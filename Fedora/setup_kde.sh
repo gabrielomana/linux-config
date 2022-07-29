@@ -23,11 +23,11 @@ echo -e "\nDefaul Grafics:"
 sudo systemctl enable sddm
 sudo systemctl set-default graphical.target
 sudo numlockx on
-sudo sed 's/#Numlock=none/Numlock=on/g' /etc/sddm.conf > output.conf
-sudo sed 's/# DisplayServer=wayland/DisplayServer=x11/g' output.conf > output2.conf
-sudo mv output2.conf /etc/sddm.conf
-rm output.conf
-sudo dnf -y install materia-kde-sddm sddm-themes sddm-kcm
+#sudo sed 's/#Numlock=none/Numlock=on/g' /etc/sddm.conf > output.conf
+#sudo sed 's/# DisplayServer=wayland/DisplayServer=x11/g' output.conf > output2.conf
+#sudo mv output2.conf /etc/sddm.conf
+#rm output.conf
+#sudo dnf -y install materia-kde-sddm sddm-themes sddm-kcm
 sleep 3
 
 echo -e "\nRemove Software"
