@@ -23,6 +23,7 @@ echo -e "\nDefaul Grafics:"
 sudo systemctl enable sddm
 sudo systemctl set-default graphical.target
 sudo numlockx on
+echo "$(cat /etc/sddm.conf | sed -E s/'^\#?Numlock\=.*$'/'Numlock=on'/)" | sudo tee /etc/sddm.conf && sudo systemctl daemon-reload
 #sudo sed 's/#Numlock=none/Numlock=on/g' /etc/sddm.conf > output.conf
 #sudo sed 's/# DisplayServer=wayland/DisplayServer=x11/g' output.conf > output2.conf
 #sudo mv output2.conf /etc/sddm.conf
