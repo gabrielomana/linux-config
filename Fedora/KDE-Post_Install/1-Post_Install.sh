@@ -71,6 +71,7 @@ sudo dnf -y install rpmfusion-free-appstream-data rpmfusion-nonfree-appstream-da
 sudo cargo install cargo-update
 numlockx on
 sudo numlockx on
+echo "$(cat /etc/sddm.conf | sed -E s/'^\#?Numlock\=.*$'/'Numlock=on'/)" | sudo tee /etc/sddm.conf && sudo systemctl daemon-reload
 echo "*************************************************************************************"
 sleep 7
 
