@@ -94,22 +94,23 @@ sudo apt install -y \
 build-essential \
 wget curl git gdebi \
 software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
-default-jre nodejs \
+default-jre nodejs cargo \
 ubuntu-drivers-common \
 ubuntu-restricted-extras \
 gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder mplayer \
 cabextract \
 samba \
-screen
+screen \
+util-linux-user openssl finger dos2unix nano sed numlockx
 sudo apt clean -y
 clear
 
 ###### Purga
 clear
 sudo apt remove postfix -y && apt purge postfix -y
+sudo dpkg-reconfigure postfix
 sudo purge libreoffice libreoffice-\* -y
 sudo apt autoremove -y
-sudo dpkg-reconfigure postfix
 
 clear
  "*************************************************************************************"
