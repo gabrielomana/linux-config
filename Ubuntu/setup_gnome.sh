@@ -48,7 +48,7 @@ sudo apt-get install linuxmint-keyring -y
 
 
 #GNOME
-sudo apt install ubuntu-desktop-minimal gnome-session gnome-terminal nome-calculator gnome-system-monitor gedit evince file-roller lightdm -y
+sudo apt install ubuntu-desktop-minimal gnome-session gnome-terminal gnome-calculator gnome-system-monitor gedit evince file-roller lightdm -y
 
 sudo systemctl set-default graphical.target
 sudo systemctl enable lightdm
@@ -111,7 +111,6 @@ sudo purge libreoffice libreoffice-\* -y
 sudo apt autoremove -y
 sudo dpkg-reconfigure postfix
 
-
 clear
  "*************************************************************************************"
 sleep 7
@@ -119,17 +118,7 @@ sleep 7
 
 ###### UPDATE
 clear
-#TOPGRADE
-sudo apt-get install cargo -y
-echo -e "PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:~/.cargo/bin\:/root/.cargo/bin\"" | sudo tee /etc/environment
-sudo apt install --install-recommends libssl-dev -y
-sudo cargo install cargo-update
-sudo cargo install topgrade
-sudo cp -r Files/topgrade.toml ~/.config/topgrade.toml
-sudo cp -r Files/topgrade.toml /root/.config/topgrade.toml
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.config/zsh_config/zsh_path
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.config/zsh_config/zsh_path
-sudo topgrade 
+sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
 echo "*************************************************************************************"
 sleep 7
 reboot
