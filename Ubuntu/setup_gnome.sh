@@ -129,7 +129,7 @@ sudo cp -r Files/topgrade.toml ~/.config/topgrade.toml
 sudo cp -r Files/topgrade.toml /root/.config/topgrade.toml
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.config/zsh_config/zsh_path
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.config/zsh_config/zsh_path
-echo
-sudo topgrade "*************************************************************************************"
+sudo topgrade 
+echo "*************************************************************************************"
 sleep 7
 reboot
