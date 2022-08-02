@@ -40,7 +40,7 @@ sudo add-apt-repository ppa:mozillateam/ppa -y
 #Repos MINT
 sudo sh -c 'echo "deb http://packages.linuxmint.com/ uma main" >> /etc/apt/sources.list.d/mint.list'
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A6616109451BBBF2
-sudo apt reinstall libxapp1
+sudo apt reinstall libxapp1 -y
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/mint.gpg
 sudo apt update
 sudo apt-get install linuxmint-keyring -y
@@ -48,9 +48,14 @@ sudo apt-get install linuxmint-keyring -y
 
 
 #GNOME
-sudo apt install tasksel -y
-sudo tasksel install ubuntu-desktop-minimal -y
+#Ubunutu Minimal
+sudo apt install ubuntu-desktop-minimal -y
+#GNOME Vanilla Minimal
+#sudo apt install vanilla-gnome-desktop
+
 sudo apt install gedit evince file-roller lightdm -y
+clear
+sudo dpkg-reconfigure locales
 
 sudo systemctl set-default graphical.target
 sudo systemctl enable lightdm
