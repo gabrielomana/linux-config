@@ -48,6 +48,7 @@ sudo apt-get install linuxmint-keyring -y
 
 
 #GNOME
+sudo apt install tasksel -y
 sudo tasksel install ubuntu-desktop-minimal -y
 sudo apt install gedit evince file-roller lightdm -y
 
