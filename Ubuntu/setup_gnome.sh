@@ -54,6 +54,7 @@ sudo apt install ubuntu-desktop-minimal -y
 #sudo apt install vanilla-gnome-desktop
 
 sudo apt install gedit evince file-roller lightdm -y
+sudo apt-get -y install language-pack-es-base
 clear
 sudo dpkg-reconfigure locales
 
