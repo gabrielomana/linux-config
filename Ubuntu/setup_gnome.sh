@@ -48,7 +48,8 @@ sudo apt-get install linuxmint-keyring -y
 
 
 #GNOME
-sudo apt install ubuntu-desktop-minimal gnome-session gnome-terminal gnome-calculator gnome-system-monitor gedit evince file-roller lightdm -y
+sudo tasksel install ubuntu-desktop-minimal -y
+sudo apt install gedit evince file-roller lightdm -y
 
 sudo systemctl set-default graphical.target
 sudo systemctl enable lightdm
