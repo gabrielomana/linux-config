@@ -40,14 +40,16 @@ sudo add-apt-repository multiverse -y
 sudo add-apt-repository ppa:mozillateam/ppa -y
 
 #Repos MINT
-sudo sh -c 'echo "deb http://packages.linuxmint.com/ uma main" >> /etc/apt/sources.list.d/mint.list'
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A6616109451BBBF2
+sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa main" >> /etc/apt/sources.list.d/mint_vanessa.list'
+sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa upstream" >> /etc/apt/sources.list.d/mint_vanessa.list'
+sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa backport" >> /etc/apt/sources.list.d/mint_vanessa.list'
+sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com A1715D88E1DF1F24 40976EAF437D05B5 3B4FE6ACC0B21F32 A6616109451BBBF2
 sudo apt reinstall libxapp1 -y
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/mint.gpg
 sudo apt update
 sudo apt-get install linuxmint-keyring -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 #******************
-
 
 #GNOME
 #Ubunutu Minimal
@@ -72,20 +74,21 @@ gsettings set org.gnome.desktop.background show-desktop-icons false
 gsettings set org.nemo.desktop show-desktop-icons true
 gsettings set org.nemo.desktop use-desktop-grid true
 echo -e "[Desktop Entry]\nType=Application\nName=Files\nExec=nemo-desktop\nOnlyShowIn=GNOME;Unity;\nX-Ubuntu-Gettext-Domain=nemo" | sudo tee /etc/xdg/autostart/nemo-autostart.desktop
+sudo apt -y install python-nemo nemo-compare nemo-compare nemo-fileroller cinnamon-l10n --install-recommends
 
-sudo apt install mint-dev-tools -y
-sudo apt-get install libglib2.0-dev -y
-sudo mkdir -p /git/
-sudo mkdir -p /git/nemo-extensions/
-sudo git clone https://github.com/linuxmint/nemo-extensions /git/nemo-extensions/
-cd /git/nemo-extensions/
-sudo git pull origin master
-sudo ./build nemo-python nemo-terminal nemo-compare
-sudo dpkg -i python-nemo*.deb
-sudo apt install gir1.2-xapp-1.0 -y
-sudo dpkg -i nemo-terminal*.deb nemo-compare*.deb
-sudo rm *.deb -rf
-cd -
+#sudo apt install mint-dev-tools -y
+#sudo apt-get install libglib2.0-dev -y
+#sudo mkdir -p /git/
+#sudo mkdir -p /git/nemo-extensions/
+#sudo git clone https://github.com/linuxmint/nemo-extensions /git/nemo-extensions/
+#cd /git/nemo-extensions/
+#sudo git pull origin master
+#sudo ./build nemo-python nemo-terminal nemo-compare
+#sudo dpkg -i python-nemo*.deb
+#sudo apt install gir1.2-xapp-1.0 -y
+#sudo dpkg -i nemo-terminal*.deb nemo-compare*.deb
+#sudo rm *.deb -rf
+#cd -
 
 sudo apt install chrome-gnome-shell gnome-tweaks gnome-shell-extensions gnome-software -y
 sudo apt-get update –fix-missing
