@@ -62,28 +62,84 @@ sudo systemctl set-default graphical.target
 sudo systemctl enable lightdm
 
 
-###Nautilis
-sudo apt purge nautilus gnome-shell-extension-desktop-icons -y
-sudo apt install nemo -y
-xdg-mime default nemo.desktop inode/directory application/x-gnome-saved-search
-gsettings set org.gnome.desktop.background show-desktop-icons false
-gsettings set org.nemo.desktop show-desktop-icons true
-gsettings set org.nemo.desktop use-desktop-grid true
-echo -e "[Desktop Entry]\nType=Application\nName=Files\nExec=nemo-desktop\nOnlyShowIn=GNOME;Unity;\nX-Ubuntu-Gettext-Domain=nemo" | sudo tee /etc/xdg/autostart/nemo-autostart.desktop
+###Nautilis>Thunar
+## I went with --no-install-recommends because
+## I didn't want to bring in a whole lot of junk,
+## and Jaunty installs recommended packages by default.
+echo -e "\nMaking sure Thunar is installed\n"
+sudo apt-get update &amp;amp;amp;&amp;amp;amp; sudo apt-get install thunar --no-install-recommends
+ 
+## Does it make sense to change to the directory?
+## Or should all the individual commands just reference the full path?
+echo -e "\nChanging to application launcher directory\n"
+cd /usr/share/applications
+echo -e "\nMaking backup directory\n"
+ 
+## Does it make sense to create an entire backup directory?
+## Should each file just be backed up in place?
+sudo mkdir nonautilusplease
+echo -e "\nModifying folder handler launcher\n"
+sudo cp nautilus-folder-handler.desktop nonautilusplease/
+ 
+## Here I'm using two separate sed commands
+## Is there a way to string them together to have one
+## sed command make two replacements in a single file?
+sudo sed -i -n 's/nautilus --no-desktop/thunar/g' nautilus-folder-handler.desktop
+sudo sed -i -n 's/TryExec=nautilus/TryExec=thunar/g' nautilus-folder-handler.desktop
+echo -e "\nModifying browser launcher\n"
+sudo cp nautilus-browser.desktop nonautilusplease/
+sudo sed -i -n 's/nautilus --no-desktop --browser/thunar/g' nautilus-browser.desktop
+sudo sed -i -n 's/TryExec=nautilus/TryExec=thunar/g' nautilus-browser.desktop
+echo -e "\nModifying computer icon launcher\n"
+sudo cp nautilus-computer.desktop nonautilusplease/
+sudo sed -i -n 's/nautilus --no-desktop/thunar/g' nautilus-computer.desktop
+sudo sed -i -n 's/TryExec=nautilus/TryExec=thunar/g' nautilus-computer.desktop
+echo -e "\nModifying home icon launcher\n"
+sudo cp nautilus-home.desktop nonautilusplease/
+sudo sed -i -n 's/nautilus --no-desktop/thunar/g' nautilus-home.desktop
+sudo sed -i -n 's/TryExec=nautilus/TryExec=thunar/g' nautilus-home.desktop
+echo -e "\nModifying general Nautilus launcher\n"
+sudo cp nautilus.desktop nonautilusplease/
+sudo sed -i -n 's/Exec=nautilus/Exec=thunar/g' nautilus.desktop
+ 
+## This last bit I'm not sure should be included
+## See, the only thing that doesn't change to the
+## new Thunar default is clicking the files on the desktop,
+## because Nautilus is managing the desktop (so technically
+## it's not launching a new process when you double-click
+## an icon there).
+## So this kills the desktop management of icons completely
+## Making the desktop pretty useless... would it be better
+## to keep Nautilus there instead of nothing? Or go so far
+## as to have Xfce manage the desktop in Gnome?
+echo -e "\nChanging base Nautilus launcher\n"
+sudo dpkg-divert --divert /usr/bin/nautilus.old --rename /usr/bin/nautilus &amp;amp;amp;&amp;amp;amp; sudo ln -s /usr/bin/thunar /usr/bin/nautilus
+echo -e "\nRemoving Nautilus as desktop manager\n"
+killall nautilus
+echo -e "\nThunar is now the default file manager. To return Nautilus to the default, run this script again.\n"
 
-sudo apt install mint-dev-tools -y
-sudo apt-get install libglib2.0-dev -y
-sudo mkdir -p /git/
-sudo mkdir -p /git/nemo-extensions/
-sudo git clone https://github.com/linuxmint/nemo-extensions /git/nemo-extensions/
-cd /git/nemo-extensions/
-sudo git pull origin master
-sudo ./build nemo-python nemo-terminal nemo-compare
-sudo dpkg -i python-nemo*.deb
-sudo apt install gir1.2-xapp-1.0 -y
-sudo dpkg -i nemo-terminal*.deb nemo-compare*.deb
-sudo rm *.deb -rf
-cd -
+###Nautilis>Nemo
+#sudo apt purge nautilus gnome-shell-extension-desktop-icons -y
+#sudo apt install nemo -y
+#xdg-mime default nemo.desktop inode/directory application/x-gnome-saved-search
+#gsettings set org.gnome.desktop.background show-desktop-icons false
+#gsettings set org.nemo.desktop show-desktop-icons true
+#gsettings set org.nemo.desktop use-desktop-grid true
+#echo -e "[Desktop Entry]\nType=Application\nName=Files\nExec=nemo-desktop\nOnlyShowIn=GNOME;Unity;\nX-Ubuntu-Gettext-Domain=nemo" | sudo tee /etc/xdg/autostart/nemo-autostart.desktop
+
+#sudo apt install mint-dev-tools -y
+#sudo apt-get install libglib2.0-dev -y
+#sudo mkdir -p /git/
+#sudo mkdir -p /git/nemo-extensions/
+#sudo git clone https://github.com/linuxmint/nemo-extensions /git/nemo-extensions/
+#cd /git/nemo-extensions/
+#sudo git pull origin master
+#sudo ./build nemo-python nemo-terminal nemo-compare
+#sudo dpkg -i python-nemo*.deb
+#sudo apt install gir1.2-xapp-1.0 -y
+#sudo dpkg -i nemo-terminal*.deb nemo-compare*.deb
+#sudo rm *.deb -rf
+#cd -
 
 sudo apt install chrome-gnome-shell gnome-tweaks gnome-shell-extensions gnome-software -y
 sudo apt-get update –fix-missing
