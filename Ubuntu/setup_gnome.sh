@@ -60,7 +60,7 @@ sudo apt update -y
 
 # CORE APPS
 sudo apt install -y \
-build-essential gcc make perl g++\
+build-essential software-properties-gtk gcc make perl g++\
 wget curl git gdebi \
 software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
 default-jre nodejs cargo \
