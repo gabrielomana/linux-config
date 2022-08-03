@@ -6,4 +6,5 @@ export LANG=es_ES.UTF-8
 clear
 sudo apt purge libreoffice* -y
 sudo apt autoremove -y
+sudo apt clean
 reboot
