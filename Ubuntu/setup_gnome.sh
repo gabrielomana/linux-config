@@ -38,14 +38,15 @@ sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
 sudo add-apt-repository ppa:graphics-drivers/ppa -y
 sudo add-apt-repository multiverse -y
 sudo add-apt-repository ppa:mozillateam/ppa -y
+sudo add-apt-repository ppa:xubuntu-dev/extras -y
 
 #Repos MINT
-sudo sh -c 'echo "deb http://packages.linuxmint.com/ uma main" >> /etc/apt/sources.list.d/mint.list'
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A6616109451BBBF2
-sudo apt reinstall libxapp1 -y
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/mint.gpg
-sudo apt update
-sudo apt-get install linuxmint-keyring -y
+#sudo sh -c 'echo "deb http://packages.linuxmint.com/ uma main" >> /etc/apt/sources.list.d/mint.list'
+#sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A6616109451BBBF2
+#sudo apt reinstall libxapp1 -y
+#sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/mint.gpg
+#sudo apt update
+#sudo apt-get install linuxmint-keyring -y
 #******************
 
 
