@@ -41,7 +41,7 @@ v4l2loopback-utils \
 nomacs \
 audacity \
 neofetch \
-unrar p7zip unzip file-roller \
+unrar p7zip unzip file-roller catfish \
 gedit \
 qemu qemu-kvm libvirt libvirt-devel virt-top libguestfs-tools guestfs-tools bridge-utils virt-manager \
 uget \
