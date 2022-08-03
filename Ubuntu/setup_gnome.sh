@@ -1,6 +1,8 @@
 #!/bin/bash
 clear
-
+sudo apt purge libreoffice* -y
+sudo apt-get autoremove -y
+clear
 #REMOVE SNAP/ADD FLATPACK
 
 #remove snap service (existing sanp applications must be uninstalled first)
@@ -54,9 +56,9 @@ sudo apt install ubuntu-desktop-minimal -y
 #sudo apt install vanilla-gnome-desktop
 
 sudo apt install gedit evince file-roller lightdm -y
-sudo apt-get -y install language-pack-es-base
+#sudo apt-get -y install language-pack-es-base
 clear
-sudo dpkg-reconfigure locales
+#sudo dpkg-reconfigure locales
 
 sudo systemctl set-default graphical.target
 sudo systemctl enable lightdm
@@ -67,7 +69,7 @@ sudo systemctl enable lightdm
 ## I didn't want to bring in a whole lot of junk,
 ## and Jaunty installs recommended packages by default.
 echo -e "\nMaking sure Thunar is installed\n"
-sudo apt-get update &amp;amp;amp;&amp;amp;amp; sudo apt-get install thunar --no-install-recommends
+sudo apt-get install thunar --no-install-recommends
  
 ## Does it make sense to change to the directory?
 ## Or should all the individual commands just reference the full path?
