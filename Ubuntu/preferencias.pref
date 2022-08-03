@@ -1,0 +1,27 @@
+Package: *
+Pin: release o=Ubuntu
+Pin-Priority: 601
+
+Package: *
+Pin: release o=LP-PPA-ubuntustudio-ppa-backports
+Pin-Priority: 501
+
+Package: *
+Pin: release o=LLP-PPA-pipewire-debian-pipewire-upstream
+Pin-Priority: 501
+
+Package: *
+Pin: release o=LP-PPA-kisak-kisak-mesa
+Pin-Priority: 501
+
+Package: *
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 501
+
+Package: *
+Pin: release o=LP-PPA-graphics-drivers
+Pin-Priority: 501
+
+Package: *
+Pin: release o=linuxmint
+Pin-Priority: 100 
