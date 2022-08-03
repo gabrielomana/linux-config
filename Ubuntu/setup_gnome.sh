@@ -40,53 +40,6 @@ sudo add-apt-repository multiverse -y
 sudo add-apt-repository ppa:mozillateam/ppa -y
 
 #Repos MINT
-sudo sh -c 'echo "deb http://packages.linuxmint.com/ uma main" >> /etc/apt/sources.list.d/mint.list'
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A6616109451BBBF2
-sudo apt reinstall libxapp1 -y
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/mint.gpg
-sudo apt update
-sudo apt-get install linuxmint-keyring -y
-
-
-#GNOME
-#Ubunutu Minimal
-sudo apt install ubuntu-desktop-minimal -y
-#GNOME Vanilla Minimal
-#sudo apt install vanilla-gnome-desktop
-
-sudo apt install gedit evince file-roller lightdm -y
-#sudo apt-get -y install language-pack-es-base
-clear
-#sudo dpkg-reconfigure locales
-
-sudo systemctl set-default graphical.target
-sudo systemctl enable lightdm
-
-
-###Nautilis>Nemo
-sudo apt purge nautilus gnome-shell-extension-desktop-icons -y
-sudo apt install nemo -y
-xdg-mime default nemo.desktop inode/directory application/x-gnome-saved-search
-gsettings set org.gnome.desktop.background show-desktop-icons false
-gsettings set org.nemo.desktop show-desktop-icons true
-gsettings set org.nemo.desktop use-desktop-grid true
-echo -e "[Desktop Entry]\nType=Application\nName=Files\nExec=nemo-desktop\nOnlyShowIn=GNOME;Unity;\nX-Ubuntu-Gettext-Domain=nemo" | sudo tee /etc/xdg/autostart/nemo-autostart.desktop
-
-sudo apt install mint-dev-tools -y
-sudo apt-get install libglib2.0-dev -y
-sudo mkdir -p /git/
-sudo mkdir -p /git/nemo-extensions/
-sudo git clone https://github.com/linuxmint/nemo-extensions /git/nemo-extensions/
-cd /git/nemo-extensions/
-sudo git pull origin master
-sudo ./build nemo-python nemo-terminal nemo-compare
-sudo dpkg -i python-nemo*.deb
-sudo apt install gir1.2-xapp-1.0 -y
-sudo dpkg -i nemo-terminal*.deb nemo-compare*.deb
-sudo rm *.deb -rf
-cd -
-
-#Repos MINT 2
 sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa main" >> /etc/apt/sources.list.d/mint_vanessa.list'
 sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa upstream" >> /etc/apt/sources.list.d/mint_vanessa.list'
 sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa backport" >> /etc/apt/sources.list.d/mint_vanessa.list'
@@ -99,7 +52,6 @@ sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; 
 #******************
 
 #GNOME
-clear
 #Ubunutu Minimal
 sudo apt install ubuntu-desktop-minimal -y
 #GNOME Vanilla Minimal
@@ -113,12 +65,6 @@ clear
 sudo systemctl set-default graphical.target
 sudo systemctl enable lightdm
 
-sudo apt install chrome-gnome-shell gnome-tweaks gnome-shell-extensions gnome-software -y
-sudo apt-get update –fix-missing
-sudo apt-get install -f
-sudo apt-get clean -y
-sudo apt-get autoremove -y
-sudo dpkg --configure -a
 
 sudo apt install -t 'o=LP-PPA-mozillateam' firefox -y
 echo -e "Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501" | sudo tee /etc/apt/preferences.d/mozillateamppa.pref
