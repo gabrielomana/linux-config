@@ -1,6 +1,6 @@
 Package: *
 Pin: release o=Ubuntu
-Pin-Priority: 601
+Pin-Priority: 501
 
 Package: *
 Pin: release o=LP-PPA-ubuntustudio-ppa-backports
