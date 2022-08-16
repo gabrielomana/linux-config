@@ -69,7 +69,7 @@ gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder mplayer \
 cabextract \
 samba \
 screen \
-util-linux-user openssl finger dos2unix nano sed numlockx
+util-linux-user apt-utils bash-completion openssl finger dos2unix nano sed numlockx
 sudo apt clean -y
 clear
 
