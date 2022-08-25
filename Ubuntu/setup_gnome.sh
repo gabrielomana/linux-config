@@ -3,6 +3,7 @@ clear
 sudo apt-get purge -y --auto-remove mate-desktop mate-* lightdm
 sudo apt-get purge -y --auto-remove ubuntu-mate-artwork ubuntu-mate-default-settings ubuntu-mate-icon-themes ubuntu-mate-themes ubuntu-mate-wallpapers* caja-open-terminal libmate-desktop-2-17 plymouth-theme-ubuntu-mate-logo plymouth-theme-ubuntu-mate-text caja-eiciel caja-extensions-common caja-gtkhash caja-sendto caja-wallpaper libcaja-extension1 engrampa* plank
 dpkg --purge mate-* --force-all
+sudo rm /var/lib/apt/lists/*MATE*
 sudo apt purge libreoffice* -y
 sudo apt-get autoremove -y
 clear
@@ -58,6 +59,7 @@ sudo systemctl enable gdm3
 
 
 sudo apt install -t 'o=LP-PPA-mozillateam' firefox -y
+echo -e "Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501" | sudo tee /etc/apt/preferences.d/mozillateamppa.pref
 sudo apt update -y
 
 # CORE APPS
@@ -92,10 +94,6 @@ clear
 sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
 echo "*************************************************************************************"
 sleep 7
-
-sudo dpkg-reconfigure locales
-export LANG=es_ES.UTF-8
-clear
 reboot
 
 
