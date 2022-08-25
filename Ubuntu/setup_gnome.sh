@@ -1,5 +1,7 @@
 #!/bin/bash
 clear
+sudo apt-get purge --auto-remove mate-desktop
+dpkg --purge mate-* --force-all
 sudo apt purge libreoffice* -y
 sudo apt-get autoremove -y
 clear
