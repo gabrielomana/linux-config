@@ -44,7 +44,7 @@ sudo add-apt-repository ppa:mozillateam/ppa -y
 
 #GNOME
 #Ubunutu Minimal
-sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es -y
+sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo  -y
 #GNOME Vanilla Minimal
 #sudo apt install vanilla-gnome-desktop
 
