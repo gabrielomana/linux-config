@@ -1,7 +1,7 @@
 #!/bin/bash
 clear
 sudo apt-get purge -y --auto-remove mate-desktop
-sudo apt-get purge -y --auto-remove ubuntu-mate-artwork ubuntu-mate-default-settings ubuntu-mate-icon-themes ubuntu-mate-themes ubuntu-mate-wallpapers* caja-open-terminal libmate-desktop-2-17 plymouth-theme-ubuntu-mate-logo plymouth-theme-ubuntu-mate-text caja-eiciel caja-extensions-common caja-gtkhash caja-sendto caja-wallpaper libcaja-extension1 engrampa* gnome-characters plank
+sudo apt-get purge -y --auto-remove ubuntu-mate-artwork ubuntu-mate-default-settings ubuntu-mate-icon-themes ubuntu-mate-themes ubuntu-mate-wallpapers* caja-open-terminal libmate-desktop-2-17 plymouth-theme-ubuntu-mate-logo plymouth-theme-ubuntu-mate-text caja-eiciel caja-extensions-common caja-gtkhash caja-sendto caja-wallpaper libcaja-extension1 engrampa* plank
 dpkg --purge mate-* --force-all
 sudo apt purge libreoffice* -y
 sudo apt-get autoremove -y
@@ -44,7 +44,7 @@ sudo add-apt-repository ppa:mozillateam/ppa -y
 
 #GNOME
 #Ubunutu Minimal
-sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-gnome-logo plymouth-theme-ubuntu-gnome-text plymouth-theme-ubuntu-logo -y
+sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es -y
 #GNOME Vanilla Minimal
 #sudo apt install vanilla-gnome-desktop
 
