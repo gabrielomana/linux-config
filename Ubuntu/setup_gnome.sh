@@ -1,6 +1,6 @@
 #!/bin/bash
 clear
-sudo apt-get purge -y --auto-remove mate-desktop mate-*
+sudo apt-get purge -y --auto-remove mate-desktop mate-* lightdm
 sudo apt-get purge -y --auto-remove ubuntu-mate-artwork ubuntu-mate-default-settings ubuntu-mate-icon-themes ubuntu-mate-themes ubuntu-mate-wallpapers* caja-open-terminal libmate-desktop-2-17 plymouth-theme-ubuntu-mate-logo plymouth-theme-ubuntu-mate-text caja-eiciel caja-extensions-common caja-gtkhash caja-sendto caja-wallpaper libcaja-extension1 engrampa* plank
 dpkg --purge mate-* --force-all
 sudo apt purge libreoffice* -y
@@ -54,7 +54,7 @@ clear
 #sudo dpkg-reconfigure locales
 
 sudo systemctl set-default graphical.target
-#sudo systemctl enable lightdm
+sudo systemctl enable gdm3
 
 
 sudo apt install -t 'o=LP-PPA-mozillateam' firefox -y
