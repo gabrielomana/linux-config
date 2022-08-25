@@ -1,6 +1,6 @@
 #!/bin/bash
 clear
-sudo apt-get purge -y --auto-remove mate-desktop
+sudo apt-get purge -y --auto-remove mate-desktop mate-*
 sudo apt-get purge -y --auto-remove ubuntu-mate-artwork ubuntu-mate-default-settings ubuntu-mate-icon-themes ubuntu-mate-themes ubuntu-mate-wallpapers* caja-open-terminal libmate-desktop-2-17 plymouth-theme-ubuntu-mate-logo plymouth-theme-ubuntu-mate-text caja-eiciel caja-extensions-common caja-gtkhash caja-sendto caja-wallpaper libcaja-extension1 engrampa* plank
 dpkg --purge mate-* --force-all
 sudo apt purge libreoffice* -y
