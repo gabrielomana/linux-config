@@ -1,127 +1,170 @@
 #!/bin/bash
-#NAME
-echo NEW NAME FOR DE COMPUTER:
-read nombre
-sudo hostnamectl set-hostname $nombre
 
-# CONF DNF
-clear
-echo "CONF DNF"
-sudo echo -e "[main]\ngpgcheck=1\ninstallonly_limit=3\nclean_requirements_on_remove=True\nbest=False\nskip_if_unavailable=True\n#Speed\nfastestmirror=True\nmax_parallel_downloads=10\ndefaultyes=True\nkeepcache=True\ndeltarpm=True" | sudo tee /etc/dnf/dnf.conf
-sudo dnf clean all
-sudo dnf makecache --refresh
-sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
-echo "*************************************************************************************"
-sleep 7
+sudo apt update -y
+sudo apt clean -y
+sudo apt autoremove -y
+sudo dpkg --configure -a
 
-# UNINSTALL
+
+#REMOVE SNAP/ADD FLATPACK
+
+#remove snap service (existing sanp applications must be uninstalled first)
+sudo apt autoremove --purge snapd -y
+sudo rm -rf ~/snap
+sudo rm -rf /var/cache/snapd
+sudo apt purge snapd
+sudo apt-mark hold snapd
+echo -e "Package: snapd\nPin: release a=*\nPin-Priority: -10" | sudo tee /etc/apt/preferences.d/nosnap.pref
+sudo apt update -y
+
+#limpiar y arreglar paquetes rotos
+sudo apt-get update –fix-missing
+sudo apt-get install -f
+sudo apt-get clean -y
+sudo apt-get autoremove -y
+sudo dpkg --configure -a
+
+#install flatpak service
+sudo apt install flatpak -y
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 clear
-echo "UNINSTALL"
-sudo dnf -y remove gnome-photos gnome-boxes gnome-text-editor evince simple-scan totem gnome-weather gnome-maps gnome-contacts eog baobab libreoffice* rhythmbox 
-sudo dnf -y autoremove
-echo "*************************************************************************************"
-sleep 7
+
+#########################################################################
+
+# CORE APPS
+
+sudo apt install -y \
+build-essential software-properties-gtk gcc make perl g++ \
+wget curl git gdebi \
+software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
+default-jre nodejs cargo \
+ubuntu-drivers-common \
+ubuntu-restricted-extras \
+gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder mplayer \
+cabextract \
+samba \
+screen \
+util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx
+sudo apt clean -y
+sudo apt install nemo --install-recommends -y
+clear
+
+sudo apt clean -y
+clear
 
 ###### REPOSITORIES
-clear
-echo "REPOSITORIES"
-sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-sudo dnf -y install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-sudo dnf -y copr enable refi64/webapp-manager
+sudo add-apt-repository ppa:graphics-drivers/ppa -y
+sudo add-apt-repository ppa:linrunner/tlp -y
+sudo add-apt-repository ppa:kisak/kisak-mesa -y
+sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
+sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
+sudo add-apt-repository multiverse -y
+sudo add-apt-repository ppa:mozillateam/ppa -y
+sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
+sudo add-apt-repository ppa:yannubuntu/boot-repair -y
+sudo add-apt-repository ppa:ubuntucinnamonremix/all
 
-curl -1sLf \
-'https://dl.cloudsmith.io/public/balena/etcher/setup.rpm.sh' \
-| sudo -E bash
+sudo wget --no-check-certificate -qO - https://dl.xanmod.org/gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/xanmod.gpg
+echo 'deb [signed-by=/usr/share/keyrings/xanmod.gpg] http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-kernel.list
 
+sudo add-apt-repository ppa:peppermintos/ice-dev -y
+echo -e  "deb https://ppa.launchpadcontent.net/peppermintos/ice-dev/ubuntu/ bionic main\n# deb-src https://ppa.launchpadcontent.net/peppermintos/ice-dev/ubuntu/ jammy main" | sudo tee /etc/apt/sources.list.d/peppermintos-ubuntu-ice-dev-jammy.list
+sudo wget --no-check-certificate -qO - https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=index&search=0x8407C49CC82B751AD961D657FD538AD29ED3B288 | gpg --dearmor | sudo tee /usr/share/keyrings/peppermintos-ice.gpg
+sudo add-apt-repository ppa:savoury1/chromium -y
+sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
 
-sudo yum -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
-sudo yum -y install epel-release
+sudo add-apt-repository ppa:teejee2008/ppa -y
+echo -e "deb https://ppa.launchpadcontent.net/teejee2008/ppa/ubuntu/ impish main\n# deb-src https://ppa.launchpadcontent.net/teejee2008/ppa/ubuntu/ impish main" | sudo tee /etc/apt/sources.list.d/teejee2008-ubuntu-ppa-jammy.list
+sudo wget --no-check-certificate -qO - https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=index&search=0x1B32B87ABAEE357218F6B48CB5B116B72D0F61F0 | gpg --dearmor | sudo tee /usr/share/keyrings/teejee2008.gpg
 
-sudo dnf -y copr enable ayoungdukie/Personal_Repo 
+sudo add-apt-repository ppa:webupd8team/y-ppa-manager -y
+echo -e "deb https://ppa.launchpadcontent.net/webupd8team/y-ppa-manager/ubuntu/ impish main\n# deb-src https://ppa.launchpadcontent.net/webupd8team/y-ppa-manager/ubuntu/ impish main" | sudo tee /etc/apt/sources.list.d/webupd8team-ubuntu-y-ppa-manager-jammy.list
+sudo wget --no-check-certificate -qO - https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=index&search=0x7B2C3B0889BF5709A105D03AC2518248EEA14886 | gpg --dearmor | sudo tee /usr/share/keyrings/webupd8team.gpg
 
-sudo dnf -y copr enable bugzy/mkchromecast
+curl -1sLf 'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' | sudo -E bash
 
-sudo rpm --import https://raw.githubusercontent.com/UnitedRPMs/unitedrpms/master/URPMS-GPG-PUBLICKEY-Fedora
-sudo dnf -y install https://github.com/UnitedRPMs/unitedrpms/releases/download/20/unitedrpms-$(rpm -E %fedora)-20.fc$(rpm -E %fedora).noarch.rpm
+sudo add-apt-repository ppa:appimagelauncher-team/stable -y
 
-sudo dnf makecache --refresh
-sudo dnf config-manager --set-disabled balena-etcher-noarch
-sudo dnf config-manager --set-disabled balena-etcher-source
-sudo dnf makecache --refresh
-echo "*************************************************************************************"
-sleep 7
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+sudo mv /etc/apt/trusted.gpg /etc/apt/google.gpg
+sudo mv /etc/apt/google.gpg /etc/apt/trusted.gpg.d/google.gpg
 
+mkdir -p ~/.gnupg
+chmod 700 ~/.gnupg
+gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
+chmod 644 /tmp/onlyoffice.gpg
+sudo chown root:root /tmp/onlyoffice.gpg
+sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
+echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
 
-###### EXTRA LIBS AND CODECS
-clear
-echo "EXTRA LIBS AND CODECS"
-sudo dnf -y install dnfdragora wget curl git nodejs java-latest-openjdk.x86_64 cargo samba screen dconf dconf-editor cabextract xorg-x11-font-utils fontconfig util-linux-user gedit cmake alien anacron
-sudo dnf -y groupupdate multimedia --setop="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
-sudo dnf -y install gstreamer1-libav gstreamer1-plugins-bad-free-extras gstreamer1-plugins-bad-freeworld gstreamer1-plugins-good-extras gstreamer1-plugins-ugly unrar p7zip p7zip-plugins gstreamer1-plugin-openh264 mozilla-openh264 openh264 webp-pixbuf-loader gstreamer1-plugins-bad-free-fluidsynth gstreamer1-plugins-bad-free-wildmidi gstreamer1-svt-av1 libopenraw-pixbuf-loader dav1d file-roller x264 h264enc x265 svt-av1 rav1e cabextract mencoder mplayer ffmpeg
-sudo dbf -y install lame\* --exclude=lame-devel
-sudo dnf -y groupupdate sound-and-video
-sudo dnf -y groupupdate core
-sudo dnf -y install rpmfusion-free-appstream-data rpmfusion-nonfree-appstream-data 
-sudo cargo install cargo-update
-echo "*************************************************************************************"
-sleep 7
+#Repos MINT
 
-###### INSTALL NEMO / REMOVE NAUTILIUS
-###Nautilis>Nemo
-
-sudo echo "deb http://packages.linuxmint.com una main upstream import backport" > /etc/apt/sources.list.d/linux-mint.list  
-sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com A6616109451BBBF2
+sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa main" >> /etc/apt/sources.list.d/mint_vanessa.list'
+sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa upstream" >> /etc/apt/sources.list.d/mint_vanessa.list'
+sudo sh -c 'echo "deb http://packages.linuxmint.com/ vanessa backport" >> /etc/apt/sources.list.d/mint_vanessa.list'
+sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com A1715D88E1DF1F24 40976EAF437D05B5 3B4FE6ACC0B21F32 A6616109451BBBF2
+sudo apt update
 sudo apt reinstall libxapp1 -y
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/mint.gpg
 sudo apt install linuxmint-keyring -y
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-#sudo apt -y install python-nemo nemo-compare nemo-terminal nemo-fileroller cinnamon-l10n mint-translations --install-recommends
 
-sudo sh -c 'echo "Package: *\nPin: release o=Ubuntu\nPin-Priority: 501\n\n" >> /etc/apt/preferences.d/priority.pref'
-sudo sh -c 'echo "Package: *\nPin: release o=LP-PPA-ubuntustudio-ppa-backports\nPin-Priority: 501\n\n" >> /etc/apt/preferences.d/priority.pref'
-sudo sh -c 'echo "Package: *\nPin: release o=LLP-PPA-pipewire-debian-pipewire-upstream\nPin-Priority: 501\n\n" >> /etc/apt/preferences.d/priority.pref'
-sudo sh -c 'echo "Package: *\nPin: release o=LP-PPA-kisak-kisak-mesa\nPin-Priority: 501\n\n" >> /etc/apt/preferences.d/priority.pref'
-sudo sh -c 'echo "Package: *\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501\n\n" >> /etc/apt/preferences.d/priority.pref'
-sudo sh -c 'echo "Package: *\nPin: release o=LP-PPA-graphics-drivers\nPin-Priority: 501\n\n" >> /etc/apt/preferences.d/priority.pref'
-sudo sh -c 'echo "Package: *\nPin: release o=linuxmint\nPin-Priority: 100\n\n" >> /etc/apt/preferences.d/priority.pref'
+sudo sh -c 'echo "Package: *\nPin: release o=linuxmint\nPin-Priority: 101\n\n" >> /etc/apt/preferences.d/mint.pref'
+
 sudo apt update
+
+#find missing keys
+
+sudo apt clean -y
+sudo apt autoremove -y
+sudo apt update -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 clear
-sudo apt install nemo -y
+
+sudo apt install y-ppa-manager -y
+sudo apt remove postfix -y && apt purge postfix -y
+sudo apt autoremove -y
+sudo dpkg-reconfigure postfix
+clear
+
+sudo apt install -t 'o=LP-PPA-mozillateam' firefox -y
+echo -e "Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501" | sudo tee /etc/apt/preferences.d/mozillateamppa.pref
+sudo apt update -y
+
+#TOPGRADE
+sudo apt-get install cargo -y
+echo -e "PATH=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:~/.cargo/bin\:/root/.cargo/bin\"" | sudo tee /etc/environment
+sudo apt install --install-recommends libssl-dev -y
+sudo cargo install cargo-update
+sudo cargo install topgrade
+sudo cp -r Files/topgrade.toml ~/.config/topgrade.toml
+sudo cp -r Files/topgrade.toml /root/.config/topgrade.toml
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.config/zsh_config/zsh_path
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.config/zsh_config/zsh_path
+
+
+sudo software-properties-gtk
+sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
+
+###############################
+clear
+sudo apt -y install python-nemo nemo-compare nemo-terminal nemo-fileroller cinnamon-l10n mint-translations --install-recommends
 
 sudo apt purge nautilus gnome-shell-extension-desktop-icons -y
-
 xdg-mime default nemo.desktop inode/directory application/x-gnome-saved-search
 gsettings set org.gnome.desktop.background show-desktop-icons false
 gsettings set org.nemo.desktop show-desktop-icons true
 gsettings set org.nemo.desktop use-desktop-grid true
 echo -e "[Desktop Entry]\nType=Application\nName=Files\nExec=nemo-desktop\nOnlyShowIn=GNOME;Unity;\nX-Ubuntu-Gettext-Domain=nemo" | sudo tee /etc/xdg/autostart/nemo-autostart.desktop
-sudo apt -y install python-nemo nemo-compare nemo-terminal nemo-fileroller cinnamon-l10n mint-translations --install-recommends
 
 sudo apt install chrome-gnome-shell gnome-tweaks gnome-shell-extensions gnome-software -y
 sudo apt-get update –fix-missing
 sudo apt-get install -f
+sudo apt-get clean -y
 sudo apt-get autoremove -y
 sudo dpkg --configure -a
-sudo apt-get clean -y
-echo "*************************************************************************************"
-sleep 7
-
-###### EXTRAS GNOME
-clear
-echo "EXTRAS GNOME"
-sudo dnf -y  install chrome-gnome-shell gnome-tweaks gnome-extensions-app gnome-software chrome-gnome-shell 
-#sudo dnf -y  install lightdm-gtk
-#systemctl disable gdm.service
-#systemctl enable lightdm
-
-echo "*************************************************************************************"
-sleep 7
-###### UPDATE
-clear
-echo "UPDATE"
-sudo dnf -y upgrade --refresh
-sudo dnf clean all
-echo "*************************************************************************************"
-sleep 7
 reboot
+#Export: dconf dump / > dconf-settings.ini
+#Import: dconf load / < dconf-settings.ini
+#ruta=sh pwd && cd /git/nemo-extensions/ && sudo git pull origin master && sudo ./build nemo-python nemo-terminal nemo-compare && sudo dpkg -i python-nemo*.deb && sudo dpkg -i nemo-terminal*.deb nemo-compare*.deb && sudo rm *.deb -rf && cd $ruta
