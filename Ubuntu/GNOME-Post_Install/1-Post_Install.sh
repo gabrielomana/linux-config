@@ -64,18 +64,9 @@ sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
 sudo add-apt-repository ppa:yannubuntu/boot-repair -y
 sudo add-apt-repository ppa:ubuntucinnamonremix/all
 
-sudo wget --no-check-certificate -qO - https://dl.xanmod.org/gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/xanmod.gpg
-echo 'deb [signed-by=/usr/share/keyrings/xanmod.gpg] http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-kernel.list
-
-sudo add-apt-repository ppa:peppermintos/ice-dev -y
-echo -e  "deb https://ppa.launchpadcontent.net/peppermintos/ice-dev/ubuntu/ bionic main\n# deb-src https://ppa.launchpadcontent.net/peppermintos/ice-dev/ubuntu/ jammy main" | sudo tee /etc/apt/sources.list.d/peppermintos-ubuntu-ice-dev-jammy.list
 sudo wget --no-check-certificate -qO - https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=index&search=0x8407C49CC82B751AD961D657FD538AD29ED3B288 | gpg --dearmor | sudo tee /usr/share/keyrings/peppermintos-ice.gpg
 sudo add-apt-repository ppa:savoury1/chromium -y
 sudo add-apt-repository ppa:savoury1/ffmpeg4 -y
-
-sudo add-apt-repository ppa:teejee2008/ppa -y
-echo -e "deb https://ppa.launchpadcontent.net/teejee2008/ppa/ubuntu/ impish main\n# deb-src https://ppa.launchpadcontent.net/teejee2008/ppa/ubuntu/ impish main" | sudo tee /etc/apt/sources.list.d/teejee2008-ubuntu-ppa-jammy.list
-sudo wget --no-check-certificate -qO - https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=index&search=0x1B32B87ABAEE357218F6B48CB5B116B72D0F61F0 | gpg --dearmor | sudo tee /usr/share/keyrings/teejee2008.gpg
 
 sudo add-apt-repository ppa:webupd8team/y-ppa-manager -y
 echo -e "deb https://ppa.launchpadcontent.net/webupd8team/y-ppa-manager/ubuntu/ impish main\n# deb-src https://ppa.launchpadcontent.net/webupd8team/y-ppa-manager/ubuntu/ impish main" | sudo tee /etc/apt/sources.list.d/webupd8team-ubuntu-y-ppa-manager-jammy.list
