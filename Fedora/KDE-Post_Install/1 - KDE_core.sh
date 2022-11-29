@@ -72,9 +72,9 @@ kget \
 kinfocenter \
 kio-extras \
 krdc \
-plasma-nm plasma-pa plasma-widget* ffmpegthumbs \
-kaccounts-providers
+kaccounts-providers \
 kio-gdrive \
+plasma-nm plasma-pa plasma-widget* ffmpegthumbs --allowerasing
 
 sudo dnf -y remove kwrite
 
