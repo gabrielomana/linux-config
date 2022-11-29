@@ -6,6 +6,7 @@ echo "UNINSTALL"
 sudo dnf -y remove gwenview akregator kmail konversation krfb kmahjongg kmines dragonplayer elisa-player korganizer kontact kpat
 sudo dnf -y groupremove "LibreOffice"
 sudo dnf -y remove libreoffice-*
+sudo dnf -y remove awesome i3 openbox ratpoison
 sudo dnf -y autoremove
 echo "*************************************************************************************"
 sleep 7
