@@ -52,7 +52,7 @@ sudo dnf makecache --refresh
 
 #CODECS, LIBS  *******************************************#
 sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
-sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo 
+sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo python3-psutil.x86_64
 sudo dnf -y install dnfdragora java-latest-openjdk.x86_64 samba screen cabextract xorg-x11-font-utils fontconfig cmake alien anacron 
 sudo dnf -y groupupdate multimedia --setop="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
 sudo dnf -y install gstreamer1-libav gstreamer1-plugins-bad-free-extras gstreamer1-plugins-bad-freeworld gstreamer1-plugins-good-extras gstreamer1-plugins-ugly unrar p7zip p7zip-plugins gstreamer1-plugin-openh264 mozilla-openh264 openh264 webp-pixbuf-loader gstreamer1-plugins-bad-free-fluidsynth gstreamer1-plugins-bad-free-wildmidi gstreamer1-svt-av1 libopenraw-pixbuf-loader dav1d x264 h264enc x265 svt-av1 rav1e cabextract mencoder mplayer ffmpeg
@@ -191,4 +191,4 @@ echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.co
 sudo topgrade
 
 sudo dnf clean dbcache
-bleachbit
+sudo bleachbit
