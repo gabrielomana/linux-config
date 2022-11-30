@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 clear
 # UNINSTALL
 echo "UNINSTALL"
@@ -53,7 +52,6 @@ sudo dnf -y autoremove
 echo "*************************************************************************************"
 sleep 7
 
-clear
 #APPS KDE
 clear
 echo -e "APPS KDE\n"
@@ -88,6 +86,8 @@ featherpad \
 digikam \
 timeshift \
 ksnip \
+pdfarranger
+
 
 #SYSTEM
 clear
@@ -99,7 +99,7 @@ stacer bleachbit python3-psutil.x86_64 \
 cups-pdf \
 grub-customizer \
 tesseract tesseract-devel tesseract-langpack-cat tesseract-langpack-eng tesseract-langpack-spa gimagereader-qt \
-policycoreutils-gui firewall-config \
+policycoreutils-gui firewall-config
 
 sudo npm install -g hblock
 hblock
@@ -131,7 +131,7 @@ vlc \
 audacity \
 audacious \
 audacious-plugins-freeworld  \
-nomacs \
+nomacs
 
 
 ###### UPDATE
