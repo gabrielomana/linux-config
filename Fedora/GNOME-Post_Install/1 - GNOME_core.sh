@@ -1,16 +1,17 @@
 #!/bin/bash
-#NAME
-echo NEW NAME FOR DE COMPUTER:
-read nombre
-sudo hostnamectl set-hostname $nombre
 
-# CONF DNF
+#REPOS
 clear
-echo "CONF DNF"
+echo "REPOS"
 sudo echo -e "[main]\ngpgcheck=1\ninstallonly_limit=3\nclean_requirements_on_remove=True\nbest=False\nskip_if_unavailable=True\n#Speed\nfastestmirror=True\nmax_parallel_downloads=10\ndefaultyes=True\nkeepcache=True\ndeltarpm=True" | sudo tee /etc/dnf/dnf.conf
 sudo dnf clean all
 sudo dnf makecache --refresh
-sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
+sudo dnf -y install fedora-workstation-repositories
+sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf -y install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf clean all
+sudo dnf makecache --refresh
+sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo
 echo "*************************************************************************************"
 sleep 7
 
@@ -22,36 +23,35 @@ sudo dnf -y autoremove
 echo "*************************************************************************************"
 sleep 7
 
-###### REPOSITORIES
+#TOOLS
 clear
-echo "REPOSITORIES"
-sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-sudo dnf -y install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-sudo dnf -y copr enable refi64/webapp-manager
+echo -e "TOOLS\n"
+sudo dnf install -y \
+firefox \
+unrar p7zip unzip file-roller \
+gedit \
+cheese \
+timeshift \
+flameshot \
+tilix \
+https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher-2.2.0-travis995.0f91801.x86_64.rpm
 
-curl -1sLf \
-'https://dl.cloudsmith.io/public/balena/etcher/setup.rpm.sh' \
-| sudo -E bash
+gsettings set org.gnome.desktop.default-applications.terminal exec 'tilix'
 
+#SYSTEM
+clear
+echo -e "SYSTEM\n"
+sudo dnf install -y \
+v4l2loopback-utils \
+neofetch \
+stacer bleachbit python3-psutil.x86_64 \
+cups-pdf \
+grub-customizer \
+tesseract tesseract-devel tesseract-langpack-cat tesseract-langpack-eng tesseract-langpack-spa gimagereader-qt \
+policycoreutils-gui firewall-config
 
-sudo yum -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
-sudo yum -y install epel-release
-
-sudo dnf -y copr enable ayoungdukie/Personal_Repo 
-
-sudo dnf -y copr enable bugzy/mkchromecast
-
-sudo rpm --import https://raw.githubusercontent.com/UnitedRPMs/unitedrpms/master/URPMS-GPG-PUBLICKEY-Fedora
-sudo dnf -y install https://github.com/UnitedRPMs/unitedrpms/releases/download/20/unitedrpms-$(rpm -E %fedora)-20.fc$(rpm -E %fedora).noarch.rpm
-
-sudo dnf makecache --refresh
-sudo dnf config-manager --set-disabled balena-etcher-noarch
-sudo dnf config-manager --set-disabled balena-etcher-source
-sudo dnf makecache --refresh
-echo "*************************************************************************************"
-sleep 7
-
+sudo npm install -g hblock
+hblock
 
 ###### EXTRA LIBS AND CODECS
 clear
@@ -66,6 +66,17 @@ sudo dnf -y install rpmfusion-free-appstream-data rpmfusion-nonfree-appstream-da
 sudo cargo install cargo-update
 echo "*************************************************************************************"
 sleep 7
+
+
+#MULTIMEDIA
+clear
+echo -e "MULTIMEDIA\n"
+sudo dnf install -y \
+smplayer \
+audacity \
+deadbeef deadbeef-mpris2-plugin deadbeef-plugins \
+shotwell
+
 
 ###### INSTALL NEMO / REMOVE NAUTILIUS
 clear
@@ -101,4 +112,6 @@ sudo dnf -y upgrade --refresh
 sudo dnf clean all
 echo "*************************************************************************************"
 sleep 7
+sudo dnf clean dbcache
+sudo bleachbit
 reboot

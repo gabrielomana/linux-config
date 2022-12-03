@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 #REPOSITORIES  *******************************************#
 #sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 #sudo dnf -y install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
@@ -16,20 +17,17 @@ curl -1sLf \
    | sudo -E bash
 
 sudo yum -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
-sudo dnf -y copr enable ayoungdukie/Personal_Repo 
+sudo dnf -y copr enable ayoungdukie/Personal_Repo
 
 sudo rpm --import https://raw.githubusercontent.com/UnitedRPMs/unitedrpms/master/URPMS-GPG-PUBLICKEY-Fedora
 sudo dnf -y install https://github.com/UnitedRPMs/unitedrpms/releases/download/20/unitedrpms-$(rpm -E %fedora)-20.fc$(rpm -E %fedora).noarch.rpm
 
 sudo dnf makecache --refresh
 
-
 # FONTS
 sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
 sudo dnf install -y dejavu-fonts* google-roboto-fonts
 sudo fc-cache -fv
-
-
 
 #INTERNET  *******************************************#
 sudo dnf install -y \
@@ -40,23 +38,17 @@ flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
 flatpak install flathub us.zoom.Zoom -y
 flatpak install flathub com.anydesk.Anydesk -y
 flatpak install flathub com.microsoft.Teams -y
+flatpak install flathub org.qbittorrent.qBittorrent -y
 
 
+#Hblock
+sudo npm install -g hblock
+hblock
+  
 #OFIMATICA  ******************************************#
 sudo yum install onlyoffice-desktopeditors -y
-
+sudo dnf install -y pdfarranger
 #*****************************************************#
-
-
-#MULTIMEDIA  *****************************************#
-sudo dnf install -y \
-clementine
-
-sudo timedatectl set-local-rtc 1
-
-flatpak install flathub app.ytmdesktop.ytmdesktop -y
-flatpak install flathub tv.kodi.Kodi -y
-flatpak install flathub com.github.bajoja.indicator-kdeconnect -y
 
 
 #HERRAMIENTAS  ***************************************#
@@ -78,6 +70,14 @@ flatpak install flathub org.phoenicis.playonlinux -y
 flatpak install flathub com.usebottles.bottles -y
 
 
+
+#MULTIMEDIA  *****************************************#
+sudo timedatectl set-local-rtc 1
+flatpak install flathub org.videolan.VLC -y
+flatpak install flathub app.ytmdesktop.ytmdesktop -y
+flatpak install flathub tv.kodi.Kodi -y
+flatpak install flathub com.notepadqq.Notepadqq -y
+
 #*****************************************************#
 
 
@@ -90,5 +90,10 @@ echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.co
 sudo topgrade
 
 sudo dnf clean dbcache
+firefox Files/extensions.html
+sudo dnf clean dbcache
 sudo bleachbit
 reboot
+
+
+
