@@ -23,5 +23,10 @@ sudo apt update
 sudo apt purge libreoffice* -y
 sudo apt autoremove -y
 sudo apt clean
-reboot
-
+clear
+cd /usr/share/locales/
+sudo ./install-language-pack es_ES
+echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/environment
+echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/default/locale
+echo -e "es_ES.UTF-8 UTF-8\nen_US.UTF-8 UTF-8" | sudo tee /var/lib/locales/supported.d/local
+sudo dpkg-reconfigure locales
