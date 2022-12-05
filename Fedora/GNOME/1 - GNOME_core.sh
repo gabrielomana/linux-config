@@ -12,6 +12,7 @@ sudo dnf -y install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-non
 sudo dnf clean all
 sudo dnf makecache --refresh
 sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 echo "*************************************************************************************"
 sleep 7
 
@@ -19,6 +20,7 @@ sleep 7
 clear
 echo "UNINSTALL"
 sudo dnf -y remove gnome-photos gnome-boxes gnome-text-editor evince simple-scan totem gnome-weather gnome-maps gnome-contacts eog baobab libreoffice* rhythmbox 
+sudo dnf -y remove awesome i3 openbox ratpoison
 sudo dnf -y autoremove
 echo "*************************************************************************************"
 sleep 7
@@ -36,7 +38,7 @@ flameshot \
 tilix \
 https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher-2.2.0-travis995.0f91801.x86_64.rpm
 
-gsettings set org.gnome.desktop.default-applications.terminal exec 'tilix'
+sudo gsettings set org.gnome.desktop.default-applications.terminal exec 'tilix'
 
 #SYSTEM
 clear
@@ -63,7 +65,6 @@ sudo dbf -y install lame\* --exclude=lame-devel
 sudo dnf -y groupupdate sound-and-video
 sudo dnf -y groupupdate core
 sudo dnf -y install rpmfusion-free-appstream-data rpmfusion-nonfree-appstream-data 
-sudo cargo install cargo-update
 echo "*************************************************************************************"
 sleep 7
 
@@ -98,7 +99,7 @@ sleep 7
 ###### EXTRAS GNOME
 clear
 echo "EXTRAS GNOME"
-sudo dnf -y  install chrome-gnome-shell gnome-tweaks gnome-extensions-app gnome-software chrome-gnome-shell 
+sudo dnf -y  install chrome-gnome-shell gnome-tweaks-tool gnome-extensions-app gnome-software chrome-gnome-shell 
 #sudo dnf -y  install lightdm-gtk
 #systemctl disable gdm.service
 #systemctl enable lightdm

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # ZSH & POWERLEVEL
 sudo dnf -y install zsh -y
 sudo chsh -s $(which zsh)

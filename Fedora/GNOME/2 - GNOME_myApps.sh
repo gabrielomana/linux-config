@@ -10,8 +10,6 @@ sudo dnf -y copr enable refi64/webapp-manager
 sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/
 sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
 
-sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-
 curl -1sLf \
    'https://dl.cloudsmith.io/public/balena/etcher/setup.rpm.sh' \
    | sudo -E bash
@@ -82,6 +80,7 @@ flatpak install flathub com.notepadqq.Notepadqq -y
 
 
 # UPDATE & UPGRADE
+sudo cargo install cargo-update
 sudo dnf -y install topgrade
 sudo cp -r Files/topgrade.toml ~/.config/topgrade.toml
 sudo cp -r Files/topgrade.toml /root/.config/topgrade.toml
