@@ -72,6 +72,9 @@ sudo add-apt-repository multiverse -y
 sudo add-apt-repository ppa:mozillateam/ppa -y
 sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
 sudo add-apt-repository ppa:appimagelauncher-team/stable -y
+sudo add-apt-repository ppa:ubuntucinnamonremix/all -y
+sudo apt-add-repository -y ppa:teejee2008/ppa -y
+
 
 sudo apt install -t 'o=LP-PPA-mozillateam' firefox -y
 echo -e "Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501" | sudo tee /etc/apt/preferences.d/mozillateamppa.pref
