@@ -45,9 +45,9 @@ sudo add-apt-repository ppa:mozillateam/ppa -y
 
 #GNOME
 #Ubunutu Minimal
-sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo  -y
+#sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo  -y
 #GNOME Vanilla Minimal
-#sudo apt install vanilla-gnome-desktop
+sudo apt install vanilla-gnome-desktop language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo  -y
 
 sudo apt install gedit evince file-roller -y
 #sudo apt-get -y install language-pack-es-base
@@ -66,6 +66,7 @@ sudo apt update -y
 sudo apt install -y \
 build-essential software-properties-gtk gcc make perl g++ \
 wget curl git gdebi \
+dconf dconf-editor cabextract xorg-x11-font-utils fontconfig cmake anacron \
 software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
 default-jre nodejs cargo \
 ubuntu-drivers-common \
