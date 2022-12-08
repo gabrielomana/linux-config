@@ -42,7 +42,7 @@ echo "GNOME"
 #Ubunutu Minimal
 #sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo  -y
 #GNOME Vanilla Minimal
-sudo apt install -y vanilla-gnome-desktop gnome-terminal gedit
+sudo apt install -y vanilla-gnome-desktop gnome-session gnome-terminal gedit
 # sudo apt install -y gedit evince file-roller
 
 clear
