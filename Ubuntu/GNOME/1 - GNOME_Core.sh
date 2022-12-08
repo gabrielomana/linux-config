@@ -40,8 +40,8 @@ clear
 #Ubunutu Minimal
 #sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo  -y
 #GNOME Vanilla Minimal
-sudo apt install vanilla-gnome-desktop gnome-session gnome-terminal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo lightdm -y
-sudo apt install gedit evince file-roller -y
+sudo apt install -y vanilla-gnome-desktop gnome-terminal
+# sudo apt install -y gedit evince file-roller
 
 clear
 sudo apt purge libreoffice* gnome-maps gnome-weather gnome-contacts gnome-music gnome-photos eog gpac totem* -y
