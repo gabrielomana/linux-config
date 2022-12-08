@@ -48,12 +48,12 @@ sudo apt install -y vanilla-gnome-desktop gnome-terminal gedit
 clear
 # CLEAN GNOME
 echo "CLEAN GNOME"
-sudo apt purge libreoffice* gnome-maps gnome-weather gnome-contacts gnome-music gnome-photos eog gpac totem* -y
-sudo apt remove postfix -y && apt purge postfix -y
-sudo apt autoremove -y
-sudo dpkg-reconfigure postfix
+# sudo apt purge libreoffice* gnome-maps gnome-weather gnome-contacts gnome-music gnome-photos eog gpac totem* -y
+# sudo apt remove postfix -y && apt purge postfix -y
+# sudo apt autoremove -y
+# sudo dpkg-reconfigure postfix
 
-sudo apt-get autoremove -y
+# sudo apt-get autoremove -y
 
 #sudo apt-get -y install language-pack-es-base
 #sudo dpkg-reconfigure locales
