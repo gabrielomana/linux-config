@@ -26,7 +26,7 @@ sudo dpkg-reconfigure locales
 # # sudo apt update -y
 
 # # #limpiar y arreglar paquetes rotos
-# # sudo apt-get update –fix-missing
+# # sudo apt-get update –-fix-missing
 # # sudo apt-get install -f
 # # sudo apt-get clean -y
 # # sudo apt-get autoremove -y
@@ -42,7 +42,7 @@ sudo dpkg-reconfigure locales
 # #Ubunutu Minimal
 # #sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo  -y
 # #GNOME Vanilla Minimal
-# sudo apt install -y vanilla-gnome-desktop gnome-session gnome-terminal gedit
+#sudo apt install -y gnome-session gnome-session-wayland gnome-terminal gedit gdm3
 # # sudo apt install -y gedit evince file-roller
 
 # clear
