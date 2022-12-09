@@ -1,6 +1,5 @@
 !/bin/bash
-clea
-r
+clear
 # REPOSITORIES
 echo "REPOSITORIES"
 
