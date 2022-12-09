@@ -18,4 +18,4 @@ sudo chmod 777 linux-cnfig/Ubuntu/Gnome/*sh
 sudo chmod 777 linux-cnfig/Ubuntu/KDE_PLASMA/*sh
 dos2unix linux-cnfig/Ubuntu/Gnome/*sh
 dos2unix linux-cnfig/Ubuntu/KDE_PLASMA/*sh
-reboot 
+
