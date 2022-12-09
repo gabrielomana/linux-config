@@ -2,7 +2,7 @@ clear
 # REMOVE SNAP/ADD FLATPACK
 echo "REMOVE SNAP/ADD FLATPACK"
 #remove snap service (existing sanp applications must be uninstalled first)
-sudo apt autoremove --purge snapd -y
+sudo apt autoremove --purge snapd gnome-software-plugin-snap -y
 sudo rm -rf ~/snap
 sudo rm -rf /var/cache/snapd
 sudo apt purge snapd

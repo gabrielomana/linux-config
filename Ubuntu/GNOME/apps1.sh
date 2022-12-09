@@ -22,11 +22,3 @@ echo -e "deb https://ppa.launchpadcontent.net/webupd8team/y-ppa-manager/ubuntu/ 
 sudo wget --no-check-certificate -qO - https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=index&search=0x7B2C3B0889BF5709A105D03AC2518248EEA14886 | gpg --dearmor | sudo tee /usr/share/keyrings/webupd8team.gpg
 
 sudo apt -y update && sudo apt -y upgrade
-
-clear
-#FIREFOX
-echo "FIREFOX"
-
-sudo apt install -t 'o=LP-PPA-mozillateam' firefox -y
-echo -e "Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501" | sudo tee /etc/apt/preferences.d/mozillateamppa.pref
-
