@@ -14,8 +14,16 @@ echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sud
 echo -e "es_ES.UTF-8 UTF-8\nen_US.UTF-8 UTF-8" | sudo tee /var/lib/locales/supported.d/local
 sudo dpkg-reconfigure locales
 sudo apt install -y dos2unix
-sudo chmod 777 linux-cnfig/Ubuntu/Gnome/*.sh
-sudo chmod 777 linux-cnfig/Ubuntu/KDE_PLASMA/*.sh
-dos2unix linux-cnfig/Ubuntu/Gnome/*.sh
-dos2unix linux-cnfig/Ubuntu/KDE_PLASMA/*.sh
+sudo chmod 777 ~/linux-config/Ubuntu/GNOME/*.sh
+sudo chmod 777 ~/linux-config/Ubuntu/KDE_PLASMA/*.sh
+dos2unix ~/linux-config/Ubuntu/GNOME/*.sh
+dos2unix ~/linux-config/Ubuntu/KDE_PLASMA/*.sh
+
+#SUDO
+me="$(whoami)"
+clear
+echo -e "RUN THIS COMMAND: usermod -aG sudo "$me"\n"
+sudo su
+
+
 
