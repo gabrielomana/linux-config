@@ -5,11 +5,11 @@ echo "LANGUAGE"
 sudo apt clean
 sudo apt-get -y install language-pack-es
 sudo apt-get -y install language-pack-es-base
-cd /usr/share/locales/
-sudo ./install-language-pack es_ES
-echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/environment
-echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/default/locale
-echo -e "es_ES.UTF-8 UTF-8\nen_US.UTF-8 UTF-8" | sudo tee /var/lib/locales/supported.d/local
+# cd /usr/share/locales/
+# sudo ./install-language-pack es_ES
+# echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/environment
+# echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/default/locale
+# echo -e "es_ES.UTF-8 UTF-8\nen_US.UTF-8 UTF-8" | sudo tee /var/lib/locales/supported.d/local
 sudo dpkg-reconfigure locales
 
 
@@ -41,8 +41,11 @@ sudo dpkg-reconfigure locales
 # echo "GNOME"
 # #Ubunutu Minimal
 # #sudo apt install ubuntu-desktop-minimal language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo  -y
+
 # #GNOME Vanilla Minimal
-#sudo apt install -y gnome-session gnome-session-wayland gnome-terminal gedit gdm3
+
+#sudo apt install -y gnome-session gnome-session-wayland gnome-terminal gedit lightdm
+
 # # sudo apt install -y gedit evince file-roller
 
 # clear
@@ -59,7 +62,9 @@ sudo dpkg-reconfigure locales
 # #sudo dpkg-reconfigure locales
 
 # sudo systemctl set-default graphical.target
-# # sudo systemctl enable gdm3
+#sudo systemctl enable gdm3
+#sudo systemctl enable lightdm
+
 
 # clear
 # # REPOSITORIES
