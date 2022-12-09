@@ -1,16 +1,16 @@
 !/bin/bash
-clear
-# LANGUAGE
-echo "LANGUAGE"
-sudo apt clean
-sudo apt-get -y install language-pack-es
-sudo apt-get -y install language-pack-es-base
-# cd /usr/share/locales/
-# sudo ./install-language-pack es_ES
-# echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/environment
-# echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/default/locale
-# echo -e "es_ES.UTF-8 UTF-8\nen_US.UTF-8 UTF-8" | sudo tee /var/lib/locales/supported.d/local
-sudo dpkg-reconfigure locales
+# clear
+# # LANGUAGE
+# echo "LANGUAGE"
+# sudo apt clean
+# sudo apt-get -y install language-pack-es
+# sudo apt-get -y install language-pack-es-base
+# # cd /usr/share/locales/
+# # sudo ./install-language-pack es_ES
+# # echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/environment
+# # echo -e "LANG=\"es_ES.UTF-8\"\nLC_ALL=\"es_ES.UTF-8\"\nLANGUAGE=\"es_ES\"" | sudo tee /etc/default/locale
+# # echo -e "es_ES.UTF-8 UTF-8\nen_US.UTF-8 UTF-8" | sudo tee /var/lib/locales/supported.d/local
+# sudo dpkg-reconfigure locales
 
 
 # # clear
@@ -44,7 +44,7 @@ sudo dpkg-reconfigure locales
 
 # #GNOME Vanilla Minimal
 
-#sudo apt install -y gnome-session gnome-session-wayland gnome-terminal gedit lightdm
+#sudo apt install -y gnome-session xinit gnome-terminal gedit lightdm
 
 # # sudo apt install -y gedit evince file-roller
 
@@ -190,9 +190,4 @@ sudo dpkg-reconfigure locales
 # # sudo apt-get autoremove -y
 # # sudo dpkg --configure -a
 
-# #FULL UPDATE
-clear
-echo -e "FULL UPDATE\n"
-sudo apt clean -y
-sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
-reboot
+
