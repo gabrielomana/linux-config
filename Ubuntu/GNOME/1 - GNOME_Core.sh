@@ -44,7 +44,7 @@
 
 # #GNOME Vanilla Minimal
 
-sudo apt install -y vanilla-gnome-desktop gnome-session xinit gnome-terminal gedit lightdm
+sudo apt install -y vanilla-gnome-desktop gnome-session xinit gnome-terminal gedit lightdm language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
 
 # # sudo apt install -y gedit evince file-roller
 
