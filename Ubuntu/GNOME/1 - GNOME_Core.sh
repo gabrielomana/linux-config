@@ -44,7 +44,7 @@
 
 # #GNOME Vanilla Minimal
 
-#sudo apt install -y gnome-session xinit gnome-terminal gedit lightdm
+sudo apt install -y vanilla-gnome-desktop gnome-session xinit gnome-terminal gedit lightdm
 
 # # sudo apt install -y gedit evince file-roller
 
@@ -61,7 +61,7 @@
 # #sudo apt-get -y install language-pack-es-base
 # #sudo dpkg-reconfigure locales
 
-# sudo systemctl set-default graphical.target
+sudo systemctl set-default graphical.target
 #sudo systemctl enable gdm3
 #sudo systemctl enable lightdm
 
