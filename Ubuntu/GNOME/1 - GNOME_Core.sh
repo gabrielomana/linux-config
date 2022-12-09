@@ -4,11 +4,12 @@ clear
 #GNOME Vanilla Minimal
 echo "GNOME Vanilla Minimal"
 sudo apt install -y vanilla-gnome-desktop gnome-session xinit gnome-terminal gedit lightdm language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
+sudo apt install -y build-essential software-properties-gtk gcc make perl g++ npm file-roller
 
 # clear
 # CLEAN GNOME
 echo "CLEAN GNOME"
-sudo apt purge libreoffice* gnome-maps gnome-weather gnome-contacts gnome-music gnome-photos eog gpac totem* -y
+sudo apt purge libreoffice* gnome-maps gnome-weather gnome-contacts gnome-music gnome-photos eog gpac totem* simple-scan -y
 sudo apt remove postfix -y && apt purge postfix -y
 sudo apt autoremove -y
 sudo apt-get update --fix-missing
@@ -18,39 +19,39 @@ sudo systemctl set-default graphical.target
 #sudo systemctl enable gdm3
 #sudo systemctl enable lightdm
 
-clear
-# REMOVE SNAP/ADD FLATPACK
-echo "REMOVE SNAP/ADD FLATPACK"
-#remove snap service (existing sanp applications must be uninstalled first)
-sudo apt autoremove --purge snapd -y
-sudo rm -rf ~/snap
-sudo rm -rf /var/cache/snapd
-sudo apt purge snapd
-sudo apt-mark hold snapd
-echo -e "Package: snapd\nPin: release a=*\nPin-Priority: -10" | sudo tee /etc/apt/preferences.d/nosnap.pref
-sudo apt update -y
+# clear
+# # REMOVE SNAP/ADD FLATPACK
+# echo "REMOVE SNAP/ADD FLATPACK"
+# #remove snap service (existing sanp applications must be uninstalled first)
+# sudo apt autoremove --purge snapd -y
+# sudo rm -rf ~/snap
+# sudo rm -rf /var/cache/snapd
+# sudo apt purge snapd
+# sudo apt-mark hold snapd
+# echo -e "Package: snapd\nPin: release a=*\nPin-Priority: -10" | sudo tee /etc/apt/preferences.d/nosnap.pref
+# sudo apt update -y
 
-#limpiar y arreglar paquetes rotos
-sudo apt-get update –-fix-missing
-sudo apt-get install -f
-sudo apt-get clean -y
-sudo apt-get autoremove -y
-sudo dpkg --configure -a
+# #limpiar y arreglar paquetes rotos
+# sudo apt-get update –-fix-missing
+# sudo apt-get install -f
+# sudo apt-get clean -y
+# sudo apt-get autoremove -y
+# sudo dpkg --configure -a
 
-#install flatpak service
-sudo apt install flatpak -y
-sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+# #install flatpak service
+# sudo apt install flatpak -y
+# sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 
-clear
-# REPOSITORIES
-echo "REPOSITORIES"
+# clear
+# # REPOSITORIES
+# echo "REPOSITORIES"
 
-####Vanilla
-sudo add-apt-repository ppa:kisak/kisak-mesa -y
-sudo add-apt-repository multiverse -y
-sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
-sudo add-apt-repository ppa:mozillateam/ppa -y
+# ####Vanilla
+# sudo add-apt-repository ppa:kisak/kisak-mesa -y
+# sudo add-apt-repository multiverse -y
+# sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
+# sudo add-apt-repository ppa:mozillateam/ppa -y
 
 # # sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
 # # sudo add-apt-repository ppa:graphics-drivers/ppa -y
@@ -81,30 +82,30 @@ sudo add-apt-repository ppa:mozillateam/ppa -y
 # sudo apt-get update –fix-missing
 # sudo apt-get install -f
 
-sudo apt update -y
-clear
+# sudo apt update -y
+# clear
 # FIREFOX
-echo "FIREFOX"
+# echo "FIREFOX"
 
-sudo apt install -t 'o=LP-PPA-mozillateam' firefox -y
-echo -e "Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501" | sudo tee /etc/apt/preferences.d/mozillateamppa.pref
+# sudo apt install -t 'o=LP-PPA-mozillateam' firefox -y
+# echo -e "Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501" | sudo tee /etc/apt/preferences.d/mozillateamppa.pref
 
 
-echo -e "CORE\n"
-sudo apt install -y \
-build-essential software-properties-gtk gcc make perl g++ npm \
-wget curl git gdebi \
-dconf dconf-editor cabextract xorg-x11-font-utils fontconfig cmake anacron \
-software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
-default-jre nodejs cargo \
-ubuntu-drivers-common \
-ubuntu-restricted-extras \
-gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder mplayer \
-cabextract \
-samba \
-screen bleachbit y-ppa-manager\
-util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
-unrar p7zip unzip file-roller \
+# echo -e "CORE\n"
+# sudo apt install -y \
+# build-essential software-properties-gtk gcc make perl g++ npm \
+# wget curl git gdebi \
+# dconf dconf-editor cabextract xorg-x11-font-utils fontconfig cmake anacron \
+# software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
+# default-jre nodejs cargo \
+# ubuntu-drivers-common \
+# ubuntu-restricted-extras \
+# gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder mplayer \
+# cabextract \
+# samba \
+# screen bleachbit y-ppa-manager\
+# util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
+# unrar p7zip unzip file-roller \
 
 # # #SYSTEM
 # # clear
@@ -136,12 +137,12 @@ unrar p7zip unzip file-roller \
 # # sudo gsettings set org.gnome.desktop.default-applications.terminal exec 'tilix'
 
 #MULTIMEDIA
-clear
-echo -e "MULTIMEDIA\n"
-sudo apt install -y \
-smplayer \
-audacity \
-shotwell
+# clear
+# echo -e "MULTIMEDIA\n"
+# sudo apt install -y \
+# smplayer \
+# audacity \
+# shotwell
 
 # # #OFIMATICA  ******************************************#
 # # clear
@@ -166,5 +167,11 @@ shotwell
 # # sudo apt-get clean -y
 # # sudo apt-get autoremove -y
 # # sudo dpkg --configure -a
+
+clear
+echo -e "FULL UPDATE\n"
+sudo apt clean -y
+sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
+sudo reboot
 
 
