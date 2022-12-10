@@ -11,7 +11,11 @@ sudo snap remove --purge core20
 sudo snap remove --purge gnome-3-38-2004
 sudo snap remove --purge gtk-common-themes
 sudo snap remove --purge lxd
-sudo apt remove --autoremove snapd
+sudo snap remove --purge snapd
+sudo apt --purge autoremove snapd
+sudo apt --purge autoremove cloud-init
+sudo rm -rf /etc/cloud/
+sudo rm -rf /var/lib/cloud/
 sudo rm -rf /var/cache/snapd/
 rm -rf ~/snap
 sudo apt-mark hold snapd
@@ -27,6 +31,10 @@ sudo apt-get install -f
 #install flatpak service
 sudo apt install flatpak -y
 sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+
+
+
 
 
 
