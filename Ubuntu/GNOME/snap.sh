@@ -15,9 +15,11 @@ sudo apt remove --autoremove snapd
 sudo rm -rf /var/cache/snapd/
 rm -rf ~/snap
 sudo apt-mark hold snapd
-echo -e "Package: snapd\nPin: release a=*\nPin-Priority: -10" | sudo tee /etc/apt/preferences.d/nosnap.pref
 sudo apt-get autoremove --purge -y
-sudo apt install --install-suggests gnome-software
+echo -e "Package: snapd\nPin: release a=*\nPin-Priority: -10" | sudo tee /etc/apt/preferences.d/nosnap.pref
+sudo apt update -y
+
+sudo apt install --reinstall --install-suggests gnome-software
 sudo apt-get update --fix-missing
 sudo apt-get install -f
 
