@@ -128,7 +128,7 @@ sudo apt-get install -f
 sudo apt-get clean -y
 sudo apt-get autoremove -y
 sudo dpkg --configure -a
-sudo rm *classic /usr/share/xsessions/ -rf
+sudo rm /usr/share/xsessions/*classic* -rf
 
 clear
 echo -e "FULL UPDATE\n"
