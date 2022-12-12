@@ -45,6 +45,9 @@ sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/keys.gpg
 clear
 sudo apt update -y
 
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+sudo apt install -y gnome-software-plugin-flatpak
+
 
 echo -e "CORE\n"
 sudo apt install -y \
