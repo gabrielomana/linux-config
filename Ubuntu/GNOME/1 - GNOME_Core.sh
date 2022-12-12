@@ -1,9 +1,9 @@
 #!/bin/bash
 clear
-sudo apt -y purge --autoremove mint-meta-xfce thunar thunar* xfce4* xfconf xfdesktop4 xfwm4 mugshot
+sudo apt purge --autoremove mint-meta-xfce thunar thunar* xfce4* xfconf xfdesktop4 xfwm4 mugshot -y
 clear
-sudo apt -y purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
-compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs
+sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
+compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs -y
 clear
 sudo apt-get update --fix-missing
 sudo apt-get install -f
