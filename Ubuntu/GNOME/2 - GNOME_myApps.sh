@@ -1,5 +1,5 @@
 #!/bin/bash
-
+firefox Files/extensions.html 
 #REPOSITORIES  *******************************************#
 sudo apt install -y apt-transport-https curl
 sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
