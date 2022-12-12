@@ -11,7 +11,7 @@ sudo apt-get install -f
 #GNOME Vanilla Minimal
 echo "GNOME Vanilla Minimal"
 sudo apt install -y vanilla-gnome-desktop gnome-session xinit gnome-terminal gedit lightdm language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
-sudo apt install -y build-essential software-properties-gtk gcc make perl g++ npm file-roller
+sudo apt install -y build-essential software-properties-gtk gcc make perl sed git nano g++ npm file-roller
 
 # clear
 # CLEAN GNOME
@@ -23,8 +23,23 @@ sudo apt-get update --fix-missing
 sudo apt-get install -f
 sudo systemctl set-default graphical.target
 
-#sudo systemctl enable gdm3
-#sudo systemctl enable lightdm
+clear
+# REPOSITORIES
+echo "REPOSITORIES"
+
+####Vanilla
+#sudo add-apt-repository ppa:kisak/kisak-mesa -y
+sudo add-apt-repository multiverse -y
+sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
+sudo add-apt-repository ppa:mozillateam/ppa -y
+
+sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
+sudo add-apt-repository ppa:graphics-drivers/ppa -y
+sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
+sudo add-apt-repository ppa:appimagelauncher-team/stable -y
+#sudo add-apt-repository ppa:ubuntucinnamonremix/all -y
+
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 
 # clear
 # # REMOVE SNAP/ADD FLATPACK
@@ -110,7 +125,7 @@ sudo systemctl set-default graphical.target
 # gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder mplayer \
 # cabextract \
 # samba \
-# screen bleachbit y-ppa-manager\
+# screen bleachbit \
 # util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
 # unrar p7zip unzip file-roller \
 
@@ -139,7 +154,6 @@ sudo systemctl set-default graphical.target
 # # flameshot \
 # # tilix \
 # # appimagelauncher \
-# # webapp-manager
 
 # # sudo gsettings set org.gnome.desktop.default-applications.terminal exec 'tilix'
 
@@ -179,6 +193,6 @@ clear
 echo -e "FULL UPDATE\n"
 sudo apt clean -y
 sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
-sudo reboot
+#sudo reboot
 
 
