@@ -10,7 +10,7 @@ sudo apt-get install -f
 
 #GNOME Vanilla Minimal
 echo "GNOME Vanilla Minimal"
-sudo apt install -y vanilla-gnome-desktop gnome-session xinit gnome-terminal gedit lightdm language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
+sudo apt install -y vanilla-gnome-desktop gnome-terminal gedit language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
 sudo apt install -y build-essential software-properties-gtk gcc make perl sed git nano g++ npm file-roller
 
 # clear
@@ -77,7 +77,7 @@ v4l2loopback-utils \
 neofetch \
 printer-driver-cups-pdf \
 grub-customizer \
-tesseract-ocr-spa gImageReader* \
+tesseract-ocr-spa gimagereader \
 policycoreutils-gui firewall-config
 
 sudo npm install -g hblock
@@ -129,6 +129,21 @@ sudo apt-get clean -y
 sudo apt-get autoremove -y
 sudo dpkg --configure -a
 sudo rm /usr/share/xsessions/*classic* -rf
+
+#ZSH
+clear
+echo -e "ZSH"
+sudo apt -y install zsh -y
+sudo chsh -s $(which zsh)
+sudo chsh -s /usr/bin/zsh $USER
+chsh -s $(which zsh)
+chsh -s /usr/bin/zsh $USER
+sudo mkdir ~/.fonts
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf -P /usr/share/fonts/
+fc-cache -f -v
 
 clear
 echo -e "FULL UPDATE\n"

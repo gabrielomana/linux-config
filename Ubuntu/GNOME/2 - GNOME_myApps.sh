@@ -55,7 +55,7 @@ flatpak install flathub com.github.bajoja.indicator-kdeconnect -y
 #HERRAMIENTAS  ***************************************#
 
 sudo apt install -y \
-qemu qemu-kvm libvirt libvirt-devel virt-top libguestfs-tools guestfs-tools bridge-utils virt-manager
+qemu qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virtinst virt-manager virt-viewer virt-top libguestfs-tools guestfs-tools virt-manager
 sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
 
