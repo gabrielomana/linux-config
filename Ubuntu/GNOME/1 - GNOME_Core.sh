@@ -103,7 +103,7 @@ echo -e "MULTIMEDIA\n"
 sudo apt install -y \
 smplayer \
 audacity \
-shotwell
+shotwell eog
 
 # # #OFIMATICA  ******************************************#
 # # clear
