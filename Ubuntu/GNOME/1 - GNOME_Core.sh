@@ -10,7 +10,7 @@ sudo apt-get install -f
 
 #GNOME Vanilla Minimal
 echo "GNOME Vanilla Minimal"
-sudo apt install -y vanilla-gnome-desktop gnome-terminal gedit language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
+sudo apt install -y vanilla-gnome-desktop gedit language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
 sudo apt install -y build-essential software-properties-gtk gcc make perl sed git nano g++ npm file-roller
 
 # clear
