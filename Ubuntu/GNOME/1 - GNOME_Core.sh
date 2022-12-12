@@ -1,6 +1,13 @@
-!/bin/bash
+#!/bin/bash
+clear
 sudo apt purge --autoremove mint-meta-xfce thunar thunar* xfce4* xfconf xfdesktop4 xfwm4 mugshot
 clear
+sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
+compiz gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs
+clear
+sudo apt-get update --fix-missing
+sudo apt-get install -f
+
 #GNOME Vanilla Minimal
 echo "GNOME Vanilla Minimal"
 sudo apt install -y vanilla-gnome-desktop gnome-session xinit gnome-terminal gedit lightdm language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
