@@ -1,5 +1,5 @@
 !/bin/bash
-
+sudo apt purge --autoremove mint-meta-xfce thunar thunar* xfce4* xfconf xfdesktop4 xfwm4 mugshot
 clear
 #GNOME Vanilla Minimal
 echo "GNOME Vanilla Minimal"
