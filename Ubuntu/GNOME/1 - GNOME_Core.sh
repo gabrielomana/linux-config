@@ -10,12 +10,14 @@ sudo apt-get clean
 sudo apt-get autoclean
 sudo apt-get update --fix-missing
 sudo apt-get install -f
-
+sudo rm /usr/share/xfce4/ -rf
+sudo rm /usr/share/thunar/ -rf
+clear
 
 #GNOME Vanilla Minimal
 echo "GNOME Vanilla Minimal"
 sudo apt install -y vanilla-gnome-desktop gedit language-pack-gnome-es language-pack-gnome-es-base gnome-user-docs gnome-user-docs-es plymouth-theme-ubuntu-logo
-sudo apt install -y build-essential software-properties-gtk gcc make perl sed git nano g++ npm file-roller
+sudo apt install -y build-essential software-properties-gtk gcc make perl sed git nano g++ npm file-roller lightdm-gtk-greeter*
 
 # clear
 # CLEAN GNOME
@@ -26,7 +28,7 @@ sudo apt autoremove -y
 sudo apt-get update --fix-missing
 sudo apt-get install -f
 sudo systemctl set-default graphical.target
-
+clear
 
 clear
 # REPOSITORIES
