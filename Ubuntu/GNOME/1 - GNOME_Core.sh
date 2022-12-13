@@ -1,12 +1,16 @@
 #!/bin/bash
 clear
-sudo apt purge --autoremove mint-meta-xfce thunar thunar* xfce4* xfconf xfdesktop4 xfwm4 mugshot -y
+sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfconf xfdesktop4 xfwm4 mugshot -y
 clear
 sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
 compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs -y
 clear
+sudo apt-get -f install
+sudo apt-get clean
+sudo apt-get autoclean
 sudo apt-get update --fix-missing
 sudo apt-get install -f
+
 
 #GNOME Vanilla Minimal
 echo "GNOME Vanilla Minimal"
@@ -28,7 +32,6 @@ clear
 # REPOSITORIES
 echo "REPOSITORIES"
 
-####Vanilla
 #sudo add-apt-repository ppa:kisak/kisak-mesa -y
 sudo add-apt-repository multiverse -y
 sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
@@ -59,7 +62,6 @@ default-jre nodejs cargo \
 ubuntu-drivers-common \
 ubuntu-restricted-extras \
 gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder mplayer \
-cabextract \
 samba \
 screen bleachbit \
 util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
@@ -105,10 +107,10 @@ smplayer \
 audacity \
 shotwell eog
 
-# # #OFIMATICA  ******************************************#
-# # clear
-# # echo -e "OFIMATICA\n"
-# # sudo apt install -y pdfarranger evince 
+#OFIMATICA  ******************************************#
+clear
+echo -e "OFIMATICA\n"
+sudo apt install -y pdfarranger evince 
 
 #NAUTILUS > NEMO
 clear
