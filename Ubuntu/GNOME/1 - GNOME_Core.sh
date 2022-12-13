@@ -50,6 +50,7 @@ sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/keys.gpg
 clear
 sudo apt update -y
 
+sudo apt install flatpak -y
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 sudo apt install -y gnome-software-plugin-flatpak
 
@@ -63,7 +64,7 @@ software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-h
 default-jre nodejs cargo \
 ubuntu-drivers-common \
 ubuntu-restricted-extras \
-gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder mplayer \
+gstreamer1.0-libav ffmpeg x264 x265 h264enc lame mencoder mplayer \
 samba \
 screen bleachbit \
 util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
