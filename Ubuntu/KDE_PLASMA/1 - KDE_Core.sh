@@ -4,7 +4,7 @@
 clear
 sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfconf xfdesktop4 xfwm4 mugshot -y
 clear
-sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick ark gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
+sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
 compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox -y
 clear
 sudo apt-get -f install
@@ -66,7 +66,8 @@ kio-extras \
 krdc \
 kaccounts-providers \
 kio-gdrive \
-plasma-nm plasma-pa plasma-widget* ffmpegthumbs
+plasma-nm plasma-pa plasma-widget* ffmpegthumbs \
+kde-plasma-desktop
 
 sudo apt purge kwrite -y
 
