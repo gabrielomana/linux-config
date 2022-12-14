@@ -170,7 +170,7 @@ sudo apt install -y \
 vlc \
 audacity \
 audacious \
-nomacs
+nomacs h264enc
 
 #OFIMATICA  ******************************************#
 clear
