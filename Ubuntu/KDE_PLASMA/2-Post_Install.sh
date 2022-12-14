@@ -22,6 +22,8 @@ curl -1sLf \
 sudo apt update
 clear
 mintsources
+clear
+sudo apt update
 
 # FONTS
 sudo apt install -y ttf-mscorefonts-installer fonts-dejavu fonts-freefont-ttf ttf-bitstream-vera fonts-freefont-otf fonts-lyx xfonts-100dpi xfonts-75dpi fonts-roboto-hinted fonts-roboto-unhinted | tee 2> install.log
@@ -81,5 +83,6 @@ echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.co
 sudo topgrade
 
 sudo bleachbit
+sudo apt update -y
 reboot
 

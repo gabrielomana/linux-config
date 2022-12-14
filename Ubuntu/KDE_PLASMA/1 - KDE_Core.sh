@@ -74,7 +74,6 @@ sudo apt purge kwrite -y
 ###### REPOSITORIES
 echo "REPOSITORIES"
 
-#sudo add-apt-repository ppa:kisak/kisak-mesa -y
 sudo add-apt-repository multiverse -y
 sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
 sudo add-apt-repository ppa:mozillateam/ppa -y
@@ -91,6 +90,16 @@ sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/keys.gpg
 sudo add-apt-repository ppa:kubuntu-ppa/backports -y
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/kubuntu.gpg
+
+sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
+sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/pipewire_wireplumber.gpg
+
+# sudo add-apt-repository ppa:kisak/kisak-mesa -y
+# sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+# sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/kisak-mesa.gpg
+
 
 clear
 sudo apt update -y
@@ -117,6 +126,15 @@ unrar p7zip unzip ark
 
 sudo apt remove postfix -y && apt purge postfix -y
 sudo apt autoremove -y
+
+sudo apt install -y libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0
+sudo apt install -y gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}}
+sudo apt install -y pipewire-doc
+sudo apt-get install -y wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev}
+systemctl --user --now disable pulseaudio.{socket,service}
+systemctl --user mask pulseaudio
+systemctl --user --now enable pipewire{,-pulse}.{socket,service}
+systemctl --user --now enable wireplumber.service
 
 
 #SYSTEM
@@ -178,4 +196,5 @@ clear
 echo -e "FULL UPDATE\n"
 sudo apt clean -y
 sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
+sudo aptitude safe-upgrade -y
 sudo reboot
