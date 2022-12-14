@@ -146,13 +146,13 @@ featherpad
 #MULTIMEDIA
 clear
 echo -e "MULTIMEDIA\n"
+sudo apt remove gpac -y
+
 sudo apt install -y \
 vlc \
 audacity \
 audacious \
 nomacs
-
-sudo apt remove gpac -y
 
 #OFIMATICA  ******************************************#
 clear
