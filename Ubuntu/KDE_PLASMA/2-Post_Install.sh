@@ -1,5 +1,5 @@
 #!/bin/bash
-
+mintsources
 # CODECS | FONTS
 sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
 sudo dnf install -y dejavu-fonts* google-roboto-fonts

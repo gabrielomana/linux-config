@@ -2,7 +2,7 @@
 
 #UNINSTALL XFCE
 clear
-sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfconf xfdesktop4 xfwm4 mugshot -y
+sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce4* xfconf xfdesktop4 xfwm4 mugshot -y
 clear
 sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
 compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox -y
@@ -88,7 +88,9 @@ sudo add-apt-repository ppa:appimagelauncher-team/stable -y
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/keys.gpg
 
-#sudo add-apt-repository ppa:kubuntu-ppa/backports -y
+sudo add-apt-repository ppa:kubuntu-ppa/backports -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/kubuntu.gpg
 
 clear
 sudo apt update -y
@@ -149,6 +151,8 @@ vlc \
 audacity \
 audacious \
 nomacs
+
+sudo apt remove gpac -y
 
 #OFIMATICA  ******************************************#
 clear
