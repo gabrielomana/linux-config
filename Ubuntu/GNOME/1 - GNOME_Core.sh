@@ -66,7 +66,7 @@ sudo apt install -y gnome-software-plugin-flatpak
 
 echo -e "CORE\n"
 sudo apt install -y \
-build-essential software-properties-gtk gcc make perl g++ npm \
+build-essential gcc make perl g++ npm \
 wget curl git gdebi \
 dconf* cabextract fontconfig cmake anacron \
 software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
