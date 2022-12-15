@@ -28,9 +28,26 @@ clear
 echo "UNINSTALL"
 sudo apt purge --autoremove libreoffice* -y
 
-sudo apt purge --autoremove gwenview akregator kmail konversation krfb kmahjongg kmines dragonplayer elisa korganizer kontact kpat gimp k3b apper kmouth konqueror muon kontrast -y
-
 sudo apt purge --autoremove \
+gwenview \
+akregator \
+kmail \
+konversation \
+krfb \
+kmahjongg \
+kmines \
+dragonplayer \
+elisa \
+korganizer \
+kontact \
+kpat \
+gimp \
+k3b \
+apper \
+kmouth \
+konqueror \
+muon \
+kontrast \
 libreoffice-base-core \
 libreoffice-common \
 libreoffice-core \
@@ -66,6 +83,7 @@ kio-extras \
 krdc \
 kaccounts-providers \
 kio-gdrive \
+kbackup \
 plasma-nm plasma-pa plasma-widget* ffmpegthumbs \
 kde-plasma-desktop
 
@@ -75,13 +93,18 @@ sudo apt purge kwrite -y
 echo "REPOSITORIES"
 
 sudo add-apt-repository multiverse -y
-sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
-sudo add-apt-repository ppa:mozillateam/ppa -y
 
-sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
 sudo add-apt-repository ppa:graphics-drivers/ppa -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/nvidia.gpg
+
 sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/grub-customizer.gpg
+
 sudo add-apt-repository ppa:appimagelauncher-team/stable -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/appimagelauncher.gpg
 
 
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -92,9 +115,12 @@ sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; 
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/kubuntu.gpg
 
 sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
+
 sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/pipewire_wireplumber.gpg
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
 
 # sudo add-apt-repository ppa:kisak/kisak-mesa -y
 # sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -154,7 +180,6 @@ hblock
 clear
 echo -e "TOOLS\n"
 sudo apt install -y \
-unrar p7zip unzip \
 digikam \
 timeshift \
 ksnip \

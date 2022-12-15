@@ -84,6 +84,7 @@ sudo topgrade
 
 sudo bleachbit
 sudo apt update -y
+mintsources
 
 #ZSH
 clear
