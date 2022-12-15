@@ -66,6 +66,7 @@ echo "**************************************************************************
 #EXTRA APPS KDE
 clear
 echo -e "APPS KDE\n"
+sudo apt install -y kde-plasma-desktop
 sudo apt install -y \
 kcalc \
 kate \
@@ -84,8 +85,7 @@ krdc \
 kaccounts-providers \
 kio-gdrive \
 kbackup \
-plasma-nm plasma-pa plasma-widget* ffmpegthumbs \
-kde-plasma-desktop
+plasma-nm plasma-pa plasma-widget* ffmpegthumbs
 
 sudo apt purge kwrite -y
 

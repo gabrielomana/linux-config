@@ -89,7 +89,7 @@ mintsources
 #ZSH
 clear
 echo -e "ZSH"
-sudo apt -y install zsh -y
+sudo apt -y install zsh
 sudo chsh -s $(which zsh)
 sudo chsh -s /usr/bin/zsh $USER
 chsh -s $(which zsh)
