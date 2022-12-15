@@ -118,7 +118,7 @@ software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-h
 default-jre nodejs cargo \
 ubuntu-drivers-common \
 ubuntu-restricted-extras \
-gstreamer1.0-libav ffmpeg x264 x265 h264enc mencoder lame mplayer \
+gstreamer1.0-libav ffmpeg x264 x265 mencoder lame mplayer \
 samba \
 screen bleachbit \
 util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
@@ -170,27 +170,12 @@ sudo apt install -y \
 vlc \
 audacity \
 audacious \
-nomacs h264enc
+nomacs 
 
 #OFIMATICA  ******************************************#
 clear
 echo -e "OFIMATICA\n"
 sudo apt install -y pdfarranger okular 
-
-#ZSH
-clear
-echo -e "ZSH"
-sudo apt -y install zsh -y
-sudo chsh -s $(which zsh)
-sudo chsh -s /usr/bin/zsh $USER
-chsh -s $(which zsh)
-chsh -s /usr/bin/zsh $USER
-sudo mkdir ~/.fonts
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf -P /usr/share/fonts/
-fc-cache -f -v
 
 clear
 echo -e "FULL UPDATE\n"
