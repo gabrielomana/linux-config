@@ -18,6 +18,11 @@ curl -1sLf \
    'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
    | sudo -E bash
 
+
+sudo apt update
+clear
+mintsources
+clear
 sudo apt update
 
 # FONTS
@@ -75,9 +80,29 @@ flatpak install flathub com.usebottles.bottles -y
 sudo cargo install topgrade
 sudo cp -r Files/topgrade.toml ~/.config/topgrade.toml
 sudo cp -r Files/topgrade.toml /root/.config/topgrade.toml
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.config/zsh_config/zsh_path
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.config/zsh_config/zsh_path
-sudo topgrade
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.zshrc
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.zshrc
+sudo apt clean -y
+sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
+sudo aptitude safe-upgrade -y
 
 sudo bleachbit
+sudo apt update -y
+mintsources
+
+#ZSH
+clear
+echo -e "ZSH"
+sudo apt -y install zsh
+sudo chsh -s $(which zsh)
+sudo chsh -s /usr/bin/zsh $USER
+chsh -s $(which zsh)
+chsh -s /usr/bin/zsh $USER
+sudo mkdir ~/.fonts
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf -P /usr/share/fonts/
+fc-cache -f -v
+
 reboot

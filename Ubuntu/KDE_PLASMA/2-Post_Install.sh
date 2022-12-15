@@ -78,11 +78,13 @@ flatpak install flathub com.usebottles.bottles -y
 sudo cargo install topgrade
 sudo cp -r Files/topgrade.toml ~/.config/topgrade.toml
 sudo cp -r Files/topgrade.toml /root/.config/topgrade.toml
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.config/zsh_config/zsh_path
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.config/zsh_config/zsh_path
-sudo topgrade
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.zshrc
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.zshrc
 
-sudo bleachbit
+sudo apt clean -y
+sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
+sudo aptitude safe-upgrade -y
+
 sudo apt update -y
 mintsources
 

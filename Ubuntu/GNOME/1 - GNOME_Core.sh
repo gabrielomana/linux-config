@@ -70,7 +70,7 @@ build-essential gcc make perl g++ npm \
 wget curl git gdebi \
 dconf* cabextract fontconfig cmake anacron \
 software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
-default-jre nodejs cargo \
+default-jre nodejs cargo libssl-dev pkg-config \
 ubuntu-drivers-common \
 ubuntu-restricted-extras \
 gstreamer1.0-libav ffmpeg x264 x265 lame mencoder mplayer \
@@ -152,21 +152,6 @@ sudo apt-get clean -y
 sudo apt-get autoremove -y
 sudo dpkg --configure -a
 sudo rm /usr/share/xsessions/*classic* -rf
-
-#ZSH
-clear
-echo -e "ZSH"
-sudo apt -y install zsh -y
-sudo chsh -s $(which zsh)
-sudo chsh -s /usr/bin/zsh $USER
-chsh -s $(which zsh)
-chsh -s /usr/bin/zsh $USER
-sudo mkdir ~/.fonts
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf -P /usr/share/fonts/
-fc-cache -f -v
 
 clear
 echo -e "FULL UPDATE\n"

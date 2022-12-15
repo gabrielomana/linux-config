@@ -141,7 +141,7 @@ build-essential gcc make perl g++ npm \
 wget curl git gdebi \
 dconf* cabextract fontconfig cmake anacron \
 software-properties-common ca-certificates gnupg2 ubuntu-keyring apt-transport-https \
-default-jre nodejs cargo \
+default-jre nodejs cargo libssl-dev pkg-config \
 ubuntu-drivers-common \
 ubuntu-restricted-extras \
 gstreamer1.0-libav ffmpeg x264 x265 mencoder lame mplayer \
