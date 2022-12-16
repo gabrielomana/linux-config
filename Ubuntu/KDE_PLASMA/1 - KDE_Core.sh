@@ -108,13 +108,13 @@ sudo add-apt-repository ppa:appimagelauncher-team/stable -y
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/appimagelauncher.gpg
 
-
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/keys.gpg
-
 sudo add-apt-repository ppa:kubuntu-ppa/backports -y
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/kubuntu.gpg
+
+sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ubuntustudio.gpg
 
 sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -208,4 +208,6 @@ echo -e "FULL UPDATE\n"
 sudo apt clean -y
 sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
 sudo aptitude safe-upgrade -y
+clear
+sudo apt install -y kde-plasma-desktop
 sudo reboot
