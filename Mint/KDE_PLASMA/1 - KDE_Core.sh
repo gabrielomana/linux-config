@@ -62,8 +62,6 @@ sudo apt-get -f install
 sudo apt-get clean
 sudo apt-get autoclean
 
-sudo apt install -y kde-plasma-desktop
-
 echo "*************************************************************************************"
 
 #EXTRA APPS KDE
@@ -210,4 +208,4 @@ sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
 sudo aptitude safe-upgrade -y
 clear
 sudo apt install -y kde-plasma-desktop
-sudo reboot
+
