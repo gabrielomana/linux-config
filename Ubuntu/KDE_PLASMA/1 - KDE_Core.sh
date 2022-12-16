@@ -2,10 +2,10 @@
 
 #UNINSTALL XFCE
 clear
-sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce4* xfconf xfdesktop4 xfwm4 mugshot -y
+sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce* xfconf xfdesktop4 xfwm4 mugshot -y
 clear
 sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
-compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox -y
+compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox sticky -y
 clear
 sudo apt-get -f install
 sudo apt-get clean
@@ -61,12 +61,13 @@ sudo apt-get -f install
 sudo apt-get clean
 sudo apt-get autoclean
 
+sudo apt install -y kde-plasma-desktop
+
 echo "*************************************************************************************"
 
 #EXTRA APPS KDE
 clear
 echo -e "APPS KDE\n"
-sudo apt install -y kde-plasma-desktop
 sudo apt install -y \
 kcalc \
 kate \
@@ -150,7 +151,6 @@ screen bleachbit \
 util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
 unrar p7zip unzip ark
 
-sudo apt remove postfix -y && apt purge postfix -y
 sudo apt autoremove -y
 
 sudo apt install -y libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0

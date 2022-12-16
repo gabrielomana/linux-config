@@ -35,9 +35,9 @@ brave-browser \
 filezilla
 
 flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-flatpak install flathub us.zoom.Zoom -y
-flatpak install flathub com.anydesk.Anydesk -y
-flatpak install flathub com.microsoft.Teams -y
+#flatpak install flathub us.zoom.Zoom -y
+#flatpak install flathub com.anydesk.Anydesk -y
+#flatpak install flathub com.microsoft.Teams -y
 
 
 #OFIMATICA  ******************************************#
@@ -52,7 +52,6 @@ sudo timedatectl set-local-rtc 1
 
 flatpak install flathub app.ytmdesktop.ytmdesktop -y
 flatpak install flathub tv.kodi.Kodi -y
-flatpak install flathub com.github.bajoja.indicator-kdeconnect -y
 
 
 #HERRAMIENTAS  ***************************************#
