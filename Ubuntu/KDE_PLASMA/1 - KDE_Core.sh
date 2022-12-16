@@ -1,5 +1,6 @@
 #!/bin/bash
-
+sudo apt update -y && sudo apt upgrade -y
+clear
 #UNINSTALL XFCE
 clear
 sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce* xfconf xfdesktop4 xfwm4 mugshot -y
