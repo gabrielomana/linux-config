@@ -20,7 +20,7 @@ clear
 echo "KDE PLASMA"
 sudo apt -y install tasksel
 sudo tsksell install kde-desktop
-sudo apt install -y plasma-workspace-wayland --install-recommends
+sudo apt -y install plasma-workspace-wayland	
 sudo systemctl set-default graphical.target
 
 # CLEAN PLASMA
