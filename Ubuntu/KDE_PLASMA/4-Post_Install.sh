@@ -9,6 +9,8 @@ cp -r Files/topgrade.toml ~/.config
 source ~/.zshrc 
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.zshrc
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.zshrc
+sudo cp -r Files/topgrade.toml ~/.config/topgrade.toml
+sudo cp -r Files/topgrade.toml /root/.config/topgrade.toml
 source ~/.zshrc
 
 

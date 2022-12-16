@@ -74,11 +74,9 @@ flatpak install flathub com.usebottles.bottles -y
 
 
 # UPDATE & UPGRADE
-sudo cargo install topgrade
-sudo cp -r Files/topgrade.toml ~/.config/topgrade.toml
-sudo cp -r Files/topgrade.toml /root/.config/topgrade.toml
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.zshrc
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.zshrc
+cargo install topgrade
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.bashrc
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.bashrc
 
 sudo apt clean -y
 sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
