@@ -24,7 +24,7 @@ sudo tsksell install kde-desktop
 sudo apt -y install plasma-workspace-wayland	
 sudo systemctl set-default graphical.target
 
-# CLEAN PLASMA
+#CLEAN PLASMA
 clear
 echo "UNINSTALL"
 sudo apt purge --autoremove libreoffice* -y
@@ -87,8 +87,6 @@ kio-gdrive \
 kbackup \
 plasma-nm plasma-pa plasma-widget* ffmpegthumbs
 
-sudo apt purge kwrite -y
-
 ###### REPOSITORIES
 echo "REPOSITORIES"
 
@@ -121,6 +119,18 @@ sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
 sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
+
+sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
+
+mkdir -p ~/.gnupg
+chmod 700 ~/.gnupg
+gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
+chmod 644 /tmp/onlyoffice.gpg
+sudo chown root:root /tmp/onlyoffice.gpg
+sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
+echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
 
 # sudo add-apt-repository ppa:kisak/kisak-mesa -y
 # sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -183,7 +193,8 @@ digikam \
 timeshift \
 ksnip \
 appimagelauncher \
-featherpad
+featherpad \
+qbittorrent
 
 #MULTIMEDIA
 clear
@@ -200,12 +211,13 @@ nomacs
 clear
 echo -e "OFIMATICA\n"
 sudo apt install -y pdfarranger okular 
+sudo apt-get install onlyoffice-desktopeditors -y
 
+#FULL UPDATE  ******************************************#
 clear
 echo -e "FULL UPDATE\n"
 sudo apt clean -y
 sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
 sudo aptitude safe-upgrade -y
 clear
-sudo apt install -y kde-plasma-desktop
 
