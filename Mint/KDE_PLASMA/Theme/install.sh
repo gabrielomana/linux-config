@@ -26,8 +26,9 @@ cd LightlyShaders; mkdir qt5build; cd qt5build; cmake ../ -DCMAKE_INSTALL_PREFIX
 #Theme Windows
 cd /usr/share/themes/myPlasmaTheme-1.0
 
-git clone https://github.com/yeyushengfan258/We10XOS-kde.git
-./We10XOS-kde/instal.sh
+git clone https://github.com/yeyushengfan258/Win11OS-kde.git
+cd Win11OS-kde
+.instal.sh
 
 #PAPIRUS
 cd /usr/share/themes/myPlasmaTheme-1.0
@@ -56,11 +57,31 @@ cd /usr/share/themes/myPlasmaTheme-1.0
 
 firefox custom.html
 
-sudo systemctl disable sddm
-sudo systemctl enable lightdm
-sudo systemctl enable lightdm-plymouth
-rm /usr/share/themes/Mint* -rf
-rm /usr/share/themes/mint* -rf
-cp Gabriel.profile ~/.local/share/konsole
+##Litarvan LIGHTDM
+# cd /usr/share/themes/myPlasmaTheme-1.0
+
+# sudo apt install -y python-pip
+# git clone https://github.com/JezerM/web-greeter.git /tmp/web-greeter
+# cd /tmp/web-greeter
+# pip install -r requirements.txt
+
+# cd /usr/share/themes/myPlasmaTheme-1.0
+# wget https://github.com/JezerM/web-greeter/releases/download/3.5.1/web-greeter-3.5.1-ubuntu.deb
+# sudo apt install -y ./web-greeter-3.5.1-ubuntu.deb
+
+
+# cd /usr/share/themes/myPlasmaTheme-1.0
+# wget https://github.com/Litarvan/lightdm-webkit-theme-litarvan/releases/download/v3.2.0/lightdm-webkit-theme-litarvan-3.2.0.tar.gz
+# sudo mkdir /usr/share/lightdm-webkit/themes/litarvan/  
+# sudo tar -xvzf lightdm-webkit-theme-litarvan-3.2.0.tar.gz -C /usr/share/lightdm-webkit/themes/litarvan
+# sudo rm *.tar.gz
+
+
+# sudo systemctl disable sddm
+# sudo systemctl enable lightdm
+# sudo systemctl enable lightdm-plymouth
+# rm /usr/share/themes/Mint* -rf
+# rm /usr/share/themes/mint* -rf
+# cp Gabriel.profile ~/.local/share/konsole
 reboot
 
