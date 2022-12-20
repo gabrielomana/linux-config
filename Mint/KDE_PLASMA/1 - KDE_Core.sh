@@ -1,5 +1,4 @@
 #!/bin/bash
-sudo apt update -y && sudo apt upgrade -y
 clear
 #UNINSTALL XFCE
 clear
@@ -16,6 +15,7 @@ sudo apt-get install -f
 sudo rm /usr/share/xfce4/ -rf
 sudo rm /usr/share/thunar/ -rf
 clear
+sudo apt update -y && sudo apt upgrade -y
 
 #KDE PLASMA
 echo "KDE PLASMA"
@@ -236,5 +236,6 @@ echo -e "FULL UPDATE\n"
 sudo apt clean -y
 sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
 sudo aptitude safe-upgrade -y
+reboot
 clear
 
