@@ -6,7 +6,7 @@ clear
 sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce* xfconf xfdesktop4 xfwm4 mugshot -y
 clear
 sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
-compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox sticky -y
+compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox sticky lightdm -y
 clear
 sudo apt-get -f install
 sudo apt-get clean
@@ -19,8 +19,9 @@ clear
 
 #KDE PLASMA
 echo "KDE PLASMA"
-sudo apt -y install tasksel
-sudo tsksell install kde-desktop
+# sudo apt -y install tasksel
+# sudo tsksell install kde-desktop
+sudo apt install -y kde-plasma-desktop
 sudo apt -y install plasma-workspace-wayland	
 sudo systemctl set-default graphical.target
 
