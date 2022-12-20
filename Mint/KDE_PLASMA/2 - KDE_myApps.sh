@@ -78,5 +78,5 @@ sudo bleachbit
 sudo apt update -y
 mintsources
 
-reboot
+sudo mainline
 
