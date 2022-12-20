@@ -25,6 +25,7 @@ cd LightlyShaders; mkdir qt5build; cd qt5build; cmake ../ -DCMAKE_INSTALL_PREFIX
 
 #Theme Windows
 cd /usr/share/themes/myPlasmaTheme-1.0
+
 git clone https://github.com/yeyushengfan258/We10XOS-kde.git
 ./We10XOS-kde/instal.sh
 
@@ -58,6 +59,8 @@ firefox custom.html
 sudo systemctl disable sddm
 sudo systemctl enable lightdm
 sudo systemctl enable lightdm-plymouth
+rm /usr/share/themes/Mint* -rf
+rm /usr/share/themes/mint* -rf
 cp Gabriel.profile ~/.local/share/konsole
 reboot
 
