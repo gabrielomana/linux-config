@@ -93,36 +93,44 @@ echo "REPOSITORIES"
 sudo add-apt-repository multiverse -y
 
 sudo add-apt-repository ppa:graphics-drivers/ppa -y
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/nvidia.gpg
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/nvidia.gpg
+sudo ln -s /etc/apt/nvidia.gpg /etc/apt/trusted.gpg.d/nvidia.gpg
 
 sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/grub-customizer.gpg
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/grub-customizer.gpg
+sudo ln -s /etc/apt/grub-customizer.gpg /etc/apt/trusted.gpg.d/grub-customizer.gpg
 
 sudo add-apt-repository ppa:appimagelauncher-team/stable -y
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/appimagelauncher.gpg
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/appimagelauncher.gpg
+sudo ln -s /etc/apt/appimagelauncher.gpg /etc/apt/trusted.gpg.d/appimagelauncher.gpg
 
 sudo add-apt-repository ppa:kubuntu-ppa/backports -y
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/kubuntu.gpg
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu.gpg
+sudo ln -s /etc/apt/kubuntu.gpg /etc/apt/trusted.gpg.d/kubuntu.gpg
 
 sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ubuntustudio.gpg
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/ubuntustudio.gpg
+sudo ln -s /etc/apt/ubuntustudio.gpg /etc/apt/trusted.gpg.d/ubuntustudio.gpg
 
 sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/pipewire.gpg
+sudo ln -s /etc/apt/pipewire.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
 
 sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/wireplumber.gpg
+sudo ln -s /etc/apt/wireplumber.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
 
 sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/qbittorrent.gpg
+sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
 
 mkdir -p ~/.gnupg
 chmod 700 ~/.gnupg
@@ -132,13 +140,14 @@ sudo chown root:root /tmp/onlyoffice.gpg
 sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
 echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
 
-# sudo add-apt-repository ppa:kisak/kisak-mesa -y
-# sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-# sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/kisak-mesa.gpg
+#sudo add-apt-repository ppa:kisak/kisak-mesa -y
+##Fix deprecated Key MINT issue
+#sudo mv /etc/apt/trusted.gpg /etc/apt/kisak-mesa.gpg
+#sudo ln -s /etc/apt/kisak-mesa.gpg /etc/apt/trusted.gpg.d/kisak-mesa.gpg
 
-
-clear
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo apt update -y
+clear
 
 sudo apt install flatpak -y
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
