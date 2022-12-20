@@ -82,6 +82,5 @@ firefox custom.html
 # sudo systemctl enable lightdm-plymouth
 # rm /usr/share/themes/Mint* -rf
 # rm /usr/share/themes/mint* -rf
-# cp Gabriel.profile ~/.local/share/konsole
 reboot
 

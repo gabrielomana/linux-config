@@ -1,4 +1,11 @@
-1) crear perfil personalizado en kterminal y cerrar terminal
+1) Abrir terminal y ejecutar los siguinets comados:
+
+sudo apt -y install zsh
+sudo chsh -s $(which zsh)
+sudo chsh -s /usr/bin/zsh $USER
+chsh -s $(which zsh)
+chsh -s /usr/bin/zsh $USER
+exit
 
 2) Abrir terminal y ejecutar los siguinets comados:
 

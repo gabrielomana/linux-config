@@ -55,6 +55,15 @@ flatpak install flathub org.phoenicis.playonlinux -y
 flatpak install flathub com.usebottles.bottles -y
 #*****************************************************#
 
+#KONSOLE *******************************************#
+sudo mkdir ~/.fonts
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf -P /usr/share/fonts/
+sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf -P /usr/share/fonts/
+fc-cache -f -v
+cp Gabriel.profile ~/.local/share/konsole
+#*****************************************************#
 
 # UPDATE & UPGRADE
 cargo install topgrade
@@ -68,21 +77,6 @@ sudo aptitude safe-upgrade -y
 sudo bleachbit
 sudo apt update -y
 mintsources
-
-#ZSH
-clear
-echo -e "ZSH"
-sudo apt -y install zsh
-sudo chsh -s $(which zsh)
-sudo chsh -s /usr/bin/zsh $USER
-chsh -s $(which zsh)
-chsh -s /usr/bin/zsh $USER
-sudo mkdir ~/.fonts
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf -P /usr/share/fonts/
-sudo wget https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf -P /usr/share/fonts/
-fc-cache -f -v
 
 reboot
 
