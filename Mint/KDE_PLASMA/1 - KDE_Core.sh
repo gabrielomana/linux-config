@@ -22,8 +22,11 @@ echo "KDE PLASMA"
 # sudo apt -y install tasksel
 # sudo tsksell install kde-desktop
 sudo apt -y install kde-plasma-desktop
-sudo apt -y install plasma-workspace-wayland	
+sudo apt -y install plasma-workspace-wayland
+sudo apt -y install sddm-theme-breeze
 sudo systemctl set-default graphical.target
+sudo systemctl enable sddm
+lookandfeeltool -a org.kde.breezedark.desktop
 
 #CLEAN PLASMA
 clear

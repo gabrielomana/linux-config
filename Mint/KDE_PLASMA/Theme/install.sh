@@ -9,7 +9,7 @@ cd /usr/share/themes/myPlasmaTheme-1.0
 
 sudo apt install -y cmake build-essential libkf5config-dev libkdecorations2-dev libqt5x11extras5-dev qtdeclarative5-dev extra-cmake-modules libkf5guiaddons-dev libkf5configwidgets-dev libkf5windowsystem-dev libkf5coreaddons-dev libkf5iconthemes-dev gettext qt3d5-dev
 
-git clone --single-branch --depth=1 https://github.com/Luwx/Lightly.git /
+sudo git clone --single-branch --depth=1 https://github.com/Luwx/Lightly.git
 cd Lightly && mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DBUILD_TESTING=OFF ..
 make
@@ -20,13 +20,13 @@ cd /usr/share/themes/myPlasmaTheme-1.0
 
 sudo apt install -y git cmake g++ gettext extra-cmake-modules qttools5-dev libqt5x11extras5-dev libkf5configwidgets-dev libkf5crash-dev libkf5globalaccel-dev libkf5kio-dev libkf5notifications-dev kinit-dev kwin-dev 
 
-git clone https://github.com/Luwx/LightlyShaders
+sudo git clone https://github.com/Luwx/LightlyShaders
 cd LightlyShaders; mkdir qt5build; cd qt5build; cmake ../ -DCMAKE_INSTALL_PREFIX=/usr -DQT5BUILD=ON && make && sudo make install && (kwin_x11 --replace &)
 
 #Theme Windows
 cd /usr/share/themes/myPlasmaTheme-1.0
 
-git clone https://github.com/yeyushengfan258/Win11OS-kde.git
+sudo git clone https://github.com/yeyushengfan258/Win11OS-kde.git
 cd Win11OS-kde
 .instal.sh
 
@@ -42,7 +42,7 @@ sudo apt update && sudo apt install -y papirus-icon-theme
 
 #ORCHIS KDE
 cd /usr/share/themes/myPlasmaTheme-1.0
-git clone https://github.com/Luwx/LightlyShadershttps://github.com/vinceliuice/Orchis-kde.git
+git clone https://github.com/vinceliuice/Orchis-kde.git
 cd Orchis-kde
 ./install.sh
 
