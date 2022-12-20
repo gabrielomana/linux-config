@@ -93,6 +93,11 @@ echo "REPOSITORIES"
 
 sudo add-apt-repository multiverse -y
 
+sudo add-apt-repository ppa:cappelikan/ppa -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/mainline.gpg
+sudo ln -s /etc/apt/mainline.gpg /etc/apt/trusted.gpg.d/mainline.gpg
+
 sudo add-apt-repository ppa:graphics-drivers/ppa -y
 ##Fix deprecated Key MINT issue
 sudo mv /etc/apt/trusted.gpg /etc/apt/nvidia.gpg
@@ -169,6 +174,8 @@ samba \
 screen bleachbit \
 util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
 unrar p7zip unzip ark
+
+sudo apt install -y mainline
 
 sudo apt autoremove -y
 
