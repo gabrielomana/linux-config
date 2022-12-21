@@ -7,12 +7,15 @@ sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce* xfconf x
 clear
 sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
 compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox sticky lightdm -y
+
 clear
 sudo apt-get -f install
 sudo apt-get clean
 sudo apt-get autoclean
 sudo apt-get update --fix-missing
 sudo apt-get install -f
+
+clear
 sudo rm /usr/share/xfce4/ -rf
 sudo rm /usr/share/thunar/ -rf
 sudo rm /usr/share/themes/Mint* -rf

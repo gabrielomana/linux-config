@@ -76,9 +76,9 @@ firefox custom.htm
 # systemctl disable sddm
 # systemctl enable lightdm
 # systemctl enable lightdm-plymouth
-sudo rm /usr/share/themes/Mint* -rf
-sudo rm /usr/share/themes/mint* -rf
-sudo rm /usr/share/Thunar -rf
+# sudo rm /usr/share/themes/Mint* -rf
+# sudo rm /usr/share/themes/mint* -rf
+# sudo rm /usr/share/Thunar -rf
 
 
 reboot
