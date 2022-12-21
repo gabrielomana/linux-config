@@ -34,13 +34,10 @@ cd Win11OS-kde
 ./install.sh
 
 #PAPIRUS
-cd /usr/share/themes/myPlasmaTheme-1.0
-
 add-apt-repository ppa:papirus/papirus -y
 ##Fix deprecated Key MINT issue
 mv /etc/apt/trusted.gpg /etc/apt/papirus.gpg
 ln -s /etc/apt/papirus.gpg /etc/apt/trusted.gpg.d/papirus.gpg
-
 apt update && apt install -y papirus-icon-theme
 
 #ARC THEME &&  ARK-KDE  THEME
@@ -49,9 +46,6 @@ sudo apt-get install -y --install-recommends arc-theme arc-kde
 #POP_OS ICONS
 cd /usr/share/themes/myPlasmaTheme-1.0
 tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
-
-cd /usr/share/themes/myPlasmaTheme-1.0
-firefox custom.htm
 
 ##Litarvan LIGHTDM
 # cd /usr/share/themes/myPlasmaTheme-1.0

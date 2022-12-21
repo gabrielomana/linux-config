@@ -23,7 +23,7 @@ sudo rm /usr/share/themes/mint* -rf
 sudo rm /usr/share/Thunar -rf
 
 clear
-sudo apt update -y && sudo apt upgrade -y
+sudo apt update; sudo apt full-upgrade -y; sudo apt install -f; sudo dpkg --configure -a; sudo apt-get autoremove; sudo apt --fix-broken install; sudo update-apt-xapian-index
 
 ###### REPOSITORIES
 echo "REPOSITORIES"
@@ -249,8 +249,7 @@ sudo apt-get install onlyoffice-desktopeditors -y
 clear
 echo -e "FULL UPDATE\n"
 sudo apt clean -y
-sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
+sudo apt update; sudo apt full-upgrade -y; sudo apt install -f; sudo dpkg --configure -a; sudo apt-get autoremove; sudo apt --fix-broken install; sudo update-apt-xapian-index
 sudo aptitude safe-upgrade -y
 reboot
-clear
 
