@@ -6,7 +6,7 @@ echo "UNINSTALL XFCE"
 sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce* xfconf xfdesktop4 xfwm4 mugshot -y
 clear
 sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
-compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox sticky lightdm -y
+compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox sticky lightdm lightdm-settings -y
 
 clear
 sudo apt-get -f install
@@ -23,9 +23,62 @@ sudo rm /usr/share/themes/mint* -rf
 sudo rm /usr/share/Thunar -rf
 
 clear
-sudo apt update; sudo apt full-upgrade -y; sudo apt install -f; sudo dpkg --configure -a; sudo apt-get autoremove; sudo apt --fix-broken install; sudo update-apt-xapian-index
+sudo apt update; sudo apt upgrade -y; sudo apt install -f; sudo dpkg --configure -a; sudo apt-get autoremove; sudo apt --fix-broken install; sudo update-apt-xapian-index
 
+#KDE PLASMA
+clear
+echo "KDE PLASMA"
+# sudo apt -y install tasksel
+# sudo tsksell install kde-desktop
+sudo apt -y install kde-plasma-desktop
+sudo apt -y install plasma-workspace-wayland
+sudo apt -y install sddm sddm-theme-breeze
+sudo systemctl set-default graphical.target
+sudo systemctl enable sddm
+lookandfeeltool -a org.kde.breezedark.desktop
+sudo lookandfeeltool -a org.kde.breezedark.desktop
+
+#CLEAN PLASMA
+clear
+echo "UNINSTALL"
+sudo apt purge --autoremove libreoffice* -y
+
+sudo apt purge --autoremove \
+gwenview \
+akregator \
+kmail \
+konversation \
+krfb \
+kmahjongg \
+kmines \
+dragonplayer \
+elisa \
+korganizer \
+kontact \
+kpat \
+gimp \
+k3b \
+apper \
+kmouth \
+konqueror \
+muon \
+kontrast \
+libreoffice-base-core \
+libreoffice-common \
+libreoffice-core \
+libreoffice-math \
+libreoffice-style-breeze \
+libreoffice-style-colibre \
+libreoffice-writer -y
+
+sudo apt -y autoremove
+sudo apt-get -f install
+sudo apt-get clean
+sudo apt-get autoclean
+
+echo "*************************************************************************************"
 ###### REPOSITORIES
+clear
 echo "REPOSITORIES"
 
 sudo add-apt-repository multiverse -y
@@ -96,58 +149,6 @@ sudo apt install flatpak -y
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 sudo apt install plasma-discover-backend-flatpak -y
 
-#KDE PLASMA
-clear
-echo "KDE PLASMA"
-# sudo apt -y install tasksel
-# sudo tsksell install kde-desktop
-sudo apt -y install kde-plasma-desktop
-sudo apt -y install plasma-workspace-wayland
-sudo apt -y install sddm sddm-theme-breeze
-sudo systemctl set-default graphical.target
-sudo systemctl enable sddm
-lookandfeeltool -a org.kde.breezedark.desktop
-sudo lookandfeeltool -a org.kde.breezedark.desktop
-
-#CLEAN PLASMA
-clear
-echo "UNINSTALL"
-sudo apt purge --autoremove libreoffice* -y
-
-sudo apt purge --autoremove \
-gwenview \
-akregator \
-kmail \
-konversation \
-krfb \
-kmahjongg \
-kmines \
-dragonplayer \
-elisa \
-korganizer \
-kontact \
-kpat \
-gimp \
-k3b \
-apper \
-kmouth \
-konqueror \
-muon \
-kontrast \
-libreoffice-base-core \
-libreoffice-common \
-libreoffice-core \
-libreoffice-math \
-libreoffice-style-breeze \
-libreoffice-style-colibre \
-libreoffice-writer -y
-
-sudo apt -y autoremove
-sudo apt-get -f install
-sudo apt-get clean
-sudo apt-get autoclean
-
-echo "*************************************************************************************"
 
 #EXTRA APPS KDE
 clear
@@ -170,8 +171,7 @@ krdc \
 kaccounts-providers \
 kio-gdrive \
 kbackup \
-plasma-nm plasma-pa plasma-widget* kdeplasma-addons ffmpegthumbs
-
+plasma-nm plasma-pa plasma-widget* ffmpegthumbs
 
 #CORE APPS
 clear
@@ -189,11 +189,9 @@ samba \
 screen bleachbit \
 util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx \
 unrar p7zip unzip ark
-
 sudo apt install -y mainline
 
-sudo apt autoremove -y
-
+#CORE APPS
 sudo apt install -y libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0
 sudo apt install -y gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}}
 sudo apt install -y pipewire-doc

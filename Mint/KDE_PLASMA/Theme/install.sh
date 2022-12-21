@@ -47,6 +47,12 @@ sudo apt-get install -y --install-recommends arc-theme arc-kde
 cd /usr/share/themes/myPlasmaTheme-1.0
 tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 
+##GRUB
+#https://salmorejogeek.com/2017/02/04/devolver-a-linux-el-bonito-grub-de-antano-blanco-sobre-negro-y-demas-extras/
+
+
+
+
 ##Litarvan LIGHTDM
 # cd /usr/share/themes/myPlasmaTheme-1.0
 
@@ -74,6 +80,4 @@ tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 # sudo rm /usr/share/themes/mint* -rf
 # sudo rm /usr/share/Thunar -rf
 
-
 reboot
-
