@@ -3,6 +3,7 @@ if ! [ $(id -u) = 0 ]; then echo "Run as root" exit 1 fi
 
 mkdir /usr/share/themes/myPlasmaTheme-1.0 
 cp custom.htm /usr/share/themes/myPlasmaTheme-1.0/
+cp CUSTOMIZACION_archivos/ /usr/share/themes/myPlasmaTheme-1.0/CUSTOMIZACION_archivos
 cp Pop_Os-Icons.tar.gz /usr/share/themes/myPlasmaTheme-1.0/
 cp Gabriel.profile /usr/share/themes/myPlasmaTheme-1.0/
 
