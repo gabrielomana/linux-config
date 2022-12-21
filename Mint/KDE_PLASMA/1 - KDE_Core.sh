@@ -2,6 +2,7 @@
 clear
 #UNINSTALL XFCE
 clear
+echo "UNINSTALL XFCE"
 sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce* xfconf xfdesktop4 xfwm4 mugshot -y
 clear
 sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
@@ -20,80 +21,6 @@ sudo rm /usr/share/Thunar -rf
 
 clear
 sudo apt update -y && sudo apt upgrade -y
-
-#KDE PLASMA
-echo "KDE PLASMA"
-# sudo apt -y install tasksel
-# sudo tsksell install kde-desktop
-sudo apt -y install kde-plasma-desktop
-sudo apt -y install plasma-workspace-wayland
-sudo apt -y install sddm-theme-breeze
-sudo systemctl set-default graphical.target
-sudo systemctl enable sddm
-lookandfeeltool -a org.kde.breezedark.desktop
-
-#CLEAN PLASMA
-clear
-echo "UNINSTALL"
-sudo apt purge --autoremove libreoffice* -y
-
-sudo apt purge --autoremove \
-gwenview \
-akregator \
-kmail \
-konversation \
-krfb \
-kmahjongg \
-kmines \
-dragonplayer \
-elisa \
-korganizer \
-kontact \
-kpat \
-gimp \
-k3b \
-apper \
-kmouth \
-konqueror \
-muon \
-kontrast \
-libreoffice-base-core \
-libreoffice-common \
-libreoffice-core \
-libreoffice-math \
-libreoffice-style-breeze \
-libreoffice-style-colibre \
-libreoffice-writer -y
-
-sudo apt -y autoremove
-sudo apt-get -f install
-sudo apt-get clean
-sudo apt-get autoclean
-
-echo "*************************************************************************************"
-
-#EXTRA APPS KDE
-clear
-echo -e "APPS KDE\n"
-sudo apt install -y \
-kcalc \
-kate \
-kmix \
-knotes \
-kde-config-cron* \
-krename \
-kid3 \
-kcolorchooser \
-kdenetwork-filesharing \
-kfind \
-kget \
-kinfocenter \
-kio-extras \
-krdc \
-kaccounts-providers \
-kio-gdrive \
-kbackup \
-plasma-nm plasma-pa plasma-widget* ffmpegthumbs
 
 ###### REPOSITORIES
 echo "REPOSITORIES"
@@ -166,8 +93,86 @@ sudo apt install flatpak -y
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 sudo apt install plasma-discover-backend-flatpak -y
 
+#KDE PLASMA
+clear
+echo "KDE PLASMA"
+# sudo apt -y install tasksel
+# sudo tsksell install kde-desktop
+sudo apt -y install kde-plasma-desktop
+sudo apt -y install plasma-workspace-wayland
+sudo apt -y install sddm sddm-theme-breeze
+sudo systemctl set-default graphical.target
+sudo systemctl enable sddm
+lookandfeeltool -a org.kde.breezedark.desktop
+sudo lookandfeeltool -a org.kde.breezedark.desktop
 
-echo -e "CORE\n"
+#CLEAN PLASMA
+clear
+echo "UNINSTALL"
+sudo apt purge --autoremove libreoffice* -y
+
+sudo apt purge --autoremove \
+gwenview \
+akregator \
+kmail \
+konversation \
+krfb \
+kmahjongg \
+kmines \
+dragonplayer \
+elisa \
+korganizer \
+kontact \
+kpat \
+gimp \
+k3b \
+apper \
+kmouth \
+konqueror \
+muon \
+kontrast \
+libreoffice-base-core \
+libreoffice-common \
+libreoffice-core \
+libreoffice-math \
+libreoffice-style-breeze \
+libreoffice-style-colibre \
+libreoffice-writer -y
+
+sudo apt -y autoremove
+sudo apt-get -f install
+sudo apt-get clean
+sudo apt-get autoclean
+
+echo "*************************************************************************************"
+
+#EXTRA APPS KDE
+clear
+echo -e "APPS KDE\n"
+sudo apt install -y \
+kcalc \
+kate \
+kmix \
+knotes \
+kde-config-cron* \
+krename \
+kid3 \
+kcolorchooser \
+kdenetwork-filesharing \
+kfind \
+kget \
+kinfocenter \
+kio-extras \
+krdc \
+kaccounts-providers \
+kio-gdrive \
+kbackup \
+plasma-nm plasma-pa plasma-widget* kdeplasma-addons ffmpegthumbs
+
+
+#CORE APPS
+clear
+echo -e "CORE APPS\n"
 sudo apt install -y \
 build-essential gcc make perl g++ npm \
 wget curl git gdebi \
