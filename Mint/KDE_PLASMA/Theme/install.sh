@@ -3,7 +3,7 @@ if ! [ $(id -u) = 0 ]; then echo "Run as root" exit 1 fi
 
 mkdir /usr/share/themes/myPlasmaTheme-1.0 
 cp custom.htm /usr/share/themes/myPlasmaTheme-1.0/
-cp CUSTOMIZACION_archivos/ /usr/share/themes/myPlasmaTheme-1.0/CUSTOMIZACION_archivos
+cp -rf CUSTOMIZACION_archivos/ /usr/share/themes/myPlasmaTheme-1.0/CUSTOMIZACION_archivos
 cp Pop_Os-Icons.tar.gz /usr/share/themes/myPlasmaTheme-1.0/
 cp Gabriel.profile /usr/share/themes/myPlasmaTheme-1.0/
 
@@ -31,7 +31,7 @@ cd /usr/share/themes/myPlasmaTheme-1.0
 
 git clone https://github.com/yeyushengfan258/Win11OS-kde.git
 cd Win11OS-kde
-.instal.sh
+./install.sh
 
 #PAPIRUS
 cd /usr/share/themes/myPlasmaTheme-1.0
@@ -43,21 +43,14 @@ ln -s /etc/apt/papirus.gpg /etc/apt/trusted.gpg.d/papirus.gpg
 
 apt update && apt install -y papirus-icon-theme
 
-#ORCHIS KDE
-cd /usr/share/themes/myPlasmaTheme-1.0
-git clone https://github.com/vinceliuice/Orchis-kde.git
-cd Orchis-kde
-./install.sh
-
-#ORCHIS GTK
-cd /usr/share/themes/myPlasmaTheme-1.0
-git clone https://github.com/vinceliuice/Orchis-theme.git
-cd Orchis-theme
-./install.sh
+#ARC THEME &&  ARK-KDE  THEME
+sudo apt-get install -y --install-recommends arc-theme arc-kde
 
 #POP_OS ICONS
 cd /usr/share/themes/myPlasmaTheme-1.0
+tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 
+cd /usr/share/themes/myPlasmaTheme-1.0
 firefox custom.htm
 
 ##Litarvan LIGHTDM
@@ -83,7 +76,10 @@ firefox custom.htm
 # systemctl disable sddm
 # systemctl enable lightdm
 # systemctl enable lightdm-plymouth
-# rm /usr/share/themes/Mint* -rf
-# rm /usr/share/themes/mint* -rf
+sudo rm /usr/share/themes/Mint* -rf
+sudo rm /usr/share/themes/mint* -rf
+sudo rm /usr/share/Thunar -rf
+
+
 reboot
 

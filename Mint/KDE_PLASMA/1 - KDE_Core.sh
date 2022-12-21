@@ -14,6 +14,10 @@ sudo apt-get update --fix-missing
 sudo apt-get install -f
 sudo rm /usr/share/xfce4/ -rf
 sudo rm /usr/share/thunar/ -rf
+sudo rm /usr/share/themes/Mint* -rf
+sudo rm /usr/share/themes/mint* -rf
+sudo rm /usr/share/Thunar -rf
+
 clear
 sudo apt update -y && sudo apt upgrade -y
 
