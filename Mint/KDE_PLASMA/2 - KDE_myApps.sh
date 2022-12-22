@@ -50,7 +50,7 @@ sudo systemctl enable libvirtd
 
 #SISTEMA   *******************************************#
 sudo apt -y install balena-etcher-electron
-sudo cargo install cargo-update
+cargo install cargo-update
 flatpak install flathub org.phoenicis.playonlinux -y
 flatpak install flathub com.usebottles.bottles -y
 #*****************************************************#

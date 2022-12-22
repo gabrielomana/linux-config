@@ -8,7 +8,9 @@ chsh -s /usr/bin/zsh $USER
 zsh
 
 
-2) Abrir terminal y ejecutar los siguinets comados:
+2) Reiniciar
+
+3) Abrir terminal y ejecutar los siguinets comados:
 
 git clone https://github.com/ohmyzsh/ohmyzsh/ /tmp/ohmyzsh/
 ZSH= sh /tmp/ohmyzsh/tools/install.sh
@@ -29,7 +31,9 @@ git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ${ZSH_CUSTOM
 6) Abrir terminalir y posiscionarse dentro de la carpeta KDE_PLASMA dentro del directorio de los scripts:
 
 cp -r Files/.zshrc ~/
+source ~/.zshrc 
 cp -r Files/.p10k.zsh ~/
+source ~/.zshrc 
 cp -r Files/topgrade.toml ~/.config
 source ~/.zshrc 
 

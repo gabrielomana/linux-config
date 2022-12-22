@@ -105,8 +105,13 @@ sudo ln -s /etc/apt/appimagelauncher.gpg /etc/apt/trusted.gpg.d/appimagelauncher
 
 sudo add-apt-repository ppa:kubuntu-ppa/backports -y
 ##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu.gpg
-sudo ln -s /etc/apt/kubuntu.gpg /etc/apt/trusted.gpg.d/kubuntu.gpg
+sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu_backports.gpg
+sudo ln -s /etc/apt/kubuntu_backports.gpg /etc/apt/trusted.gpg.d/kubuntu_backports.gpg
+
+sudo add-apt-repository ppa:kubuntu-ppa/backports-extra -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu_backports_extra.gpg
+sudo ln -s /etc/apt/kubuntu_backports_extra.gpg /etc/apt/trusted.gpg.d/kubuntu_backports_extra.gpg
 
 sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
 ##Fix deprecated Key MINT issue
