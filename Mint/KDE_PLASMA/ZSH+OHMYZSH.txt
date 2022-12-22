@@ -5,7 +5,8 @@ sudo chsh -s $(which zsh)
 sudo chsh -s /usr/bin/zsh $USER
 chsh -s $(which zsh)
 chsh -s /usr/bin/zsh $USER
-exit
+zsh
+
 
 2) Abrir terminal y ejecutar los siguinets comados:
 
