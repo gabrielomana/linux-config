@@ -1,5 +1,5 @@
 # Inserts a blank line between shell prompts
-#add_newline = true
+add_newline = true
 
 # Replace the "❯" symbol in the prompt with "➜"
 #[character] # The name of the module we are configuring is "character"
@@ -11,7 +11,10 @@
 
 format = """
 [](bg:#464347 fg:#625d63)\
+$os\
 $sudo\
+$username\
+$hostname\
 $directory\
 (↓ Source control - for right side ↓)\
 $git_metrics\
@@ -30,9 +33,6 @@ $time\
 [](fg:#464347)\
 $line_break\
 [](bg:#464347 fg:#625d63)\
-$jobs\
-$cmd_duration\
-$status\
 $character
 """
 
@@ -40,16 +40,99 @@ $character
 # add_newline = false
 
 # You can also replace your username with a neat symbol like  to save some space
+[os]
+format = "[[](bg:#65737E fg:#464347)$symbol[](bg:#464347 fg:#65737E)]($style)"
+style= "bg:#65737E fg:#EEEEEE"
+disabled = false
+
+# This is the default symbols table.
+[os.symbols]
+Alpine = " "
+Amazon = " "
+Android = " "
+Arch = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "﯑ "
+Gentoo = " "
+HardenedBSD = "ﲊ "
+Illumos = " "
+Linux = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+OpenBSD = " "
+openSUSE = " "
+OracleLinux = " "
+Pop = " "
+Raspbian = " "
+Redhat = " "
+RedHatEnterprise = " "
+Redox = " "
+Solus = "ﴱ "
+SUSE = " "
+Ubuntu = " "
+Unknown = " "
+Windows = " "
+
 [username]
 show_always = true
 style_root = "bold bg:#9A348E fg:#FF5511"
-style_user = "bg:#9A348E fg:#EEEEEE"
-format = "[[](bg:#9A348E fg:#464347)$user[](bg:#464347 fg:#9A348E)]($style)"
+style_user = "bg:#6699CC fg:#EEEEEE"
+format = "[[](bg:#6699CC fg:#464347)$user[](bg:#464347 fg:#6699CC)]($style)"
 
 [sudo]
 style = "bold green bg:#9A348E"
 symbol = "👩 "
 disabled = false
+
+# ~/.config/starship.toml
+
+[hostname]
+ssh_only = false
+format = "[[](bg:#C594C5 fg:#464347)[$ssh_symbol](bold) $hostname(bold red) [](bg:#464347 fg:#C594C5)]($style)"
+style= "bg:#C594C5 fg:#EEEEEE"
+disabled = false
+
+[ssh_symbol]
+symbol=' '
+
+[directory]
+style = "bg:#99C794 fg:#111111"
+truncation_length = 3
+truncation_symbol = "…/"
+format = "[[](bg:#99C794 fg:#464347)$path[](bg:#464347 fg:#99C794)]($style)"
+
+# Here is how you can shorten some long paths by text replacement
+# similar to mapped_locations in Oh My Posh:
+[directory.substitutions]
+"~/Documents" = " "
+"~/Music" = "♫ "
+"~/Movies" = " "
+"~/Pictures" = " "
+"~/Downloads" = " "
+"~/Sources" = ""
+"~/Documentos" = " "
+"~/Música" = "♫ "
+"~/Vídeos" = " "
+"~/Imágenes" = " "
+"~/Descargas" = " "
+"~" = " "
+#"/" = "  "
+# Keep in mind that the order matters. For example:
+# "Important Documents" = "  "
+# will not be replaced, because "Documents" was already substituted before.
+# So either put "Important Documents" before "Documents" or use the substituted version:
+# "Important  " = "  "
 
 [cmd_duration]
 # disabled = true
@@ -59,25 +142,6 @@ show_milliseconds = true
 show_notifications = false
 min_time_to_notify = 45_000
 format = "[[](bg:#625d63 fg:#464347) ⏱️ $duration[](bg:#464347 fg:#625d63)]($style)"
-
-[directory]
-style = "bg:#DA627D fg:#111111"
-truncation_length = 3
-truncation_symbol = "…/"
-format = "[[](bg:#DA627D fg:#464347)$path[](bg:#464347 fg:#DA627D)]($style)"
-
-# Here is how you can shorten some long paths by text replacement
-# similar to mapped_locations in Oh My Posh:
-[directory.substitutions]
-"Documents" = " "
-"Downloads" = " "
-"Music" = " "
-"Pictures" = " "
-# Keep in mind that the order matters. For example:
-# "Important Documents" = "  "
-# will not be replaced, because "Documents" was already substituted before.
-# So either put "Important Documents" before "Documents" or use the substituted version:
-# "Important  " = "  "
 
 [git_commit]
 commit_hash_length = 4
@@ -150,7 +214,7 @@ format = "[$symbol$status]($style)"
 disabled = false
 time_format = "%R" # Hour:Minute Format
 style = "bg:#33658A fg:#111111"
-format = '[[](fg:#464347 bg:#33658A) 🐧 $time [](bg:#464347 fg:#33658A)]($style)'
+format = '[[](fg:#464347 bg:#33658A)  $time [](bg:#464347 fg:#33658A)]($style)'
 
 [character]
 success_symbol = "[[](bg:#AFD700 fg:#464347)](fg:#AFD700)"

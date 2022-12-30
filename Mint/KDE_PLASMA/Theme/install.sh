@@ -49,14 +49,6 @@ tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 
 
 #KONSOLE
-sudo unzip -o JetBrainsMono.zip -d  /tmp/nerd_fonts/ 
-sudo unzip -o Ubuntu.zip -d  /tmp/nerd_fonts/
-sudo unzip -o Mononoki.zip -d  /tmp/nerd_fonts/       
-sudo mv /tmp/nerd_fonts/*.ttf /usr/share/fonts 
-sudo mv /tmp/nerd_fonts/*.otf /usr/share/fonts
-sudo rm /tmp/nerd_fonts/ -rf
-fc-cache -f -v
-
 cp konsole.profile ~/.local/share/konsole     
 
 #STARSHIP

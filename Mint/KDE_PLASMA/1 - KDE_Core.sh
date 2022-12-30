@@ -165,8 +165,10 @@ kmix \
 knotes \
 kde-config-cron* \
 krename \
+kamoso \
 kid3 \
 kcolorchooser \
+kcharselect \
 kdenetwork-filesharing \
 kfind \
 kget \
@@ -196,7 +198,7 @@ util-linux* apt-utils bash-completion openssl finger dos2unix nano sed numlockx 
 unrar p7zip unzip ark
 sudo apt install -y mainline
 
-#CORE APPS
+#PIPEWIRE & WIREPLUMBER
 sudo apt install -y libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0
 sudo apt install -y gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}}
 sudo apt install -y pipewire-doc
@@ -205,6 +207,23 @@ systemctl --user --now disable pulseaudio.{socket,service}
 systemctl --user mask pulseaudio
 systemctl --user --now enable pipewire{,-pulse}.{socket,service}
 systemctl --user --now enable wireplumber.service
+
+#NERD FONTS
+mkdir /tmp/nerd-fonts/
+wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip /tmp/nerd-fonts/
+wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip /tmp/nerd-fonts/
+wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip /tmp/nerd-fonts/
+sudo unzip -o JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono/
+sudo unzip -o JetBrainsMono.zip -d /tmp/nerd_fonts/Ubuntu/
+sudo unzip -o JetBrainsMono.zip -d /tmp/nerd_fonts/Mononoki/
+sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fots/
+sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fots/
+sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fots/
+sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fots/
+sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fots/
+sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fots/
+sudo rm /tmp/nerd_fonts/ -rf
+fc-cache -f -v
 
 
 #SYSTEM
@@ -254,5 +273,6 @@ echo -e "FULL UPDATE\n"
 sudo apt clean -y
 sudo apt update; sudo apt full-upgrade -y; sudo apt install -f; sudo dpkg --configure -a; sudo apt-get autoremove; sudo apt --fix-broken install; sudo update-apt-xapian-index
 sudo aptitude safe-upgrade -y
+sudo systemctl disable casper-md5check.service
 reboot
 
