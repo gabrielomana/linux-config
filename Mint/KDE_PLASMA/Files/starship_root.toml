@@ -87,9 +87,9 @@ Windows = " "
 
 [username]
 show_always = true
-style_root = "bold bg:#9A348E fg:#FF5511"
-style_user = "bg:#6699CC fg:#EEEEEE"
-format = "[[](bg:#6699CC fg:#464347)$user[](bg:#464347 fg:#6699CC)]($style)"
+style_root = "bold bg:#EC5F67 fg:#EEEEEE"
+style_user = "bg:#EC5F67 fg:#EEEEEE"
+format = "[[](bg:#EC5F67 fg:#464347)$user[](bg:#464347 fg:#EC5F67)]($style)"
 
 # [sudo]
 # style = "bold green bg:#9A348E"
@@ -100,16 +100,17 @@ format = "[[](bg:#6699CC fg:#464347)$user[](bg:#464347 fg:#6699CC)]($style
 
 [hostname]
 ssh_only = false
-format = "[[](bg:#5FB3B3 fg:#464347)[$ssh_symbol](bold) $hostname(bold red) [](bg:#464347 fg:#5FB3B3)]($style)"
-style= "bg:#5FB3B3 fg:#111111"
+format = "[[](bg:#F99157 fg:#464347)[$ssh_symbol](bold) $hostname(bold red) [](bg:#464347 fg:#F99157)]($style)"
+style= "bg:#F99157 fg:#111111"
 disabled = false
 ssh_symbol=' '
 
+
 [directory]
-style = "bg:#99C794 fg:#111111"
+style = "bg:#FAC863 fg:#111111"
 truncation_length = 3
 truncation_symbol = "…/"
-format = "[[](bg:#99C794 fg:#464347)$path[](bg:#464347 fg:#99C794)]($style)"
+format = "[[](bg:#FAC863 fg:#464347)$path[](bg:#464347 fg:#FAC863)]($style)"
 
 # Here is how you can shorten some long paths by text replacement
 # similar to mapped_locations in Oh My Posh:
@@ -144,14 +145,14 @@ format = "[[](bg:#99C794 fg:#464347)$path[](bg:#464347 fg:#99C794)]($style
 
 [git_branch]
 symbol = " "
-style = "bg:#FAC863 fg:#111111"
+style = "bg:#99C794 fg:#111111"
 truncation_length = 6
 truncation_symbol = ""
 # ignore_branches = ["master", "main"]
-format = "[[](bg:#FAC863 fg:#464347)( $symbol$branch )[](bg:#464347 fg:#FAC863)]($style)"
+format = "[[](bg:#99C794 fg:#464347)( $symbol$branch )[](bg:#464347 fg:#99C794)]($style)"
 
 [git_status]
-style = "bg:#FAC863 fg:#111111"
+style = "bg:#99C794 fg:#111111"
 conflicted = "🏳"
 ahead = "🏎💨 ${count}"
 behind = "😰 ${count}"
@@ -163,14 +164,14 @@ modified = "📝 ${count}"
 staged = "++ ${count}"
 renamed = "👅 ${count}"
 deleted = "🗑 ${count}"
-format = "[[](bg:#FAC863 fg:#464347)( $all_status$ahead_behind )[](bg:#464347 fg:#FAC863)]($style)"
+format = "[[](bg:#99C794 fg:#464347)( $all_status$ahead_behind )[](bg:#464347 fg:#99C794)]($style)"
 
 [git_commit]
 commit_hash_length = 4
 tag_symbol = "🔖 "
 
 [git_metrics]
-added_style = "bold blue bg:#FAC863"
+added_style = "bold blue bg:#99C794"
 format = "[$added]($added_style)/[-$deleted]($deleted_style)"
 # format = "[$added]($added_style)/[-$deleted]($deleted_style)"
 
@@ -213,8 +214,8 @@ format = "[$symbol$status]($style)"
 [time]
 disabled = false
 time_format = "%R" # Hour:Minute Format
-style = "bg:#EC5F67 fg:#111111"
-format = '[[](fg:#464347 bg:#EC5F67) 🕙 $time  [](bg:#464347 fg:#EC5F67)]($style)'
+style = "bg:#6699CC fg:#111111"
+format = '[[](fg:#464347 bg:#6699CC) 🕙 $time  [](bg:#464347 fg:#6699CC)]($style)'
 
 [character]
 success_symbol = "[[](bg:#AFD700 fg:#464347)](fg:#AFD700)"

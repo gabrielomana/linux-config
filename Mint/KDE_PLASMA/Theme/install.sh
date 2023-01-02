@@ -49,6 +49,7 @@ tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 
 
 #KONSOLE
+sudo cp Theme/Colores/* /usr/share/konsole
 cp konsole.profile ~/.local/share/konsole     
 
 #STARSHIP

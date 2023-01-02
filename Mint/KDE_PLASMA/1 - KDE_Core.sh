@@ -25,6 +25,12 @@ sudo rm /usr/share/Thunar -rf
 clear
 sudo apt update; sudo apt upgrade -y; sudo apt install -f; sudo dpkg --configure -a; sudo apt-get autoremove; sudo apt --fix-broken install; sudo update-apt-xapian-index
 
+sudo apt remove initramfs-tools -y
+sudo apt clean
+sudo apt install initramfs-tools -y
+sudo apt-get update --fix-missing
+sudo apt-get install -f
+
 #KDE PLASMA
 clear
 echo "KDE PLASMA"
