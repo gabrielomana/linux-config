@@ -209,20 +209,26 @@ systemctl --user --now enable pipewire{,-pulse}.{socket,service}
 systemctl --user --now enable wireplumber.service
 
 #NERD FONTS
-mkdir /tmp/nerd-fonts/
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip /tmp/nerd-fonts/
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip /tmp/nerd-fonts/
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip /tmp/nerd-fonts/
-sudo unzip -o JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono/
-sudo unzip -o JetBrainsMono.zip -d /tmp/nerd_fonts/Ubuntu/
-sudo unzip -o JetBrainsMono.zip -d /tmp/nerd_fonts/Mononoki/
-sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fots/
-sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fots/
-sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fots/
-sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fots/
-sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fots/
-sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fots/
+mkdir /tmp/nerd_fonts/
+wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
+wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
+wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip -P /tmp/nerd_fonts/
+
+sudo unzip /tmp/nerd_fonts/JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono
+sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
+sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
+
+sudo mkdir /usr/share/fonts/nerd_fonts/
+sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
+sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
+sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
+sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
+sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
+sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
 sudo rm /tmp/nerd_fonts/ -rf
+sudo apt install -y fonts-noto-color-emoji
+fc-cache -f -v
+sudo cp Files/fonts.conf /etc/fonts/fonts.conf -rf
 fc-cache -f -v
 
 
