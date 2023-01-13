@@ -5,7 +5,6 @@ mkdir /usr/share/themes/myPlasmaTheme-1.0
 cp custom.htm /usr/share/themes/myPlasmaTheme-1.0/
 cp -rf CUSTOMIZACION_archivos/ /usr/share/themes/myPlasmaTheme-1.0/CUSTOMIZACION_archivos
 cp Pop_Os-Icons.tar.gz /usr/share/themes/myPlasmaTheme-1.0/
-cp Gabriel.profile /usr/share/themes/myPlasmaTheme-1.0/
 
 #Lightly
 cd /usr/share/themes/myPlasmaTheme-1.0
@@ -47,49 +46,6 @@ sudo apt-get install -y --install-recommends arc-theme arc-kde
 cd /usr/share/themes/myPlasmaTheme-1.0
 tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 
+cd /usr/share/themes/myPlasmaTheme-1.0
+firefox custom.htm
 
-#KONSOLE
-sudo cp Theme/Colores/* /usr/share/konsole
-cp konsole.profile ~/.local/share/konsole     
-
-#STARSHIP
-
-
-
-##GRUB
-sudo su
-sudo cp /etc/default/grub /etc/default/grub_old
-sudo rm /etc/default/grub -rf
-
-
-
-
-
-##Litarvan LIGHTDM
-# cd /usr/share/themes/myPlasmaTheme-1.0
-
-# apt install -y python-pip
-# git clone https://github.com/JezerM/web-greeter.git /tmp/web-greeter
-# cd /tmp/web-greeter
-# pip install -r requirements.txt
-
-# cd /usr/share/themes/myPlasmaTheme-1.0
-# wget https://github.com/JezerM/web-greeter/releases/download/3.5.1/web-greeter-3.5.1-ubuntu.deb
-# apt install -y ./web-greeter-3.5.1-ubuntu.deb
-
-
-# cd /usr/share/themes/myPlasmaTheme-1.0
-# wget https://github.com/Litarvan/lightdm-webkit-theme-litarvan/releases/download/v3.2.0/lightdm-webkit-theme-litarvan-3.2.0.tar.gz
-# mkdir /usr/share/lightdm-webkit/themes/litarvan/  
-# tar -xvzf lightdm-webkit-theme-litarvan-3.2.0.tar.gz -C /usr/share/lightdm-webkit/themes/litarvan
-# rm *.tar.gz
-
-
-# systemctl disable sddm
-# systemctl enable lightdm
-# systemctl enable lightdm-plymouth
-# sudo rm /usr/share/themes/Mint* -rf
-# sudo rm /usr/share/themes/mint* -rf
-# sudo rm /usr/share/Thunar -rf
-
-reboot
