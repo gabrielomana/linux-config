@@ -111,6 +111,10 @@ source $ZSH/oh-my-zsh.sh
 #
 # Example aliases
 alias zshr="source ~/.zshrc"
+alias cat="batcat -f"
+alias ls="lsd"
+alias ll="lsd -l"
+alias "ls -l"="lsd -l"
 alias fupdate="topgrade &&  sudo hblock -O /etc/host"
 #alias ohmyzsh="mate ~/.oh-my-zsh"
 

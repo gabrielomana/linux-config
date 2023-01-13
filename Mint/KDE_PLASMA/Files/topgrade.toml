@@ -45,7 +45,8 @@ repos = [
     "~/.config/*",
     "/git/*",
     "~/.oh-my-zsh/custom/themes/*",
-     "~/*"
+     "~/*",
+     "/usr/share/themes/*"
 ]
 
 

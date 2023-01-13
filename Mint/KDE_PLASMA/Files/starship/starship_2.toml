@@ -1,0 +1,258 @@
+# Inserts a blank line between shell prompts
+add_newline = true
+
+# Replace the "❯" symbol in the prompt with "➜"
+#[character] # The name of the module we are configuring is "character"
+#:was = "[➜](bold green)" # The "success_symbol" segment is being set to "➜" with the color "bold green"
+
+# Disable the package module, hiding it from the prompt completely
+#[package]
+#disabled = true
+
+format = """
+[░▒▓](#65737E)\
+$os\
+$username\
+$hostname\
+$directory\
+(↓ Source control - for right side ↓)\
+$git_branch\
+$git_commit\
+$git_metrics\
+$git_status\
+(↑ Source control - for right side ↑)\
+(↓ Toolchain version modules ↓)\
+(↓ Toolchain version modules ↓)\
+(↓ on input line ↓)\
+[](fg:#464347)\
+$fill\
+$time\
+${custom.weather}\
+$line_break\
+$character
+"""
+
+scan_timeout = 20
+
+# Disable the blank line at the start of the prompt
+# add_newline = false
+
+[fill]
+symbol="  "
+
+# You can also replace your username with a neat symbol like  to save some space
+[os]
+format = "[(bg:#65737E fg:#464347) $symbol[](bg:#464347 fg:#65737E)]($style)"
+style= "bg:#65737E fg:#EEEEEE"
+disabled = false
+
+# This is the default symbols table.
+[os.symbols]
+Alpine = " "
+Amazon = " "
+Android = " "
+Arch = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "﯑ "
+Gentoo = " "
+HardenedBSD = "ﲊ "
+Illumos = " "
+Linux = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+OpenBSD = " "
+openSUSE = " "
+OracleLinux = " "
+Pop = " "
+Raspbian = " "
+Redhat = " "
+RedHatEnterprise = " "
+Redox = " "
+Solus = "ﴱ "
+SUSE = " "
+Ubuntu = " "
+Unknown = " "
+Windows = " "
+
+[username]
+show_always = true
+style_root = "bold bg:#EC5F67 fg:#EEEEEE"
+style_user = "bold bg:#6699CC fg:#EEEEEE"
+format = "[[](bg:#6699CC fg:#464347)$user[](bg:#464347 fg:#6699CC)]($style)"
+
+# [sudo]
+# style = "bold green bg:#9A348E"
+# symbol = "👩 "
+# disabled = false
+#
+# # ~/.config/starship.toml
+
+[hostname]
+ssh_only = false
+format = "[[](bg:#5FB3B3 fg:#464347)[$ssh_symbol](bold) $hostname(bold red) [](bg:#464347 fg:#5FB3B3)]($style)"
+style= "bg:#5FB3B3 fg:#111111"
+disabled = false
+ssh_symbol=' '
+
+[directory]
+style = "bg:#99C794 fg:#111111"
+read_only = "  "
+truncation_length = 3
+truncation_symbol = "…/"
+format = "[[](bg:#99C794 fg:#464347)$path$read_only[](bg:#464347 fg:#99C794)]($style)"
+
+# Here is how you can shorten some long paths by text replacement
+# similar to mapped_locations in Oh My Posh:
+[directory.substitutions]
+"~/Documents" = " "
+"~/Music" = " "
+"~/Movies" = " "
+"~/Pictures" = " "
+"~/Downloads" = " "
+"~/Sources" = ""
+"~/Documentos" = " "
+"~/Música" = " "
+"~/Vídeos" = " "
+"~/Imágenes" = " "
+"~/Descargas" = " "
+"/git"="GITs "
+"~" = " "
+#"/" = "  "
+# Keep in mind that the order matters. For example:
+# "Important Documents" = "  "
+# will not be replaced, because "Documents" was already substituted before.
+# So either put "Important Documents" before "Documents" or use the substituted version:
+# "Important  " = "  "
+
+# [cmd_duration]
+# # disabled = true
+# style = "bg:#625d63 fg:#FBDE2D"
+# min_time = 2_000
+# show_milliseconds = true
+# show_notifications = false
+# min_time_to_notify = 45_000
+# format = "[[](bg:#625d63 fg:#464347) ⏱️ $duration[](bg:#464347 fg:#625d63)]($style)"
+
+[git_branch]
+symbol = " "
+style = "bg:#FAC863 fg:#111111"
+truncation_length = 6
+truncation_symbol = ""
+# ignore_branches = ["master", "main"]
+format = "[[](bg:#FAC863 fg:#464347)( $symbol$branch )]($style)"
+
+[git_commit]
+commit_hash_length = 4
+tag_symbol = "🔖 "
+
+[git_metrics]
+added_style = "bold blue bg:#FAC863"
+format = "[$added]($added_style)/[-$deleted]($deleted_style)"
+# format = "[$added]($added_style)/[-$deleted]($deleted_style)"
+
+[git_status]
+style = "bg:#FAC863 fg:#111111"
+conflicted = "🏳"
+ahead = "🏎💨 ${count}"
+behind = "😰 ${count}"
+diverged = "😵 ${count}"
+up_to_date = "✓ ${count}"
+untracked = "🤷 ${count}"
+stashed = "📦 ${count}"
+modified = "📝 ${count}"
+staged = "++ ${count}"
+renamed = "👅 ${count}"
+deleted = "🗑 ${count}"
+format = "[( $all_status$ahead_behind )[](bg:#464347 fg:#FAC863)]($style)"
+
+# [jobs]
+# # disabled = true
+# symbol = "  "
+# style = "bold bg:#625d63 fg:#FFA200"
+# # threshold = 1
+# format = "[$symbol$number]($style)"
+
+
+[line_break]
+disabled = false
+
+[docker_context]
+symbol = " 🐳 "
+style = "bg:#65737E fg:#464347"
+format = "[[](bg:#65737E fg:#464347)$symbol$context[](bg:#464347 fg:#65737E)]($style)"
+
+[python]
+# disabled = true
+symbol = "  "
+style = "bg:#65737E fg:#111111"
+# pyenv_version_name = true
+pyenv_prefix = "pyenv "
+python_binary = "python3"
+format = '[[](fg:#464347 bg:#65737E)$symbol$pyenv_prefix$version(\($virtualenv\))[](bg:#464347 fg:#65737E)]($style)'
+
+[php]
+symbol = " 🐘 "
+style = "bg:#65737E fg:#111111"
+format = "[[](bg:#65737E fg:#464347)$symbol$version[](bg:#464347 fg:#65737E)]($style)"
+
+[rust]
+symbol = " 🦀 "
+style = "bg:#65737E fg:#111111"
+format = "[[](bg:#65737E fg:#464347)$symbol$version[](bg:#464347 fg:#65737E)]($style)"
+
+[c]
+symbol = "  "
+style = "bg:#65737E fg:#111111"
+format = "[[](bg:#65737E fg:#464347)$symbol$name $version[](bg:#464347 fg:#65737E)]($style)"
+
+
+[status]
+# disabled = false
+symbol = ""
+style = "bg:#464347 fg:#ff3322"
+format = "[$symbol$status]($style)"
+
+##########TIME MODULE###########
+
+# [time]
+# disabled = false
+# time_format = "%R" # Hour:Minute Format
+# style = "bg:#F99157 fg:#111111"
+# format = '[[](fg:#464347 bg:#F99157) 🕙 $time  [](bg:#464347 fg:#F99157)]($style)'
+
+###################################
+
+##########TIME & WEATHER MODULE###########
+
+[time]
+disabled = false
+time_format = "%R" # Hour:Minute Format
+style = "bg:#C594C5 fg:#1B2B34"
+format = '[[](fg:#464347 bg:none)[](fg:#C594C5 bg:#464347)🕙 $time]($style)'
+
+[custom.weather]
+when=true
+time_format = "%R" # Hour:Minute Format
+style = "bg:#C594C5 fg:#1B2B34"
+command="curl -s 'wttr.in/Barcelona?format=%c%t'"
+format = '[ $output [▓▒░](bg:#464347 fg:#C594C5)]($style)'
+
+###################################
+
+[character]
+success_symbol = "[[](bg:#AFD700 fg:#464347)](fg:#AFD700)"
+error_symbol = "[[](bg:#ff3322 fg:#464347)](fg:#ff3322)"
+vicmd_symbol = "[[](bg:#6f6a70 fg:#464347)[](bg:#464347 fg:#6f6a70)](bold bg:#6f6a70 fg:#ff3322)"
+format = "[[](bg:#464347)$symbol ]($style)"
+
