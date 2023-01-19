@@ -113,7 +113,7 @@ clear
 #### FLATPACKS ####
 sudo apt install flatpak -y
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-sudo apt install plasma-discover-backend-flatpak -y
+
 
 
 ####################### KDE PLASMA ###############################
@@ -124,6 +124,7 @@ sudo systemctl set-default graphical.target
 sudo systemctl enable sddm
 lookandfeeltool -a org.kde.breezedark.desktop
 sudo lookandfeeltool -a org.kde.breezedark.desktop
+sudo apt install plasma-discover-backend-flatpak -y
 
 #CLEAN PLASMA
 clear
@@ -268,7 +269,6 @@ sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
 sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
 sudo rm /tmp/nerd_fonts/ -rf
 sudo apt install -y fonts-noto-color-emoji
-fc-cache -f -v
 sudo cp Files/fonts.conf /etc/fonts/fonts.conf -rf
 fc-cache -f -v
 
