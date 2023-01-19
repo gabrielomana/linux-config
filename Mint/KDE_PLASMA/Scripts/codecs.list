@@ -1,0 +1,10 @@
+build-essential
+ubuntu-drivers-common
+ubuntu-restricted-extras
+gstreamer1.0-libav
+ffmpeg
+x264
+x265
+mencoder
+lame
+mplayer
