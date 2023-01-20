@@ -2,23 +2,21 @@
 clear
 dir="$(pwd)"
 
-. "${dir}"/Scripts/function
+. "${dir}"/sources/functions/functions
 
-codecs="${dir}/Scripts/codecs.list"
-exta_apps="${dir}/Scripts/exta_apps.list"
-kde_plasma="${dir}/Scripts/kde_plasma.list"
-kde_plasma_apps="${dir}/Scripts/kde_plasma_apps.list"
-multimedia="${dir}/Scripts/multimedia.list"
-tools="${dir}/Scripts/tools.list"
-utilities="${dir}/Scripts/utilities.list"
+codecs="${dir}/sources/lists/codecs.list"
+exta_apps="${dir}/sources/lists/exta_apps.list"
+kde_plasma="${dir}/sources/lists/kde_plasma.list"
+kde_plasma_apps="${dir}/sources/lists/kde_plasma_apps.list"
+multimedia="${dir}/sources/lists/multimedia.list"
+tools="${dir}/sources/lists/tools.list"
+utilities="${dir}/sources/lists/utilities.list"
+xfce="${dir}/sources/lists/xfce.list"
 
 ######################## UNINSTALL XFCE ###############################
 clear
 echo "UNINSTALL XFCE"
-sudo apt purge --autoremove mint-meta-xfce thunar thunar* ^xfce4* xfce* xfconf xfdesktop4 xfwm4 mugshot -y
-clear
-sudo apt purge --autoremove libreoffice* simple-scan drawing pix thunderbird* transmission* hexchat xviewer gnome-calculator seahorse gnome-disk* xed exo-utils mintstick file-roller gucharmap gnome-logs gnome-font-viewer xreader warpinator celluloid pavucontrol rhythmbox thingy \
-compiz* gnome-disk* metacity gcr* baobab mintinstall* mintupdate mintbackup system-config-printer mintreport* gdebi* gnome-logs menulibre celluloid rhythmbox sticky lightdm lightdm-settings -y
+check_uninstalled "${xfce}"
 
 clear
 echo "UNINSTALL XFCE: Fix missing"
@@ -48,92 +46,7 @@ sudo apt-get install -f
 ######################## REPOSITORIES ###############################
 clear
 echo "REPOSITORIES"
-
-sudo add-apt-repository multiverse -y
-
-##### KERNEL INSTALLER ####
-sudo add-apt-repository ppa:cappelikan/ppa -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/mainline.gpg
-sudo ln -s /etc/apt/mainline.gpg /etc/apt/trusted.gpg.d/mainline.gpg
-
-##### NVIDIA ####
-sudo add-apt-repository ppa:graphics-drivers/ppa -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/nvidia.gpg
-sudo ln -s /etc/apt/nvidia.gpg /etc/apt/trusted.gpg.d/nvidia.gpg
-
-##### GRUB CUSTOMIZER ####
-sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/grub-customizer.gpg
-sudo ln -s /etc/apt/grub-customizer.gpg /etc/apt/trusted.gpg.d/grub-customizer.gpg
-
-##### APP IMAGE LAUNCHER ####
-sudo add-apt-repository ppa:appimagelauncher-team/stable -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/appimagelauncher.gpg
-sudo ln -s /etc/apt/appimagelauncher.gpg /etc/apt/trusted.gpg.d/appimagelauncher.gpg
-
-##### KUBUNTU BACKPORTS ####
-sudo add-apt-repository ppa:kubuntu-ppa/backports -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu_backports.gpg
-sudo ln -s /etc/apt/kubuntu_backports.gpg /etc/apt/trusted.gpg.d/kubuntu_backports.gpg
-
-##### KUBUNTU BACKPORTS EXTRAS ####
-sudo add-apt-repository ppa:kubuntu-ppa/backports-extra -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu_backports_extra.gpg
-sudo ln -s /etc/apt/kubuntu_backports_extra.gpg /etc/apt/trusted.gpg.d/kubuntu_backports_extra.gpg
-
-##### UBUNTU STUDIO BACKPORTS ####
-sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/ubuntustudio.gpg
-sudo ln -s /etc/apt/ubuntustudio.gpg /etc/apt/trusted.gpg.d/ubuntustudio.gpg
-
-##### PIPEWIRE ####
-sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/pipewire.gpg
-sudo ln -s /etc/apt/pipewire.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
-
-##### WIREPLUMBER ####
-sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/wireplumber.gpg
-sudo ln -s /etc/apt/wireplumber.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
-
-###### QBITTORRENT ####
-sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/qbittorrent.gpg
-sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
-
-###### BRAVE BROWSER ####
-sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
-
-###### ONLY OFFICE ####
-mkdir -p ~/.gnupg
-chmod 700 ~/.gnupg
-gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
-chmod 644 /tmp/onlyoffice.gpg
-sudo chown root:root /tmp/onlyoffice.gpg
-sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
-echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
-
-
-###### BALENA ETCHER ####
-curl -1sLf \
-   'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-   | sudo -E bash
-
-# #sudo add-apt-repository ppa:kisak/kisak-mesa -y
-# ##Fix deprecated Key MINT issue
-# #sudo mv /etc/apt/trusted.gpg /etc/apt/kisak-mesa.gpg
-# #sudo ln -s /etc/apt/kisak-mesa.gpg /etc/apt/trusted.gpg.d/kisak-mesa.gpg
+add_repos
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -145,11 +58,9 @@ sudo apt install flatpak -y
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 
-
 ######################## KDE PLASMA ###############################
 clear
 echo "KDE PLASMA"
-#sudo apt -y install kde-plasma-desktop plasma-workspace-wayland sddm sddm-theme-breeze
 check_installed "${kde_plasma}"
 sudo systemctl set-default graphical.target
 sudo systemctl enable sddm
