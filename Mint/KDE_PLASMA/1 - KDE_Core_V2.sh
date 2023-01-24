@@ -19,32 +19,28 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 clear
 echo "UNINSTALL XFCE"
 uninstall_xfce
-
-
+read -p "Press enter to continue"
 ######################## REPOSITORIES ###############################
 clear
 echo "REPOSITORIES"
 add_repos
-
-
+read -p "Press enter to continue"
 ######################## KDE PLASMA ###############################
 clear
 echo "KDE PLASMA"
-install_kde
-
-
+add_repos
+read -p "Press enter to continue"
 ######################## CORE APPS ###############################
 clear
 echo "CORE APPS"
 install_core_apps
-
-
+read -p "Press enter to continue"
 ######################## MULTIMEDIA ###############################
 clear
-echo -e "MULTIMEDIA\n"
+echo "CORE APPS"
 check_installed "${multimedia}"
+read -p "Press enter to continue"
 
-sudo timedatectl set-local-rtc 1
 
 ##############################################################################################
 ########################################  EXTRA APPS #########################################
@@ -72,6 +68,8 @@ j=0
 #############################################################################################
 
 ######## CARGO & TOPGRADE #####################################
+clear
+echo -e "MULTIMEDIA\n"
 cargo install cargo-update
 cargo install topgrade
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.bashrc
