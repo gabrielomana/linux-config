@@ -15,8 +15,9 @@ utilities="${dir}/sources/lists/utilities.list"
 xfce="${dir}/sources/lists/xfce.list"
 kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 
-. "${dir}"/sources/functions/functions
+
 . "${dir}"/sources/functions/functions_aux
+. "${dir}"/sources/functions/functions
 
 
 ######################## UNINSTALL XFCE ###############################
