@@ -1,215 +1,97 @@
-#! /bin/bash
+show_listitem() {
+  #echo -e $'\033[1;37m'"$*"$'\033[0m'
+}
+show_error() {
+  #echo -e $'\033[1;31m'"$*"$'\033[0m' 1>&2
+}
+show_info() {
+  #echo -e $'\033[1;32m'"$*"$'\033[0m'
+}
+show_warning() {
+  #echo -e $'\033[1;33m'"$*"$'\033[0m'
+}
+show_question() {
+  #echo -e $'\033[1;34m'"$*"$'\033[0m'
+}
+ask_question() {
+  #read -r -p $'\033[1;34m'"$* "$'\033[0m' var
+  #echo "${var}"
+}
+show_success() {
+  #echo -e $'\033[1;35m'"$*"$'\033[0m'
+}
+show_header() {
+  #echo -e $'\033[1;36m'"$*"$'\033[0m'
+}
+show_listitem() {
+  #echo -e $'\033[1;37m'"$*"$'\033[0m'
+}
+
 function check_installed {
   local package
+  list=""
+
   while read -r package; do
     [ -z "${package}" ] && continue
+
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
 
     # Check if package is installed already before installing.
     if dpkg -s "${package}" >/dev/null 2>&1; then
       show_listitem "${package} package already installed. Skipping."
     else
-      # First check if the package exists in the repos.
+       #First check if the package exists in the repos.
       if ! (apt-cache showsrc "${package}" 2>&1 | grep -q "W: "); then
-        show_listitem "Installing ${package}."
-        sudo apt-get -y install "${package}"
+        #show_listitem "Installing ${package}."
+        #sudo apt-get -y install "${package}"
+        list="${list} ${package}"
       else
-        show_warning "Package ${package} does not exist in the repos. Skipping."
+        show_warning "Package ${package} does not exist in the repos. Skipping"
       fi
     fi
   done < "${1}"
+  c="sudo nala install "${list}" -y"
+  eval $c
 }
 
 function check_uninstalled {
   local package
+  list=""
   while read -r package; do
     [ -z "${package}" ] && continue
 
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
+
     if dpkg -s "${package}" >/dev/null 2>&1; then
-      show_listitem "Purging ${package}."
-      sudo apt purge --autoremove "${package}"n
+#       show_listitem "Purging ${package}."
+#       sudo apt purge --autoremove "${package}"n
+      list="${list} ${package}"
     else
       show_warning "Package ${package} is not installed. Skipping."
     fi
   done < "${1}"
-  sudo apt -y autoremove
-  sudo apt-get -f install
-  sudo apt-get clean
-  sudo apt-get autoclea
-}
-
-function install_ZSH()
-{
-clear
-
-########Install ZSH##########
-if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
-    echo -e "ZSH and Git are already installed\n"
-else
-    if sudo apt install -y zsh git wget || sudo pacman -S zsh git wget || sudo dnf install -y zsh git wget || sudo yum install -y zsh git wget || sudo brew install git zsh wget || pkg install git zsh wget ; then
-        echo -e "zsh wget and git Installed\n"
-    else
-        echo -e "Please install the following packages first, then try again: zsh git wget \n" && exit
-    fi
-fi
-
-
-######## BackUp .zshrc ##########
-if mv -n ~/.zshrc ~/.zshrc-backup-$(date +"%Y-%m-%d"); then # backup .zshrc
-    echo -e "Backed up the current .zshrc to .zshrc-backup-date\n"
-fi
-
-
-######## Installing oh-my-zsh ##########
-
-echo -e "Installing oh-my-zsh\n"
-if [ -d ~/.oh-my-zsh ]; then
-    echo -e "oh-my-zsh is already installed\n"
-    git -C ~/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
-else
-    git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
-fi
-
-######## dotfiles ##########
-
-cp -f Files/.zshrc ~/
-mkdir -p ~/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
-
-if [ -f ~/.zcompdump ]; then
-    mv ~/.zcompdump* ~/.cache/zsh/
-fi
-
-######## Plugins ##########
-
-if [ -d ~/.oh-my-zsh/plugins/zsh-autosuggestions ]; then
-    cd ~/.oh-my-zsh/plugins/zsh-autosuggestions && git pull
-else
-    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
-fi
-
-if [ -d ~/.oh-my-zsh/plugins/fast-syntax-highlighting ]; then
-    cd ~/.oh-my-zsh/plugins/fast-syntax-highlighting && git pull
-else
-    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git  ~/.oh-my-zsh/plugins/fast-syntax-highlighting
-fi
-
-if [ -d ~/.oh-my-zsh/plugins/you-should-use ]; then
-    cd ~/.oh-my-zsh/plugins/you-should-use && git pull
-else
-    git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/plugins/you-should-use
-fi
-
-
-if [ -d ~/.oh-my-zsh/custom/plugins/zsh-completions ]; then
-    cd ~/.oh-my-zsh/custom/plugins/zsh-completions && git pull
-else
-    git clone --depth=1 https://github.com/zsh-users/zsh-completions ~/.oh-my-zsh/custom/plugins/zsh-completions
-fi
-
-
-if [ -d ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search ]; then
-    cd ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search && git pull
-else
-    git clone --depth=1 https://github.com/zsh-users/zsh-history-substring-search ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
-fi
-
-######## STARSHIP ##########
-curl -sS https://starship.rs/install.sh | sh
-cp -f Files/starship/starship_3.toml ~/.config/starship.toml
-
-######## REBOOT ZSH ##########
-# source ~/.zshrc
-echo -e "\nSudo access is needed to change default shell\n"
-if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
-    echo -e "Installation Successful"
-    sleep 5
-    reboot
-else
-    echo -e "Something is wrong"
-fi
-exit
-
-}
-
-function add_repos(){
-sudo add-apt-repository multiverse -y
-
-##### KERNEL INSTALLER ####
-sudo add-apt-repository ppa:cappelikan/ppa -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/mainline.gpg
-sudo ln -s /etc/apt/mainline.gpg /etc/apt/trusted.gpg.d/mainline.gpg
-
-##### NVIDIA ####
-sudo add-apt-repository ppa:graphics-drivers/ppa -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/nvidia.gpg
-sudo ln -s /etc/apt/nvidia.gpg /etc/apt/trusted.gpg.d/nvidia.gpg
-
-##### GRUB CUSTOMIZER ####
-sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/grub-customizer.gpg
-sudo ln -s /etc/apt/grub-customizer.gpg /etc/apt/trusted.gpg.d/grub-customizer.gpg
-
-##### APP IMAGE LAUNCHER ####
-sudo add-apt-repository ppa:appimagelauncher-team/stable -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/appimagelauncher.gpg
-sudo ln -s /etc/apt/appimagelauncher.gpg /etc/apt/trusted.gpg.d/appimagelauncher.gpg
-
-##### KUBUNTU BACKPORTS ####
-sudo add-apt-repository ppa:kubuntu-ppa/backports -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu_backports.gpg
-sudo ln -s /etc/apt/kubuntu_backports.gpg /etc/apt/trusted.gpg.d/kubuntu_backports.gpg
-
-##### KUBUNTU BACKPORTS EXTRAS ####
-sudo add-apt-repository ppa:kubuntu-ppa/backports-extra -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu_backports_extra.gpg
-sudo ln -s /etc/apt/kubuntu_backports_extra.gpg /etc/apt/trusted.gpg.d/kubuntu_backports_extra.gpg
-
-##### UBUNTU STUDIO BACKPORTS ####
-sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/ubuntustudio.gpg
-sudo ln -s /etc/apt/ubuntustudio.gpg /etc/apt/trusted.gpg.d/ubuntustudio.gpg
-
-##### PIPEWIRE ####
-sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/pipewire.gpg
-sudo ln -s /etc/apt/pipewire.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
-
-##### WIREPLUMBER ####
-sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/wireplumber.gpg
-sudo ln -s /etc/apt/wireplumber.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
-
-###### QBITTORRENT ####
-sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/qbittorrent.gpg
-sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
-
-###### BRAVE BROWSER ####
-sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
-
-###### ONLY OFFICE ####
-mkdir -p ~/.gnupg
-chmod 700 ~/.gnupg
-gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
-chmod 644 /tmp/onlyoffice.gpg
-sudo chown root:root /tmp/onlyoffice.gpg
-sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
-echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
-
-###### BALENA ETCHER ####
-curl -1sLf \
-   'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-   | sudo -E bash
-
-
+  c="sudo apt purge --autoremove "${list}" -y"
+  #echo $c
+  eval $c
+  sudo nala autoremove -y
+  sudo nala install -f
+  sudo nala clean -y
+  sudo apt-get autoclean
+  clear
 }
