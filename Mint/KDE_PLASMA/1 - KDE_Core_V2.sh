@@ -15,8 +15,9 @@ utilities="${dir}/sources/lists/utilities.list"
 xfce="${dir}/sources/lists/xfce.list"
 kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 
-#. "${dir}"/sources/functions/functions_aux
 . "${dir}"/sources/functions/functions
+. "${dir}"/sources/functions/functions_aux
+
 
 ######################## UNINSTALL XFCE ###############################
 clear
@@ -48,10 +49,8 @@ install_multimedia
 # # ##############################################################################################
 # # ########################################  EXTRA APPS #########################################
 # # ##############################################################################################
-
 a=0
 j=0
-
     while [ $a -lt 1  ]
     do
         read -p "Do you wish to install Extra Apps? " yn
@@ -61,7 +60,6 @@ j=0
             * ) echo "Please answer yes or no.";;
         esac
     done
-
 # # #############################################################################################
 # # #######################################_END_#################################################
 # # #############################################################################################

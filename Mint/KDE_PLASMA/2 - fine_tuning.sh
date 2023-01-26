@@ -2,6 +2,8 @@
 a=0
 install=false
 
+dir="$(pwd)"
+. "${dir}"/sources/functions/zsh_starship
 
 #FIX REPOS AND PPA'S *******************************************#
 clear
@@ -19,18 +21,14 @@ while [ $a -lt 1  ]
     do
         read -p "Do you wish to install ZSH+OH_MY_ZSH+STARSHIP? (Y/N) " yn
         case $yn in
-            [Yy]* ) a=1;install=true;clear;;
-            [Nn]* ) a=1;install=false;clear;;
+            [Yy]* ) a=1;install_ZSH "${exta_apps}";clear;;
+            [Nn]* ) a=1;echo "OK\n";clear;;
             * ) echo "Please answer yes or no.";;
         esac
     done
 
-if $install; then
-    install_ZSH
-fi
-
-sudo apt clean -y
-sudo apt update -y && sudo apt upgrade -y && sudo apt full-upgrade -y
+sudo nala clean -y
+sudo nala update -y && sudo nala upgrade -y && sudo nala full-upgrade -y
 sudo aptitude safe-upgrade -y
 
 sudo bleachbit
