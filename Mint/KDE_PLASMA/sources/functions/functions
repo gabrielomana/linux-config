@@ -4,6 +4,31 @@
 show_listitem() {
   echo -e $'\033[1;37m'"$*"$'\033[0m'
 }
+show_error() {
+  echo -e $'\033[1;31m'"$*"$'\033[0m' 1>&2
+}
+show_info() {
+  echo -e $'\033[1;32m'"$*"$'\033[0m'
+}
+show_warning() {
+  echo -e $'\033[1;33m'"$*"$'\033[0m'
+}
+show_question() {
+  echo -e $'\033[1;34m'"$*"$'\033[0m'
+}
+ask_question() {
+  read -r -p $'\033[1;34m'"$* "$'\033[0m' var
+  echo "${var}"
+}
+show_success() {
+  echo -e $'\033[1;35m'"$*"$'\033[0m'
+}
+show_header() {
+  echo -e $'\033[1;36m'"$*"$'\033[0m'
+}
+show_listitem() {
+  echo -e $'\033[1;37m'"$*"$'\033[0m'
+}
 
 function check_installed {
   local package
@@ -12,28 +37,49 @@ function check_installed {
   while read -r package; do
     [ -z "${package}" ] && continue
 
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
+
     # Check if package is installed already before installing.
     if dpkg -s "${package}" >/dev/null 2>&1; then
       show_listitem "${package} package already installed. Skipping."
     else
-      # First check if the package exists in the repos.
+       #First check if the package exists in the repos.
       if ! (apt-cache showsrc "${package}" 2>&1 | grep -q "W: "); then
         #show_listitem "Installing ${package}."
         #sudo apt-get -y install "${package}"
         list="${list} ${package}"
       else
-        show_warning "Package ${package} does not exist in the repos. Skipping."
+        show_warning "Package ${package} does not exist in the repos. Skipping"
       fi
     fi
   done < "${1}"
-  sudo apt-get -y install "${list}"
+  c="sudo nala install "${list}" -y"
+  eval $c
 }
 
 function check_uninstalled {
   local package
-   list=""
+  list=""
   while read -r package; do
     [ -z "${package}" ] && continue
+
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
 
     if dpkg -s "${package}" >/dev/null 2>&1; then
 #       show_listitem "Purging ${package}."
@@ -43,11 +89,14 @@ function check_uninstalled {
       show_warning "Package ${package} is not installed. Skipping."
     fi
   done < "${1}"
-  sudo apt purge --autoremove "${list}"n
-  sudo apt -y autoremove
-  sudo apt-get -f install
-  sudo apt-get clean
-  sudo apt-get autoclea
+  c="sudo apt purge --autoremove "${list}" -y"
+  #echo $c
+  eval $c
+  sudo nala autoremove -y
+  sudo nala install -f
+  sudo nala clean -y
+  sudo apt-get autoclean
+  clear
 }
 
 ##################### AUX FUNCTIONS ########################
@@ -57,15 +106,12 @@ clear
 echo "UNINSTALL XFCE"
 check_uninstalled "${xfce}"
 
-clear
+
 echo "UNINSTALL XFCE: Fix missing"
-sudo apt-get -f install
-sudo apt-get clean
-sudo apt-get autoclean
 sudo apt-get update --fix-missing
 sudo apt-get install -f
 
-clear
+
 echo "UNINSTALL XFCE: Remove folders"
 sudo rm /usr/share/xfce4/ -rf
 sudo rm /usr/share/thunar/ -rf
@@ -73,15 +119,14 @@ sudo rm /usr/share/themes/Mint* -rf
 sudo rm /usr/share/themes/mint* -rf
 sudo rm /usr/share/Thunar -rf
 
-clear
-echo "UNINSTALL XFCE: Update & clean"
-sudo apt update; sudo apt upgrade -y; sudo apt install -f; sudo dpkg --configure -a; sudo apt-get autoremove; sudo apt --fix-broken install; sudo update-apt-xapian-index
-sudo apt remove initramfs-tools -y
-sudo apt clean
-sudo apt install initramfs-tools -y
-sudo apt-get update --fix-missing
-sudo apt-get install -f
 
+echo "UNINSTALL XFCE: Update & clean"
+sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
+sudo nala remove initramfs-tools -y
+sudo nala clean -y
+sudo nala install initramfs-tools -y
+sudo apt-get update --fix-missing
+sudo nala install -f
 }
 
 function add_repos(){
@@ -162,17 +207,17 @@ echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -
 
 ###### BALENA ETCHER ####
 curl -1sLf \
-   'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-   | sudo -E bash
+  'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+  | sudo -E bash
 
 
-   ##### CLEAN ANH GET MISSINGS KEYS ####
+##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo apt update -y
 clear
 
 ##### FLATPACKS ####
-sudo apt install flatpak -y
+sudo nala install flatpak -y
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 
@@ -187,17 +232,14 @@ sudo systemctl set-default graphical.target
 sudo systemctl enable sddm
 lookandfeeltool -a org.kde.breezedark.desktop
 sudo lookandfeeltool -a org.kde.breezedark.desktop
-sudo apt install plasma-discover-backend-flatpak -y
+sudo nala install plasma-discover-backend-flatpak -y
 
 #CLEAN PLASMA
 clear
 echo "KDE PLASMA: Remove apps and bloatware"
 check_uninstalled "${kde_bloatware}"
-
-sudo apt -y autoremove
-sudo apt-get -f install
-sudo apt-get clean
-sudo apt-get autoclean
+sudo apt-get update --fix-missing
+sudo apt-get install -f
 
 
 #KDE'S apps
@@ -232,10 +274,10 @@ hblock
 
 
 #PIPEWIRE & WIREPLUMBER
-sudo apt install -y libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0
-sudo apt install -y gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}}
-sudo apt install -y pipewire-doc
-sudo apt-get install -y wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev}
+sudo nala install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
+sudo nala install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
+sudo nala install pipewire-doc -y
+sudo nala install wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} -y
 systemctl --user --now disable pulseaudio.{socket,service}
 systemctl --user mask pulseaudio
 systemctl --user --now enable pipewire{,-pulse}.{socket,service}
@@ -259,12 +301,18 @@ sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
 sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
 sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
 sudo rm /tmp/nerd_fonts/ -rf
-sudo apt install -y fonts-noto-color-emoji
+sudo nala install fonts-noto-color-emoji -y
 sudo cp Files/fonts.conf /etc/fonts/fonts.conf -rf
 fc-cache -f -v
 }
 
-
+#MULTIMEDIA
+function install_multimedia()
+{
+clear
+echo -e "MULTIMEDIA\n"
+check_installed "${multimedia}"
+}
 
 function install_ZSH()
 {
@@ -274,7 +322,7 @@ clear
 if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
     echo -e "ZSH and Git are already installed\n"
 else
-    if sudo apt install -y zsh git wget || sudo pacman -S zsh git wget || sudo dnf install -y zsh git wget || sudo yum install -y zsh git wget || sudo brew install git zsh wget || pkg install git zsh wget ; then
+    if sudo nala install zsh git wget -y || sudo pacman -S zsh git wget || sudo dnf install -y zsh git wget || sudo yum install -y zsh git wget || sudo brew install git zsh wget || pkg install git zsh wget ; then
         echo -e "zsh wget and git Installed\n"
     else
         echo -e "Please install the following packages first, then try again: zsh git wget \n" && exit

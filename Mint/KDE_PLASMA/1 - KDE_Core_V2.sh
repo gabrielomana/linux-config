@@ -1,9 +1,9 @@
 #!/bin/bash
+sudo apt install nala -y
+sudo nala fetch --auto --fetches 5 -y
+
 clear
 dir="$(pwd)"
-
-. "${dir}"/sources/functions/functions_aux
-. "${dir}"/sources/functions/functions
 
 codecs="${dir}/sources/lists/codecs.list"
 exta_apps="${dir}/sources/lists/exta_apps.list"
@@ -15,41 +15,40 @@ utilities="${dir}/sources/lists/utilities.list"
 xfce="${dir}/sources/lists/xfce.list"
 kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 
+#. "${dir}"/sources/functions/functions_aux
+. "${dir}"/sources/functions/functions
+
 ######################## UNINSTALL XFCE ###############################
 clear
 echo "UNINSTALL XFCE"
+sleep 5
 uninstall_xfce
-read -p "Press enter to continue"
-######################## REPOSITORIES ###############################
+# # ######################## REPOSITORIES ###############################
 clear
 echo "REPOSITORIES"
+sleep 5
 add_repos
-read -p "Press enter to continue"
-######################## KDE PLASMA ###############################
+# ######################## KDE PLASMA ###############################
 clear
 echo "KDE PLASMA"
-add_repos
-read -p "Press enter to continue"
-######################## CORE APPS ###############################
+sleep 5
+install_kde
+# ######################## CORE APPS ###############################
 clear
 echo "CORE APPS"
+sleep 5
 install_core_apps
-read -p "Press enter to continue"
-######################## MULTIMEDIA ###############################
+# ######################## MULTIMEDIA ###############################
 clear
-echo "CORE APPS"
-check_installed "${multimedia}"
-read -p "Press enter to continue"
+echo "MULTIMEDIA"
+sleep 5
+install_multimedia
 
 
-##############################################################################################
-########################################  EXTRA APPS #########################################
-##############################################################################################
+# # ##############################################################################################
+# # ########################################  EXTRA APPS #########################################
+# # ##############################################################################################
 
-declare -a apps
-declare -a install
-apps=(brave onlyoffice filezilla WhatsApp ytmdesktop KODI QEMU Balena-etcher Playonlinux Extra-Fonts)
-s=${#apps[*]}
 a=0
 j=0
 
@@ -63,29 +62,27 @@ j=0
         esac
     done
 
-#############################################################################################
-#######################################_END_#################################################
-#############################################################################################
-
-######## CARGO & TOPGRADE #####################################
+# # #############################################################################################
+# # #######################################_END_#################################################
+# # #############################################################################################
+# #
+# # ######## CARGO & TOPGRADE #####################################
 clear
-echo -e "MULTIMEDIA\n"
+echo -e "CARGO & TOPGRADE\n"
 cargo install cargo-update
 cargo install topgrade
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.bashrc
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.bashrc
 
-######## KONSOLE #############################################
-sudo cp Style/Colors/* /usr/share/konsole/ -rf
-cp Files/konsole.profile ~/.local/share/konsole/
+# # ######## KONSOLE #############################################
+sudo cp style/colors/* /usr/share/konsole/ -rf
+cp files/konsole.profile ~/.local/share/konsole/
 
-
-######## FULL UPDATE ##########################################
+# # ######## FULL UPDATE ##########################################
 clear
 echo -e "FULL UPDATE\n"
-sudo apt clean -y
-sudo apt update; sudo apt full-upgrade -y; sudo apt install -f; sudo dpkg --configure -a; sudo apt-get autoremove; sudo apt --fix-broken install; sudo update-apt-xapian-index
+sudo nala clean
+sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
 sudo aptitude safe-upgrade -y
 sudo systemctl disable casper-md5check.service
 reboot
-
