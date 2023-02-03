@@ -25,63 +25,63 @@ clear
 echo "UNINSTALL XFCE"
 sleep 5
 uninstall_xfce
-# # ######################## REPOSITORIES ###############################
-clear
-echo "REPOSITORIES"
-sleep 5
-add_repos
-# ######################## KDE PLASMA ###############################
-clear
-echo "KDE PLASMA"
-sleep 5
-install_kde
-# ######################## CORE APPS ###############################
-clear
-echo "CORE APPS"
-sleep 5
-install_core_apps
-# ######################## MULTIMEDIA ###############################
-clear
-echo "MULTIMEDIA"
-sleep 5
-install_multimedia
-
-
-# # ##############################################################################################
-# # ########################################  EXTRA APPS #########################################
-# # ##############################################################################################
-a=0
-j=0
-    while [ $a -lt 1  ]
-    do
-        read -p "Do you wish to install Extra Apps? " yn
-        case $yn in
-            [Yy]* ) a=1;check_installed "${exta_apps}";clear;;
-            [Nn]* ) a=1;echo "OK\n";clear;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
-# # #############################################################################################
-# # #######################################_END_#################################################
-# # #############################################################################################
-# #
-# # ######## CARGO & TOPGRADE #####################################
-clear
-echo -e "CARGO & TOPGRADE\n"
-cargo install cargo-update
-cargo install topgrade
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.bashrc
-echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.bashrc
-
-# # ######## KONSOLE #############################################
-sudo cp style/colors/* /usr/share/konsole/ -rf
-cp files/konsole.profile ~/.local/share/konsole/
-
-# # ######## FULL UPDATE ##########################################
-clear
-echo -e "FULL UPDATE\n"
-sudo nala clean
-sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
-sudo aptitude safe-upgrade -y
-sudo systemctl disable casper-md5check.service
-reboot
+# # # ######################## REPOSITORIES ###############################
+# clear
+# echo "REPOSITORIES"
+# sleep 5
+# add_repos
+# # ######################## KDE PLASMA ###############################
+# clear
+# echo "KDE PLASMA"
+# sleep 5
+# install_kde
+# # ######################## CORE APPS ###############################
+# clear
+# echo "CORE APPS"
+# sleep 5
+# install_core_apps
+# # ######################## MULTIMEDIA ###############################
+# clear
+# echo "MULTIMEDIA"
+# sleep 5
+# install_multimedia
+#
+#
+# # # ##############################################################################################
+# # # ########################################  EXTRA APPS #########################################
+# # # ##############################################################################################
+# a=0
+# j=0
+#     while [ $a -lt 1  ]
+#     do
+#         read -p "Do you wish to install Extra Apps? " yn
+#         case $yn in
+#             [Yy]* ) a=1;check_installed "${exta_apps}";clear;;
+#             [Nn]* ) a=1;echo "OK\n";clear;;
+#             * ) echo "Please answer yes or no.";;
+#         esac
+#     done
+# # # #############################################################################################
+# # # #######################################_END_#################################################
+# # # #############################################################################################
+# # #
+# # # ######## CARGO & TOPGRADE #####################################
+# clear
+# echo -e "CARGO & TOPGRADE\n"
+# cargo install cargo-update
+# cargo install topgrade
+# echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee ~/.bashrc
+# echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee /root/.bashrc
+#
+# # # ######## KONSOLE #############################################
+# sudo cp style/colors/* /usr/share/konsole/ -rf
+# cp files/konsole.profile ~/.local/share/konsole/
+#
+# # # ######## FULL UPDATE ##########################################
+# clear
+# echo -e "FULL UPDATE\n"
+# sudo nala clean
+# sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
+# sudo aptitude safe-upgrade -y
+# sudo systemctl disable casper-md5check.service
+# reboot

@@ -6,26 +6,26 @@ echo "UNINSTALL XFCE"
 check_uninstalled "${xfce}"
 
 
-echo "UNINSTALL XFCE: Fix missing"
-sudo apt-get update --fix-missing
-sudo apt-get install -f
-
-
-echo "UNINSTALL XFCE: Remove folders"
-sudo rm /usr/share/xfce4/ -rf
-sudo rm /usr/share/thunar/ -rf
-sudo rm /usr/share/themes/Mint* -rf
-sudo rm /usr/share/themes/mint* -rf
-sudo rm /usr/share/Thunar -rf
-
-
-echo "UNINSTALL XFCE: Update & clean"
-sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
-sudo nala remove initramfs-tools -y
-sudo nala clean -y
-sudo nala install initramfs-tools -y
-sudo apt-get update --fix-missing
-sudo nala install -f
+# echo "UNINSTALL XFCE: Fix missing"
+# sudo apt-get update --fix-missing
+# sudo apt-get install -f
+#
+#
+# echo "UNINSTALL XFCE: Remove folders"
+# sudo rm /usr/share/xfce4/ -rf
+# sudo rm /usr/share/thunar/ -rf
+# sudo rm /usr/share/themes/Mint* -rf
+# sudo rm /usr/share/themes/mint* -rf
+# sudo rm /usr/share/Thunar -rf
+#
+#
+# echo "UNINSTALL XFCE: Update & clean"
+# sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
+# sudo nala remove initramfs-tools -y
+# sudo nala clean -y
+# sudo nala install initramfs-tools -y
+# sudo apt-get update --fix-missing
+# sudo nala install -f
 }
 
 function add_repos(){
