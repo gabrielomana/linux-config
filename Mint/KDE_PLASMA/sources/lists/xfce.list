@@ -1,7 +1,7 @@
 mint-meta-xfce
 thunar
 "thunar*"
-"^xfce4*"
+"*xfce4*"
 "xfce*"
 xfconf
 xfdesktop4

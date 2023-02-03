@@ -1,6 +1,6 @@
 #!/bin/bash
 sudo apt install nala -y
-sudo nala fetch --auto --fetches 5 -y
+#sudo nala fetch --auto --fetches 5 -y
 
 clear
 dir="$(pwd)"
@@ -21,20 +21,20 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 
 
 ######################## UNINSTALL XFCE ###############################
-clear
-echo "UNINSTALL XFCE"
-sleep 5
-uninstall_xfce
+#clear
+#echo "UNINSTALL XFCE"
+#sleep 5
+#uninstall_xfce
 # # # ######################## REPOSITORIES ###############################
-# clear
-# echo "REPOSITORIES"
-# sleep 5
-# add_repos
+ #clear
+ #echo "REPOSITORIES"
+ #sleep 5
+ #add_repos
 # # ######################## KDE PLASMA ###############################
-# clear
-# echo "KDE PLASMA"
-# sleep 5
-# install_kde
+ clear
+ echo "KDE PLASMA"
+ sleep 5
+ install_kde
 # # ######################## CORE APPS ###############################
 # clear
 # echo "CORE APPS"

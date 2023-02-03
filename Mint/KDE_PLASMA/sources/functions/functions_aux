@@ -63,6 +63,7 @@ function check_installed {
 }
 
 function check_uninstalled {
+echo "check_uninstalled"
   local package
   list=""
   while read -r package; do
