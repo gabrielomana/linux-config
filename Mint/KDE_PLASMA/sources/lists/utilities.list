@@ -1,7 +1,6 @@
 samba
 screen
 bleachbit
-"util-linux*"
 apt-utils
 bash-completion
 openssl

@@ -37,6 +37,7 @@ function check_uninstalled {
 function check_installed {
   local package
   list=""
+  z="";
 
   while read -r package; do
     [ -z "${package}" ] && continue
@@ -53,7 +54,7 @@ function check_installed {
 
     # Check if package is installed already before installing.
     if dpkg -s "${package}" >/dev/null 2>&1; then
-      echo ""
+      $z=""
     else
        #First check if the package exists in the repos.
       if ! (apt-cache showsrc "${package}" 2>&1 | grep -q "W: "); then
@@ -74,28 +75,31 @@ function uninstall_xfce {
 
  clear
  echo "UNINSTALL XFCE: Fix missing"
+ sleep 3
  sudo apt-get update --fix-missing
  sudo apt-get install -f
- sleep 10
+
 
  clear
  echo "UNINSTALL XFCE: Remove folders"
+ sleep 3
  sudo rm /usr/share/xfce4/ -rf
  sudo rm /usr/share/thunar/ -rf
  sudo rm /usr/share/themes/Mint* -rf
  sudo rm /usr/share/themes/mint* -rf
  sudo rm /usr/share/Thunar -rf
- sleep 10
+
 
  clear
  echo "UNINSTALL XFCE: Update & clean"
+ sleep 3
  sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
  sudo nala remove initramfs-tools -y
  sudo nala clean
  sudo nala install initramfs-tools -y
  sudo apt-get update --fix-missing
  sudo nala install -f
- sleep 10
+
 }
 
 function add_repos(){
@@ -195,6 +199,7 @@ function install_kde {
  clear
  echo "INSTALL KDE PLASMA: "
  echo " - Install KDE Plasma Core"
+ sleep 3
  check_installed "${kde_plasma}"
  sudo systemctl set-default graphical.target
  sudo systemctl enable sddm
@@ -209,7 +214,7 @@ function install_kde {
  check_uninstalled "${kde_bloatware}"
  sudo apt-get update --fix-missing
  sudo apt-get install -f
-sleep 10
+
 
  #KDE'S apps
 
@@ -217,8 +222,9 @@ sleep 10
  echo " - Install KDEL Plasma Core"
  echo " - Remove apps and bloatware"
  echo " - Install KDE's APPS"
+ sleep 3
  check_installed "${kde_plasma_apps}"
- sleep 10
+
 }
 
 
@@ -229,34 +235,38 @@ function install_core_apps()
  echo "INSTALL SYSTEM CORE APPS: "
  echo " - Development tools and libraries"
 ##Development tools and libraries
+sleep 3
 check_installed "${tools}"
-sleep 10
+
 curl https://sh.rustup.rs -sSf | sh
 source ~/.profile
 source ~/.cargo/env
 
-sleep 10
+
 ##Codecs and Drivers
  clear
  echo "INSTALL SYSTEM CORE APPS: "
  echo " - Development tools and libraries"
  echo " - Codecs and Drivers"
+ sleep 3
 check_installed "${codecs}"
-sleep 10
+
 ##Utilities
  clear
  echo "INSTALL SYSTEM CORE APPS: "
  echo " - Development tools and libraries"
  echo " - Codecs and Drivers"
  echo " - Utilities"
+ sleep 3
 check_installed "${utilities}"
-sleep 10
-# cargo install --git https://github.com/Peltoche/lsd.git --branch master
-## falta el alias de batch"
-
+sudo apt install "util-linux*" -y
+cargo install --git https://github.com/Peltoche/lsd.git --branch master
+sudo echo -e "export PATH=/home/gabriel/.cargo/bin:/usr/local/bin:/home/gabriel/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin\n\nalias cat=\"batcat -f\"\nalias ls=\"lsd\"\nalias ll=\"lsd -l\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | tee ~/aux.txt
+mv ~/aux.txt ~/.bashrc -f
+rm ~/aux.txt
+source .bashrc
 sudo npm install -g hblock
 hblock
-
 
 ##Pipewire & Wireplumber
  clear
@@ -265,6 +275,7 @@ hblock
  echo " - Codecs and Drivers"
  echo " - Utilities"
  echo " - Pipewire & Wireplumber"
+ sleep 3
 sudo nala install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
 sudo nala install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
 sudo nala install pipewire-doc -y
@@ -282,6 +293,7 @@ systemctl --user --now enable wireplumber.service
  echo " - Utilities"
  echo " - Pipewire & Wireplumber"
  echo " - Nerd Fonts"
+ sleep 3
 mkdir /tmp/nerd_fonts/
 wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
 wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
@@ -308,7 +320,8 @@ fc-cache -f -v
 function install_multimedia()
 {
 clear
-echo -e "MULTIMEDIA\n"
+echo -e "INSTALL MULTIMEDIA APPS: \n"
+sleep 3
 check_installed "${multimedia}"
-sleep 10
+
 }
