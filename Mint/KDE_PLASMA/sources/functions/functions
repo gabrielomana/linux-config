@@ -23,6 +23,9 @@ function check_uninstalled {
     fi
   done < "${1}"
   c="sudo nala remove --purge "${list}" -y"
+  clear
+#   echo $c
+#   sleep 5
   eval $c
   sudo nala autoremove -y
   sudo nala install -f
@@ -32,8 +35,6 @@ function check_uninstalled {
 }
 
 function check_installed {
-  echo "check_installed"
-  sleep 5
   local package
   list=""
 
@@ -52,7 +53,7 @@ function check_installed {
 
     # Check if package is installed already before installing.
     if dpkg -s "${package}" >/dev/null 2>&1; then
-
+      echo ""
     else
        #First check if the package exists in the repos.
       if ! (apt-cache showsrc "${package}" 2>&1 | grep -q "W: "); then
@@ -63,9 +64,9 @@ function check_installed {
     fi
   done < "${1}"
   c="sudo nala install "${list}" -y"
-  echo $c
-  sleep 5
-  #eval $c
+#   echo $c
+#   sleep 5
+  eval $c
 }
 
 function uninstall_xfce {
@@ -75,6 +76,7 @@ function uninstall_xfce {
  echo "UNINSTALL XFCE: Fix missing"
  sudo apt-get update --fix-missing
  sudo apt-get install -f
+ sleep 10
 
  clear
  echo "UNINSTALL XFCE: Remove folders"
@@ -83,6 +85,7 @@ function uninstall_xfce {
  sudo rm /usr/share/themes/Mint* -rf
  sudo rm /usr/share/themes/mint* -rf
  sudo rm /usr/share/Thunar -rf
+ sleep 10
 
  clear
  echo "UNINSTALL XFCE: Update & clean"
@@ -92,6 +95,7 @@ function uninstall_xfce {
  sudo nala install initramfs-tools -y
  sudo apt-get update --fix-missing
  sudo nala install -f
+ sleep 10
 }
 
 function add_repos(){
@@ -187,58 +191,80 @@ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flat
 
 }
 
-function install_kde()
-{
- echo "KDE PLASMA 2"
+function install_kde {
+ clear
+ echo "INSTALL KDE PLASMA: "
+ echo " - Install KDE Plasma Core"
  check_installed "${kde_plasma}"
- #sudo systemctl set-default graphical.target
- #sudo systemctl enable sddm
- #lookandfeeltool -a org.kde.breezedark.desktop
- #sudo lookandfeeltool -a org.kde.breezedark.desktop
- #sudo nala install plasma-discover-backend-flatpak -y
+ sudo systemctl set-default graphical.target
+ sudo systemctl enable sddm
+ sudo nala install plasma-discover-backend-flatpak -y
 
- ##CLEAN PLASMA
- #clear
- #echo "KDE PLASMA: Remove apps and bloatware"
- #check_uninstalled "${kde_bloatware}"
- #sudo apt-get update --fix-missing
- #sudo apt-get install -f
+ #CLEAN PLASMA
+ clear
+ echo "INSTALL KDE PLASMA: "
+ echo " - Install KDEL Plasma Core"
+ echo " - Remove apps and bloatware"
+ sleep 3
+ check_uninstalled "${kde_bloatware}"
+ sudo apt-get update --fix-missing
+ sudo apt-get install -f
+sleep 10
 
+ #KDE'S apps
 
- ##KDE'S apps
- #clear
- #echo "KDE PLASMA: KDE'S apps"
- #check_installed "${kde_plasma_apps}"
+ echo "INSTALL KDE PLASMA: "
+ echo " - Install KDEL Plasma Core"
+ echo " - Remove apps and bloatware"
+ echo " - Install KDE's APPS"
+ check_installed "${kde_plasma_apps}"
+ sleep 10
 }
 
 
 
 function install_core_apps()
 {
-clear
-echo "CORE APPS"
-
-#Development tools and libraries
+ clear
+ echo "INSTALL SYSTEM CORE APPS: "
+ echo " - Development tools and libraries"
+##Development tools and libraries
 check_installed "${tools}"
-
+sleep 10
 curl https://sh.rustup.rs -sSf | sh
 source ~/.profile
 source ~/.cargo/env
 
-#Codecs and Drivers
+sleep 10
+##Codecs and Drivers
+ clear
+ echo "INSTALL SYSTEM CORE APPS: "
+ echo " - Development tools and libraries"
+ echo " - Codecs and Drivers"
 check_installed "${codecs}"
-
-#Utilities
+sleep 10
+##Utilities
+ clear
+ echo "INSTALL SYSTEM CORE APPS: "
+ echo " - Development tools and libraries"
+ echo " - Codecs and Drivers"
+ echo " - Utilities"
 check_installed "${utilities}"
-
-cargo install --git https://github.com/Peltoche/lsd.git --branch master
-#falta el alias de batch"
+sleep 10
+# cargo install --git https://github.com/Peltoche/lsd.git --branch master
+## falta el alias de batch"
 
 sudo npm install -g hblock
 hblock
 
 
-#PIPEWIRE & WIREPLUMBER
+##Pipewire & Wireplumber
+ clear
+ echo "INSTALL SYSTEM CORE APPS: "
+ echo " - Development tools and libraries"
+ echo " - Codecs and Drivers"
+ echo " - Utilities"
+ echo " - Pipewire & Wireplumber"
 sudo nala install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
 sudo nala install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
 sudo nala install pipewire-doc -y
@@ -248,7 +274,14 @@ systemctl --user mask pulseaudio
 systemctl --user --now enable pipewire{,-pulse}.{socket,service}
 systemctl --user --now enable wireplumber.service
 
-#NERD FONTS
+#Nerd Fonts
+ clear
+ echo "INSTALL SYSTEM CORE APPS: "
+ echo " - Development tools and libraries"
+ echo " - Codecs and Drivers"
+ echo " - Utilities"
+ echo " - Pipewire & Wireplumber"
+ echo " - Nerd Fonts"
 mkdir /tmp/nerd_fonts/
 wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
 wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
@@ -277,4 +310,5 @@ function install_multimedia()
 clear
 echo -e "MULTIMEDIA\n"
 check_installed "${multimedia}"
+sleep 10
 }
