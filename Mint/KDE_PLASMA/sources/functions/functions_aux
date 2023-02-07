@@ -27,9 +27,44 @@ show_listitem() {
   #echo -e $'\033[1;37m'"$*"$'\033[0m'
 }
 
+function check_uninstalled {
+  local package
+  list=""
+  while read -r package; do
+    [ -z "${package}" ] && continue
+
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
+
+    if dpkg -s "${package}" >/dev/null 2>&1; then
+       #show_listitem "Purging ${package}."
+       #sudo apt purge --autoremove "${package}"n
+      list="${list} ${package}"
+    fi
+  done < "${1}"
+  c="sudo nala remove --purge "${list}" -y"
+  clear
+#   echo $c
+#   sleep 5
+  eval $c
+  sudo nala autoremove -y
+  sudo nala install -f
+  sudo nala clean
+  sudo apt-get autoclean
+  clear
+}
+
 function check_installed {
   local package
   list=""
+  z="";
 
   while read -r package; do
     [ -z "${package}" ] && continue
@@ -46,53 +81,18 @@ function check_installed {
 
     # Check if package is installed already before installing.
     if dpkg -s "${package}" >/dev/null 2>&1; then
-      show_listitem "${package} package already installed. Skipping."
+      $z=""
     else
        #First check if the package exists in the repos.
       if ! (apt-cache showsrc "${package}" 2>&1 | grep -q "W: "); then
         #show_listitem "Installing ${package}."
         #sudo apt-get -y install "${package}"
         list="${list} ${package}"
-      else
-        show_warning "Package ${package} does not exist in the repos. Skipping"
       fi
     fi
   done < "${1}"
   c="sudo nala install "${list}" -y"
+#   echo $c
+#   sleep 5
   eval $c
-}
-
-function check_uninstalled {
-echo "check_uninstalled"
-  local package
-  list=""
-  while read -r package; do
-    [ -z "${package}" ] && continue
-
-        STR="${package}"
-        SUB='*'
-
-        case $STR in
-
-          *"$SUB"*)
-            list="${list} ${STR}"
-            ;;
-        esac
-
-    if dpkg -s "${package}" >/dev/null 2>&1; then
-#       show_listitem "Purging ${package}."
-#       sudo apt purge --autoremove "${package}"n
-      list="${list} ${package}"
-    else
-      show_warning "Package ${package} is not installed. Skipping."
-    fi
-  done < "${1}"
-  c="sudo apt purge --autoremove "${list}" -y"
-  #echo $c
-  eval $c
-  sudo nala autoremove -y
-  sudo nala install -f
-  sudo nala clean -y
-  sudo apt-get autoclean
-  clear
 }
