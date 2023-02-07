@@ -37,7 +37,7 @@ function check_uninstalled {
 function check_installed {
   local package
   list=""
-  z="";
+  temp=""
 
   while read -r package; do
     [ -z "${package}" ] && continue
@@ -54,7 +54,7 @@ function check_installed {
 
     # Check if package is installed already before installing.
     if dpkg -s "${package}" >/dev/null 2>&1; then
-      echo ""
+      temp=""
     else
        #First check if the package exists in the repos.
       if ! (apt-cache showsrc "${package}" 2>&1 | grep -q "W: "); then
@@ -70,18 +70,21 @@ function check_installed {
   eval $c
 }
 
+
 function uninstall_xfce {
  check_uninstalled "${xfce}"
 
  clear
- echo "UNINSTALL XFCE: Fix missing"
+ echo "UNINSTALL XFCE: "
+ echo " - Fix missing"
  sleep 3
  sudo apt-get update --fix-missing
  sudo apt-get install -f
 
-
  clear
- echo "UNINSTALL XFCE: Remove folders"
+ echo "UNINSTALL XFCE: "
+ echo " - Fix missing"
+ echo " - Remove folders"
  sleep 3
  sudo rm /usr/share/xfce4/ -rf
  sudo rm /usr/share/thunar/ -rf
@@ -89,9 +92,11 @@ function uninstall_xfce {
  sudo rm /usr/share/themes/mint* -rf
  sudo rm /usr/share/Thunar -rf
 
-
  clear
- echo "UNINSTALL XFCE: Update & clean"
+ echo "UNINSTALL XFCE: "
+ echo " - Fix missing"
+ echo " - Remove folders"
+ echo " - Update & clean"
  sleep 3
  sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
  sudo nala remove initramfs-tools -y
@@ -227,20 +232,24 @@ function install_kde {
 
 }
 
-
-
 function install_core_apps()
 {
+ ##Development tools and libraries
  clear
  echo "INSTALL SYSTEM CORE APPS: "
  echo " - Development tools and libraries"
-##Development tools and libraries
-sleep 3
-check_installed "${tools}"
+ sleep 3
+ check_installed "${tools}"
 
-curl https://sh.rustup.rs -sSf | sh
-source ~/.profile
-source ~/.cargo/env
+ carg	wget https://sh.rustup.rs -O rustup-init.sh
+ chmod 777 rustup-init.sh
+ ./rustup-init.sh -y
+ source "$HOME/.cargo/env"
+ rm rustup-init.sh -rf
+
+
+ source ~/.profile
+ source ~/.cargo/env
 
 
 ##Codecs and Drivers
