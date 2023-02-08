@@ -1,6 +1,5 @@
 function install_ZSH()
 {
-clear
 
 ########Install ZSH##########
 if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
@@ -32,7 +31,7 @@ fi
 
 ######## dotfiles ##########
 
-cp -f Files/.zshrc ~/
+cp -f files/.zshrc ~/
 mkdir -p ~/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
 
 if [ -f ~/.zcompdump ]; then
@@ -59,13 +58,11 @@ else
     git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/plugins/you-should-use
 fi
 
-
 if [ -d ~/.oh-my-zsh/custom/plugins/zsh-completions ]; then
     cd ~/.oh-my-zsh/custom/plugins/zsh-completions && git pull
 else
     git clone --depth=1 https://github.com/zsh-users/zsh-completions ~/.oh-my-zsh/custom/plugins/zsh-completions
 fi
-
 
 if [ -d ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search ]; then
     cd ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search && git pull
@@ -75,18 +72,16 @@ fi
 
 ######## STARSHIP ##########
 curl -sS https://starship.rs/install.sh | sh
-cp -f Files/starship/starship_3.toml ~/.config/starship.toml
+cp -f files/starship/starship_3.toml ~/.config/starship.toml
 
 ######## REBOOT ZSH ##########
 # source ~/.zshrc
 echo -e "\nSudo access is needed to change default shell\n"
 if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
     echo -e "Installation Successful"
-    sleep 5
-    reboot
 else
     echo -e "Something is wrong"
 fi
-exit
+clear
 
 }
