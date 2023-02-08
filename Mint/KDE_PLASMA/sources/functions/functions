@@ -1,6 +1,4 @@
-#! /bin/bash
-
-function check_uninstalled {
+function check_uninstalled (){
   local package
   list=""
   while read -r package; do
@@ -17,32 +15,27 @@ function check_uninstalled {
         esac
 
     if dpkg -s "${package}" >/dev/null 2>&1; then
-       #show_listitem "Purging ${package}."
-       #sudo apt purge --autoremove "${package}"n
       list="${list} ${package}"
     fi
   done < "${1}"
-  c="sudo nala remove --purge "${list}" -y"
-  clear
-#   echo $c
-#   sleep 5
-  eval $c
-  sudo nala autoremove -y
-  sudo nala install -f
-  sudo nala clean
-  sudo apt-get autoclean
-  clear
+   c="sudo nala remove --purge "${list}" -y"
+   clear
+   eval $c
+   sudo nala autoremove -y
+   sudo nala install -f
+   sudo nala clean
+   sudo apt-get autoclean
+   clear
 }
 
 function check_installed {
   local package
+  local to_install=()
   list=""
-  temp=""
-
   while read -r package; do
     [ -z "${package}" ] && continue
 
-        STR="${package}"
+		STR="${package}"
         SUB='*'
 
         case $STR in
@@ -51,59 +44,52 @@ function check_installed {
             list="${list} ${STR}"
             ;;
         esac
-
-    # Check if package is installed already before installing.
-    if dpkg -s "${package}" >/dev/null 2>&1; then
-      temp=""
-    else
-       #First check if the package exists in the repos.
-      if ! (apt-cache showsrc "${package}" 2>&1 | grep -q "W: "); then
-        #show_listitem "Installing ${package}."
-        #sudo apt-get -y install "${package}"
-        list="${list} ${package}"
-      fi
-    fi
+	if !(dpkg -s "${package}" >/dev/null 2>&1); then
+	 if !(nala show "${package}" 2>&1 | grep -q "Error: "); then
+		list="${list} ${package}"
+	  fi
+	fi
   done < "${1}"
-  c="sudo nala install "${list}" -y"
-#   echo $c
-#   sleep 5
-  eval $c
+   c="sudo nala install "${list}" -y"
+   #echo $c
+   #echo ""
+   #sleep 5
+   eval $c
 }
 
 
 function uninstall_xfce {
- check_uninstalled "${xfce}"
+  check_uninstalled "${xfce}"
+  clear
+  echo "UNINSTALL XFCE: "
+  echo " - Fix missing"
+  sleep 3
+  sudo apt-get update --fix-missing
+  sudo apt-get install -f
 
- clear
- echo "UNINSTALL XFCE: "
- echo " - Fix missing"
- sleep 3
- sudo apt-get update --fix-missing
- sudo apt-get install -f
+  clear
+  echo "UNINSTALL XFCE: "
+  echo " - Fix missing"
+  echo " - Remove folders"
+  sleep 3
+  sudo rm /usr/share/xfce4/ -rf
+  sudo rm /usr/share/thunar/ -rf
+  sudo rm /usr/share/themes/Mint* -rf
+  sudo rm /usr/share/themes/mint* -rf
+  sudo rm /usr/share/Thunar -rf
 
- clear
- echo "UNINSTALL XFCE: "
- echo " - Fix missing"
- echo " - Remove folders"
- sleep 3
- sudo rm /usr/share/xfce4/ -rf
- sudo rm /usr/share/thunar/ -rf
- sudo rm /usr/share/themes/Mint* -rf
- sudo rm /usr/share/themes/mint* -rf
- sudo rm /usr/share/Thunar -rf
-
- clear
- echo "UNINSTALL XFCE: "
- echo " - Fix missing"
- echo " - Remove folders"
- echo " - Update & clean"
- sleep 3
- sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
- sudo nala remove initramfs-tools -y
- sudo nala clean
- sudo nala install initramfs-tools -y
- sudo apt-get update --fix-missing
- sudo nala install -f
+  clear
+  echo "UNINSTALL XFCE: "
+  echo " - Fix missing"
+  echo " - Remove folders"
+  echo " - Update & clean"
+  sleep 3
+  sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
+  sudo nala remove initramfs-tools -y
+  sudo nala clean
+  sudo nala install initramfs-tools -y
+  sudo apt-get update --fix-missing
+  sudo nala install -f
 
 }
 
@@ -201,132 +187,179 @@ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flat
 }
 
 function install_kde {
- clear
- echo "INSTALL KDE PLASMA: "
- echo " - Install KDE Plasma Core"
- sleep 3
- check_installed "${kde_plasma}"
- sudo systemctl set-default graphical.target
- sudo systemctl enable sddm
- sudo nala install plasma-discover-backend-flatpak -y
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDE Plasma Core"
+  check_installed "${kde_plasma}"
+  sudo systemctl set-default graphical.target
+  sudo systemctl enable sddm
+  sudo nala install plasma-discover-backend-flatpak -y
 
- #CLEAN PLASMA
- clear
- echo "INSTALL KDE PLASMA: "
- echo " - Install KDEL Plasma Core"
- echo " - Remove apps and bloatware"
- sleep 3
- check_uninstalled "${kde_bloatware}"
- sudo apt-get update --fix-missing
- sudo apt-get install -f
+  #CLEAN PLASMA
+  clear
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDEL Plasma Core"
+  echo " - Remove apps and bloatware"
+  sleep 3
+  check_uninstalled "${kde_bloatware}"
+  sudo apt-get update --fix-missing
+  sudo apt-get install -f
 
 
- #KDE'S apps
-
- echo "INSTALL KDE PLASMA: "
- echo " - Install KDEL Plasma Core"
- echo " - Remove apps and bloatware"
- echo " - Install KDE's APPS"
- sleep 3
- check_installed "${kde_plasma_apps}"
+  #KDE'S apps
+  clear
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDEL Plasma Core"
+  echo " - Remove apps and bloatware"
+  echo " - Install KDE's APPS"
+  sleep 3
+  check_installed "${kde_plasma_apps}"
 
 }
 
 function install_core_apps()
 {
- ##Development tools and libraries
- clear
- echo "INSTALL SYSTEM CORE APPS: "
- echo " - Development tools and libraries"
- sleep 3
- check_installed "${tools}"
+ #Development tools and libraries
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  sleep 3
+  check_installed "${tools}"
 
- carg	wget https://sh.rustup.rs -O rustup-init.sh
- chmod 777 rustup-init.sh
- ./rustup-init.sh -y
- source "$HOME/.cargo/env"
- rm rustup-init.sh -rf
+  wget https://sh.rustup.rs -O rustup-init.sh
+  sudo chmod 777 rustup-init.sh
+  ./rustup-init.sh -y
+  source "$HOME/.cargo/env"
+  rm rustup-init.sh -rf
+
+  source ~/.profile
+  source ~/.cargo/env
 
 
- source ~/.profile
- source ~/.cargo/env
-
-
-##Codecs and Drivers
- clear
- echo "INSTALL SYSTEM CORE APPS: "
- echo " - Development tools and libraries"
- echo " - Codecs and Drivers"
- sleep 3
-check_installed "${codecs}"
+ ##Codecs and Drivers
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  sleep 3
+  check_installed "${codecs}"
 
 ##Utilities
- clear
- echo "INSTALL SYSTEM CORE APPS: "
- echo " - Development tools and libraries"
- echo " - Codecs and Drivers"
- echo " - Utilities"
- sleep 3
-check_installed "${utilities}"
-sudo apt install "util-linux*" -y
-cargo install --git https://github.com/Peltoche/lsd.git --branch master
-sudo echo -e "export PATH=/home/gabriel/.cargo/bin:/usr/local/bin:/home/gabriel/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin\n\nalias cat=\"batcat -f\"\nalias ls=\"lsd\"\nalias ll=\"lsd -l\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | tee ~/aux.txt
-mv ~/aux.txt ~/.bashrc -f
-rm ~/aux.txt
-source .bashrc
-sudo npm install -g hblock
-hblock
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  sleep 3
+  check_installed "${utilities}"
+  sudo apt install "util-linux*" -y
+  cargo install --git https://github.com/Peltoche/lsd.git --branch master
 
-##Pipewire & Wireplumber
- clear
- echo "INSTALL SYSTEM CORE APPS: "
- echo " - Development tools and libraries"
- echo " - Codecs and Drivers"
- echo " - Utilities"
- echo " - Pipewire & Wireplumber"
- sleep 3
-sudo nala install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
-sudo nala install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
-sudo nala install pipewire-doc -y
-sudo nala install wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} -y
-systemctl --user --now disable pulseaudio.{socket,service}
-systemctl --user mask pulseaudio
-systemctl --user --now enable pipewire{,-pulse}.{socket,service}
-systemctl --user --now enable wireplumber.service
+  cp ~/.bashrc ~/.bashrc_old
+  cp ~/.bashrc ~/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias ls=\"lsd\"\nalias ll=\"lsd -l\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
+  rm -rf ~/.bashrc
+  mv ~/aux.txt ~/.bashrc
+  source ~/.bashrc
 
-#Nerd Fonts
- clear
- echo "INSTALL SYSTEM CORE APPS: "
- echo " - Development tools and libraries"
- echo " - Codecs and Drivers"
- echo " - Utilities"
- echo " - Pipewire & Wireplumber"
- echo " - Nerd Fonts"
- sleep 3
-mkdir /tmp/nerd_fonts/
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip -P /tmp/nerd_fonts/
+  sudo cp /root/.bashrc /root/.bashrc_old
+  sudo cp /root/.bashrc /root/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias ls=\"lsd\"\nalias ll=\"lsd -l\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" | sudo tee -a /root/aux.txt
+  sudo rm -rf /root/.bashrc
+  sudo mv /root/aux.txt /root/.bashrc
+  sudo source /root/.bashrc
 
-sudo unzip /tmp/nerd_fonts/JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono
-sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
-sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
+  sudo npm install -g hblock
+  hblock
 
-sudo mkdir /usr/share/fonts/nerd_fonts/
-sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
-sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
-sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
-sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
-sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
-sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
-sudo rm /tmp/nerd_fonts/ -rf
-sudo nala install fonts-noto-color-emoji -y
-sudo cp files/fonts.conf /etc/fonts/fonts.conf -rf
-fc-cache -f -v
-}
+  cargo install cargo-update
+  cargo install topgrade
+  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
+  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
+
+ ##Pipewire & Wireplumber
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  echo " - Pipewire & Wireplumber"
+  sleep 3
+  sudo nala install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
+  sudo nala install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
+  sudo nala install pipewire-doc -y
+  sudo nala install wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} -y
+  systemctl --user --now disable pulseaudio.{socket,service}
+  systemctl --user mask pulseaudio
+  systemctl --user --now enable pipewire{,-pulse}.{socket,service}
+  systemctl --user --now enable wireplumber.service
+
+ #Nerd Fonts
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  echo " - Pipewire & Wireplumber"
+  echo " - Nerd Fonts"
+  sleep 3
+  mkdir /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip -P /tmp/nerd_fonts/
+
+  sudo unzip /tmp/nerd_fonts/JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono
+  sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
+  sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
+
+ sudo mkdir /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
+ sudo rm /tmp/nerd_fonts/ -rf
+ sudo nala install fonts-noto-color-emoji -y
+ sudo cp files/fonts.conf /etc/fonts/fonts.conf -rf
+ fc-cache -f -v
+ }
 
 #MULTIMEDIA
 function install_multimedia()
+{
+clear
+echo -e "INSTALL MULTIMEDIA APPS: \n"
+sleep 3
+check_installed "${multimedia}"
+
+}
+
+#EXTRA APPS
+function install_extra_apps()
+{
+clear
+a=0
+j=0
+while [ $a -lt 1 ]
+do
+        read -p "Do you wish to install Extra APPS? " yn
+        case $yn in
+            [Yy]* ) a=1;check_installed "${exta_apps}";clear;;
+            [Nn]* ) a=1;echo "OK";clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+# flatpak install flathub app.ytmdesktop.ytmdesktop -y
+# flatpak install flathub tv.kodi.Kodi -y
+# flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+# flatpak install flathub org.phoenicis.playonlinux -y
+# flatpak install flathub com.usebottles.bottles -y
+sudo systemctl start libvirtd
+sudo systemctl enable libvirtd
+}
+
+#TOPGRADE
+function install_()
 {
 clear
 echo -e "INSTALL MULTIMEDIA APPS: \n"
