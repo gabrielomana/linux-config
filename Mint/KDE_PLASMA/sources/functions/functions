@@ -84,12 +84,12 @@ function uninstall_xfce {
   echo " - Remove folders"
   echo " - Update & clean"
   sleep 3
-  sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo nala autoremove; sudo apt --fix-broken install
-  sudo nala remove initramfs-tools -y
-  sudo nala clean
-  sudo nala install initramfs-tools -y
-  sudo apt-get update --fix-missing
-  sudo nala install -f
+  sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo apt --fix-broken install
+#   sudo nala remove initramfs-tools -y
+#   sudo nala clean
+#   sudo nala install initramfs-tools -y
+#   sudo apt-get update --fix-missing
+#   sudo nala install -f
 
 }
 
@@ -358,12 +358,3 @@ sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
 }
 
-#TOPGRADE
-function install_()
-{
-clear
-echo -e "INSTALL MULTIMEDIA APPS: \n"
-sleep 3
-check_installed "${multimedia}"
-
-}
