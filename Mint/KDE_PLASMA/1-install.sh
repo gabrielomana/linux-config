@@ -1,6 +1,6 @@
 #!/bin/bash
 cp ~/.bashrc ~/.bashrc_original
-
+#
 if command -v nala &> /dev/null; then
     sudo nala fetch --auto --fetches 5 -y
 else
@@ -24,35 +24,35 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 . "${dir}"/sources/functions/functions
 
 
-####################### UNINSTALL XFCE ###############################
+######################UNINSTALL XFCE ###############################
 clear
 echo "UNINSTALL XFCE"
 sleep 3
 uninstall_xfce
-########################## REPOSITORIES ###############################
+#########################REPOSITORIES ###############################
 clear
 echo "ADD REPOSITORIES"
 sleep 3
-add_repos
-######################### KDE PLASMA ###############################
+ add_repos
+########################KDE PLASMA ###############################
 clear
 echo "INSTALL KDE PLASMA: "
 sleep 3
 install_kde
-######################### CORE APPS ###############################
+########################CORE APPS ###############################
 clear
 echo "INSTALL SYSTEM CORE APPS: "
 sleep 3
 install_core_apps
-
-######################### MULTIMEDIA ###############################
+#
+########################MULTIMEDIA ###############################
 clear
 echo "INSTALL MULTIMEDIA APPS: "
 sleep 3
 install_multimedia
-
-
-########################################## EXTRA APPS #########################################
+#
+#
+#########################################EXTRA APPS #########################################
 clear
 echo "EXTRA APPS: "
 install_extra_apps
@@ -60,7 +60,7 @@ install_extra_apps
 #########################################_END_ #################################################
 
 
-########## FULL UPDATE ##########################################
+#########FULL UPDATE ##########################################
 clear
 echo "FULL UPDATE"
 sudo nala clean

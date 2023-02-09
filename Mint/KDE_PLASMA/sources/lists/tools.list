@@ -16,9 +16,11 @@ anacron
 software-properties-common
 ca-certificates
 gnupg2
+gnupg
 ubuntu-keyring
 apt-transport-https
 default-jre
 nodejs
 libssl-dev
 pkg-config
+
