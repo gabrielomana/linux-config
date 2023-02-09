@@ -1,4 +1,5 @@
 #!/bin/bash
 clear
 cd style/
-./install.sh
+sudo ./install.sh
+

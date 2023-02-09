@@ -5,11 +5,11 @@ echo "Run as root"
 exit 1
 fi
 
-mkdir /usr/share/themes/myPlasmaTheme-1.0
+sudo mkdir /usr/share/themes/myPlasmaTheme-1.0
 sudo cp custom.htm /usr/share/themes/myPlasmaTheme-1.0/
 sudo cp -rf CUSTOMIZACION_archivos/ /usr/share/themes/myPlasmaTheme-1.0/CUSTOMIZACION_archivos
 sudo cp Pop_Os-Icons.tar.gz /usr/share/themes/myPlasmaTheme-1.0/
-
+sleep 10
 #Lightly
 cd /usr/share/themes/myPlasmaTheme-1.0
 
@@ -44,9 +44,11 @@ ln -s /etc/apt/papirus.gpg /etc/apt/trusted.gpg.d/papirus.gpg
 nala update && nala install papirus-icon-theme -y
 
 #ARC THEME &&  ARK-KDE  THEME
+echo "ARC THEME &&  ARK-KDE  THEME"
 sudo nala install arc-theme arc-kde -y --install-recommends
 
 #POP_OS ICONS
+echo "POP_OS ICONS"
 cd /usr/share/themes/myPlasmaTheme-1.0
 tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 
