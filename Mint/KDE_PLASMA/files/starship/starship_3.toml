@@ -1,0 +1,294 @@
+# Inserts a blank line between shell prompts
+add_newline = true
+scan_timeout = 1000
+command_timeout= 500
+
+# Replace the "❯" symbol in the prompt with "➜"
+#[character] # The name of the module we are configuring is "character"
+#:was = "[➜](bold green)" # The "success_symbol" segment is being set to "➜" with the color "bold green"
+
+# Disable the package module, hiding it from the prompt completely
+#[package]
+#disabled = true
+
+format = """
+[╭─](bold bg:none fg:bright-green)[░▒▓](bg_os)\
+$os\
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_commit\
+$git_metrics\
+$git_status\
+[](fg:bg_time)\
+$fill\
+$time\
+${custom.end}\
+$line_break\
+$character
+"""
+
+## OCEANIC NEXT COLOR SCHEME ##
+# dark1  = #1B2B34
+# dark2  = #343D46
+# dark3  = #4F5B66
+# dark4  = #65737E
+# light1  = #A7ADBA
+# light2  = #C0C5CE
+# light3  = #CDD3DE
+# light4  = #D8DEE9
+# red  = #EC5f67
+# orange  = #F99157
+# yellow  = #FAC863
+# lime  = #CCC880
+# green  = #99C794
+# aqua  = #5FB3B3
+# blue1  = #6699CC
+# blue2 = #527296
+# purple  = #C594C5
+# brown  = #AB7967
+
+palette = 'myPrompt'
+
+[palettes.myPrompt]
+bg_os = '#4F5B66'
+fg_os = '#D8DEE9'
+bg_user = '#4F5B66'
+fg_user = '#6699CC'
+bg_host = '#4F5B66'
+fg_host =  '#5FB3B3'
+bg_direct = '#4F5B66'
+fg_direct = '#99C794'
+bg_context = '#4F5B66'
+fg_context = '#CCC880'
+bg_git = '#4F5B66'
+fg_git = '#F99157'
+bg_dev = '#4F5B66'
+fg_dev = '#C594C5'
+bg_time= '#4F5B66'
+fg_time= '#D8DEE9'
+
+
+# Disable the blank line at the start of the prompt
+# add_newline = false
+
+[character]
+success_symbol = "[[╰─❯](bold bg:none fg:bright-green)](fg:#AFD700)"
+error_symbol = "[[╰─](bold bg:none fg:bright-green)❯(bright-red)](fg:#ff3322)"
+vicmd_symbol = "[[╰─](bold bg:none fg:bright-green)❯(bright-blue)](fg:#ff3322)"
+format = "[[](bg:#464347)$symbol ]($style)"
+
+### MOVE MODULES TO THE RIGHT ###
+[fill]
+symbol = '─'
+style = 'bold bright-green'
+
+### OS NAME ###
+# You can also replace your username with a neat symbol like  to save some space
+[os]
+format = "[ $symbol]($style)[ ](bold bg:bg_os fg:bright-green)"
+style= "bold bg:bg_os fg:fg_os"
+disabled = false
+
+# This is the default symbols table.
+[os.symbols]
+Alpine = " "
+Amazon = " "
+Android = " "
+Arch = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "﯑ "
+Gentoo = " "
+HardenedBSD = "ﲊ "
+Illumos = " "
+Linux = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+OpenBSD = " "
+openSUSE = " "
+OracleLinux = " "
+Pop = " "
+Raspbian = " "
+Redhat = " "
+RedHatEnterprise = " "
+Redox = " "
+Solus = "ﴱ "
+SUSE = " "
+Ubuntu = " "
+Unknown = " "
+Windows = " "
+
+### USERNAME ###
+[username]
+show_always = true
+style_root = "bold bg:bg_user fg:bright-red"
+style_user = "bold bg:bg_user fg:fg_user"
+format = "[ $user]($style)"
+
+# [sudo]
+# style = "bold green bg:#9A348E"
+# symbol = "👩 "
+# disabled = false
+#
+# # ~/.config/starship.toml
+
+
+### HOSTNAME ###
+[hostname]
+ssh_only = false
+format = "[ ](bold bg:bg_os fg:bright-green)[[$ssh_symbol](bold) $hostname(bold red)]($style)"
+style= "bold bg:bg_host fg:fg_host"
+disabled = false
+ssh_symbol=' '
+
+################## DIRECTORY MODULES ###############################
+
+[directory]
+style = "bold bg:bg_direct fg:fg_direct"
+read_only = "  "
+truncation_length = 3
+truncation_symbol = "…/"
+format = "[ ](bold bg:bg_os fg:bright-green)[ $path$read_only]($style)"
+
+# Here is how you can shorten some long paths by text replacement
+# similar to mapped_locations in Oh My Posh:
+[directory.substitutions]
+"~/Documents" = " "
+"~/Music" = " "
+"~/Movies" = " "
+"~/Pictures" = " "
+"~/Downloads" = " "
+"~/Sources" = ""
+"~/Documentos" = " "
+"~/Música" = " "
+"~/Vídeos" = " "
+"~/Imágenes" = " "
+"~/Descargas" = " "
+"/git"="GITs "
+"~" = " "
+#"/" = "  "
+# Keep in mind that the order matters. For example:
+# "Important Documents" = "  "
+# will not be replaced, because "Documents" was already substituted before.
+# So either put "Important Documents" before "Documents" or use the substituted version:
+# "Important  " = "  "
+
+# [cmd_duration]
+# # disabled = true
+# style = "bg:#625d63 fg:#FBDE2D"
+# min_time = 2_000
+# show_milliseconds = true
+# show_notifications = false
+# min_time_to_notify = 45_000
+# format = "[[](bg:#625d63 fg:#464347) ⏱️ $duration[](bg:#464347 fg:#625d63)]($style)"
+
+
+##################### GIT CONTEXTS ########################
+
+[git_branch]
+symbol = " "
+style = "bold bg:bg_git fg:fg_git"
+truncation_length = 6
+truncation_symbol = ""
+# ignore_branches = ["master", "main"]
+format = "[ ](bold bg:bg_os fg:bright-green)[( $symbol$branch )]($style)"
+
+[git_commit]
+commit_hash_length = 4
+tag_symbol = "🔖 "
+
+[git_metrics]
+added_style = "bold bg:bg_git fg:fg_git"
+format = "[$added]($added_style)/[-$deleted]($deleted_style)"
+# format = "[$added]($added_style)/[-$deleted]($deleted_style)"
+
+[git_status]
+style = "bg:bg_git fg:fg_git"
+conflicted = "🏳"
+ahead = "🏎💨${count }"
+behind = "😰${count} "
+diverged = "😵${count} "
+up_to_date = "✓${count} "
+untracked = "🤷${count} "
+stashed = "📦${count} "
+modified = "📝${count} "
+staged = "++${count} "
+renamed = "👅${count} "
+deleted = "🗑${count} "
+format = "[($all_status$ahead_behind)]($style)"
+
+# [jobs]
+# # disabled = true
+# symbol = "  "
+# style = "bold bg:#625d63 fg:#FFA200"
+# # threshold = 1
+# format = "[$symbol$number]($style)"
+
+##################### DOCKER CONTEXTS ########################
+
+[docker_context]
+symbol = " 🐳 "
+style = "bg:bg_context fg:fg_context"
+format = "[ ](bold bg:bg_os fg:bright-green)[$symbol$context]($style)"
+
+############## DEVELOPMENT LANGUAGE MODULES #################
+
+[python]
+# disabled = true
+symbol = "  "
+style = "bg:bg_dev fg:fg_dev"
+# pyenv_version_name = true
+pyenv_prefix = "pyenv "
+python_binary = "python3"
+format = '[ ](bold bg:bg_os fg:bright-green)[$symbol$pyenv_prefix$version(\($virtualenv\))]($style)'
+
+[php]
+symbol = " 🐘 "
+style = "bg:bg_dev fg:fg_dev"
+format = "[ ](bold bg:bg_os fg:bright-green)[$symbol$version]($style)"
+
+[rust]
+symbol = " 🦀 "
+style = "bg:bg_dev fg:fg_dev"
+format = "[ ](bold bg:bg_os fg:bright-green)[$symbol$version]($style)"
+
+[c]
+symbol = "  "
+style = "bg:bg_dev fg:fg_dev"
+format = "[ ](bold bg:bg_os fg:bright-green)[$symbol$name $version]($style)"
+
+###################### TIME MODULE ##########################
+
+# [time]
+# disabled = false
+# time_format = "%R" # Hour:Minute Format
+# style = "bg:orange fg:#111111"
+# format = '[[](fg:#464347 bg:orange) 🕙 $time  [](bg:#464347 fg:orange)]($style)'
+
+
+################### TIME & WEATHER MODULE ###################
+
+[time]
+disabled = false
+time_format = "%R" # Hour:Minute Format
+style = "bg:bg_time fg:fg_time"
+format = '[[](fg:bg_time bg:none) 🕙 $time]($style)'
+
+[custom.end]
+when=true
+style = "bold bg:bg_time fg:fg_time"
+format = '[ $output [▓▒░](bg_time)]($style)'
+#[─╯](bold bg:none fg:bright-green)
+
