@@ -6,6 +6,7 @@ exit 1
 fi
 
 #POP_OS ICONS
+clear
 echo "COPY FILES"
 sudo mkdir /usr/share/themes/Dew-theme_1.0
 sudo cp style/custom.htm /usr/share/themes/Dew-theme_1.0/
