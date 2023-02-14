@@ -41,35 +41,56 @@ fi
 
 ######## Plugins ##########
 
+###ZSH-EXA
+if [ -d ~/.oh-my-zsh/plugins/zsh-exa ]; then
+    cd ~/.oh-my-zsh/plugins/zsh-exa && git pull
+else
+    git clone https://github.com/ptavares/zsh-exa.git ~/.oh-my-zsh/plugins/zsh-exa
+fi
+
+
+###ZSH-AUTOPAIR
+if [ -d ~/.oh-my-zsh/plugins/zsh-autopair ]; then
+    cd ~/.oh-my-zsh/plugins/zsh-autopair && git pull
+else
+    git clone https://github.com/hlissner/zsh-autopair ~/.oh-my-zsh/plugins/zsh-autopair
+fi
+
+###zsh-autosuggestions
 if [ -d ~/.oh-my-zsh/plugins/zsh-autosuggestions ]; then
     cd ~/.oh-my-zsh/plugins/zsh-autosuggestions && git pull
 else
     git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
 fi
 
-if [ -d ~/.oh-my-zsh/plugins/fast-syntax-highlighting ]; then
-    cd ~/.oh-my-zsh/plugins/fast-syntax-highlighting && git pull
-else
-    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git  ~/.oh-my-zsh/plugins/fast-syntax-highlighting
-fi
-
-if [ -d ~/.oh-my-zsh/plugins/you-should-use ]; then
-    cd ~/.oh-my-zsh/plugins/you-should-use && git pull
-else
-    git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/plugins/you-should-use
-fi
-
+###zsh-completions
 if [ -d ~/.oh-my-zsh/custom/plugins/zsh-completions ]; then
     cd ~/.oh-my-zsh/custom/plugins/zsh-completions && git pull
 else
     git clone --depth=1 https://github.com/zsh-users/zsh-completions ~/.oh-my-zsh/custom/plugins/zsh-completions
 fi
 
+###zsh-history-substring-search
 if [ -d ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search ]; then
     cd ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search && git pull
 else
     git clone --depth=1 https://github.com/zsh-users/zsh-history-substring-search ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
 fi
+
+###zsh-syntax-highlighting
+if [ -d ~/.oh-my-zsh/plugins/zsh-syntax-highlighting ]; then
+    cd ~/.oh-my-zsh/plugins/zsh-syntax-highlighting && git pull
+else
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
+fi
+
+###you-should-use
+if [ -d ~/.oh-my-zsh/plugins/you-should-use ]; then
+    cd ~/.oh-my-zsh/plugins/you-should-use && git pull
+else
+    git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/plugins/you-should-use
+fi
+
 
 ######## STARSHIP ##########
 curl -sS https://starship.rs/install.sh | sh
@@ -85,5 +106,4 @@ else
     echo -e "Something is wrong"
 fi
 clear
-
 }

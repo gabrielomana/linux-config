@@ -12,10 +12,10 @@ neofetch
 clear
 echo "KONSOLE & DOTFILES"
 sleep 3
-sudo cp style/colors/* /usr/share/konsole/ -rf
-cp -r files/konsole.profile ~/.local/share/konsole/konsole.profile
-cp -r files/neofetch.conf ~/.config/neofetch/config.conf
-cp -r files/topgrade.toml ~/.config/topgrade.toml
+sudo cp ../../Files/KDE_PLASMA/colors/* /usr/share/konsole/ -rf
+cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
+cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
+cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 
 
 ########## EXTRA APPS #############################################
@@ -34,7 +34,7 @@ sudo apt update -y
 clear
 
 sudo cp /etc/default/grub /etc/default/grub_old
-sudo cp files/grub /etc/default/grub
+sudo cp dotfiles/grub /etc/default/grub
 sudo update-grub
 sudo mainline-gtk
 clear

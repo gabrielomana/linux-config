@@ -4,6 +4,8 @@ then
     sudo su -s "$0"
     exit
 fi
+dir="$(pwd)"
+
 #POP_OS ICONS
 clear
 echo "COPY FILES"

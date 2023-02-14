@@ -78,11 +78,18 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+plugins=(colored-man-pages
+	exa
+	git
+	git-extras
+	zsh-autopair
 	zsh-autosuggestions
+	history-substring-search
+	zsh-syntax-highlighting
 	sudo
 	dirhistory
-	fast-syntax-highlighting
 	you-should-use)
 
 source $ZSH/oh-my-zsh.sh
@@ -112,9 +119,9 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 alias zshr="source ~/.zshrc"
 alias cat="batcat -f"
-alias ls="lsd"
-alias ll="lsd -l"
-alias "ls -l"="lsd -l"
+# alias ls="lsd"
+# alias ll="lsd -l"
+# alias "ls -l"="lsd -l"
 alias "kedit"="kwrite"
 alias "gedit"="kwrite"
 alias fupdate="topgrade &&  sudo hblock -O /etc/host"
