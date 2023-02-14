@@ -74,3 +74,10 @@ ln -s /etc/apt/papirus.gpg /etc/apt/trusted.gpg.d/papirus.gpg
 nala update && nala install papirus-icon-theme -y
 sleep 3
 
+sudo rm "/usr/share/icons/Mint-*" -rf
+okular https://github.com/gabrielomana/linux-config/raw/main/Files/KDE_PLASMA/customization_guide.pdf
+sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+sudo nala update -y
+reboot
+
+
