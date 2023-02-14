@@ -13,43 +13,55 @@ sudo cp -rf style/custom-theme/ /usr/share/themes/Dew-theme_1.0/custom-theme/
 sudo cp style/Pop_Os-Icons.tar.gz /usr/share/themes/Dew-theme_1.0/
 sleep 3
 
-#Lightly
-clear
-echo "INSTALL LIGHTLY"
-cd /usr/share/themes/Dew-theme_1.0
-
-nala install cmake build-essential libkf5config-dev libkdecorations2-dev libqt5x11extras5-dev qtdeclarative5-dev extra-cmake-modules libkf5guiaddons-dev libkf5configwidgets-dev libkf5windowsystem-dev libkf5coreaddons-dev libkf5iconthemes-dev gettext qt3d5-dev -y
-
-git clone --single-branch --depth=1 https://github.com/Luwx/Lightly.git /git/Lightly
-cd /git/Lightly && mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DBUILD_TESTING=OFF ..
-make
-make install
-sleep 3
-
-#LightlyShaders
-clear
-echo "INSTALL LIGHTLY SHADERS"
-
-nala install git cmake g++ gettext extra-cmake-modules qttools5-dev libqt5x11extras5-dev libkf5configwidgets-dev libkf5crash-dev libkf5globalaccel-dev libkf5kio-dev libkf5notifications-dev kinit-dev kwin-dev  -y
-
-git clone https://github.com/Luwx/LightlyShaders /git/LightlyShaders
-
-cd /git/LightlyShaders
-
-mkdir qt5build; cd qt5build; cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make && sudo make install && (kwin_x11 --replace &)
-
-sleep 5
-
-
 #Theme Windows
 clear
-echo "WINDOWS 11 THEME"
-cd /usr/share/themes/Dew-theme_1.0
+echo "Theme: Win11OS"
 
 git clone https://github.com/yeyushengfan258/Win11OS-kde.git /git/Win11OS-kde
 cd /git/Win11OS-kde
 ./install.sh
+sleep 5
+
+#Windows Cursors
+clear
+echo "INSTALL PAPIRUS"
+git clone https://github.com/yeyushengfan258/Win10OS-cursors.git /git/Win10OS-cursors/
+cd /git/Win10OS-cursors/
+./install.sh
+sleep 5
+
+# #phinger-cursors
+clear
+echo "INSTALL phinger-cursors"
+wget https://github.com/phisch/phinger-cursors/releases/latest/download/phinger-cursors-variants.tar.bz2
+sudo tar -xjvf phinger-cursors-variants.tar.bz2 -C /usr/share/icons/
+rm phinger-cursors-variants.tar.bz2 -rf
+sleep 5
+
+sleep 5
+
+#Orchis Theme
+clear
+echo "Theme: Orchis Theme"
+
+git clone https://github.com/vinceliuice/Orchis-kde.git /git/Orchis-kde
+cd /git/Orchis-kde
+./install.sh
+sleep 5
+git clone https://github.com/vinceliuice/Orchis-theme.git /git/Orchis-theme
+cd /git/Orchis-theme
+./install.sh
+sleep 5
+
+
+##Application Style: Klassy
+clear
+echo "Application Style: Klassy"
+sudo nala install build-essential libkf5config-dev libkdecorations2-dev libqt5x11extras5-dev qtdeclarative5-dev extra-cmake-modules libkf5guiaddons-dev libkf5configwidgets-dev libkf5windowsystem-dev libkf5coreaddons-dev gettext cmake libkf5iconthemes-dev libkf5package-dev libkf5style-dev libkf5kcmutils-dev kirigami2-dev -y
+sudo apt reinstall qtdeclarative5-dev
+git clone https://github.com/paulmcauley/klassy.git /git/Klassy
+cd /git/Klassy
+sudo ./install.sh
 sleep 5
 
 
@@ -64,11 +76,11 @@ nala update && nala install papirus-icon-theme -y
 sleep 5
 
 
-#ARC THEME &&  ARK-KDE  THEME
-clear
-echo "ARC THEME &&  ARK-KDE  THEME"
-sudo nala install arc-theme arc-kde -y --install-recommends
-sleep 5
+# #ARC THEME &&  ARK-KDE  THEME
+# clear
+# echo "ARC THEME &&  ARK-KDE  THEME"
+# sudo nala install arc-theme arc-kde -y --install-recommends
+# sleep 5
 
 
 #POP_OS ICONS

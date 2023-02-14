@@ -12,7 +12,7 @@ kdenetwork-filesharing
 kfind
 kget
 kinfocenter
-kio-extras
+"kio*"
 krdc
 kaccounts-providers
 kio-gdrive
