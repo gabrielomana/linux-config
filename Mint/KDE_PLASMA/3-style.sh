@@ -8,11 +8,10 @@ dir="$(pwd)"
 
 #POP_OS ICONS
 clear
-echo "COPY FILES"
-sudo mkdir /usr/share/themes/Dew-theme_1.0
-sudo cp style/custom-theme.htm /usr/share/themes/Dew-theme_1.0/
-sudo cp -rf style/custom-theme/ /usr/share/themes/Dew-theme_1.0/custom-theme/
-sudo cp style/Pop_Os-Icons.tar.gz /usr/share/themes/Dew-theme_1.0/
+echo "POP_OS! ICONS"
+wget https://github.com/gabrielomana/Pop_Os-Icons/blob/main/KDE/Pop_Os-Icons.tar.gz
+sudo tar -xjvf Pop_Os-Icons.tar.gz -C /usr/share/icons/
+rm Pop_Os-Icons.tar.gz -rf
 sleep 3
 
 #Theme Windows
@@ -22,25 +21,23 @@ echo "Theme: Win11OS"
 git clone https://github.com/yeyushengfan258/Win11OS-kde.git /git/Win11OS-kde
 cd /git/Win11OS-kde
 ./install.sh
-sleep 5
+sleep 3
 
-#Windows Cursors
+#Win10OS-cursors
 clear
-echo "INSTALL PAPIRUS"
+echo "Win10OS-cursors"
 git clone https://github.com/yeyushengfan258/Win10OS-cursors.git /git/Win10OS-cursors/
 cd /git/Win10OS-cursors/
 ./install.sh
-sleep 5
+sleep 3
 
-# #phinger-cursors
+##phinger-cursors
 clear
 echo "INSTALL phinger-cursors"
 wget https://github.com/phisch/phinger-cursors/releases/latest/download/phinger-cursors-variants.tar.bz2
 sudo tar -xjvf phinger-cursors-variants.tar.bz2 -C /usr/share/icons/
 rm phinger-cursors-variants.tar.bz2 -rf
-sleep 5
-
-sleep 5
+sleep 3
 
 #Orchis Theme
 clear
@@ -49,11 +46,11 @@ echo "Theme: Orchis Theme"
 git clone https://github.com/vinceliuice/Orchis-kde.git /git/Orchis-kde
 cd /git/Orchis-kde
 ./install.sh
-sleep 5
+sleep 3
 git clone https://github.com/vinceliuice/Orchis-theme.git /git/Orchis-theme
 cd /git/Orchis-theme
 ./install.sh
-sleep 5
+sleep 3
 
 
 ##Application Style: Klassy
@@ -64,7 +61,7 @@ sudo apt reinstall qtdeclarative5-dev
 git clone https://github.com/paulmcauley/klassy.git /git/Klassy
 cd /git/Klassy
 sudo ./install.sh
-sleep 5
+sleep 3
 
 
 #PAPIRUS
@@ -75,32 +72,5 @@ add-apt-repository ppa:papirus/papirus -y
 mv /etc/apt/trusted.gpg /etc/apt/papirus.gpg
 ln -s /etc/apt/papirus.gpg /etc/apt/trusted.gpg.d/papirus.gpg
 nala update && nala install papirus-icon-theme -y
-sleep 5
+sleep 3
 
-
-# #ARC THEME &&  ARK-KDE  THEME
-# clear
-# echo "ARC THEME &&  ARK-KDE  THEME"
-# sudo nala install arc-theme arc-kde -y --install-recommends
-# sleep 5
-
-
-#POP_OS ICONS
-clear
-echo "POP_OS ICONS"
-cd /usr/share/themes/Dew-theme_1.0
-tar -xf Pop_Os-Icons.tar.gz -C /usr/share/icons/
-sleep 5
-
-if [ "$(whoami)" == "root" ]
-then
-    exit
-fi
-#FINAL STEPS
-# clear
-# echo "FINAL STEPS"
-# cd /usr/share/themes/Dew-theme_1.0
-# u=$(logname)
-# runuser -l $u -c 'firefox custom.htm'
-# sleep 5
-# echo "DONE!"
