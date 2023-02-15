@@ -32,7 +32,7 @@ fi
 
 ######## dotfiles ##########
 
-cp -f files/.zshrc ~/
+cp -f dotfiles/.zshrc ~/
 mkdir -p ~/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
 
 if [ -f ~/.zcompdump ]; then
