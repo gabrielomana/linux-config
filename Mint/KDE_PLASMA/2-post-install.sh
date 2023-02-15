@@ -12,7 +12,10 @@ neofetch
 clear
 echo "KONSOLE & DOTFILES"
 sleep 3
-sudo cp ../../Files/KDE_PLASMA/colors/* /usr/share/konsole/ -rf
+wget https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip
+unzip konsole.zip
+sudo cp konsole/* /usr/share/konsole/ -rf
+rm konsole/ -rf
 cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
 cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
