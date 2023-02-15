@@ -81,7 +81,6 @@ ZSH_THEME="robbyrussell"
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 plugins=(colored-man-pages
-	exa
 	git
 	git-extras
 	zsh-autopair
@@ -119,12 +118,18 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 alias zshr="source ~/.zshrc"
 alias cat="batcat -f"
-# alias ls="lsd"
-# alias ll="lsd -l"
-# alias "ls -l"="lsd -l"
 alias "kedit"="kwrite"
 alias "gedit"="kwrite"
 alias fupdate="topgrade &&  sudo hblock -O /etc/host"
+alias l="exa"
+alias ls="exa --icons"
+alias ll="exa -lbGFhmua --group-directories-first --no-permissions --icons"
+alias llp="exa -lbGFhmua --group-directories-first --icons"
+alias la="exa -a --icons"
+alias lt="exa --tree --level=2 --icons"
+alias lt3="exa --tree --level=3 --icons"
+alias lt4="exa --tree --level=4 --icons"
+
 #alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.

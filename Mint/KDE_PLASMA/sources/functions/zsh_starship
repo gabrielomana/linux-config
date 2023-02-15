@@ -42,25 +42,25 @@ fi
 ######## Plugins ##########
 
 ###ZSH-EXA
-if [ -d ~/.oh-my-zsh/plugins/zsh-exa ]; then
-    cd ~/.oh-my-zsh/plugins/zsh-exa && git pull
+if [ -d ~/.oh-my-zsh/custom/plugins/zsh-exa ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-exa && git pull
 else
-    git clone https://github.com/ptavares/zsh-exa.git ~/.oh-my-zsh/plugins/zsh-exa
+    git clone https://github.com/ptavares/zsh-exa.git ~/.oh-my-zsh/custom/plugins/zsh-exa
 fi
 
 
 ###ZSH-AUTOPAIR
-if [ -d ~/.oh-my-zsh/plugins/zsh-autopair ]; then
-    cd ~/.oh-my-zsh/plugins/zsh-autopair && git pull
+if [ -d ~/.oh-my-zshcustom/custom/plugins/zsh-autopair ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-autopair && git pull
 else
-    git clone https://github.com/hlissner/zsh-autopair ~/.oh-my-zsh/plugins/zsh-autopair
+    git clone https://github.com/hlissner/zsh-autopair ~/.oh-my-zsh/custom/plugins/zsh-autopair
 fi
 
 ###zsh-autosuggestions
-if [ -d ~/.oh-my-zsh/plugins/zsh-autosuggestions ]; then
-    cd ~/.oh-my-zsh/plugins/zsh-autosuggestions && git pull
+if [ -d ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions && git pull
 else
-    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
+    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
 fi
 
 ###zsh-completions
@@ -78,23 +78,24 @@ else
 fi
 
 ###zsh-syntax-highlighting
-if [ -d ~/.oh-my-zsh/plugins/zsh-syntax-highlighting ]; then
-    cd ~/.oh-my-zsh/plugins/zsh-syntax-highlighting && git pull
+if [ -d ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting && git pull
 else
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 fi
 
 ###you-should-use
-if [ -d ~/.oh-my-zsh/plugins/you-should-use ]; then
-    cd ~/.oh-my-zsh/plugins/you-should-use && git pull
+if [ -d ~/.oh-my-zsh/custom/plugins/you-should-use ]; then
+    cd ~/.oh-my-zsh/custom/plugins/you-should-use && git pull
 else
-    git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/plugins/you-should-use
+    git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/custom/plugins/you-should-use
 fi
 
 
 ######## STARSHIP ##########
 curl -sS https://starship.rs/install.sh | sh
-cp -f files/starship/starship_3.toml ~/.config/starship.toml
+wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_3.toml -O ~/.config/starship.toml
+
 
 ######## REBOOT ZSH ##########
 # source ~/.zshrc
