@@ -1,8 +1,7 @@
 #!/bin/bash
-if [ "$(whoami)" != "root" ]
-then
-    sudo su -s "$0"
-    exit
+if [ "$(id -un)" != "root" ]; then
+    echo "Need root - sudoing..."
+    exec sudo "$0"
 fi
 dir="$(pwd)"
 
