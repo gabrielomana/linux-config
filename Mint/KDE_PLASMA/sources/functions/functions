@@ -152,6 +152,19 @@ sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
 sudo mv /etc/apt/trusted.gpg /etc/apt/qbittorrent.gpg
 sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
 
+
+##### CLEAN ANH GET MISSINGS KEYS ####
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo apt update -y
+clear
+
+##### FLATPACKS ####
+sudo nala install flatpak -y
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+}
+
+function add_extra_repos(){
 ###### BRAVE BROWSER ####
 sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
@@ -169,16 +182,6 @@ echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -
 curl -1sLf \
   'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
   | sudo -E bash
-
-
-##### CLEAN ANH GET MISSINGS KEYS ####
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo apt update -y
-clear
-
-##### FLATPACKS ####
-sudo nala install flatpak -y
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 }
 
@@ -340,17 +343,18 @@ while [ $a -lt 1 ]
 do
         read -p "Do you wish to install Extra APPS? " yn
         case $yn in
-            [Yy]* ) a=1;check_installed "${exta_apps}";clear;;
+            [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";clear;;
             [Nn]* ) a=1;echo "OK";clear;;
             * ) echo "Please answer yes or no.";;
         esac
     done
-# flatpak install flathub app.ytmdesktop.ytmdesktop -y
-# flatpak install flathub tv.kodi.Kodi -y
-# flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-# flatpak install flathub org.phoenicis.playonlinux -y
-# flatpak install flathub com.usebottles.bottles -y
+
 sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
+ flatpak install flathub app.ytmdesktop.ytmdesktop -y
+# flatpak install flathub tv.kodi.Kodi -y
+ flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+# flatpak install flathub org.phoenicis.playonlinux -y
+# flatpak install flathub com.usebottles.bottles -y
 }
 

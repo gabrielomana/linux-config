@@ -23,4 +23,5 @@ default-jre
 nodejs
 libssl-dev
 pkg-config
+pip
 

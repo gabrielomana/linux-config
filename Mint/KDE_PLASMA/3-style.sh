@@ -1,17 +1,19 @@
 #!/bin/bash
-if [ "$(id -un)" != "root" ]; then
-    echo "Need root - sudoing..."
-    exec sudo "$0"
+if [ "$(whoami)" != "root" ]
+then
+    sudo su -s "$0"
+    exit
 fi
 dir="$(pwd)"
 
 #POP_OS ICONS
 clear
 echo "POP_OS! ICONS"
-wget https://github.com/gabrielomana/Pop_Os-Icons/blob/main/KDE/Pop_Os-Icons.tar.gz
-sudo tar -xjvf Pop_Os-Icons.tar.gz -C /usr/share/icons/
+wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/KDE/Pop_Os-Icons.tar.gz
+sudo tar -xvf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 rm Pop_Os-Icons.tar.gz -rf
 sleep 3
+
 
 #Theme Windows
 clear
@@ -70,11 +72,12 @@ add-apt-repository ppa:papirus/papirus -y
 ##Fix deprecated Key MINT issue
 mv /etc/apt/trusted.gpg /etc/apt/papirus.gpg
 ln -s /etc/apt/papirus.gpg /etc/apt/trusted.gpg.d/papirus.gpg
-nala update && nala install papirus-icon-theme -y
+nala update && nala install papirus-icon-theme kvantum -y
 sleep 3
+/usr/lib/x86_64-linux-gnu/libexec/plasma-changeicons Papirus-Dark
 
-sudo rm "/usr/share/icons/Mint-*" -rf
-okular https://github.com/gabrielomana/linux-config/raw/main/Files/KDE_PLASMA/customization_guide.pdf
+sudo rm /usr/share/icons/Mint-* -rf
+okular ${dir}/customization_guide.pdf
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
 sudo nala update -y
 reboot
