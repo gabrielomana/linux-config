@@ -206,8 +206,7 @@ wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_3.
 # source ~/.zshrc
 echo -e "\nSudo access is needed to change default shell\n"
 if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
-    echo -e "Installation Successful"
-    install_ZSH_ROOT
+    echo -e "Installation Successful";install_ZSH_ROOT
 else
     echo -e "Something is wrong"
 fi
