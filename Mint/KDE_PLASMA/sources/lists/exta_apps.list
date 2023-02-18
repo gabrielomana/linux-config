@@ -26,13 +26,4 @@ fonts-roboto-hinted
 fonts-roboto-unhinted
 clamav
 clamtk
-"libgstreamer*dev"
-qttools5-dev-tools
-libqt5x11extras5-dev
-qtmultimedia5-dev
-libqt5multimedia5-plugins
-libpulse-dev
-libwayland-dev
-"gstreamer-*"
-vokoscreen-ng
 

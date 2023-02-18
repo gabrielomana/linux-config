@@ -223,7 +223,7 @@ function install_core_apps()
   echo " - Development tools and libraries"
   sleep 3
   check_installed "${tools}"
-
+  sudo npm install electron-store
   wget https://sh.rustup.rs -O rustup-init.sh
   sudo chmod 777 rustup-init.sh
   ./rustup-init.sh -y
@@ -351,10 +351,28 @@ do
 
 sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
+
+##FLATPAKS
+clear
  flatpak install flathub app.ytmdesktop.ytmdesktop -y
-# flatpak install flathub tv.kodi.Kodi -y
+ flatpak install flathub tv.kodi.Kodi -y
  flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+ flatpak install flathub io.freetubeapp.FreeTube -y
+ flatpak install flathub org.kde.kdenlive -y
+ flatpak install flathub com.github.tenderowl.frog -y
+ flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
 # flatpak install flathub org.phoenicis.playonlinux -y
 # flatpak install flathub com.usebottles.bottles -y
+
+#OTHERS
+clear
+git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/ && cd /git/qr-tools/
+pip3 install -r requirements.txt
+sudo nala install qtqr -y
+
+wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
+sudo chmod +x beeper.AppImage
+sudo ail-cli integrate beeper.AppImage
+
 }
 

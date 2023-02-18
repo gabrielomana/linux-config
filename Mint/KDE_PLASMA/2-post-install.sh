@@ -20,6 +20,12 @@ cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
 cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 
+########## CONFIG APPIMAGE #############################################
+clear
+echo "CONFIG APPIMAGE: Set the path in /usr/share/AppImage/"
+sudo AppImageLauncherSettings &;
+sleep 0.5
+kdialog --msgbox "CONFIG APPIMAGE:\nSet the path in /usr/share/AppImage/"
 
 ########## EXTRA APPS #############################################
 clear
@@ -34,6 +40,7 @@ sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash
 sleep 3
 sudo mintsources
 sudo apt update -y
+sudo nala update
 clear
 
 sudo cp /etc/default/grub /etc/default/grub_old

@@ -8,6 +8,7 @@ else
         sudo nala fetch --auto --fetches 5 -y
     fi
 fi
+sudo nala update
 
 dir="$(pwd)"
 
