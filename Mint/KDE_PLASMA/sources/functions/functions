@@ -155,13 +155,14 @@ sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo nala update
+sudo apt update -y
 clear
 
 ##### FLATPACKS ####
 sudo nala install flatpak -y
-flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
+sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
 }
 
 function add_extra_repos(){
@@ -183,7 +184,8 @@ curl -1sLf \
   'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
   | sudo -E bash
 
-##### CLEAN ANH GET MISSINGS KEYS ####
+
+  ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo nala update
 clear
@@ -259,14 +261,14 @@ function install_core_apps()
 
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias \"kedit\"=\"kwrite\"\nalias \"gedit\"=\"kwrite\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias l=\"exa \"\nalias ls=\"exa --group-directories-first --icons\"\nalias ll=\"exa -lbGFhmua --group-directories-first --no-permissions --icons\"\nalias llp=\"exa -lbGFhmua --group-directories-first --icons\"\nalias la=\"exa -a --group-directories-first --icons\"\nalias lt=\"exa --tree --level=2 --icons\"\nalias lt3=\"exa --tree --level=3 --icons\"\nalias lt4=\"exa --tree --level=4 --icons\"" >> ~/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
   rm -rf ~/.bashrc
   mv ~/aux.txt ~/.bashrc
   source ~/.bashrc
 
   sudo cp /root/.bashrc /root/.bashrc_old
   sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "aalias cat=\"batcat -f\"\nalias \"kedit\"=\"kwrite\"\nalias \"gedit\"=\"kwrite\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias l=\"exa \"\nalias ls=\"exa --group-directories-first --icons\"\nalias ll=\"exa -lbGFhmua --group-directories-first --no-permissions --icons\"\nalias llp=\"exa -lbGFhmua --group-directories-first --icons\"\nalias la=\"exa -a --group-directories-first --icons\"\nalias lt=\"exa --tree --level=2 --icons\"\nalias lt3=\"exa --tree --level=3 --icons\"\nalias lt4=\"exa --tree --level=4 --icons\""  | sudo tee -a /root/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
   sudo source /root/.bashrc
@@ -342,11 +344,12 @@ check_installed "${multimedia}"
 function install_extra_apps()
 {
 clear
+cd ${dir}
 a=0
 j=0
 while [ $a -lt 1 ]
 do
-        read -p "Do you wish to install Extra APPS? " yn
+        read -p "Do you wish to install Extra APPS HOLA? " yn
         case $yn in
             [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";clear;;
             [Nn]* ) a=1;echo "OK";clear;;

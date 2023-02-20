@@ -23,7 +23,7 @@ cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 ########## CONFIG APPIMAGE #############################################
 clear
 echo "CONFIG APPIMAGE: Set the path in /usr/share/AppImage/"
-sudo AppImageLauncherSettings &;
+nohup sudo AppImageLauncherSettings &>/dev/null &
 sleep 0.5
 kdialog --msgbox "CONFIG APPIMAGE:\nSet the path in /usr/share/AppImage/"
 
@@ -44,10 +44,10 @@ sudo nala update
 clear
 
 sudo cp /etc/default/grub /etc/default/grub_old
-sudo cp dotfiles/grub /etc/default/grub
+sudo cp ${dir}/dotfiles/grub /etc/default/grub
 sudo update-grub
 sudo mainline-gtk
-
+clear
 ########## ZSH+OHMYZSH+STARSHIP #############################################
 clear
 a=0
