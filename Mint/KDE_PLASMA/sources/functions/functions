@@ -349,7 +349,7 @@ a=0
 j=0
 while [ $a -lt 1 ]
 do
-        read -p "Do you wish to install Extra APPS HOLA? " yn
+        read -p "Do you wish to install Extra APPS? " yn
         case $yn in
             [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";clear;;
             [Nn]* ) a=1;echo "OK";clear;;
@@ -374,7 +374,8 @@ clear
 
 #OTHERS
 clear
-git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/ && cd /git/qr-tools/
+git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
+cd /git/qr-tools/
 pip3 install -r requirements.txt
 sudo nala install qtqr -y
 
