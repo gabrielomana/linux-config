@@ -344,7 +344,6 @@ check_installed "${multimedia}"
 function install_extra_apps()
 {
 clear
-cd ${dir}
 a=0
 j=0
 while [ $a -lt 1 ]
@@ -374,9 +373,9 @@ clear
 
 #OTHERS
 clear
-git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
+sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
 cd /git/qr-tools/
-pip3 install -r requirements.txt
+sudo pip3 install -r requirements.txt
 sudo nala install qtqr -y
 
 wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage

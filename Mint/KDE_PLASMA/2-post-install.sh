@@ -29,6 +29,7 @@ kdialog --msgbox "CONFIG APPIMAGE:\nSet the path in /usr/share/AppImage/"
 
 ########## EXTRA APPS #############################################
 clear
+cd ${dir}
 install_extra_apps
 
 
@@ -49,16 +50,17 @@ sudo update-grub
 sudo mainline-gtk
 clear
 ########## ZSH+OHMYZSH+STARSHIP #############################################
-clear
-a=0
-j=0
-while [ $a -lt 1 ]
-do
-    read -p "Do you wish to install ZSH+OHMYZSH+STARSHIP? " yn
-    case $yn in
-        [Yy]* ) a=1;install_ZSH;clear;;
-        [Nn]* ) a=1;echo "OK";clear;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+# clear
+# cd ${dir}
+# a=0
+# j=0
+# while [ $a -lt 1 ]
+# do
+#     read -p "Do you wish to install ZSH+OHMYZSH+STARSHIP? " yn
+#     case $yn in
+#         [Yy]* ) a=1;install_ZSH;clear;;
+#         [Nn]* ) a=1;echo "OK";clear;;
+#         * ) echo "Please answer yes or no.";;
+#     esac
+# done
 
