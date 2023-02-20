@@ -173,6 +173,7 @@ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=
 ###### ONLY OFFICE ####
 mkdir -p ~/.gnupg
 chmod 700 ~/.gnupg
+sudo rm /tmp/*.gpg
 gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
 chmod 644 /tmp/onlyoffice.gpg
 sudo chown root:root /tmp/onlyoffice.gpg
@@ -180,9 +181,9 @@ sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
 echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
 
 ###### BALENA ETCHER ####
-curl -1sLf \
-  'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-  | sudo -E bash
+# sudo curl -1sLf \
+#   'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+#   | sudo -E bash
 
 
   ##### CLEAN ANH GET MISSINGS KEYS ####
@@ -378,9 +379,12 @@ cd /git/qr-tools/
 sudo pip3 install -r requirements.txt
 sudo nala install qtqr -y
 
-wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
-sudo chmod +x beeper.AppImage
-sudo ail-cli integrate beeper.AppImage
-
+# wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
+# sudo chmod +x beeper.AppImage
+# sudo ./beeper.AppImage
+#
+# wget https://github.com/balena-io/etcher/releases/download/v1.14.3/balenaEtcher-1.14.3-x64.AppImage -O balenaEtcher.AppImage
+# sudo chmod +x balenaEtcher.AppImage
+# sudo ./balenaEtcher.AppImage
 }
 

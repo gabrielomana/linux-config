@@ -1,13 +1,12 @@
 #!/bin/bash
 function install_ZSH_ROOT()
 {
-if [ "$(id -un)" != "root" ]; then
-    echo "Need root - sudoing..."
-    exec sudo "$0"
+echo ""
+if [ "$(whoami)" != "root" ]
+then
+    sudo su -s "$0"
+    exit
 fi
-
-echo $(whoami)
-sleep 5
 ######## BackUp .zshrc ##########
 if mv -n ~/.zshrc ~/.zshrc-backup-$(date +"%Y-%m-%d"); then # backup .zshrc
     echo -e "Backed up the current .zshrc to .zshrc-backup-date\n"
@@ -15,27 +14,27 @@ fi
 
 
 ######## Installing oh-my-zsh ##########
-
+clear
 echo -e "Installing oh-my-zsh\n"
-sleep 5
+
 if [ -d ~/.oh-my-zsh ]; then
     echo -e "oh-my-zsh is already installed\n"
     git -C ~/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
 else
     git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
 fi
-
+sleep 5
 ######## dotfiles ##########
-
+clear
 cp -f dotfiles/.zshrc ~/
 mkdir -p ~/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
 
 if [ -f ~/.zcompdump ]; then
     mv ~/.zcompdump* ~/.cache/zsh/
 fi
-
+sleep 5
 ######## Plugins ##########
-
+clear
 ###ZSH-EXA
 if [ -d ~/.oh-my-zsh/custom/plugins/zsh-exa ]; then
     cd ~/.oh-my-zsh/custom/plugins/zsh-exa && git pull
@@ -86,19 +85,20 @@ else
     git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/custom/plugins/you-should-use
 fi
 
-
+sleep 5
 ######## STARSHIP ##########
+clear
+echo -e "Root: STARSHIP"
 curl -sS https://starship.rs/install.sh | sh
 wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_3.toml -O ~/.config/starship.toml
-
+sleep 5
 
 ######## REBOOT ZSH ##########
 # source ~/.zshrc
+clear
 echo -e "\nSudo access is needed to change default shell\n"
 if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
-    echo -e "Installation Successful"
-    sleep 5
-    rebot
+    echo -e "Done!"
 else
     echo -e "Something is wrong"
 fi
@@ -107,7 +107,7 @@ clear
 
 function install_ZSH()
 {
-
+clear
 ########Install ZSH##########
 if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
     echo -e "ZSH and Git are already installed\n"
@@ -127,34 +127,31 @@ fi
 
 
 ######## Installing oh-my-zsh ##########
-
-echo -e "Installing oh-my-zsh\n"
+clear
 if [ -d ~/.oh-my-zsh ]; then
     echo -e "oh-my-zsh is already installed\n"
     git -C ~/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
 else
     git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
 fi
-
+sleep 5
 ######## dotfiles ##########
-
+clear
 cp -f dotfiles/.zshrc ~/
 mkdir -p ~/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
 
 if [ -f ~/.zcompdump ]; then
     mv ~/.zcompdump* ~/.cache/zsh/
 fi
-
+sleep 5
 ######## Plugins ##########
-
+clear
 ###ZSH-EXA
 if [ -d ~/.oh-my-zsh/custom/plugins/zsh-exa ]; then
     cd ~/.oh-my-zsh/custom/plugins/zsh-exa && git pull
 else
     git clone https://github.com/ptavares/zsh-exa.git ~/.oh-my-zsh/custom/plugins/zsh-exa
 fi
-
-
 ###ZSH-AUTOPAIR
 if [ -d ~/.oh-my-zshcustom/custom/plugins/zsh-autopair ]; then
     cd ~/.oh-my-zsh/custom/plugins/zsh-autopair && git pull
@@ -196,18 +193,21 @@ if [ -d ~/.oh-my-zsh/custom/plugins/you-should-use ]; then
 else
     git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/custom/plugins/you-should-use
 fi
-
-
+sleep 5
 ######## STARSHIP ##########
+clear
 curl -sS https://starship.rs/install.sh | sh
 wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_3.toml -O ~/.config/starship.toml
-
+sleep 5
 
 ######## REBOOT ZSH ##########
 # source ~/.zshrc
+clear
 echo -e "\nSudo access is needed to change default shell\n"
 if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
-    echo -e "Installation Successful"
+    echo "ZSH in user: OK"
+    echo "installing ZSH in root..."
+    sleep 3
     install_ZSH_ROOT
 else
     echo -e "Something is wrong"

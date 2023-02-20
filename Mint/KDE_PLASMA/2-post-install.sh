@@ -21,11 +21,12 @@ cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
 cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 
 ########## CONFIG APPIMAGE #############################################
-clear
-echo "CONFIG APPIMAGE: Set the path in /usr/share/AppImage/"
-nohup sudo AppImageLauncherSettings &>/dev/null &
-sleep 0.5
-kdialog --msgbox "CONFIG APPIMAGE:\nSet the path in /usr/share/AppImage/"
+# clear
+# echo "CONFIG APPIMAGE: Set the path in /usr/share/AppImage/"
+# sudo mkdir /usr/share/AppImage/
+# nohup sudo AppImageLauncherSettings &>/dev/null &
+# sleep 0.5
+# kdialog --msgbox "CONFIG APPIMAGE:\nSet the path in /usr/share/AppImage/"
 
 ########## EXTRA APPS #############################################
 clear
@@ -49,18 +50,19 @@ sudo cp ${dir}/dotfiles/grub /etc/default/grub
 sudo update-grub
 sudo mainline-gtk
 clear
-########## ZSH+OHMYZSH+STARSHIP #############################################
-# clear
-# cd ${dir}
-# a=0
-# j=0
-# while [ $a -lt 1 ]
-# do
-#     read -p "Do you wish to install ZSH+OHMYZSH+STARSHIP? " yn
-#     case $yn in
-#         [Yy]* ) a=1;install_ZSH;clear;;
-#         [Nn]* ) a=1;echo "OK";clear;;
-#         * ) echo "Please answer yes or no.";;
-#     esac
-# done
+######### ZSH+OHMYZSH+STARSHIP #############################################
+
+cd ${dir}
+a=0
+j=0
+while [ $a -lt 1 ]
+do
+    read -p "Do you wish to install ZSH+OHMYZSH+STARSHIP?" yn
+    case $yn in
+        [Yy]* ) a=1;install_ZSH;clear;
+        [Nn]* ) a=1;echo "OK";clear;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+echo "ZSH it's installed!"
 

@@ -13,7 +13,6 @@ virt-top
 libguestfs-tools
 guestfs-tools
 virt-manager
-balena-etcher-electron
 ttf-mscorefonts-installer
 fonts-dejavu
 fonts-freefont-ttf
