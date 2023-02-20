@@ -259,14 +259,14 @@ function install_core_apps()
 
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias \"kedit\"=\"kwrite\"\nalias \"gedit\"=\"kwrite\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias l=\"exa \"\nalias ls=\"exa --group-directories-first --icons\"\nalias ll=\"exa -lbGFhmua --group-directories-first --no-permissions --icons\"\nalias llp=\"exa -lbGFhmua --group-directories-first --icons\"\nalias la=\"exa -a --group-directories-first --icons\"\nalias lt=\"exa --tree --level=2 --icons\"\nalias lt3=\"exa --tree --level=3 --icons\"\nalias lt4=\"exa --tree --level=4 --icons\"" >> ~/aux.txt
   rm -rf ~/.bashrc
   mv ~/aux.txt ~/.bashrc
   source ~/.bashrc
 
   sudo cp /root/.bashrc /root/.bashrc_old
   sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
+  sudo echo -e "aalias cat=\"batcat -f\"\nalias \"kedit\"=\"kwrite\"\nalias \"gedit\"=\"kwrite\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias l=\"exa \"\nalias ls=\"exa --group-directories-first --icons\"\nalias ll=\"exa -lbGFhmua --group-directories-first --no-permissions --icons\"\nalias llp=\"exa -lbGFhmua --group-directories-first --icons\"\nalias la=\"exa -a --group-directories-first --icons\"\nalias lt=\"exa --tree --level=2 --icons\"\nalias lt3=\"exa --tree --level=3 --icons\"\nalias lt4=\"exa --tree --level=4 --icons\""  | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
   sudo source /root/.bashrc
