@@ -92,6 +92,10 @@ function uninstall_xfce {
 function add_repos(){
 sudo add-apt-repository multiverse -y
 
+echo -e "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
+
+echo -e "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse"| sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
+
 ##### KERNEL INSTALLER ####
 sudo add-apt-repository ppa:cappelikan/ppa -y
 ##Fix deprecated Key MINT issue
@@ -155,7 +159,7 @@ sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo apt update -y
+sudo nala update.
 clear
 
 ##### FLATPACKS ####
