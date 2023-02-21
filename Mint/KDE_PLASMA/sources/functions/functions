@@ -351,12 +351,12 @@ function install_extra_apps()
 {
 clear
 a=0
-j=0
+f=0
 while [ $a -lt 1 ]
 do
         read -p "Do you wish to install Extra APPS? " yn
         case $yn in
-            [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";clear;;
+            [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";f=1;clear;;
             [Nn]* ) a=1;echo "OK";clear;;
             * ) echo "Please answer yes or no.";;
         esac
@@ -365,29 +365,33 @@ do
 sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
 
-##FLATPAKS
 clear
- flatpak install flathub app.ytmdesktop.ytmdesktop -y
- flatpak install flathub tv.kodi.Kodi -y
- flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
- flatpak install flathub io.freetubeapp.FreeTube -y
- flatpak install flathub org.kde.kdenlive -y
- flatpak install flathub com.github.tenderowl.frog -y
- flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
- flatpak install flathub org.phoenicis.playonlinux -y
- flatpak install flathub com.usebottles.bottles -y
+    if [ $f == 1 ]; then
+      #flatpak
+       flatpak install flathub app.ytmdesktop.ytmdesktop -y
+      flatpak install flathub tv.kodi.Kodi -y
+      flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+      flatpak install flathub io.freetubeapp.FreeTube -y
+      flatpak install flathub org.kde.kdenlive -y
+      flatpak install flathub com.github.tenderowl.frog -y
+      flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+      flatpak install flathub org.phoenicis.playonlinux -y
+      flatpak install flathub com.usebottles.bottles -y
 
-#OTHERS
-clear
-sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
-cd /git/qr-tools/
-sudo pip3 install -r requirements.txt
-sudo nala install qtqr -y
+      #OTHERS
+      clear
+      sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
+      cd /git/qr-tools/
+      sudo pip3 install -r requirements.txt
+      sudo nala install qtqr -y
 
-sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
-sudo chmod +x beeper.AppImage
-./beeper.AppImage
-rm beeper.AppImage -rf
+      sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
+      sudo chmod +x beeper.AppImage
+      ./beeper.AppImage
+      rm beeper.AppImage -rf
+    fi
+
+
 
 }
 

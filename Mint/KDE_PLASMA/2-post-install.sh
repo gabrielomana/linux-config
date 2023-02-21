@@ -38,10 +38,29 @@ sudo apt update -y
 sudo nala update
 clear
 
+#ZSWAP+SWAPPINESS+GRUB
+sudo sysctl vm.swappiness=25
+
 sudo cp /etc/default/grub /etc/default/grub_old
 sudo cp ${dir}/dotfiles/grub /etc/default/grub
 sudo update-grub
+
+sudo su -c "echo 'z3fold' >> /etc/initramfs-tools/modules"
+sudo update-initramfs -u
+
+mem="$(free -g | awk 'NR==2{printf "%s\n", $2}')"
+
+if [ $mem -le 8 ]; then
+    sudo sysctl -w vm.vfs_cache_pressure=35
+elif [ $mem -ge 16 ]; then
+    sudo sysctl -w vm.vfs_cache_pressure=65
+else
+    sudo sysctl -w vm.vfs_cache_pressure=50
+fi
+
 sudo mainline-gtk
+
+
 ######## ZSH+OHMYZSH+STARSHIP #############################################
 
 cd ${dir}
