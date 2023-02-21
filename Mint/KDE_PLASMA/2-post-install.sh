@@ -12,11 +12,27 @@ neofetch
 clear
 echo "KONSOLE & DOTFILES"
 sleep 3
-wget https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip
-unzip konsole.zip
+sudo wget https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip
+sudo unzip konsole.zip
 sudo cp konsole/* /usr/share/konsole/ -rf
-rm konsole/ -rf
-cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
+sudo rm konsole/ -rf
+sudo cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
+sudo echo -e "[Desktop Entry]
+DefaultProfile=konsole.profile
+
+[MainWindow]
+RestorePositionForNextInstance=false
+State=AAAA/wAAAAD9AAAAAQAAAAAAAAAAAAAAAPwCAAAAAvsAAAAcAFMAUwBIAE0AYQBuAGEAZwBlAHIARABvAGMAawAAAAAA/////wAAANMBAAAD+wAAACIAUQB1AGkAYwBrAEMAbwBtAG0AYQBuAGQAcwBEAG8AYwBrAAAAAAD/////AAAArQEAAAMAAAOLAAAB/QAAAAQAAAAEAAAACAAAAAj8AAAAAQAAAAIAAAACAAAAFgBtAGEAaQBuAFQAbwBvAGwAQgBhAHIBAAAAAP////8AAAAAAAAAAAAAABwAcwBlAHMAcwBpAG8AbgBUAG8AbwBsAGIAYQByAQAAARv/////AAAAAAAAAAA=
+ToolBarsMovable=Disabled
+Virtual1 Height 1920x977=585
+Virtual1 Width 1920x977=907
+Virtual1 XPosition 1920x977=451
+Virtual1 YPosition 1920x977=36
+
+[UiSettings]
+ColorScheme=" >> ~/.config/konsolerc
+
+
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
 cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 
@@ -64,6 +80,14 @@ sudo mainline-gtk
 ######## ZSH+OHMYZSH+STARSHIP #############################################
 
 cd ${dir}
-install_ZSH
-reboot
-
+a=0
+f=0
+while [ $a == 0 ]
+do
+        read -p "Do you wish to install ZSH+OHMYZSH+STARSHIP? " yn
+        case $yn in
+            [Yy]* ) a=1;install_ZSH;clear;;
+            [Nn]* ) a=1;echo "OK";clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
