@@ -381,17 +381,13 @@ clear
       #OTHERS
       clear
       sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
-      cd /git/qr-tools/
-      sudo pip3 install -r requirements.txt
+      sudo pip3 /git/qr-tools/install -r requirements.txt
       sudo nala install qtqr -y
 
       sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
       sudo chmod +x beeper.AppImage
-      ./beeper.AppImage
-      rm beeper.AppImage -rf
-    fi
-
-
-
+      ./beeper.AppImage &>/dev/null &
+  fi
+return
 }
 
