@@ -212,5 +212,5 @@ if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
 else
     echo -e "Something is wrong"
 fi
-
+return
 }
