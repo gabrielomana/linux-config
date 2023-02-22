@@ -55,10 +55,10 @@ function check_installed {
    c="sudo nala install "${list}" -y"
    c2="sudo apt install "${list2}" -y"
 
-   echo $c >> packeges.txt
-   echo -e "\n\n" >> packeges.txt
+   sudo echo $c >> packeges.txt
+   sudo echo -e "\n\n" >> packeges.txt
    echo $c2
-   echo -e "\n\n" >> packeges.txt
+   sudo echo -e "\n\n" >> packeges.txt
    eval $c
    for i in $list2; do
     sudo apt-get install -y $i
@@ -202,6 +202,7 @@ a=0
 while [ $a == 0 ]
 do
 key=$(gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5)
+sleep 3
 if grep -q "$SUB" <<< "$key"; then
   sleep 1
 else
@@ -242,7 +243,7 @@ clear
 function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
-  echo -e "INSTALL KDE PLASMA: \n" >> packeges.txt
+  sudo echo -e "INSTALL KDE PLASMA: \n" >> packeges.txt
   check_installed "${kde_plasma}"
   sudo systemctl set-default graphical.target
   sudo systemctl enable sddm
@@ -277,7 +278,7 @@ function install_core_apps()
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   sleep 3
-  echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
+  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${tools}"
   sudo npm install electron-store
   wget https://sh.rustup.rs -O rustup-init.sh
@@ -296,7 +297,7 @@ function install_core_apps()
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   sleep 3
-  echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
+  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${codecs}"
 
 ##Utilities
@@ -386,7 +387,7 @@ function install_multimedia()
 clear
 echo -e "INSTALL MULTIMEDIA APPS: \n"
 sleep 3
-echo -e "INSTALL MULTIMEDIA APPS: \n" >> packeges.txt
+sudo echo -e "INSTALL MULTIMEDIA APPS: \n" >> packeges.txt
 check_installed "${multimedia}"
 
 }
@@ -394,7 +395,7 @@ check_installed "${multimedia}"
 #EXTRA APPS
 function install_extra_apps()
 {
-echo -e "INSTALL EXTRA APPS: \n" >> packeges.txt
+sudo echo -e "INSTALL EXTRA APPS: \n" >> packeges.txt
 clear
 a=0
 f=0
