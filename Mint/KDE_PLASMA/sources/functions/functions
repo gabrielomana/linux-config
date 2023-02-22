@@ -33,6 +33,7 @@ function check_installed {
   local package
   local to_install=()
   list=""
+  list2=""
   while read -r package; do
     [ -z "${package}" ] && continue
 
@@ -42,7 +43,7 @@ function check_installed {
         case $STR in
 
           *"$SUB"*)
-            list="${list} ${STR}"
+            list2="${list2} ${STR}"
             ;;
         esac
   if !(dpkg -s "${package}" >/dev/null 2>&1); then
@@ -52,10 +53,16 @@ function check_installed {
   fi
   done < "${1}"
    c="sudo nala install "${list}" -y"
-   #echo $c
-   #echo ""
-   #sleep 5
+   c2="sudo apt install "${list2}" -y"
+
+   echo $c >> packeges.txt
+   echo -e "\n\n" >> packeges.txt
+   echo $c2
+   echo -e "\n\n" >> packeges.txt
    eval $c
+   for i in $list2; do
+    sudo apt-get install -y $i
+   done
 }
 
 
@@ -175,15 +182,49 @@ sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://b
 echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
 ###### ONLY OFFICE ####
-sudo rm /tmp/*.gpg
+sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
+sudo rm /tmp/*.gpg -rf
 sudo rm ~/.gnupg -rf
+sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
+sudo apt update
+
 mkdir -p ~/.gnupg
 chmod 700 ~/.gnupg
-gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
-chmod 644 /tmp/onlyoffice.gpg
-sudo chown root:root /tmp/onlyoffice.gpg
-sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
-echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
+clear
+SUB='fallida'
+a=0
+while [ $a == 0 ]
+do
+key=$(gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5)
+if grep -q "$SUB" <<< "$key"; then
+  sleep 1
+else
+  sleep 3
+  a=1
+  sudo chmod 644 /tmp/onlyoffice.gpg
+  sudo chown root:root /tmp/onlyoffice.gpg
+  sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
+  echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
+fi
+done
+
+##BALENA ETCHER
+sudo nala install apt-transport-https -y
+clear
+sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
+sudo rm /etc/apt/trusted.gpg.d/balena* -rf
+sudo rm /usr/share/keyrings/balena* -rf
+
+sudo apt-get clean
+sudo rm -rf "/var/lib/apt/lists/*balena*"
+sudo apt update
+clear
+keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
+curl -1sLf \
+  'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+  | sudo -E bash
+
+
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -195,6 +236,7 @@ clear
 function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
+  echo -e "INSTALL KDE PLASMA: \n" >> packeges.txt
   check_installed "${kde_plasma}"
   sudo systemctl set-default graphical.target
   sudo systemctl enable sddm
@@ -229,6 +271,7 @@ function install_core_apps()
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   sleep 3
+  echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${tools}"
   sudo npm install electron-store
   wget https://sh.rustup.rs -O rustup-init.sh
@@ -247,6 +290,7 @@ function install_core_apps()
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   sleep 3
+  echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${codecs}"
 
 ##Utilities
@@ -336,6 +380,7 @@ function install_multimedia()
 clear
 echo -e "INSTALL MULTIMEDIA APPS: \n"
 sleep 3
+echo -e "INSTALL MULTIMEDIA APPS: \n" >> packeges.txt
 check_installed "${multimedia}"
 
 }
@@ -343,6 +388,7 @@ check_installed "${multimedia}"
 #EXTRA APPS
 function install_extra_apps()
 {
+echo -e "INSTALL EXTRA APPS: \n" >> packeges.txt
 clear
 a=0
 f=0
@@ -362,11 +408,10 @@ sudo systemctl enable libvirtd
 clear
     if [ $f == 1 ]; then
       #flatpak
-       flatpak install flathub app.ytmdesktop.ytmdesktop -y
+      flatpak install flathub app.ytmdesktop.ytmdesktop -y
       flatpak install flathub tv.kodi.Kodi -y
       flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
       flatpak install flathub io.freetubeapp.FreeTube -y
-      flatpak install flathub org.kde.kdenlive -y
       flatpak install flathub com.github.tenderowl.frog -y
       flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
       flatpak install flathub org.phoenicis.playonlinux -y
@@ -377,10 +422,25 @@ clear
       sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
       sudo pip3 /git/qr-tools/install -r requirements.txt
       sudo nala install qtqr -y
+      sleep 5
+      clear
+
+      sudo apt install -y onlyoffice-desktopeditors balena-etcher-electron
+      sleep 5
+      clear
+
+      balena=$(curl -s 'https://api.github.com/repos/balena-io/etcher/releases/latest' | grep browser_download_url | grep '[.]deb' | head -n 1 | cut -d '"' -f 4)
+      wget ${balena}
+      sudo apt install ./balena*.deb --install-suggests -y
+      sudo rm balena*.deb -rf
+      sleep 5
+      clear
 
       sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
       sudo chmod +x beeper.AppImage
       ./beeper.AppImage &>/dev/null &
+      sleep 5
+      clear
   fi
 return
 }
