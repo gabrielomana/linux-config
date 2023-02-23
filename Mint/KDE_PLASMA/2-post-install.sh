@@ -16,20 +16,20 @@ sudo unzip konsole.zip
 sudo cp konsole/* /usr/share/konsole/ -rf
 sudo rm konsole/ -rf
 sudo cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
-sudo echo -e "[Desktop Entry]
-DefaultProfile=konsole.profile
-
-[MainWindow]
-RestorePositionForNextInstance=false
-State=AAAA/wAAAAD9AAAAAQAAAAAAAAAAAAAAAPwCAAAAAvsAAAAcAFMAUwBIAE0AYQBuAGEAZwBlAHIARABvAGMAawAAAAAA/////wAAANMBAAAD+wAAACIAUQB1AGkAYwBrAEMAbwBtAG0AYQBuAGQAcwBEAG8AYwBrAAAAAAD/////AAAArQEAAAMAAAOLAAAB/QAAAAQAAAAEAAAACAAAAAj8AAAAAQAAAAIAAAACAAAAFgBtAGEAaQBuAFQAbwBvAGwAQgBhAHIBAAAAAP////8AAAAAAAAAAAAAABwAcwBlAHMAcwBpAG8AbgBUAG8AbwBsAGIAYQByAQAAARv/////AAAAAAAAAAA=
-ToolBarsMovable=Disabled
-Virtual1 Height 1920x977=585
-Virtual1 Width 1920x977=907
-Virtual1 XPosition 1920x977=451
-Virtual1 YPosition 1920x977=36
-
-[UiSettings]
-ColorScheme=" >> ~/.config/konsolerc
+# sudo echo -e "[Desktop Entry]
+# DefaultProfile=konsole.profile
+#
+# [MainWindow]
+# RestorePositionForNextInstance=false
+# State=AAAA/wAAAAD9AAAAAQAAAAAAAAAAAAAAAPwCAAAAAvsAAAAcAFMAUwBIAE0AYQBuAGEAZwBlAHIARABvAGMAawAAAAAA/////wAAANMBAAAD+wAAACIAUQB1AGkAYwBrAEMAbwBtAG0AYQBuAGQAcwBEAG8AYwBrAAAAAAD/////AAAArQEAAAMAAAOLAAAB/QAAAAQAAAAEAAAACAAAAAj8AAAAAQAAAAIAAAACAAAAFgBtAGEAaQBuAFQAbwBvAGwAQgBhAHIBAAAAAP////8AAAAAAAAAAAAAABwAcwBlAHMAcwBpAG8AbgBUAG8AbwBsAGIAYQByAQAAARv/////AAAAAAAAAAA=
+# ToolBarsMovable=Disabled
+# Virtual1 Height 1920x977=585
+# Virtual1 Width 1920x977=907
+# Virtual1 XPosition 1920x977=451
+# Virtual1 YPosition 1920x977=36
+#
+# [UiSettings]
+# ColorScheme=" >> ~/.config/konsolerc
 
 
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
@@ -62,17 +62,10 @@ sudo update-grub
 
 sudo su -c "echo 'z3fold' >> /etc/initramfs-tools/modules"
 sudo update-initramfs -u
-#
-# mem="$(free -g | awk 'NR==2{printf "%s\n", $2}')"
-#
-# if [ $mem -le 8 ]; then
-#     sudo sysctl -w vm.vfs_cache_pressure=35
-# elif [ $mem -ge 16 ]; then
-#     sudo sysctl -w vm.vfs_cache_pressure=65
-# else
-#     sudo sysctl -w vm.vfs_cache_pressure=50
-# fi
 
+###mem="$(free -g | awk 'NR==2{printf "%s\n", $2}')"
+
+#KERNEL UPDATE
 sudo mainline-gtk
 
 
@@ -91,3 +84,8 @@ install_ZSH
 #             * ) echo "Please answer yes or no.";;
 #         esac
 #     done
+
+
+
+##############DUAL BOOT ####################
+#sudo nala install refind -y

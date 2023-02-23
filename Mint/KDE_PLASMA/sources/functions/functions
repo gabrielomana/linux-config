@@ -55,10 +55,10 @@ function check_installed {
    c="sudo nala install "${list}" -y"
    c2="sudo apt install "${list2}" -y"
 
-   sudo echo $c >> packeges.txt
-   sudo echo -e "\n\n" >> packeges.txt
-   echo $c2
-   sudo echo -e "\n\n" >> packeges.txt
+   sudo su - -c "sudo echo $c >> packeges.txt"
+   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
+   sudo su - -c "sudo echo $c2 >> packeges.txt"
+   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
    eval $c
    for i in $list2; do
     sudo apt-get install -y $i
@@ -98,9 +98,7 @@ function uninstall_xfce {
 
 function add_repos(){
 sudo add-apt-repository multiverse -y
-
 echo -e "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
-
 echo -e "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse"| sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
 
 ##### KERNEL INSTALLER ####
@@ -201,7 +199,7 @@ SUB='fallida'
 a=0
 while [ $a == 0 ]
 do
-key=$(gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5)
+key=$( gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5)
 sleep 3
 if grep -q "$SUB" <<< "$key"; then
   sleep 1
@@ -231,7 +229,11 @@ curl -1sLf \
   'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
   | sudo -E bash
 
-
+##rEFInd PPA
+sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
+sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -389,7 +391,6 @@ echo -e "INSTALL MULTIMEDIA APPS: \n"
 sleep 3
 sudo echo -e "INSTALL MULTIMEDIA APPS: \n" >> packeges.txt
 check_installed "${multimedia}"
-
 }
 
 #EXTRA APPS
@@ -432,7 +433,7 @@ clear
       sleep 5
       clear
 
-      sudo apt install -y onlyoffice-desktopeditors balena-etcher-electron
+      sudo nala install -y onlyoffice-desktopeditors balena-etcher-electron
       sleep 5
       clear
 
