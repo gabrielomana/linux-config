@@ -67,3 +67,4 @@ install_ZSH
 
 ##############DUAL BOOT ####################
 #sudo nala install refind -y
+firefox dotfiles/extensions.html
