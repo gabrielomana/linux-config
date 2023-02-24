@@ -37,31 +37,6 @@ clear
 echo "ADD REPOSITORIES"
 sleep 3
 add_repos
-######################### KDE PLASMA ###############################
-clear
-echo "INSTALL GNOME: "
-sleep 3
-install_gnome
-######################### CORE APPS ###############################
-clear
-echo "INSTALL SYSTEM CORE APPS: "
-sleep 3
-install_core_apps
-
-######################### MULTIMEDIA ###############################
-clear
-echo "INSTALL MULTIMEDIA APPS: "
-sleep 3
-install_multimedia
-
-######################### MULTIMEDIA ###############################
-# clear
-# echo "INSTALL NEMO: "
-# sleep 3
-# install_nemo
-
-
-#########################################_END_ #################################################
 
 ########## FULL UPDATE ##########################################
 clear
