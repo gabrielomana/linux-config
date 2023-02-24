@@ -22,11 +22,6 @@ function check_uninstalled (){
    c="sudo nala remove --purge "${list}" -y"
    clear
    eval $c
-   sudo nala autoremove -y
-   sudo nala install -f
-   sudo nala clean
-   sudo apt-get autoclean
-   clear
 }
 
 function check_installed {
@@ -236,28 +231,39 @@ function install_gnome {
   sudo apt-get update --fix-missing
   sudo apt-get install -f
 
+  sudo mkdir /usr/share/xsessions/hidden
+  sudo dpkg-divert --rename \
+      --divert /usr/share/xsessions/hidden/gnome-classic.desktop \
+      --add /usr/share/xsessions/gnome-classic.desktop
+  sudo dpkg-divert --rename \
+      --divert /usr/share/xsessions/hidden/gnome-classic-xorg.desktop \
+      --add /usr/share/xsessions/gnome-classic-xorg.desktop
+  sudo dpkg-divert --rename \
+      --divert /usr/share/xsessions/hidden/gnome-xorg.desktop \
+      --add /usr/share/xsessions/gnome-xorg.desktop
+
 }
 
 function install_core_apps()
 {
- #Development tools and libraries
+##Development tools and libraries
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   sleep 3
   check_installed "${tools}"
   sudo npm install electron-store
-  wget https://sh.rustup.rs -O rustup-init.sh
+  sudo wget https://sh.rustup.rs -O rustup-init.sh
   sudo chmod 777 rustup-init.sh
   ./rustup-init.sh -y
   source "$HOME/.cargo/env"
-  rm rustup-init.sh -rf
+  sudo rm rustup-init.sh -rf
 
   source ~/.profile
   source ~/.cargo/env
 
 
- ##Codecs and Drivers
+ #Codecs and Drivers
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
@@ -287,17 +293,16 @@ function install_core_apps()
   sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
-  sudo source /root/.bashrc
 
-  sudo gsettings set org.gnome.desktop.default-applications.terminal exec 'tilix'
+   sudo gsettings set org.gnome.desktop.default-applications.terminal exec 'tilix'
 
-  sudo npm install -g hblock
-  hblock
+   sudo npm install -g hblock
+   hblock
 
-  cargo install cargo-update
-  cargo install topgrade
-  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
-  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
+   cargo install cargo-update
+   cargo install topgrade
+   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
+   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
  ##Pipewire & Wireplumber
   clear
@@ -343,7 +348,7 @@ function install_core_apps()
  sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
  sudo rm /tmp/nerd_fonts/ -rf
  sudo nala install fonts-noto-color-emoji -y
- sudo cp dofiles/fonts.conf /etc/fonts/fonts.conf -rf
+ sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
  fc-cache -f -v
  }
 

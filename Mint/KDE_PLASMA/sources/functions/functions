@@ -283,7 +283,7 @@ function install_core_apps()
   sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${tools}"
   sudo npm install electron-store
-  wget https://sh.rustup.rs -O rustup-init.sh
+  sudo wget https://sh.rustup.rs -O rustup-init.sh
   sudo chmod 777 rustup-init.sh
   ./rustup-init.sh -y
   source "$HOME/.cargo/env"
@@ -379,7 +379,7 @@ function install_core_apps()
  sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
  sudo rm /tmp/nerd_fonts/ -rf
  sudo nala install fonts-noto-color-emoji -y
- sudo cp dofiles/fonts.conf /etc/fonts/fonts.conf -rf
+ sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
  fc-cache -f -v
  }
 
