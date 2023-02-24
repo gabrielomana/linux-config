@@ -137,12 +137,6 @@ sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
 sudo mv /etc/apt/trusted.gpg /etc/apt/wireplumber.gpg
 sudo ln -s /etc/apt/wireplumber.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
 
-###### QBITTORRENT ####
-sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/qbittorrent.gpg
-sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
-
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -227,7 +221,6 @@ clear
 function install_gnome {
   echo "INSTALL GNOME: "
   echo " - Install GNOME Core"
-  sudo echo -e "INSTALL GNOME Core: \n" >> packeges.txt
   check_installed "${gnome}"
   sudo systemctl set-default graphical.target
   sudo systemctl enable lightdm
@@ -252,7 +245,6 @@ function install_core_apps()
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   sleep 3
-  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${tools}"
   sudo npm install electron-store
   wget https://sh.rustup.rs -O rustup-init.sh
@@ -271,7 +263,6 @@ function install_core_apps()
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   sleep 3
-  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${codecs}"
 
 ##Utilities
@@ -362,7 +353,6 @@ function install_multimedia()
 clear
 echo -e "INSTALL MULTIMEDIA APPS: \n"
 sleep 3
-sudo echo -e "INSTALL MULTIMEDIA APPS: \n" >> packeges.txt
 check_installed "${multimedia}"
 }
 
@@ -393,7 +383,6 @@ sudo rm /usr/share/xsessions/*classic* -rf
 #EXTRA APPS
 function install_extra_apps()
 {
-sudo echo -e "INSTALL EXTRA APPS: \n" >> packeges.txt
 clear
 a=0
 f=0
