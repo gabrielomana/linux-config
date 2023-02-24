@@ -93,8 +93,6 @@ function uninstall_xfce {
 
 function add_repos(){
 sudo add-apt-repository multiverse -y
-echo -e "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
-echo -e "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse"| sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
 
 ##### KERNEL INSTALLER ####
 sudo add-apt-repository ppa:cappelikan/ppa -y
@@ -241,6 +239,15 @@ function install_gnome {
   sudo dpkg-divert --rename \
       --divert /usr/share/xsessions/hidden/gnome-xorg.desktop \
       --add /usr/share/xsessions/gnome-xorg.desktop
+
+       sudo dpkg-divert --rename \
+      --divert /usr/share/xsessions/hidden/ubuntu.desktop \
+      --add /usr/share/xsessions/ubuntu.desktop
+
+
+       sudo dpkg-divert --rename \
+      --divert /usr/share/xsessions/hidden/ubuntu-xorg.desktop \
+      --add /usr/share/xsessions/ubuntu-xorg.desktop
 
 }
 

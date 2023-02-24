@@ -68,7 +68,13 @@ clear
 echo "FULL UPDATE"
 sudo nala clean
 sleep 3
-sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo apt --fix-broken install
+echo -e "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
+echo -e "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse"| sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
+##### CLEAN ANH GET MISSINGS KEYS ####
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo nala update
+clear
+sudo nala upgrade -y; sudo nala install -f; sudo apt --fix-broken install
 sudo aptitude safe-upgrade -y
 sudo apt full-upgrade -y
 sudo systemctl disable casper-md5check.service
