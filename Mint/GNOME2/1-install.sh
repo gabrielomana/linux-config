@@ -52,10 +52,10 @@ sleep 3
 install_multimedia
 
 ######################### MULTIMEDIA ###############################
-clear
-echo "INSTALL NEMO: "
-sleep 3
-install_nemo
+# clear
+# echo "INSTALL NEMO: "
+# sleep 3
+# install_nemo
 
 
 #########################################_END_ #################################################
