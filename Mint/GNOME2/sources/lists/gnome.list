@@ -1,11 +1,4 @@
 vanilla-gnome-desktop
-vanilla-gnome-default-settings
-gedit
-language-pack-gnome-es
-language-pack-gnome-es-base
-gnome-user-docs
-gnome-user-docs-es
-lightdm-gtk-greeter
-lightdm-gtk-greeter-settings
-lightdm-gtk-greeter-config
-software-properties-gtk
+network-manager
+gnome-terminal
+

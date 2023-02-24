@@ -3,7 +3,6 @@ gnome-bluetooth
 gnome-calculator
 gnome-calendar
 gnome-characters
-gnome-contacts
 gnome-disk-utility
 gnome-font-viewer
 gnome-initial-setup
@@ -29,19 +28,8 @@ cups-filters
 deja-dup
 dirmngr
 exfatprogs
-fonts-indic
-fonts-kacst-one
-fonts-khmeros-core
-fonts-lao
-fonts-liberation
-fonts-lklug-sinhala
-fonts-noto-cjk
-fonts-sil-abyssinica
-fonts-sil-padauk
-fonts-thai-tlwg
-fonts-tibetan-machine
 fwupd
-fwupd-signed [not ppc64el]
+fwupd-signed
 gedit
 gvfs-fuse
 hplip
@@ -56,9 +44,6 @@ libglib2.0-bin
 libnss-mdns
 libproxy1-plugin-networkmanager
 libwmf0.2-7-gtk
-nautilus
-nautilus-sendto
-network-manager-config-connectivity-ubuntu
 network-manager-openvpn-gnome
 network-manager-pptp-gnome
 printer-driver-brlaser

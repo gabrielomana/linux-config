@@ -80,6 +80,9 @@ function uninstall_xfce {
   sudo rm /usr/share/themes/Mint* -rf
   sudo rm /usr/share/themes/mint* -rf
   sudo rm /usr/share/Thunar -rf
+  rm ~/.config/Thunar -rf
+  rm ~/.config/caja -rf
+  rm ~/.config/xfce4 -rf
 
   clear
   echo "UNINSTALL XFCE: "
@@ -216,7 +219,7 @@ function install_gnome {
   echo " - Install GNOME Core"
   check_installed "${gnome_vanilla}"
   sudo systemctl set-default graphical.target
-  sudo systemctl enable lightdm
+  sudo systemctl enable gdm
   sudo nala install gnome-software-plugin-flatpak -y
 
   #CLEAN GNOME
@@ -230,24 +233,24 @@ function install_gnome {
   sudo apt-get install -f
 
   sudo mkdir /usr/share/xsessions/hidden
-  sudo dpkg-divert --rename \
+
+      sudo dpkg-divert --rename \
       --divert /usr/share/xsessions/hidden/gnome-classic.desktop \
       --add /usr/share/xsessions/gnome-classic.desktop
-  sudo dpkg-divert --rename \
+
+      sudo dpkg-divert --rename \
       --divert /usr/share/xsessions/hidden/gnome-classic-xorg.desktop \
       --add /usr/share/xsessions/gnome-classic-xorg.desktop
-  sudo dpkg-divert --rename \
-      --divert /usr/share/xsessions/hidden/gnome-xorg.desktop \
-      --add /usr/share/xsessions/gnome-xorg.desktop
 
        sudo dpkg-divert --rename \
       --divert /usr/share/xsessions/hidden/ubuntu.desktop \
       --add /usr/share/xsessions/ubuntu.desktop
 
-
        sudo dpkg-divert --rename \
       --divert /usr/share/xsessions/hidden/ubuntu-xorg.desktop \
       --add /usr/share/xsessions/ubuntu-xorg.desktop
+
+      #sudo dpkg-divert --rename --remove /usr/share/xsessions/gnome-xorg.desktop
 
 }
 

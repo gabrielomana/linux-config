@@ -85,6 +85,9 @@ function uninstall_xfce {
   sudo rm /usr/share/themes/Mint* -rf
   sudo rm /usr/share/themes/mint* -rf
   sudo rm /usr/share/Thunar -rf
+  rm ~/.config/Thunar -rf
+  rm ~/.config/caja -rf
+  rm ~/.config/xfce4 -rf
 
   clear
   echo "UNINSTALL XFCE: "

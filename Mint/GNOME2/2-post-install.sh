@@ -6,10 +6,11 @@ exta_apps="${dir}/sources/lists/exta_apps.list"
 . "${dir}"/sources/functions/zsh_starship
 . "${dir}"/sources/functions/functions
 
-########## KONSOLE #############################################
+########## TERMINAL #############################################
 sudo cp /etc/profile.d/vte*.sh /etc/profile.d/vte.sh
 cp -r dotfiles/TILIX/tilix ~/.config/
-
+cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
+cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 
 ########## EXTRA APPS #############################################
 clear
@@ -27,6 +28,8 @@ sudo mintsources
 sudo apt update -y
 sudo nala update
 clear
+
+
 
 #ZSWAP+SWAPPINESS+GRUB
 sudo sysctl vm.swappiness=25
