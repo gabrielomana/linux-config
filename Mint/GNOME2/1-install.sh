@@ -1,14 +1,14 @@
 #!/bin/bash
-cp ~/.bashrc ~/.bashrc_original
-
-if command -v nala &> /dev/null; then
-    sudo nala fetch --auto --fetches 5 -y
-else
-    if sudo apt install nala -y ; then
-        sudo nala fetch --auto --fetches 5 -y
-    fi
-fi
-sudo nala update
+# cp ~/.bashrc ~/.bashrc_original
+#
+# if command -v nala &> /dev/null; then
+#     sudo nala fetch --auto --fetches 5 -y
+# else
+#     if sudo apt install nala -y ; then
+#         sudo nala fetch --auto --fetches 5 -y
+#     fi
+# fi
+# sudo nala update
 
 dir="$(pwd)"
 
@@ -28,15 +28,15 @@ gnome_extra_apps="${dir}/sources/lists/gnome_extra_apps.list"
 
 
 ####################### UNINSTALL XFCE ###############################
-clear
-echo "UNINSTALL XFCE"
-sleep 3
-uninstall_xfce
-########################## REPOSITORIES ###############################
-clear
-echo "ADD REPOSITORIES"
-sleep 3
-add_repos
+# clear
+# echo "UNINSTALL XFCE"
+# sleep 3
+# uninstall_xfce
+# ########################## REPOSITORIES ###############################
+# clear
+# echo "ADD REPOSITORIES"
+# sleep 3
+# add_repos
 ######################### KDE PLASMA ###############################
 clear
 echo "INSTALL GNOME: "

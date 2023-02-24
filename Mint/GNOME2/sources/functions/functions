@@ -49,12 +49,8 @@ function check_installed {
   done < "${1}"
    c="sudo nala install "${list}" -y"
    c2="sudo apt install "${list2}" -y"
-
-   sudo su - -c "sudo echo $c >> packeges.txt"
-   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
-   sudo su - -c "sudo echo $c2 >> packeges.txt"
-   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
    eval $c
+
    for i in $list2; do
     sudo apt-get install -y $i
    done
