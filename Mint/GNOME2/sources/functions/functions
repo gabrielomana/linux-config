@@ -154,48 +154,54 @@ sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://b
 echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
 ###### ONLY OFFICE ####
-sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
-sudo rm /tmp/*.gpg -rf
-sudo rm ~/.gnupg -rf
-sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
-sudo apt update
-
-mkdir -p ~/.gnupg
-chmod 700 ~/.gnupg
-clear
-SUB='fallida'
 a=0
+f=0
 while [ $a == 0 ]
 do
-key=$( gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5)
-sleep 3
-if grep -q "$SUB" <<< "$key"; then
-  sleep 1
-else
-  sleep 3
-  a=1
-  sudo chmod 644 /tmp/onlyoffice.gpg
-  sudo chown root:root /tmp/onlyoffice.gpg
-  sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
-  echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
-fi
+  sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
+  sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
+  sudo rm /tmp/*.gpg -rf
+  sudo rm ~/.gnupg -rf
+
+  curl https://example.com/key.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null  # ascii-armored key
+  curl https://example.com/key.gpg | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null  # non-ascii-armored key
+  mkdir -p ~/.gnupg && chmod 700 ~/.gnupg && gpg --no-default-keyring --keyring /tmp/onlyoffice_keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && gpg --no-default-keyring --keyring /tmp/onlyoffice_keyring.gpg --export | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null && rm /tmp/onlyoffice_keyring.gpg  # keyserver
+
+
+  echo deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main | sudo tee /etc/apt/sources.list.d/onlyoffice.list
+
+  sudo nala update
+
+  sudo nala install -y onlyoffice-desktopeditors
+
+  if command -v onlyoffice-desktopeditors ; then
+      a=1
+  else
+      f=${f}+1
+      if [ $f == 10 ] ; then
+          a=1
+          flatpak install flathub org.onlyoffice.desktopeditors -y
+      fi
+  fi
 done
 
-##BALENA ETCHER
-sudo nala install apt-transport-https -y
-clear
-sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
-sudo rm /etc/apt/trusted.gpg.d/balena* -rf
-sudo rm /usr/share/keyrings/balena* -rf
 
-sudo apt-get clean
-sudo rm -rf "/var/lib/apt/lists/*balena*"
-sudo apt update
-clear
-keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
-curl -1sLf \
-  'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-  | sudo -E bash
+##BALENA ETCHER
+  sudo nala install apt-transport-https -y
+  clear
+  sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
+  sudo rm "/etc/apt/trusted.gpg.d/balena*" -rf
+  sudo rm "/usr/share/keyrings/balena*" -rf
+
+  sudo apt-get clean
+  sudo rm -rf "/var/lib/apt/lists/*balena*"
+  sudo apt update
+  clear
+
+  keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
+  curl -1sLf \
+    'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+    | sudo -E bash
 
 ##rEFInd PPA
 sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
@@ -215,8 +221,26 @@ function install_gnome {
   echo " - Install GNOME Core"
   check_installed "${gnome_vanilla}"
   sudo systemctl set-default graphical.target
-  sudo systemctl enable gdm
+  #sudo systemctl enable gdm
   sudo nala install gnome-software-plugin-flatpak -y
+    sudo dpkg-reconfigure lightdm
+#   #lightdm
+#   sudo apt install lightdm -y
+#   sudo systemctl disable sddm
+#   sudo systemctl disable gdm
+#   sudo systemctl enable lightdm
+#
+#   sudo wget https://github.com/JezerM/web-greeter/releases/download/3.5.2/web-greeter-3.5.2-ubuntu.deb
+#   sudo nala install ./web-greeter-3.5.2-ubuntu.deb
+#   npm install nody-greeter-types
+#
+#   sudo mkdir /usr/share/web-greeter/themes/litarvan
+#   sudo wget https://github.com/Litarvan/lightdm-webkit-theme-litarvan/releases/download/v3.2.0/lightdm-webkit-theme-litarvan-3.2.0.tar.gz
+#   sudo tar -xvzf lightdm-webkit-theme-litarvan-3.2.0.tar.gz -C /usr/share/web-greeter/themes/litarvan/
+#   sudo rm lightdm-webkit2-theme-reactive-0.4.9.tar.gz  -rf
+#
+#  git clone https://github.com/paysonwallach/aqua-lightdm-webkit-theme /usr/share/web-greeter/themes/aqua/
+
 
   #CLEAN GNOME
   clear
@@ -289,14 +313,14 @@ function install_core_apps()
 
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
+  sudo echo -e "alias gedit=\"gnome-text-editor\"\nalias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
   rm -rf ~/.bashrc
   mv ~/aux.txt ~/.bashrc
   source ~/.bashrc
 
   sudo cp /root/.bashrc /root/.bashrc_old
   sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
+  sudo echo -e "alias gedit=\"gnome-text-editor\"\nalias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
 
@@ -421,6 +445,7 @@ clear
       flatpak install flathub io.freetubeapp.FreeTube -y
       flatpak install flathub com.github.tenderowl.frog -y
       flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+      flatpak install flathub org.qbittorrent.qBittorrent -y
       flatpak install flathub org.phoenicis.playonlinux -y
       flatpak install flathub com.usebottles.bottles -y
 
@@ -433,14 +458,7 @@ clear
       sleep 5
       clear
 
-      sudo nala install -y onlyoffice-desktopeditors balena-etcher-electron
-      sleep 5
-      clear
-
-      balena=$(curl -s 'https://api.github.com/repos/balena-io/etcher/releases/latest' | grep browser_download_url | grep '[.]deb' | head -n 1 | cut -d '"' -f 4)
-      wget ${balena}
-      sudo apt install ./balena*.deb --install-suggests -y
-      sudo rm balena*.deb -rf
+      sudo nala install balena-etcher-electron
       sleep 5
       clear
 

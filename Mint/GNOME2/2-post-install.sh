@@ -53,17 +53,7 @@ cd ${dir}
 a=0
 f=0
 install_ZSH
-# while [ $a == 0 ]
-# do
-#         read -p "Do you wish to install ZSH+OHMYZSH+STARSHIP? " yn
-#         case $yn in
-#             [Yy]* ) a=1;install_ZSH;clear;;
-#             [Nn]* ) a=1;echo "OK";clear;;
-#             * ) echo "Please answer yes or no.";;
-#         esac
-#     done
-
-
+install_ZSH_ROOT
 
 ##############DUAL BOOT ####################
 #sudo nala install refind -y

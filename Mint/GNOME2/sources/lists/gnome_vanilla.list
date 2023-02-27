@@ -58,7 +58,7 @@ foomatic-db-compressed-ppds
 fwupd
 fwupd-signed
 gdm3
-gedit
+gnome-text-editor
 genisoimage
 ghostscript-x
 gpg-agent
@@ -134,3 +134,4 @@ yelp
 zenity
 zip
 zsync
+menulibre

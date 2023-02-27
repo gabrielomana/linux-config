@@ -22,7 +22,7 @@ fi
 sleep 5
 ######## dotfiles ##########
 clear
-sudo cp -f ${dir}/dotfiles/.zshrc /root/
+sudo cp -f dotfiles/.zshrc /root/
 sudo mkdir -p /root/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
 
 if [ -f /root/.zcompdump ]; then
@@ -31,14 +31,6 @@ fi
 sleep 5
 ######## Plugins ##########
 clear
-###ZSH-EXA
-if [ -d /root/.oh-my-zsh/custom/plugins/zsh-exa ]; then
-    cd /root/.oh-my-zsh/custom/plugins/zsh-exa && git pull
-else
-    sudo git clone https://github.com/ptavares/zsh-exa.git /root/.oh-my-zsh/custom/plugins/zsh-exa
-fi
-
-
 ###ZSH-AUTOPAIR
 if [ -d /root/.oh-my-zshcustom/custom/plugins/zsh-autopair ]; then
     cd /root/.oh-my-zsh/custom/plugins/zsh-autopair && git pull
@@ -85,14 +77,9 @@ sleep 5
 ######## STARSHIP ##########
 clear
 echo -e "Root: STARSHIP"
-sudo wget https://starship.rs/install.sh
-sudo chmod +x install.sh
-sudo sh ./install.sh
-sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_3.toml -O /root/.config/starship.toml
+sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_1.toml -O /root/.config/starship.toml
 sleep 5
 
-######## REBOOT ZSH ##########
-sudo su - -c "chsh -s /bin/zsh root"
 }
 
 function install_ZSH()
@@ -198,7 +185,6 @@ if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
     echo "ZSH in user: OK"
     echo "installing ZSH in root..."
     sleep 3
-    install_ZSH_ROOT
 else
     echo -e "Something is wrong"
 fi
