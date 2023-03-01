@@ -223,7 +223,8 @@ function install_gnome {
   sudo systemctl set-default graphical.target
   #sudo systemctl enable gdm
   sudo nala install gnome-software-plugin-flatpak -y
-    sudo dpkg-reconfigure lightdm
+  sudo dpkg-reconfigure lightdm
+
 #   #lightdm
 #   sudo apt install lightdm -y
 #   sudo systemctl disable sddm
@@ -369,17 +370,17 @@ function install_core_apps()
   sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
   sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
 
- sudo mkdir /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
- sudo rm /tmp/nerd_fonts/ -rf
- sudo nala install fonts-noto-color-emoji -y
- sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
- fc-cache -f -v
+  sudo mkdir /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
+  sudo rm /tmp/nerd_fonts/ -rf
+  sudo nala install fonts-noto-color-emoji -y
+  sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
+  fc-cache -f -v
  }
 
 #MULTIMEDIA
