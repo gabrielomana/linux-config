@@ -130,6 +130,34 @@ sudo mv /etc/apt/trusted.gpg /etc/apt/wireplumber.gpg
 sudo ln -s /etc/apt/wireplumber.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
 
 
+##### POP OS ####
+# sentence=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1)
+# a=0
+# ulv=""
+# for word in $sentence
+# do
+#
+#
+#
+# if [ $a == 1 ] ; then
+#
+#
+#     ulv=$word
+# fi
+# a=1
+#
+# done
+# ulv= echo -e ""${ulv} | sed 's/ //g'
+#
+# sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 63C46DF0140D738961429F4E204DD8AEC33A7AFF
+# ##Fix deprecated Key MINT issue
+# sudo mv /etc/apt/trusted.gpg /etc/apt/pop_os.gpg
+# sudo ln -s /etc/apt/pop_os.gpg /etc/apt/trusted.gpg.d/pop_os.gpg
+# echo -e "deb http://apt.pop-os.org/proprietary ${ulv} main" | sudo tee -a /etc/apt/sources.list.d/pop_os.list
+# echo -e "deb http://apt.pop-os.org/ubuntu ${ulv}-backports main multiverse restricted universe"| sudo tee -a /etc/apt/sources.list.d/pop_os.list
+
+
+
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo nala update
@@ -187,21 +215,21 @@ done
 
 
 ##BALENA ETCHER
-  sudo nala install apt-transport-https -y
-  clear
-  sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
-  sudo rm "/etc/apt/trusted.gpg.d/balena*" -rf
-  sudo rm "/usr/share/keyrings/balena*" -rf
-
-  sudo apt-get clean
-  sudo rm -rf "/var/lib/apt/lists/*balena*"
-  sudo apt update
-  clear
-
-  keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
-  curl -1sLf \
-    'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-    | sudo -E bash
+#   sudo nala install apt-transport-https -y
+#   clear
+#   sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
+#   sudo rm "/etc/apt/trusted.gpg.d/balena*" -rf
+#   sudo rm "/usr/share/keyrings/balena*" -rf
+#
+#   sudo apt-get clean
+#   sudo rm -rf "/var/lib/apt/lists/*balena*"
+#   sudo apt update
+#   clear
+#
+#   keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
+#   curl -1sLf \
+#     'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+#     | sudo -E bash
 
 ##rEFInd PPA
 sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
@@ -227,20 +255,14 @@ function install_gnome {
 
 #   #lightdm
 #   sudo apt install lightdm -y
-#   sudo systemctl disable sddm
-#   sudo systemctl disable gdm
-#   sudo systemctl enable lightdm
-#
-#   sudo wget https://github.com/JezerM/web-greeter/releases/download/3.5.2/web-greeter-3.5.2-ubuntu.deb
-#   sudo nala install ./web-greeter-3.5.2-ubuntu.deb
-#   npm install nody-greeter-types
-#
-#   sudo mkdir /usr/share/web-greeter/themes/litarvan
-#   sudo wget https://github.com/Litarvan/lightdm-webkit-theme-litarvan/releases/download/v3.2.0/lightdm-webkit-theme-litarvan-3.2.0.tar.gz
-#   sudo tar -xvzf lightdm-webkit-theme-litarvan-3.2.0.tar.gz -C /usr/share/web-greeter/themes/litarvan/
-#   sudo rm lightdm-webkit2-theme-reactive-0.4.9.tar.gz  -rf
-#
-#  git clone https://github.com/paysonwallach/aqua-lightdm-webkit-theme /usr/share/web-greeter/themes/aqua/
+
+    sudo cp dotfiles/lightdm.conf /etc/lightdm/lightdm.conf -rf
+    sudo cp dotfiles/lightdm.conf /etc/lightdm/lightdm-gtk-greeter.conf -rf
+    sudo cp dotfiles/themes/kristopher-roller-110203-unsplash.jpg /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
+    sudo systemctl disable sddm
+    sudo systemctl disable gdm
+    sudo systemctl enable lightdm
+
 
 
   #CLEAN GNOME
@@ -438,31 +460,33 @@ sudo systemctl enable libvirtd
 clear
     if [ $f == 1 ]; then
       #flatpak
-      flatpak install flathub org.ksnip.ksnip -y
-      flatpak install flathub org.kde.kdenlive -y
-      flatpak install flathub app.ytmdesktop.ytmdesktop -y
-      flatpak install flathub tv.kodi.Kodi -y
-      flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-      flatpak install flathub io.freetubeapp.FreeTube -y
-      flatpak install flathub com.github.tenderowl.frog -y
-      flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
-      flatpak install flathub org.qbittorrent.qBittorrent -y
-      flatpak install flathub org.phoenicis.playonlinux -y
-      flatpak install flathub com.usebottles.bottles -y
+#       flatpak install flathub org.ksnip.ksnip -y
+#       flatpak install flathub org.kde.kdenlive -y
+#       flatpak install flathub app.ytmdesktop.ytmdesktop -y
+#       flatpak install flathub tv.kodi.Kodi -y
+#       flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+#       flatpak install flathub io.freetubeapp.FreeTube -y
+#       flatpak install flathub com.github.tenderowl.frog -y
+#       flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+#       flatpak install flathub org.qbittorrent.qBittorrent -y
+#       flatpak install flathub org.phoenicis.playonlinux -y
+#       flatpak install flathub com.usebottles.bottles -y
 
 
       #OTHERS
       clear
       sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
-      sudo pip3 /git/qr-tools/install -r requirements.txt
+      cd /git/qr-tools/
+      sudo pip3 install -r requirements.txt
       sudo nala install qtqr -y
       sleep 5
       clear
 
-      sudo nala install balena-etcher-electron
-      sleep 5
-      clear
+#       sudo nala install balena-etcher-electron
+#       sleep 5
+#       clear
 
+      cd ${dir}
       sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
       sudo chmod +x beeper.AppImage
       ./beeper.AppImage &>/dev/null &
