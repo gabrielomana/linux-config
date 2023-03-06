@@ -43,22 +43,22 @@ echo "INSTALL GNOME: "
 sleep 3
 install_gnome
 # ######################### CORE APPS ###############################
-clear
-echo "INSTALL SYSTEM CORE APPS: "
-sleep 3
-install_core_apps
+# clear
+# echo "INSTALL SYSTEM CORE APPS: "
+# sleep 3
+# install_core_apps
+# #
+# # ######################### MULTIMEDIA ###############################
+# clear
+# echo "INSTALL MULTIMEDIA APPS: "
+# sleep 3
+# install_multimedia
 #
-# ######################### MULTIMEDIA ###############################
-clear
-echo "INSTALL MULTIMEDIA APPS: "
-sleep 3
-install_multimedia
-
-# ######################### MULTIMEDIA ###############################
-clear
-echo "INSTALL NEMO: "
-sleep 3
-install_nemo
+# # ######################### MULTIMEDIA ###############################
+# clear
+# echo "INSTALL NEMO: "
+# sleep 3
+# install_nemo
 
 
 # #########################################_END_ #################################################

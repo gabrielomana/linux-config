@@ -253,7 +253,7 @@ function install_gnome {
   echo " - Install GNOME Core"
   check_installed "${gnome_vanilla}"
   sudo systemctl set-default graphical.target
-  sudo dpkg-reconfigure gdm3
+  #sudo dpkg-reconfigure gdm3
   sudo nala install gnome-software-plugin-flatpak -y
   sudo cp dotfiles/themes/kristopher-roller-110203-unsplash.jpg /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
 
@@ -265,13 +265,13 @@ function install_gnome {
 
 
     #GDM3
-    sudo nala install gdm3 -y
-    sudo dpkg-reconfigure gdm3
-    sudo nala install libglib2.0-dev dconf-cli -y
-    sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
-    cd /git/gdm-tools/
-    sudo ./install.sh
-    sudo set-gdm-theme set -b /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
+#     sudo nala install gdm3 -y
+#     sudo dpkg-reconfigure gdm3
+#     sudo nala install libglib2.0-dev dconf-cli -y
+#     sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
+#     cd /git/gdm-tools/
+#     sudo ./install.sh
+#     sudo set-gdm-theme set -b /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
 
 
 
