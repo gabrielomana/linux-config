@@ -248,8 +248,9 @@ function install_gnome {
   echo "INSTALL GNOME: "
   echo " - Install GNOME Core"
   check_installed "${gnome_vanilla}"
+  sudo systemctl enable gdm
+  sudo dpkg-reconfigure gdm3
   sudo systemctl set-default graphical.target
-  #sudo systemctl enable gdm
   sudo nala install gnome-software-plugin-flatpak -y
   sudo cp dotfiles/themes/kristopher-roller-110203-unsplash.jpg /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
 
@@ -260,29 +261,29 @@ function install_gnome {
 #     sudo cp dotfiles/lightdm-gtk-greeter.conf /etc/lightdm/lightdm-gtk-greeter.conf -rf
 
 
-    #GDM3
-    sudo nala install gdm3 -y
-    sudo dpkg-reconfigure gdm3
-    sudo nala install libglib2.0-dev dconf-cli
-    sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
-    cd /git/gdm-tools/
-    sudo ./install.sh
-
-
-    #GDM3 STYLE
-    sudo nala install sassc "libglib2.0-*"  -y
-    sudo git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git /git/WhiteSur-gtk-theme/
-    cd /git/WhiteSur-gtk-theme/
-    sudo ./install.sh
-
-    sudo set-gdm-theme set WhiteSur-Dark /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
-
-    sudo ./tweaks.sh -t "grey" -g -n -p  -b "/usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg"
-#   sudo systemctl disable sddm"
-
-    sudo systemctl disable sddm
-    sudo systemctl disable lightdm
-    sudo systemctl enable gdm3
+#     #GDM3
+#     sudo nala install gdm3 -y
+#     sudo dpkg-reconfigure gdm3
+#     sudo nala install libglib2.0-dev dconf-cli
+#     sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
+#     cd /git/gdm-tools/
+#     sudo ./install.sh
+#
+#
+#     #GDM3 STYLE
+#     sudo nala install sassc "libglib2.0-*"  -y
+#     sudo git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git /git/WhiteSur-gtk-theme/
+#     cd /git/WhiteSur-gtk-theme/
+#     sudo ./install.sh
+#
+#     sudo set-gdm-theme set WhiteSur-Dark /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
+#
+#     sudo ./tweaks.sh -t "grey" -g -n -p  -b "/usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg"
+# #   sudo systemctl disable sddm"
+#
+#     sudo systemctl disable sddm
+#     sudo systemctl disable lightdm
+#     sudo systemctl enable gdm3
 
 
 
