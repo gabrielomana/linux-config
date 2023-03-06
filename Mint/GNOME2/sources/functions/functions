@@ -251,17 +251,38 @@ function install_gnome {
   sudo systemctl set-default graphical.target
   #sudo systemctl enable gdm
   sudo nala install gnome-software-plugin-flatpak -y
-  sudo dpkg-reconfigure lightdm
+  sudo cp dotfiles/themes/kristopher-roller-110203-unsplash.jpg /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
 
-#   #lightdm
-#   sudo apt install lightdm -y
+# #   #lightdm
+#     sudo apt install lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings light-locker -y
+#
+#     sudo cp dotfiles/lightdm.conf /etc/lightdm/lightdm.conf -rf
+#     sudo cp dotfiles/lightdm-gtk-greeter.conf /etc/lightdm/lightdm-gtk-greeter.conf -rf
 
-    sudo cp dotfiles/lightdm.conf /etc/lightdm/lightdm.conf -rf
-    sudo cp dotfiles/lightdm.conf /etc/lightdm/lightdm-gtk-greeter.conf -rf
-    sudo cp dotfiles/themes/kristopher-roller-110203-unsplash.jpg /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
+
+    #GDM3
+    sudo nala install gdm3 -y
+    sudo dpkg-reconfigure gdm3
+    sudo nala install libglib2.0-dev dconf-cli
+    sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
+    cd /git/gdm-tools/
+    sudo ./install.sh
+
+
+    #GDM3 STYLE
+    sudo nala install sassc "libglib2.0-*"  -y
+    sudo git clone https://github.com/vinceliuice/WhiteSur-gtk-theme.git /git/WhiteSur-gtk-theme/
+    cd /git/WhiteSur-gtk-theme/
+    sudo ./install.sh
+
+    sudo set-gdm-theme set WhiteSur-Dark /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
+
+    sudo ./tweaks.sh -t "grey" -g -n -p  -b "/usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg"
+#   sudo systemctl disable sddm"
+
     sudo systemctl disable sddm
-    sudo systemctl disable gdm
-    sudo systemctl enable lightdm
+    sudo systemctl disable lightdm
+    sudo systemctl enable gdm3
 
 
 
@@ -443,13 +464,13 @@ function install_caja()
 {
 clear
 echo -e "NAUTILUS > CAJA\n"
-sudo apt -y install python-nemo nemo-compare nemo-terminal nemo-fileroller cinnamon-l10n mint-translations --install-recommends
+sudo apt -y install caja caja-actions caja-admin caja-extensions-common --install-recommends
 
 sudo apt purge nautilus gnome-shell-extension-desktop-icons -y
-xdg-mime default nemo.desktop inode/directory application/x-gnome-saved-search
+xdg-mime default caja.desktop inode/directory application/x-gnome-saved-search
 gsettings set org.gnome.desktop.background show-desktop-icons false
-gsettings set org.nemo.desktop show-desktop-icons true
-gsettings set org.nemo.desktop use-desktop-grid true
+gsettings set org.mate.desktop.background show-desktop-icons true
+gsettings set org.mate.desktop use-desktop-grid true
 echo -e "[Desktop Entry]\nType=Application\nName=Files\nExec=nemo-desktop\nOnlyShowIn=GNOME;Unity;\nX-Ubuntu-Gettext-Domain=nemo" | sudo tee /etc/xdg/autostart/nemo-autostart.desktop
 
 sudo apt install chrome-gnome-shell gnome-tweaks gnome-shell-extensions gnome-software -y

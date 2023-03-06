@@ -135,7 +135,5 @@ zsync
 menulibre
 gnome-screensaver
 ubuntu-mate-icon-themes
-lightdm-gtk-greeter
-lightdm
-lightdm-gtk-greeter-settings
+gdm3
 

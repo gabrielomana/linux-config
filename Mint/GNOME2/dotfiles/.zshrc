@@ -78,6 +78,8 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
 plugins=(colored-man-pages
 	git
 	git-extras
@@ -115,7 +117,16 @@ source $ZSH/oh-my-zsh.sh
 #
 # Example aliases
 alias zshr="source ~/.zshrc"
-alias fupdate="topgrade &&  sudo hblock -O /etc/host" 
+alias cat="batcat -f"
+alias fupdate="topgrade &&  sudo hblock -O /etc/host"
+alias l="exa "
+alias ls="exa --group-directories-first --icons"
+alias ll="exa -lbGFhmua --group-directories-first --no-permissions --icons"
+alias llp="exa -lbGFhmua --group-directories-first --icons"
+alias la="exa -a --group-directories-first --icons"
+alias lt="exa --tree --level=2 --icons"
+alias lt3="exa --tree --level=3 --icons"
+alias lt4="exa --tree --level=4 --icons"
 #alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
