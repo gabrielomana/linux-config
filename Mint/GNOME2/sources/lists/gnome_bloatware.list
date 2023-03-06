@@ -1,4 +1,4 @@
-"libreoffice*"
+sudo nala remove "libreoffice*"
 "transmission*"
 gnome-maps
 gnome-weather
@@ -20,5 +20,3 @@ gnome-mines
 gnome-sudoku
 rhythmbox
 ubuntu-session
-
-

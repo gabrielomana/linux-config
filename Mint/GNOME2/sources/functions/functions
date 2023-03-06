@@ -253,7 +253,7 @@ function install_gnome {
   echo " - Install GNOME Core"
   check_installed "${gnome_vanilla}"
   sudo systemctl set-default graphical.target
-  #sudo dpkg-reconfigure gdm3
+  sudo dpkg-reconfigure gdm3
   sudo nala install gnome-software-plugin-flatpak -y
   sudo cp dotfiles/themes/kristopher-roller-110203-unsplash.jpg /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
 
