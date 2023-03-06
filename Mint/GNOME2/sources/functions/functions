@@ -49,6 +49,11 @@ function check_installed {
   done < "${1}"
    c="sudo nala install "${list}" -y"
    c2="sudo apt install "${list2}" -y"
+   echo $c
+   echo ""
+   echo $c2
+   echo ""
+   sleep 10
    eval $c
 
    for i in $list2; do
