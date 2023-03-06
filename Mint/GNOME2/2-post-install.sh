@@ -7,8 +7,10 @@ exta_apps="${dir}/sources/lists/exta_apps.list"
 . "${dir}"/sources/functions/functions
 
 ########## TERMINAL #############################################
-sudo cp /etc/profile.d/vte*.sh /etc/profile.d/vte.sh
+sudo cp /etc/profile.d/vte-* /etc/profile.d/vte.sh
 cp -r dotfiles/TILIX/tilix ~/.config/
+neofetch
+clear
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
 cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 
