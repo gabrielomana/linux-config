@@ -46,6 +46,20 @@ sudo update-initramfs -u
 ###mem="$(free -g | awk 'NR==2{printf "%s\n", $2}')"
 
 #KERNEL UPDATE
+clear
+a=0
+k=0
+while [ $a -lt 1 ]
+do
+        read -p "Do you wish to install XANMOD KERNEL? " yn
+        case $yn in
+            [Yy]* ) a=1;install_kernel;k=1;clear;;
+            [Nn]* ) a=1;echo "OK";k=0;clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+
+if [ $k == 1 ]; then
 wget -qO - https://dl.xanmod.org/archive.key | sudo gpg --dearmor -o /usr/share/keyrings/xanmod-archive-keyring.gpg
 echo 'deb [signed-by=/usr/share/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-release.list
 sudo nala update
@@ -54,6 +68,7 @@ SCRIPT_PATH="${dir}/check_xanmod.sh"
 kernel=$("$SCRIPT_PATH")
 get_kernel="sudo nala install $kernel -y"
 eval $get_kernel
+fi
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
 

@@ -444,6 +444,10 @@ function install_core_apps()
   systemctl --user --now enable pipewire{,-pulse}.{socket,service}
   systemctl --user --now enable wireplumber.service
 
+  sudo nala install pulseaudio -y
+  sudo nala install pavucontrol -y
+
+
  #Nerd Fonts
   clear
   echo "INSTALL SYSTEM CORE APPS: "
