@@ -283,47 +283,49 @@ function install_gnome {
   sudo apt-get update --fix-missing
   sudo apt-get install -f
 
-      sudo mkdir /usr/share/wayland-sessions/hidden
+  sudo mkdir /usr/share/wayland-sessions/hidden
 
-      sudo dpkg-divert --rename \
-      --divert /usr/share/wayland-sessions/hidden/gnome-classic.desktop \
-      --add /usr/share/wayland-sessions/gnome-classic.desktop
+  sudo dpkg-divert --rename \
+  --divert /usr/share/wayland-sessions/hidden/gnome-classic.desktop \
+  --add /usr/share/wayland-sessions/gnome-classic.desktop
 
-      sudo dpkg-divert --rename \
-      --divert /usr/share/wayland-sessions/hidden/gnome-classic-xorg.desktop \
-      --add /usr/share/wayland-sessions/gnome-classic-xorg.desktop
+  sudo dpkg-divert --rename \
+  --divert /usr/share/wayland-sessions/hidden/gnome-classic-xorg.desktop \
+  --add /usr/share/wayland-sessions/gnome-classic-xorg.desktop
 
-      sudo dpkg-divert --rename \
-      --divert /usr/share/wayland-sessions/hidden/gnome-classic-wayland.desktop \
-      --add /usr/share/wayland-sessions/gnome-classic-wayland.desktop
+  sudo dpkg-divert --rename \
+  --divert /usr/share/wayland-sessions/hidden/gnome-classic-wayland.desktop \
+  --add /usr/share/wayland-sessions/gnome-classic-wayland.desktop
 
-       sudo dpkg-divert --rename \
-      --divert /usr/share/wayland-sessions/hidden/ubuntu.desktop \
-      --add /usr/share/wayland-sessions/ubuntu.desktop
+    sudo dpkg-divert --rename \
+  --divert /usr/share/wayland-sessions/hidden/ubuntu.desktop \
+  --add /usr/share/wayland-sessions/ubuntu.desktop
 
-       sudo dpkg-divert --rename \
-      --divert /usr/share/wayland-sessions/hidden/ubuntu-xorg.desktop \
-      --add /usr/share/wayland-sessions/ubuntu-xorg.desktop
+    sudo dpkg-divert --rename \
+  --divert /usr/share/wayland-sessions/hidden/ubuntu-xorg.desktop \
+  --add /usr/share/wayland-sessions/ubuntu-xorg.desktop
 
 
 
-      sudo mkdir /usr/share/xsessions/hidden
+  sudo mkdir /usr/share/xsessions/hidden
 
-      sudo dpkg-divert --rename \
-      --divert /usr/share/xsessions/hidden/gnome-classic.desktop \
-      --add /usr/share/xsessions/gnome-classic.desktop
+  sudo dpkg-divert --rename \
+  --divert /usr/share/xsessions/hidden/gnome-classic.desktop \
+  --add /usr/share/xsessions/gnome-classic.desktop
 
-      sudo dpkg-divert --rename \
-      --divert /usr/share/xsessions/hidden/gnome-classic-xorg.desktop \
-      --add /usr/share/xsessions/gnome-classic-xorg.desktop
+  sudo dpkg-divert --rename \
+  --divert /usr/share/xsessions/hidden/gnome-classic-xorg.desktop \
+  --add /usr/share/xsessions/gnome-classic-xorg.desktop
 
-       sudo dpkg-divert --rename \
-      --divert /usr/share/xsessions/hidden/ubuntu.desktop \
-      --add /usr/share/xsessions/ubuntu.desktop
+    sudo dpkg-divert --rename \
+  --divert /usr/share/xsessions/hidden/ubuntu.desktop \
+  --add /usr/share/xsessions/ubuntu.desktop
 
-       sudo dpkg-divert --rename \
-      --divert /usr/share/xsessions/hidden/ubuntu-xorg.desktop \
-      --add /usr/share/xsessions/ubuntu-xorg.desktop
+    sudo dpkg-divert --rename \
+  --divert /usr/share/xsessions/hidden/ubuntu-xorg.desktop \
+  --add /usr/share/xsessions/ubuntu-xorg.desktop
+
+  sudo cp dotfiles/ubuntu-logo.png /usr/share/plymouth/ubuntu-logo.png -rf
 
 #       sudo rm /usr/share/xsessions/gnome-xorg.desktop -rf
 #       echo -e "[Desktop Entry]
@@ -358,11 +360,6 @@ function install_gnome {
 #       X-GDM-SessionRegisters=true
 #       X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/wayland-sessions/ubuntu-wayland.desktop
 
-
-      sudo mkdir /usr/share/plymouth/hidden
-      sudo dpkg-divert --rename \
-      --divert /usr/share/plymouth/hidden/ubuntu-logo.png \
-      --add /usr/share/plymouth/ubuntu-logo.png
 
 
 }
