@@ -246,7 +246,7 @@ clear
 function install_gnome {
   echo "INSTALL GNOME: "
   echo " - Install GNOME Core"
-  check_installed "${gnome_vanilla}"
+  check_installed "${gnome}"
   sudo systemctl set-default graphical.target
   sudo dpkg-reconfigure gdm3
   sudo nala install gnome-software-plugin-flatpak -y
