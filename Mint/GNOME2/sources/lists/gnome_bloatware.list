@@ -1,4 +1,4 @@
-sudo nala remove "libreoffice*"
+"libreoffice*"
 "transmission*"
 gnome-maps
 gnome-weather
@@ -19,3 +19,4 @@ gnome-mahjongg
 gnome-mines
 gnome-sudoku
 rhythmbox
+ubuntu-gnome-wallpapers

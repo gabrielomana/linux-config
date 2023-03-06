@@ -283,6 +283,30 @@ function install_gnome {
   sudo apt-get update --fix-missing
   sudo apt-get install -f
 
+      sudo mkdir /usr/share/wayland-sessions/hidden
+
+      sudo dpkg-divert --rename \
+      --divert /usr/share/wayland-sessions/hidden/gnome-classic.desktop \
+      --add /usr/share/wayland-sessions/gnome-classic.desktop
+
+      sudo dpkg-divert --rename \
+      --divert /usr/share/wayland-sessions/hidden/gnome-classic-xorg.desktop \
+      --add /usr/share/wayland-sessions/gnome-classic-xorg.desktop
+
+      sudo dpkg-divert --rename \
+      --divert /usr/share/wayland-sessions/hidden/gnome-classic-wayland.desktop \
+      --add /usr/share/wayland-sessions/gnome-classic-wayland.desktop
+
+       sudo dpkg-divert --rename \
+      --divert /usr/share/wayland-sessions/hidden/ubuntu.desktop \
+      --add /usr/share/wayland-sessions/ubuntu.desktop
+
+       sudo dpkg-divert --rename \
+      --divert /usr/share/wayland-sessions/hidden/ubuntu-xorg.desktop \
+      --add /usr/share/wayland-sessions/ubuntu-xorg.desktop
+
+
+
       sudo mkdir /usr/share/xsessions/hidden
 
       sudo dpkg-divert --rename \
@@ -301,42 +325,45 @@ function install_gnome {
       --divert /usr/share/xsessions/hidden/ubuntu-xorg.desktop \
       --add /usr/share/xsessions/ubuntu-xorg.desktop
 
-      sudo rm /usr/share/xsessions/gnome-xorg.desktop -rf
-      echo -e "[Desktop Entry]
-      Name=GNOME - Xorg
-      Comment=This session logs you into Ubuntu
-      Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
-      TryExec=/usr/bin/gnome-shell
-      Type=Application
-      DesktopNames=ubuntu:GNOME
-      X-GDM-SessionRegisters=true
-      X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/xsessions/gnome-xorg.desktop
+#       sudo rm /usr/share/xsessions/gnome-xorg.desktop -rf
+#       echo -e "[Desktop Entry]
+#       Name=GNOME - Xorg
+#       Comment=This session logs you into Ubuntu
+#       Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
+#       TryExec=/usr/bin/gnome-shell
+#       Type=Application
+#       DesktopNames=ubuntu:GNOME
+#       X-GDM-SessionRegisters=true
+#       X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/xsessions/gnome-xorg.desktop
+#
+#       sudo rm /usr/share/wayland-sessions/ubuntu.desktop -rf
+#       echo -e "[Desktop Entry]
+#       Name=GNOME
+#       Comment=This session logs you into Ubuntu
+#       Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
+#       TryExec=/usr/bin/gnome-shell
+#       Type=Application
+#       DesktopNames=ubuntu:GNOME
+#       X-GDM-SessionRegisters=true
+#       X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/wayland-sessions/ubuntu.desktop
+#
+#       sudo rm /usr/share/wayland-sessions/ubuntu-wayland.desktop -rf
+#       echo -e "[Desktop Entry]
+#       Name=GNOME - Wayland
+#       Comment=This session logs you into Ubuntu
+#       Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
+#       TryExec=/usr/bin/gnome-shell
+#       Type=Application
+#       DesktopNames=ubuntu:GNOME
+#       X-GDM-SessionRegisters=true
+#       X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/wayland-sessions/ubuntu-wayland.desktop
 
-      sudo rm /usr/share/wayland-sessions/ubuntu.desktop -rf
-      echo -e "[Desktop Entry]
-      Name=GNOME
-      Comment=This session logs you into Ubuntu
-      Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
-      TryExec=/usr/bin/gnome-shell
-      Type=Application
-      DesktopNames=ubuntu:GNOME
-      X-GDM-SessionRegisters=true
-      X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/wayland-sessions/ubuntu.desktop
 
-      sudo rm /usr/share/wayland-sessions/ubuntu-wayland.desktop -rf
-      echo -e "[Desktop Entry]
-      Name=GNOME - Wayland
-      Comment=This session logs you into Ubuntu
-      Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
-      TryExec=/usr/bin/gnome-shell
-      Type=Application
-      DesktopNames=ubuntu:GNOME
-      X-GDM-SessionRegisters=true
-      X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/wayland-sessions/ubuntu-wayland.desktop
+      sudo mkdir /usr/share/plymouth/hidden
+      sudo dpkg-divert --rename \
+      --divert /usr/share/plymouth/hidden/ubuntu-logo.png \
+      --add /usr/share/plymouth/ubuntu-logo.png
 
-
-
-      #sudo dpkg-divert --rename --remove /usr/share/xsessions/gnome-xorg.desktop
 
 }
 
