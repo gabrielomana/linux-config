@@ -48,11 +48,6 @@ function check_installed {
   done < "${1}"
    c="sudo nala install "${list}" -y"
    c2="sudo apt install "${list2}" -y"
-   echo $c
-   echo ""
-   echo $c2
-   echo ""
-   sleep 10
    eval $c
 
    for i in $list2; do
@@ -264,14 +259,14 @@ function install_gnome {
 #     sudo cp dotfiles/lightdm-gtk-greeter.conf /etc/lightdm/lightdm-gtk-greeter.conf -rf
 
 
-    #GDM3
-#     sudo nala install gdm3 -y
-#     sudo dpkg-reconfigure gdm3
-#     sudo nala install libglib2.0-dev dconf-cli -y
-#     sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
-#     cd /git/gdm-tools/
-#     sudo ./install.sh
-#     sudo set-gdm-theme set -b /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
+##GDM3
+    sudo nala install gdm3 -y
+    sudo dpkg-reconfigure gdm3
+    sudo nala install libglib2.0-dev dconf-cli -y
+    sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
+    cd /git/gdm-tools/
+    sudo ./install.sh
+    sudo set-gdm-theme set -b /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
 
 
 
