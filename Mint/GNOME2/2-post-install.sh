@@ -46,8 +46,11 @@ sudo update-initramfs -u
 ###mem="$(free -g | awk 'NR==2{printf "%s\n", $2}')"
 
 #KERNEL UPDATE
-sudo mainline-gtk
-
+SCRIPT_PATH="${dir}/check_xanmod.sh"
+# or
+kernel=$("$SCRIPT_PATH")
+get_kernel="sudo nala install $OUTPUT -y"
+eval $get_kernel
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
 
