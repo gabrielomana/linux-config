@@ -520,7 +520,7 @@ clear
       clear
       sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
       cd /git/qr-tools/
-      sudo pip3 install -r requirements.txt
+      sudo pip install -r requirements.txt
       sudo nala install qtqr -y
       sleep 5
       clear
