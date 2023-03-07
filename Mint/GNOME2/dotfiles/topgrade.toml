@@ -45,7 +45,8 @@ repos = [
     "~/.config/*",
     "/git/*",
     "~/.oh-my-zsh/custom/themes/*",
-     "~/*"
+     "~/*",
+     "/usr/share/themes/*"
 ]
 
 
@@ -66,7 +67,7 @@ repos = [
 
 # Custom commands
 
-Repos="sudo dnf makecache --refresh"
+#Repos="sudo dnf makecache --refresh"
 
 [commands]
 
@@ -74,7 +75,7 @@ Repos="sudo dnf makecache --refresh"
 
 Hblock = "sudo hblock -O /etc/host"
 
-Clean_DNF= "sudo dnf clean dbcache"
+#Clean_DNF= "sudo dnf clean dbcache"
 
 [brew]
 

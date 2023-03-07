@@ -97,7 +97,7 @@ source $ZSH/oh-my-zsh.sh
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
-# You may need to manually set your language environment
+# You may need to manually set your language environmentgedi
 # export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
@@ -127,6 +127,8 @@ alias la="exa -a --group-directories-first --icons"
 alias lt="exa --tree --level=2 --icons"
 alias lt3="exa --tree --level=3 --icons"
 alias lt4="exa --tree --level=4 --icons"
+alias kate="/usr/bin/flatpak run --branch=master --arch=x86_64 --command=kate --file-forwarding org.kde.kate"
+
 #alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.

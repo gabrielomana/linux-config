@@ -1,4 +1,5 @@
 #!/bin/bash
+
 function check_uninstalled (){
   local package
   list=""
@@ -180,61 +181,6 @@ function add_extra_repos(){
 sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
-###### ONLY OFFICE ####
-a=0
-f=0
-while [ $a == 0 ]
-do
-  sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
-  sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
-  sudo rm /tmp/*.gpg -rf
-  sudo rm ~/.gnupg -rf
-
-  curl https://example.com/key.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null  # ascii-armored key
-  curl https://example.com/key.gpg | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null  # non-ascii-armored key
-  mkdir -p ~/.gnupg && chmod 700 ~/.gnupg && gpg --no-default-keyring --keyring /tmp/onlyoffice_keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && gpg --no-default-keyring --keyring /tmp/onlyoffice_keyring.gpg --export | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null && rm /tmp/onlyoffice_keyring.gpg  # keyserver
-
-
-  echo deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main | sudo tee /etc/apt/sources.list.d/onlyoffice.list
-
-  sudo nala update
-
-  sudo nala install -y onlyoffice-desktopeditors
-
-  if command -v onlyoffice-desktopeditors ; then
-      a=1
-  else
-      f=${f}+1
-      if [ $f == 10 ] ; then
-          a=1
-          flatpak install flathub org.onlyoffice.desktopeditors -y
-      fi
-  fi
-done
-
-
-##BALENA ETCHER
-#   sudo nala install apt-transport-https -y
-#   clear
-#   sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
-#   sudo rm "/etc/apt/trusted.gpg.d/balena*" -rf
-#   sudo rm "/usr/share/keyrings/balena*" -rf
-#
-#   sudo apt-get clean
-#   sudo rm -rf "/var/lib/apt/lists/*balena*"
-#   sudo apt update
-#   clear
-#
-#   keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
-#   curl -1sLf \
-#     'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-#     | sudo -E bash
-
-##rEFInd PPA
-sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
-sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -253,16 +199,11 @@ function install_gnome {
   sudo systemctl set-default graphical.target
   sudo dpkg-reconfigure gdm3
   sudo nala install gnome-software-plugin-flatpak -y
+  cd ${dir}
   sudo cp dotfiles/themes/kristopher-roller-110203-unsplash.jpg /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
 
-# #   #lightdm
-#     sudo apt install lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings light-locker -y
-#
-#     sudo cp dotfiles/lightdm.conf /etc/lightdm/lightdm.conf -rf
-#     sudo cp dotfiles/lightdm-gtk-greeter.conf /etc/lightdm/lightdm-gtk-greeter.conf -rf
 
-
-##GDM3
+  ##GDM3
     sudo nala install gdm3 -y
     sudo dpkg-reconfigure gdm3
     sudo nala install libglib2.0-dev dconf-cli -y
@@ -270,6 +211,8 @@ function install_gnome {
     cd /git/gdm-tools/
     sudo ./install.sh
     sudo set-gdm-theme set -b /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
+    cd ${dir}
+    sudo cp dotfiles/ubuntu-logo.png /usr/share/plymouth/ubuntu-logo.png -rf
 
 
 
@@ -301,6 +244,10 @@ function install_gnome {
   --divert /usr/share/wayland-sessions/hidden/ubuntu.desktop \
   --add /usr/share/wayland-sessions/ubuntu.desktop
 
+      sudo dpkg-divert --rename \
+  --divert /usr/share/wayland-sessions/hidden/ubuntu-wayland.desktop \
+  --add /usr/share/wayland-sessions/ubuntu-wayland.desktop
+
     sudo dpkg-divert --rename \
   --divert /usr/share/wayland-sessions/hidden/ubuntu-xorg.desktop \
   --add /usr/share/wayland-sessions/ubuntu-xorg.desktop
@@ -324,43 +271,6 @@ function install_gnome {
     sudo dpkg-divert --rename \
   --divert /usr/share/xsessions/hidden/ubuntu-xorg.desktop \
   --add /usr/share/xsessions/ubuntu-xorg.desktop
-
-  sudo cp dotfiles/ubuntu-logo.png /usr/share/plymouth/ubuntu-logo.png -rf
-
-#       sudo rm /usr/share/xsessions/gnome-xorg.desktop -rf
-#       echo -e "[Desktop Entry]
-#       Name=GNOME - Xorg
-#       Comment=This session logs you into Ubuntu
-#       Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
-#       TryExec=/usr/bin/gnome-shell
-#       Type=Application
-#       DesktopNames=ubuntu:GNOME
-#       X-GDM-SessionRegisters=true
-#       X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/xsessions/gnome-xorg.desktop
-#
-#       sudo rm /usr/share/wayland-sessions/ubuntu.desktop -rf
-#       echo -e "[Desktop Entry]
-#       Name=GNOME
-#       Comment=This session logs you into Ubuntu
-#       Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
-#       TryExec=/usr/bin/gnome-shell
-#       Type=Application
-#       DesktopNames=ubuntu:GNOME
-#       X-GDM-SessionRegisters=true
-#       X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/wayland-sessions/ubuntu.desktop
-#
-#       sudo rm /usr/share/wayland-sessions/ubuntu-wayland.desktop -rf
-#       echo -e "[Desktop Entry]
-#       Name=GNOME - Wayland
-#       Comment=This session logs you into Ubuntu
-#       Exec=env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/gnome-session --session=ubuntu
-#       TryExec=/usr/bin/gnome-shell
-#       Type=Application
-#       DesktopNames=ubuntu:GNOME
-#       X-GDM-SessionRegisters=true
-#       X-Ubuntu-Gettext-Domain=gnome-session-42" | sudo tee /usr/share/wayland-sessions/ubuntu-wayland.desktop
-
-
 
 }
 
@@ -403,14 +313,14 @@ function install_core_apps()
 
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
-  sudo echo -e "alias gedit=\"gnome-text-editor\"\nalias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
+  sudo echo -e "alias gedit=\"gnome-text-editor\"\nalias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias kate=\"/usr/bin/flatpak run --branch=master --arch=x86_64 --command=kate --file-forwarding org.kde.kate\"" >> ~/aux.txt
   rm -rf ~/.bashrc
   mv ~/aux.txt ~/.bashrc
   source ~/.bashrc
 
   sudo cp /root/.bashrc /root/.bashrc_old
   sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "alias gedit=\"gnome-text-editor\"\nalias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
+  sudo echo -e "alias gedit=\"gnome-text-editor\"\nalias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias kate=\"/usr/bin/flatpak run --branch=master --arch=x86_64 --command=kate --file-forwarding org.kde.kate\""  | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
 
@@ -530,32 +440,92 @@ sudo systemctl enable libvirtd
 
 clear
     if [ $f == 1 ]; then
-      #flatpak
-#       flatpak install flathub org.ksnip.ksnip -y
-#       flatpak install flathub org.kde.kdenlive -y
-#       flatpak install flathub app.ytmdesktop.ytmdesktop -y
-#       flatpak install flathub tv.kodi.Kodi -y
-#       flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-#       flatpak install flathub io.freetubeapp.FreeTube -y
-#       flatpak install flathub com.github.tenderowl.frog -y
-#       flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
-#       flatpak install flathub org.qbittorrent.qBittorrent -y
-#       flatpak install flathub org.phoenicis.playonlinux -y
-#       flatpak install flathub com.usebottles.bottles -y
+
+      ###### ONLY OFFICE ####
+      clear
+      a=0
+      f=0
+      while [ $a == 0 ]
+      do
+        sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
+        sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
+        sudo rm /tmp/*.gpg -rf
+        sudo rm ~/.gnupg -rf
+
+        curl https://example.com/key.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null  # ascii-armored key
+        curl https://example.com/key.gpg | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null  # non-ascii-armored key
+        mkdir -p ~/.gnupg && chmod 700 ~/.gnupg && gpg --no-default-keyring --keyring /tmp/onlyoffice_keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && gpg --no-default-keyring --keyring /tmp/onlyoffice_keyring.gpg --export | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null && rm /tmp/onlyoffice_keyring.gpg  # keyserver
 
 
-      #OTHERS
+        echo deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main | sudo tee /etc/apt/sources.list.d/onlyoffice.list
+
+        sudo nala update
+
+        sudo nala install -y onlyoffice-desktopeditors
+
+        if command -v onlyoffice-desktopeditors ; then
+            a=1
+        else
+            f=${f}+1
+            if [ $f == 10 ] ; then
+                a=1
+                flatpak install flathub org.onlyoffice.desktopeditors -y
+            fi
+        fi
+      done
+
+      ##BALENA ETCHER
+      clear
+      a=0
+      f=0
+      sudo nala install apt-transport-https -y
+      while [ $a == 0 ]
+      do
+        sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
+        sudo rm "/etc/apt/trusted.gpg.d/balena*" -rf
+        sudo rm "/usr/share/keyrings/balena*" -rf
+        sudo rm -rf "/var/lib/apt/lists/*balena*"
+        sudo nala update
+        clear
+
+        keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
+        curl -1sLf \
+          'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+          | sudo -E bash
+
+        sudo nala update
+        sudo nala install balena-etcher
+
+      if command -v balena-etcher ; then
+            a=1
+      fi
+      done
+
+      ##flatpak
+      flatpak install kde org.kde.kdenlive -y
+      flatpak install kde org.kde.kate -y
+      flatpak install flathub org.videolan.VLC -y
+      flatpak install flathub org.ksnip.ksnip -y
+      flatpak install flathub app.ytmdesktop.ytmdesktop -y
+      flatpak install flathub tv.kodi.Kodi -y
+      flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+      flatpak install flathub io.freetubeapp.FreeTube -y
+      flatpak install flathub com.github.tenderowl.frog -y
+      flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+      flatpak install flathub org.qbittorrent.qBittorrent -y
+      flatpak install flathub org.phoenicis.playonlinux -y
+      flatpak install flathub com.usebottles.bottles -y
+
+
+      ##OTHERS
       clear
       sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
+      cd ${dir}
       cd /git/qr-tools/
       sudo pip install -r requirements.txt
       sudo nala install qtqr -y
       sleep 5
       clear
-
-#       sudo nala install balena-etcher-electron
-#       sleep 5
-#       clear
 
       cd ${dir}
       sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage

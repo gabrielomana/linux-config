@@ -71,6 +71,9 @@ eval $get_kernel
 fi
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
+clear
+echo "ZSH+OHMYZSH+STARSHIP"
+sleep 3
 
 cd ${dir}
 a=0
@@ -78,6 +81,54 @@ f=0
 install_ZSH
 install_ZSH_ROOT
 
-##############DUAL BOOT ####################
-#sudo nala install refind -y
+############## DUAL BOOT ####################
+clear
+echo "DUAL BOOT"
+sleep 3
+
+a=0
+r=0
+while [ $a -lt 1 ]
+do
+        read -p "Do you wish to install DUAL BOOT SYSTEM? " yn
+        case $yn in
+            [Yy]* ) a=1;r=1;clear;;
+            [Nn]* ) a=1;echo "OK";k=0;clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+
+     if [ $r == 1 ]; then
+     ##rEFInd PPA
+     sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
+     ##Fix deprecated Key MINT issue
+     sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
+     sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
+
+     sudo nala install refind -y
+    fi
+done
+
+
+############## GRUB-BTRFS ####################
+clear
+echo "GRUB-BTRFS"
+sleep 3
+
+SCRIPT_PATH="${dir}/check_filesystem.sh"
+# or
+file_sys=$("$SCRIPT_PATH")
+get_fs="$file_sys"
+eval "$get_fs"
+#collect result in $r
+fs=$(eval "$?")
+
+     if [ $fs == "btrfs" ]; then
+        sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
+        cd /git/grub-btrfs/
+        sudo make install
+    fi
+
+############## EXTENSIONS ####################
+
 firefox dotfiles/extensions.html
