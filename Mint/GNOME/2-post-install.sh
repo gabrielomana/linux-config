@@ -13,6 +13,8 @@ neofetch
 clear
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
 cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
+sudo tar -xvf dotfiles/GNOME-Templates.tar -C ~/Plantillas
+sudo tar -xvf dotfiles/GNOME-Templates.tar -C ~/Templates
 
 ########## EXTRA APPS #############################################
 clear

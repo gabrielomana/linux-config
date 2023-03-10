@@ -1,0 +1,27 @@
+
+#------------------------------------------------------------------------------#
+#                   OFFICIAL DEBIAN REPOS
+#------------------------------------------------------------------------------#
+
+###### Debian Main Repos
+deb http://deb.debian.org/debian/ testing main contrib non-free
+deb-src http://deb.debian.org/debian/ testing main contrib non-free
+
+###### Debian Updates Repos
+deb http://deb.debian.org/debian/ testing-updates main contrib non-free
+deb-src http://deb.debian.org/debian/ testing-updates main contrib non-free
+
+###### Debian Security Repos
+deb http://deb.debian.org/debian-security testing-security main contrib non-free updates
+deb-src http://deb.debian.org/debian-security testing-security main contrib non-free updates
+
+
+#------------------------------------------------------------------------------#
+#                      UNOFFICIAL  REPOS
+#------------------------------------------------------------------------------#
+
+###### 3rd Party Binary Repos
+###Debian Multimedia
+deb [arch=amd64,i386] http://www.deb-multimedia.org bullseye main non-free
+
+##################################################################################

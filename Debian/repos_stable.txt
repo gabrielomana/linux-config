@@ -1,0 +1,73 @@
+#INSTALL
+apt install sudo
+gedit /etc/sudoers
+miusuario ALL(ALL) ALL
+apt install curl wget apt-transport-https dirmngr apt-xapian-index
+sudo update-apt-xapian-index -vf
+
+#REPOS########################################################################
+
+#------------------------------------------------------------------------------#
+#                   OFFICIAL DEBIAN REPOS
+#------------------------------------------------------------------------------#
+
+###### Debian Main Repos
+deb [arch=amd64,i386] http://ftp.es.debian.org/debian/ stable main contrib non-free
+deb-src [arch=amd64,i386] http://ftp.es.debian.org/debian/ stable main contrib non-free
+
+deb [arch=amd64,i386] http://ftp.es.debian.org/debian/ stable-updates main contrib non-free
+deb-src [arch=amd64,i386] http://ftp.es.debian.org/debian/ stable-updates main contrib non-free
+
+deb [arch=amd64,i386] http://security.debian.org/ stable/updates main contrib non-free
+deb-src [arch=amd64,i386] http://security.debian.org/ stable/updates main contrib non-free
+
+deb [arch=amd64,i386] http://deb.debian.org/ stable-backports main contrib non-free
+deb-src [arch=amd64,i386] http://deb.debian.org/ stable-backports main contrib non-free
+
+
+#------------------------------------------------------------------------------#
+#                      UNOFFICIAL  REPOS
+#------------------------------------------------------------------------------#
+
+###### 3rd Party Binary Repos
+###Debian Multimedia
+deb [arch=amd64,i386] http://www.deb-multimedia.org bullseye main non-free
+
+###Google Chrome Browser
+deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
+
+
+#------------------------------------------------------------------------------#
+#                      MX-LINUX  REPOS
+#------------------------------------------------------------------------------#
+
+### MX Linux AHS
+deb http://mxrepo.com/mx/repo/ [code name stable debian] ahs main non-free
+
+##################################################################################
+
+####GET CODENAME DEBIAN
+curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1
+
+#####GPG Keys:
+wget http://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb && dpkg -i deb-multimedia-keyring_2016.8.1_all.deb
+
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys E58A9D36647CAE7F
+
+#### MX GPG Keys
+#wget https://mxrepo.com/mx/repo/pool/main/m/mx21-archive-keyring/mx21-archive-keyring_2021.2.19_all.deb  | dpkg -i mx*.deb
+#rm mx*.deb
+
+curl https://mxrepo.com/mx21repo.asc | sudo apt-key add -
+curl https://mxrepo.com/mx23repo.asc | sudo apt-key add -
+curl https://mxrepo.com/mx25repo.asc | sudo apt-key add -
+curl https://mxrepo.com/mx27repo.asc | sudo apt-key add -
+
+#####PPA
+apt install software-properties-common
+
+sudo add-apt-repository ppa:peppermintos/ice-dev
+sudo add-apt-repository ppa:webupd8team/y-ppa-manager
+
+
