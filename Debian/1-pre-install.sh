@@ -51,18 +51,28 @@ elif [ $r == 2 ]; then
     deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
     echo -e "deb http://mxrepo.com/mx/repo/ $deb_cn ahs main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
-    if [ curl https://mxrepo.com/mx21repo.asc ]; then
-        sudo apt-key add -
-    elif [ curl https://mxrepo.com/mx23repo.asc ]; then
-    sudo apt-key add -
-    elif [ curl https://mxrepo.com/mx25repo.asc ]; then
-        sudo apt-key add -
-    elif [ curl https://mxrepo.com/mx27repo.asc ]; then
-        sudo apt-key add -
-    fi
+    curl https://mxrepo.com/mx27repo.asc | apt-key add -
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+
+    curl https://mxrepo.com/mx25repo.asc | apt-key add -
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+
+    curl https://mxrepo.com/mx23repo.asc | apt-key add -
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+
+    curl https://mxrepo.com/mx21repo.asc | apt-key add -
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+
+
+    sleep 10
 
     wget http://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb && dpkg -i deb-multimedia-keyring_2016.8.1_all.deb
     rm *.deb
+
     apt update
     apt upgrade
     apt dist-upgrade
