@@ -54,18 +54,30 @@ elif [ $r == 2 ]; then
     curl https://mxrepo.com/mx27repo.asc | apt-key add -
     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    sleep 5
+    echo " "
+    echo " "
 
     curl https://mxrepo.com/mx25repo.asc | apt-key add -
     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+     sleep 5
+    echo " "
+    echo " "
 
     curl https://mxrepo.com/mx23repo.asc | apt-key add -
     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+     sleep 5
+    echo " "
+    echo " "
 
     curl https://mxrepo.com/mx21repo.asc | apt-key add -
     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    sleep 5
+    echo " "
+    echo " "
 
 
     sleep 10
