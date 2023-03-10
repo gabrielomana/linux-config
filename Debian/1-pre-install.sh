@@ -21,6 +21,7 @@ options=("Debian testing" "Debian Stable" "Debian Stable+Backports+MX repos" "Qu
 clear
 a=0
 r=0
+cp /etc/apt/sources.list /etc/apt/sources_old.list
 while [ $a -lt 1 ]
 do
         echo "SELECT THE DEBIAN BRANCH YOU WANT TO INSTALL:"
