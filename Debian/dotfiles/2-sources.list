@@ -3,19 +3,11 @@
 #                   OFFICIAL DEBIAN REPOS
 #------------------------------------------------------------------------------#
 
-###### Debian Main Repos
-deb [arch=amd64,i386] http://ftp.es.debian.org/debian/ stable main contrib non-free
-deb-src [arch=amd64,i386] http://ftp.es.debian.org/debian/ stable main contrib non-free
+deb http://deb.debian.org/debian stable main contrib non-free
+deb http://security.debian.org/debian-security/ stable-security main contrib non-free
 
-deb [arch=amd64,i386] http://ftp.es.debian.org/debian/ stable-updates main contrib non-free
-deb-src [arch=amd64,i386] http://ftp.es.debian.org/debian/ stable-updates main contrib non-free
-
-deb [arch=amd64,i386] http://security.debian.org/ stable/updates main contrib non-free
-deb-src [arch=amd64,i386] http://security.debian.org/ stable/updates main contrib non-free
-
-deb [arch=amd64,i386] http://deb.debian.org/ stable-backports main contrib non-free
-deb-src [arch=amd64,i386] http://deb.debian.org/ stable-backports main contrib non-free
-
+deb http://deb.debian.org/debian stable-updates main contrib non-free
+deb http://ftp.debian.org/debian stable-backports main contrib non-free
 
 #------------------------------------------------------------------------------#
 #                      UNOFFICIAL  REPOS
@@ -23,7 +15,8 @@ deb-src [arch=amd64,i386] http://deb.debian.org/ stable-backports main contrib n
 
 ###### 3rd Party Binary Repos
 ###Debian Multimedia
-deb [arch=amd64,i386] http://www.deb-multimedia.org bullseye main non-free
+deb https://www.deb-multimedia.org stable main non-free
+deb https://www.deb-multimedia.org stable-backports main
 
 
 ##################################################################################
