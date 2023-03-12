@@ -1,18 +1,14 @@
 #!/bin/bash
 dir="$(pwd)"
 
-apt install sudo -yy
-
-#  Find the standard user you created during installation and make it a variable
-
-user=$(getent passwd 1000 |  awk -F: '{ print $1}')
-
-#  Echo the user into the sudoers file
-
-echo "$user  ALL=(ALL:ALL)  ALL" >> /etc/sudoers
-apt install curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms gnupg linux-headers-$(uname -r) -yy
+apt install curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) comm dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools screen sudo -yy
 
 update-apt-xapian-index -vf
+
+users=$(cut -d: -f1 /etc/passwd)
+
+
+
 
 clear
 PS3='Select the Debian branch you want to install: '
@@ -54,7 +50,7 @@ elif [ $r == 2 ]; then
     deb_cn="$(echo "$deb_cn" | tr -d ' ')"
 
 
-    echo -e "deb http://ftp.debian.org/debian $deb_cn-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
+    #echo -e "deb http://ftp.debian.org/debian $deb_cn-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
 
     echo -e "deb http://mxrepo.com/mx/repo/ $deb_cn ahs main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
@@ -96,6 +92,7 @@ elif [ $r == 2 ]; then
     apt update
     apt upgrade
     apt dist-upgrade
+    apt -t $deb_cn-backports upgrade
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/3-sources.list /etc/apt/sources.list -rf

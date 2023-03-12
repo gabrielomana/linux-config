@@ -8,12 +8,6 @@ deb http://deb.debian.org/debian testing main contrib non-free
 deb http://security.debian.org/ testing-security main contrib non-free
 
 
-
-## Multimedia testing
-deb https://www.deb-multimedia.org testing main non-free
-#deb ftp://ftp.deb-multimedia.org testing main non-free
-
-
 #------------------------------------------------------------------------------#
 #                      UNOFFICIAL  REPOS
 #------------------------------------------------------------------------------#
