@@ -8,40 +8,44 @@ cp ${dir}/dotfiles/2-sources.list /etc/apt/sources.list -rf
 apt update
 sleep 5
 
-user_sys=("root" "daemon" "bin2" "sys" "sync" "games" "man" "lp" "mail" "news" "uucp" "proxy" "www-data" "backup" "list" "irc" "gnats" "nobody" "_apt" "systemd—tymesync" "avahi-autoipd" "systemd—coredump")
-users_local=()
+users_default=("root" "daemon" "bin" "sys" "sync" "games" "man" "lp" "mail" "news" "uucp" "proxy" "www-data" "backup" "list" "irc" "gnats" "nobody" "_apt" "systemd-network" "systemd-resolve" "messagebus" "systemd-timesync" "avahi-autoipd" "systemd-coredump" "rtkit" "usbmux" "avahi" "saned" "colord" "speech-dispatcher" "pulse" "sddm" "gdm" "gdm3" "lightdm" "geoclue" "vboxadd" "vboxadd")
+users_system=()
 
 temp=$(cut -d: -f1 /etc/passwd)
 
-list1=${user_sys}
-list2=${users_local}
+for val in $temp; do
+users_system+=($(echo "$val" | tr -d ' '))
+done
+
+
+clear
 diff_list=()
 common_list=()
-#loop through the first list comparing an item from list1 with every item in list2
-for i in "${!list1[@]}"; do
-#begin looping through list2
-    for x in "${!list2[@]}"; do
+
+#loop through the first list comparing an item from users_default with every item in users_system
+for i in "${!users_system[@]}"; do
+#begin looping through users_system
+    for x in "${!users_default[@]}"; do
 #compare the two items
-        if test "${list1[i]}"  == "${list2[x]}"; then
-#add item to the common_list, then remove it from list1 and list2 so that we can
+        if test "${users_default[i]}"  == "${users_system[x]}"; then
+#add item to the common_list, then remove it from users_default and users_system so that we can
 #later use those to generate the diff_list
-            common_list+=("${list2[x]}")
-            unset 'list1[i]'
-            unset 'list2[x]'
+            common_list+=("${users_system[x]}")
+            unset 'users_default[i]'
+            unset 'users_system[x]'
         fi
     done
 done
-#add unique items from list1 to diff_list
-for i in "${!list1[@]}"; do
-    diff_list+=("${list1[i]}")
+#add unique items from users_default to diff_list
+#for i in "${!users_default[@]}"; do
+#    diff_list+=("${users_system[i]}")
+#done
+#add unique items from users_system to diff_list
+for i in "${!users_system[@]}"; do
+    diff_list+=("${users_system[i]}")
 done
-#add unique items from list2 to diff_list
-for i in "${!list2[@]}"; do
-    diff_list+=("${list2[i]}")
-done
-#print out the results
-echo "Here are the unique items between list1 & list2:"
-printf '%s\n' "${diff_list[@]}"
 
-echo "Here are the common items between list1 & list2:"
-printf '%s\n' "${common_list[@]}"
+for u in "${!${diff_list[@]}}"; do
+aux="$u ALL=(ALL:ALL) ALL"
+eval $aux
+done
