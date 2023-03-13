@@ -6,7 +6,7 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 
-apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools screen sudo neofetch
+apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools screen sudo neofetch -yy
 sleep 5
 
 
@@ -14,7 +14,7 @@ sleep 5
 clear
 echo "SUDO+SUDOERS"
 sleep 3
-users_default=("root" "daemon" "bin" "sys" "sync" "games" "man" "lp" "mail" "news" "uucp" "proxy" "www-data" "backup" "list" "irc" "gnats" "nobody" "_apt" "systemd-network" "systemd-resolve" "messagebus" "systemd-timesync" "avahi-autoipd" "systemd-coredump" "rtkit" "usbmux" "avahi" "saned" "colord" "speech-dispatcher" "pulse" "sddm" "gdm" "gdm3" "lightdm" "geoclue" "vboxadd" "vboxadd")
+users_default=("root" "daemon" "bin" "sys" "sync" "games" "man" "lp" "mail" "news" "uucp" "proxy" "www-data" "backup" "list" "irc" "gnats" "nobody" "_apt" "systemd-network" "systemd-resolve" "messagebus" "systemd-timesync" "avahi-autoipd" "systemd-coredump" "rtkit" "usbmux" "avahi" "saned" "colord" "speech-dispatcher" "pulse" "sddm" "gdm" "gdm3" "lightdm"  "geoclue" "vboxadd")
 users_system=()
 
 temp=$(cut -d: -f1 /etc/passwd)
@@ -31,12 +31,12 @@ for i in "${!users_system[@]}"; do
 #begin looping through users_system
     for x in "${!users_default[@]}"; do
 #compare the two items
-        if test "${users_default[i]}"  == "${users_system[x]}"; then
+        if test "${users_system[i]}"  == "${users_default[x]}"; then
 #add item to the common_list, then remove it from users_default and users_system so that we can
 #later use those to generate the diff_list
-            common_list+=("${users_system[x]}")
-            unset 'users_default[i]'
-            unset 'users_system[x]'
+            common_list+=("${users_system[i]}")
+            unset 'users_default[x]'
+            unset 'users_system[i]'
         fi
     done
 done
@@ -47,11 +47,13 @@ done
 #add unique items from users_system to diff_list
 for i in "${!users_system[@]}"; do
     diff_list+=("${users_system[i]}")
+    echo ${users_system[i]}
 done
 
-for u in "${!${diff_list[@]}}"; do
-aux="$u ALL=(ALL:ALL) ALL"
-eval $aux
+for u in "${!diff_list[@]}"; do
+echo -e "${diff_list[u]}  ALL=(ALL:ALL) ALL" >> /etc/sudoers
+aux2="usermod -aG sudo ${diff_list[u]}"
+eval $aux2
 done
 
 export PATH=$PATH:/sbin:/usr/sbin
@@ -139,7 +141,8 @@ elif [ $r == 2 ]; then
     apt update
     apt upgrade -yy
     apt full-upgrade -yy
-    apt -t $deb_cn-backports upgrade
+    apt -t $deb_cn-backports upgrade -yy
+    apt install apt-listbugs apt-listchanges -yy
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/3-sources.list /etc/apt/sources.list -rf

@@ -1,0 +1,458 @@
+#!/bin/bash
+function check_uninstalled (){
+  local package
+  list=""
+  while read -r package; do
+    [ -z "${package}" ] && continue
+
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
+
+    if dpkg -s "${package}" >/dev/null 2>&1; then
+      list="${list} ${package}"
+    fi
+  done < "${1}"
+   c="sudo nala remove --purge "${list}" -y"
+   clear
+   eval $c
+   sudo nala autoremove -y
+   sudo nala install -f
+   sudo nala clean
+   sudo apt-get autoclean
+   clear
+}
+
+function check_installed {
+  local package
+  local to_install=()
+  list=""
+  list2=""
+  while read -r package; do
+    [ -z "${package}" ] && continue
+
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list2="${list2} ${STR}"
+            ;;
+        esac
+  if !(dpkg -s "${package}" >/dev/null 2>&1); then
+    if !(nala show "${package}" 2>&1 | grep -q "Error: "); then
+      list="${list} ${package}"
+    fi
+  fi
+  done < "${1}"
+   c="sudo nala install "${list}" -y"
+   c2="sudo apt install "${list2}" -y"
+
+   sudo su - -c "sudo echo $c >> packeges.txt"
+   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
+   sudo su - -c "sudo echo $c2 >> packeges.txt"
+   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
+   eval $c
+   for i in $list2; do
+    sudo apt-get install -y $i
+   done
+}
+
+
+function uninstall_xfce {
+  check_uninstalled "${xfce}"
+  clear
+  echo "UNINSTALL XFCE: "
+  echo " - Fix missing"
+  sleep 3
+  sudo apt-get update --fix-missing
+  sudo apt-get install -f
+
+  clear
+  echo "UNINSTALL XFCE: "
+  echo " - Fix missing"
+  echo " - Remove folders"
+  sleep 3
+  sudo rm /usr/share/xfce4/ -rf
+  sudo rm /usr/share/thunar/ -rf
+  sudo rm /usr/share/themes/Mint* -rf
+  sudo rm /usr/share/themes/mint* -rf
+  sudo rm /usr/share/Thunar -rf
+  rm ~/.config/Thunar -rf
+  rm ~/.config/caja -rf
+  rm ~/.config/xfce4 -rf
+
+  clear
+  echo "UNINSTALL XFCE: "
+  echo " - Fix missing"
+  echo " - Remove folders"
+  echo " - Update & clean"
+  sleep 3
+  sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo apt --fix-broken install
+
+}
+
+function add_repos(){
+sudo add-apt-repository multiverse -y
+echo -e "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
+echo -e "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse"| sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
+
+##### KERNEL INSTALLER ####
+sudo add-apt-repository ppa:cappelikan/ppa -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/mainline.gpg
+sudo ln -s /etc/apt/mainline.gpg /etc/apt/trusted.gpg.d/mainline.gpg
+
+##### NVIDIA ####
+sudo add-apt-repository ppa:graphics-drivers/ppa -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/nvidia.gpg
+sudo ln -s /etc/apt/nvidia.gpg /etc/apt/trusted.gpg.d/nvidia.gpg
+
+##### GRUB CUSTOMIZER ####
+sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/grub-customizer.gpg
+sudo ln -s /etc/apt/grub-customizer.gpg /etc/apt/trusted.gpg.d/grub-customizer.gpg
+
+##### APP IMAGE LAUNCHER ####
+sudo add-apt-repository ppa:appimagelauncher-team/stable -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/appimagelauncher.gpg
+sudo ln -s /etc/apt/appimagelauncher.gpg /etc/apt/trusted.gpg.d/appimagelauncher.gpg
+
+##### KUBUNTU BACKPORTS ####
+sudo add-apt-repository ppa:kubuntu-ppa/backports -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu_backports.gpg
+sudo ln -s /etc/apt/kubuntu_backports.gpg /etc/apt/trusted.gpg.d/kubuntu_backports.gpg
+
+##### KUBUNTU BACKPORTS EXTRAS ####
+sudo add-apt-repository ppa:kubuntu-ppa/backports-extra -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/kubuntu_backports_extra.gpg
+sudo ln -s /etc/apt/kubuntu_backports_extra.gpg /etc/apt/trusted.gpg.d/kubuntu_backports_extra.gpg
+
+##### UBUNTU STUDIO BACKPORTS ####
+sudo add-apt-repository ppa:ubuntustudio-ppa/backports -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/ubuntustudio.gpg
+sudo ln -s /etc/apt/ubuntustudio.gpg /etc/apt/trusted.gpg.d/ubuntustudio.gpg
+
+##### PIPEWIRE ####
+sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/pipewire.gpg
+sudo ln -s /etc/apt/pipewire.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
+
+##### WIREPLUMBER ####
+sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/wireplumber.gpg
+sudo ln -s /etc/apt/wireplumber.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
+
+###### QBITTORRENT ####
+sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/qbittorrent.gpg
+sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
+
+
+##### CLEAN ANH GET MISSINGS KEYS ####
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo nala update
+clear
+
+##### FLATPACKS ####
+sudo nala install flatpak -y
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
+sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
+sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
+
+sudo flatpak remote-modify --system --prio=1 kde
+sudo flatpak remote-modify --system --prio=2 flathub
+sudo flatpak remote-modify --system --prio=3 elementary
+sudo flatpak remote-modify --system --prio=4 fedora
+}
+
+function add_extra_repos(){
+###### BRAVE BROWSER ####
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+
+###### ONLY OFFICE ####
+sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
+sudo rm /tmp/*.gpg -rf
+sudo rm ~/.gnupg -rf
+sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
+sudo apt update
+
+mkdir -p ~/.gnupg
+chmod 700 ~/.gnupg
+clear
+SUB='fallida'
+a=0
+while [ $a == 0 ]
+do
+key=$( gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5)
+sleep 3
+if grep -q "$SUB" <<< "$key"; then
+  sleep 1
+else
+  sleep 3
+  a=1
+  sudo chmod 644 /tmp/onlyoffice.gpg
+  sudo chown root:root /tmp/onlyoffice.gpg
+  sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
+  echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
+fi
+done
+
+##BALENA ETCHER
+sudo nala install apt-transport-https -y
+clear
+sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
+sudo rm /etc/apt/trusted.gpg.d/balena* -rf
+sudo rm /usr/share/keyrings/balena* -rf
+
+sudo apt-get clean
+sudo rm -rf "/var/lib/apt/lists/*balena*"
+sudo apt update
+clear
+keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
+curl -1sLf \
+  'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+  | sudo -E bash
+
+##rEFInd PPA
+sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
+##Fix deprecated Key MINT issue
+sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
+sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
+
+##### CLEAN ANH GET MISSINGS KEYS ####
+sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+sudo nala update
+clear
+
+}
+
+function install_kde {
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDE Plasma Core"
+  sudo echo -e "INSTALL KDE PLASMA: \n" >> packeges.txt
+  check_installed "${kde_plasma}"
+  sudo systemctl set-default graphical.target
+  sudo systemctl enable sddm
+  sudo nala install plasma-discover-backend-flatpak -y
+
+  #CLEAN PLASMA
+  clear
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDEL Plasma Core"
+  echo " - Remove apps and bloatware"
+  sleep 3
+  check_uninstalled "${kde_bloatware}"
+  sudo apt-get update --fix-missing
+  sudo apt-get install -f
+
+
+  #KDE'S apps
+  clear
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDEL Plasma Core"
+  echo " - Remove apps and bloatware"
+  echo " - Install KDE's APPS"
+  sleep 3
+  check_installed "${kde_plasma_apps}"
+
+}
+
+function install_core_apps()
+{
+ #Development tools and libraries
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  sleep 3
+  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
+  check_installed "${tools}"
+  sudo npm install electron-store
+  sudo wget https://sh.rustup.rs -O rustup-init.sh
+  sudo chmod 777 rustup-init.sh
+  ./rustup-init.sh -y
+  source "$HOME/.cargo/env"
+  rm rustup-init.sh -rf
+
+  source ~/.profile
+  source ~/.cargo/env
+
+
+ ##Codecs and Drivers
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  sleep 3
+  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
+  check_installed "${codecs}"
+
+##Utilities
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  sleep 3
+  check_installed "${utilities}"
+  sudo apt install "util-linux*" -y
+
+  cp ~/.bashrc ~/.bashrc_old
+  cp ~/.bashrc ~/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
+  rm -rf ~/.bashrc
+  mv ~/aux.txt ~/.bashrc
+  source ~/.bashrc
+
+  sudo cp /root/.bashrc /root/.bashrc_old
+  sudo cp /root/.bashrc /root/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
+  sudo rm -rf /root/.bashrc
+  sudo mv /root/aux.txt /root/.bashrc
+  sudo source /root/.bashrc
+
+
+  sudo npm install -g hblock
+  hblock
+
+  cargo install cargo-update
+  cargo install topgrade
+  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
+  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
+
+ ##Pipewire & Wireplumber
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  echo " - Pipewire & Wireplumber"
+  sleep 3
+  sudo nala install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
+  sudo nala install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
+  sudo nala install pipewire-doc -y
+  sudo nala install wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} -y
+  systemctl --user --now disable pulseaudio.{socket,service}
+  systemctl --user mask pulseaudio
+  systemctl --user --now enable pipewire{,-pulse}.{socket,service}
+  systemctl --user --now enable wireplumber.service
+
+ #Nerd Fonts
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  echo " - Pipewire & Wireplumber"
+  echo " - Nerd Fonts"
+  sleep 3
+  mkdir /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip -P /tmp/nerd_fonts/
+
+  sudo unzip /tmp/nerd_fonts/JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono
+  sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
+  sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
+
+ sudo mkdir /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
+ sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
+ sudo rm /tmp/nerd_fonts/ -rf
+ sudo nala install fonts-noto-color-emoji -y
+ sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
+ fc-cache -f -v
+ }
+
+#MULTIMEDIA
+function install_multimedia()
+{
+clear
+echo -e "INSTALL MULTIMEDIA APPS: \n"
+sleep 3
+sudo echo -e "INSTALL MULTIMEDIA APPS: \n" >> packeges.txt
+check_installed "${multimedia}"
+}
+
+#EXTRA APPS
+function install_extra_apps()
+{
+sudo echo -e "INSTALL EXTRA APPS: \n" >> packeges.txt
+clear
+a=0
+f=0
+while [ $a -lt 1 ]
+do
+        read -p "Do you wish to install Extra APPS? " yn
+        case $yn in
+            [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";f=1;clear;;
+            [Nn]* ) a=1;echo "OK";clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+
+sudo systemctl start libvirtd
+sudo systemctl enable libvirtd
+
+clear
+    if [ $f == 1 ]; then
+      #flatpak
+      flatpak install flathub app.ytmdesktop.ytmdesktop -y
+      flatpak install flathub tv.kodi.Kodi -y
+      flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+      flatpak install flathub io.freetubeapp.FreeTube -y
+      flatpak install flathub com.github.tenderowl.frog -y
+      flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+      flatpak install flathub org.phoenicis.playonlinux -y
+      flatpak install flathub com.usebottles.bottles -y
+
+      #OTHERS
+      clear
+      sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
+      sudo pip3 /git/qr-tools/install -r requirements.txt
+      sudo nala install qtqr -y
+      sleep 5
+      clear
+
+      sudo nala install -y onlyoffice-desktopeditors balena-etcher-electron
+      sleep 5
+      clear
+
+      balena=$(curl -s 'https://api.github.com/repos/balena-io/etcher/releases/latest' | grep browser_download_url | grep '[.]deb' | head -n 1 | cut -d '"' -f 4)
+      wget ${balena}
+      sudo apt install ./balena*.deb --install-suggests -y
+      sudo rm balena*.deb -rf
+      sleep 5
+      clear
+
+      sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
+      sudo chmod +x beeper.AppImage
+      ./beeper.AppImage &>/dev/null &
+      sleep 5
+      clear
+  fi
+return
+}
+
