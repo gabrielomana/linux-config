@@ -92,8 +92,8 @@ if [ $r == 1 ]; then
     apt install ./deb-multimedia-keyring_2016.8.1_all.deb
     rm *.deb
     apt update
-    apt upgrade -y
-    apt full-upgrade -y
+    apt upgrade -yy
+    apt full-upgrade -yy
 
 elif [ $r == 2 ]; then
     cp ${dir}/dotfiles/2-sources.list /etc/apt/sources.list -rf
@@ -135,9 +135,9 @@ elif [ $r == 2 ]; then
     rm *.deb
 
     apt update
-    apt upgrade -y
-    apt full-upgrade -y
-    apt -t $deb_cn-backports upgrade -y
+    apt upgrade -yy
+    apt full-upgrade -yy
+    apt -t $deb_cn-backports upgrade -yy
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/3-sources.list /etc/apt/sources.list -rf
