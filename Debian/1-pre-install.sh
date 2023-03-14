@@ -55,9 +55,10 @@ for u in "${!diff_list[@]}"; do
 echo -e "${diff_list[u]}  ALL=(ALL:ALL) ALL" >> /etc/sudoers
 aux2="usermod -aG sudo ${diff_list[u]}"
 eval $aux2
+echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /home/${diff_list[u]}/.bashrc
 done
 
-export PATH=$PATH:/sbin:/usr/sbin
+echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /root/.bashrc
 
 ###################### BRANCH DEBIAN (REPOS) ###############################
 clear
