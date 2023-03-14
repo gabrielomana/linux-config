@@ -6,9 +6,11 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 
-apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools screen sudo neofetch -yy
+apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools screen sudo neofetch isenkram-cli apt-listbugs apt-listchanges -y
+
 sleep 5
 
+rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 
 ###################### SUDO+SUDOERS ###############################
 clear
@@ -24,7 +26,6 @@ users_system+=($(echo "$val" | tr -d ' '))
 done
 
 diff_list=()
-common_list=()
 
 #loop through the first list comparing an item from users_default with every item in users_system
 for i in "${!users_system[@]}"; do
@@ -34,16 +35,11 @@ for i in "${!users_system[@]}"; do
         if test "${users_system[i]}"  == "${users_default[x]}"; then
 #add item to the common_list, then remove it from users_default and users_system so that we can
 #later use those to generate the diff_list
-            common_list+=("${users_system[i]}")
             unset 'users_default[x]'
             unset 'users_system[i]'
         fi
     done
 done
-#add unique items from users_default to diff_list
-#for i in "${!users_default[@]}"; do
-#    diff_list+=("${users_system[i]}")
-#done
 #add unique items from users_system to diff_list
 for i in "${!users_system[@]}"; do
     diff_list+=("${users_system[i]}")
@@ -58,7 +54,7 @@ done
 
 export PATH=$PATH:/sbin:/usr/sbin
 
-###################### SUDO+SUDOERS ###############################
+###################### BRANCH DEBIAN (REPOS) ###############################
 clear
 PS3='Select the Debian branch you want to install: '
 options=("Debian testing" "Debian Stable" "Debian Stable+Backports+MX repos" "Quit")
@@ -90,8 +86,8 @@ if [ $r == 1 ]; then
     apt install ./deb-multimedia-keyring_2016.8.1_all.deb
     rm *.deb
     apt update
-    apt upgrade -yy
-    apt full-upgrade -yy
+    apt upgrade -y
+    apt full-upgrade -y
 
 elif [ $r == 2 ]; then
     cp ${dir}/dotfiles/2-sources.list /etc/apt/sources.list -rf
@@ -110,39 +106,32 @@ elif [ $r == 2 ]; then
     echo " "
     echo " "
 
-    curl https://mxrepo.com/mx25repo.asc | apt-key add -
+    curl -s https://mxrepo.com/mx25repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    sleep 5
-    echo " "
-    echo " "
+    fi
 
-    curl https://mxrepo.com/mx23repo.asc | apt-key add -
+    curl -s https://mxrepo.com/mx23repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    sleep 5
-    echo " "
-    echo " "
+    fi
 
-    curl https://mxrepo.com/mx21repo.asc | apt-key add -
+    curl -s https://mxrepo.com/mx21repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    sleep 5
-    echo " "
-    echo " "
-
-
-    sleep 10
+    fi
 
     wget https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb
     apt install ./deb-multimedia-keyring_2016.8.1_all.deb
     rm *.deb
 
     apt update
-    apt upgrade -yy
-    apt full-upgrade -yy
-    apt -t $deb_cn-backports upgrade -yy
-    apt install apt-listbugs apt-listchanges -yy
+    apt upgrade -y
+    apt full-upgrade -y
+    apt -t $deb_cn-backports upgrade -y
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/3-sources.list /etc/apt/sources.list -rf
@@ -158,7 +147,7 @@ elif [ $r == 3 ]; then
 fi
 
 
-###################### #ZSWAP+SWAPPINESS+GRUB ###############################
+####################### ZSWAP+SWAPPINESS+GRUB ###############################
 clear
 echo "ZSWAP+SWAPPINESS+GRUB"
 sleep 3
@@ -176,6 +165,12 @@ update-initramfs -u
 clear
 echo "FULL UPDATE"
 clear
-aptitude safe-upgrade -yy
-apt dist-upgrade -yy
+aptitude safe-upgrade -y
+apt dist-upgrade -y
+
+###################### FIRMWARE ###############################
+clear
+echo "FIRMWARE"
+sleep 3
+isenkram-autoinstall-firmware
 /sbin/reboot
