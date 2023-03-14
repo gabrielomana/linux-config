@@ -25,11 +25,6 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 . "${dir}"/sources/functions/functions
 
 
-####################### UNINSTALL XFCE ###############################
-clear
-echo "UNINSTALL XFCE"
-sleep 3
-uninstall_xfce
 ########################## REPOSITORIES ###############################
 clear
 echo "ADD REPOSITORIES"

@@ -19,10 +19,6 @@ rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 
 ###################### BRANCH DEBIAN (REPOS) ###############################
 clear
-PS3='Select the Debian branch you want to install: '
-options=("Debian testing" "Debian Stable" "Debian Stable+Backports+MX repos" "Quit")
-
-clear
 a=0
 r=0
 cp /etc/apt/sources.list /etc/apt/sources_old.list
@@ -122,6 +118,14 @@ echo "FULL UPDATE"
 clear
 aptitude safe-upgrade -y
 apt dist-upgrade -y
+apt --fix-missing update
+apt update
+apt install -f
+dpkg --configure -a
+dpkg -l | grep ^..r
+dpkg --remove --force-remove-reinstreq
+apt clean
+apt update
 
 
 ###################### SUDO+SUDOERS ###############################
@@ -171,15 +175,16 @@ echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /root/.bashrc
 clear
 echo "ZSWAP+SWAPPINESS+GRUB"
 sleep 3
-sysctl vm.swappiness=25
+echo -e "vm.swappiness=25" >> /etc/sysctl.conf
 
 cp /etc/default/grub /etc/default/grub_old
 cp ${dir}/dotfiles/grub /etc/default/grub
 update-grub
 
-echo 'lz4' >> /etc/initramfs-tools/modules
-echo 'lz4_compress' >> /etc/initramfs-tools/modules
-echo 'z3fold' >> /etc/initramfs-tools/modules
+echo -e 'lz4' >> /etc/initramfs-tools/modules
+echo -e 'lz4_compress' >> /etc/initramfs-tools/modules
+echo -e 'z3fold' >> /etc/initramfs-tools/modules
+
 update-initramfs -u
 
 
