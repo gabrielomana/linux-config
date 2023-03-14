@@ -11,54 +11,11 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 
-apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools screen sudo neofetch isenkram-cli apt-listbugs apt-listchanges -y
+apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools lz4 screen sudo neofetch isenkram-cli apt-listbugs apt-listchanges -y
 
 sleep 5
 
 rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
-
-###################### SUDO+SUDOERS ###############################
-clear
-echo "SUDO+SUDOERS"
-sleep 3
-users_default=("root" "daemon" "bin" "sys" "sync" "games" "man" "lp" "mail" "news" "uucp" "proxy" "www-data" "backup" "list" "irc" "gnats" "nobody" "_apt" "systemd-network" "systemd-resolve" "messagebus" "systemd-timesync" "avahi-autoipd" "systemd-coredump" "rtkit" "usbmux" "avahi" "saned" "colord" "speech-dispatcher" "pulse" "sddm" "gdm" "gdm3" "lightdm"  "geoclue" "vboxadd")
-users_system=()
-
-temp=$(cut -d: -f1 /etc/passwd)
-
-for val in $temp; do
-users_system+=($(echo "$val" | tr -d ' '))
-done
-
-diff_list=()
-
-#loop through the first list comparing an item from users_default with every item in users_system
-for i in "${!users_system[@]}"; do
-#begin looping through users_system
-    for x in "${!users_default[@]}"; do
-#compare the two items
-        if test "${users_system[i]}"  == "${users_default[x]}"; then
-#add item to the common_list, then remove it from users_default and users_system so that we can
-#later use those to generate the diff_list
-            unset 'users_default[x]'
-            unset 'users_system[i]'
-        fi
-    done
-done
-#add unique items from users_system to diff_list
-for i in "${!users_system[@]}"; do
-    diff_list+=("${users_system[i]}")
-    echo ${users_system[i]}
-done
-
-for u in "${!diff_list[@]}"; do
-echo -e "${diff_list[u]}  ALL=(ALL:ALL) ALL" >> /etc/sudoers
-aux2="usermod -aG sudo ${diff_list[u]}"
-eval $aux2
-echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /home/${diff_list[u]}/.bashrc
-done
-
-echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /root/.bashrc
 
 ###################### BRANCH DEBIAN (REPOS) ###############################
 clear
@@ -74,8 +31,8 @@ do
         echo "SELECT THE DEBIAN BRANCH YOU WANT TO INSTALL:"
         echo "  1)Debian Stable"
         echo "  2)Debian Stable+Backports+MX repos"
-        echo "  1)Debian Testing"
-        read -p ">" b
+        echo "  3)Debian Testing"
+        read -p "> " b
 
         case $b in
              1) a=1;r=1;clear;;
@@ -150,8 +107,65 @@ elif [ $r == 3 ]; then
     apt upgrade -yy
     apt full-upgrade -yy
 
+    for u in "${!diff_list[@]}"; do
+    echo -e "${diff_list[u]}  ALL=(ALL:ALL) ALL" >> /etc/sudoers
+    aux2="usermod -aG sudo ${diff_list[u]}"
+    eval $aux2
+    echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /home/${diff_list[u]}/.bashrc
+    done
+
 fi
 
+# ########## FULL UPDATE ##########################################
+clear
+echo "FULL UPDATE"
+clear
+aptitude safe-upgrade -y
+apt dist-upgrade -y
+
+
+###################### SUDO+SUDOERS ###############################
+clear
+echo "SUDO+SUDOERS"
+sleep 3
+users_default=("root" "daemon" "bin" "sys" "sync" "games" "man" "lp" "mail" "news" "uucp" "proxy" "www-data" "backup" "list" "irc" "gnats" "nobody" "_apt" "systemd-network" "systemd-resolve" "messagebus" "systemd-timesync" "avahi-autoipd" "systemd-coredump" "rtkit" "usbmux" "avahi" "saned" "colord" "speech-dispatcher" "pulse" "sddm" "gdm" "gdm3" "lightdm"  "geoclue" "vboxadd")
+users_system=()
+
+temp=$(cut -d: -f1 /etc/passwd)
+
+for val in $temp; do
+users_system+=($(echo "$val" | tr -d ' '))
+done
+
+diff_list=()
+
+#loop through the first list comparing an item from users_default with every item in users_system
+for i in "${!users_system[@]}"; do
+#begin looping through users_system
+    for x in "${!users_default[@]}"; do
+#compare the two items
+        if test "${users_system[i]}"  == "${users_default[x]}"; then
+#add item to the common_list, then remove it from users_default and users_system so that we can
+#later use those to generate the diff_list
+            unset 'users_default[x]'
+            unset 'users_system[i]'
+        fi
+    done
+done
+#add unique items from users_system to diff_list
+for i in "${!users_system[@]}"; do
+    diff_list+=("${users_system[i]}")
+    echo ${users_system[i]}
+done
+
+for u in "${!diff_list[@]}"; do
+echo -e "${diff_list[u]}  ALL=(ALL:ALL) ALL" >> /etc/sudoers
+aux2="usermod -aG sudo ${diff_list[u]}"
+eval $aux2
+echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /home/${diff_list[u]}/.bashrc
+done
+
+echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /root/.bashrc
 
 ####################### ZSWAP+SWAPPINESS+GRUB ###############################
 clear
@@ -163,16 +177,11 @@ cp /etc/default/grub /etc/default/grub_old
 cp ${dir}/dotfiles/grub /etc/default/grub
 update-grub
 
+echo 'lz4' >> /etc/initramfs-tools/modules
+echo 'lz4_compress' >> /etc/initramfs-tools/modules
 echo 'z3fold' >> /etc/initramfs-tools/modules
 update-initramfs -u
 
-
-# ########## FULL UPDATE ##########################################
-clear
-echo "FULL UPDATE"
-clear
-aptitude safe-upgrade -y
-apt dist-upgrade -y
 
 ###################### FIRMWARE ###############################
 clear
