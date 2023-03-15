@@ -58,7 +58,7 @@ elif [ $r == 2 ]; then
     deb_cn="$(echo "$deb_cn" | tr -d ' ')"
 
 
-    echo -e "deb http://ftp.debian.org/debian $deb_cn-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/debian-backports.list
+    echo -e "deb http://deb.debian.org/debian $deb_cn-backports main non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list.d/debian-backports.list
 
 
     echo -e "deb http://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
