@@ -41,9 +41,9 @@ do
 if [ $r == 1 ]; then
     cp ${dir}/dotfiles/1-sources.list /etc/apt/sources.list -rf
 
-    wget https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb
-    apt install ./deb-multimedia-keyring_2016.8.1_all.deb
-    rm *.deb
+    apt-get update -oAcquire::AllowInsecureRepositories=true
+    apt-get install deb-multimedia-keyring -yy
+
     apt update
     apt upgrade -yy
     apt full-upgrade -yy
@@ -84,9 +84,8 @@ elif [ $r == 2 ]; then
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
     fi
 
-    wget https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb
-    apt install ./deb-multimedia-keyring_2016.8.1_all.deb
-    rm *.deb
+    apt-get update -oAcquire::AllowInsecureRepositories=true
+    apt-get install deb-multimedia-keyring -yy
 
     apt update
     apt upgrade -yy
@@ -96,9 +95,8 @@ elif [ $r == 2 ]; then
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/3-sources.list /etc/apt/sources.list -rf
 
-    wget https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb
-    apt install ./deb-multimedia-keyring_2016.8.1_all.deb
-    rm *.deb
+    apt-get update -oAcquire::AllowInsecureRepositories=true
+    apt-get install deb-multimedia-keyring -yy
 
     apt update
     apt upgrade -yy
@@ -147,7 +145,7 @@ diff_list=()
 #loop through the first list comparing an item from users_default with every item in users_system
 for i in "${!users_system[@]}"; do
 #begin looping through users_system
-    for x in "${!users_default[@]}"; do
+    for x in "${!users_default[@]}";
 #compare the two items
         if test "${users_system[i]}"  == "${users_default[x]}"; then
 #add item to the common_list, then remove it from users_default and users_system so that we can
