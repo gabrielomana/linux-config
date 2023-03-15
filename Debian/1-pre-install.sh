@@ -53,13 +53,15 @@ if [ $r == 1 ]; then
 elif [ $r == 2 ]; then
     clear
     cp ${dir}/dotfiles/2-sources.list /etc/apt/sources.list -rf
+
     deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
     deb_cn="$(echo "$deb_cn" | tr -d ' ')"
 
 
     echo -e "deb http://ftp.debian.org/debian $deb_cn-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/debian-backports.list
 
-    echo -e "deb http://mxrepo.com/mx/repo/ $deb_cn ahs main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
+
+    echo -e "deb http://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
     curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
     if test -f "/etc/apt/trusted.gpg"; then
@@ -87,6 +89,7 @@ elif [ $r == 2 ]; then
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
     fi
 
+    apt clean
     apt update
 
     sleep 10
@@ -98,6 +101,7 @@ elif [ $r == 2 ]; then
     apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
     apt-get install deb-multimedia-keyring -yy
+    sleep 5
     apt-get update
     sleep 10
 
