@@ -86,8 +86,14 @@ elif [ $r == 2 ]; then
     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
     fi
+
+    apt update
+
     sleep 10
     clear
+
+    echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
+    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
     apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
