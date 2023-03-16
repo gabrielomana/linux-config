@@ -64,10 +64,8 @@ fi
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
     echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
-    apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
-    apt update
-    apt-get install deb-multimedia-keyring -yy
+    apt install deb-multimedia-keyring -y --allow-unauthenticated
     apt clean
     apt update
     sleep 10
