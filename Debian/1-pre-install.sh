@@ -106,6 +106,7 @@ elif [ $r == 2 ]; then
 
     apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
+    apt update
     apt-get install deb-multimedia-keyring -yy
     apt clean
     apt update
