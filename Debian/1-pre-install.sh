@@ -39,7 +39,7 @@ do
     done
 
 if [ $r == 1 ]; then
-    cp ${dir}/dotfiles/1-sources.list /etc/apt/sources.list -rf
+    cp ${dir}/dotfiles/stable_sources.list /etc/apt/sources.list -rf
 
     apt-get update -oAcquire::AllowInsecureRepositories=true
     wget https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb
@@ -52,16 +52,23 @@ if [ $r == 1 ]; then
 
 elif [ $r == 2 ]; then
     clear
-    cp ${dir}/dotfiles/2-sources.list /etc/apt/sources.list -rf
+    cp ${dir}/dotfiles/stable_sources.list /etc/apt/sources.list -rf
+    apt clean
+    apt update
+    sleep 5
+    clear
 
     deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
     deb_cn="$(echo "$deb_cn" | tr -d ' ')"
 
+    echo -e "deb https://deb.debian.org/debian/ $deb_cn-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-backports.list
 
-    echo -e "deb http://deb.debian.org/debian $deb_cn-backports main non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list.d/debian-backports.list
+    apt clean
+    apt update
+    sleep 5
+    clear
 
-
-    echo -e "deb http://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
+    echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
     curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
     if test -f "/etc/apt/trusted.gpg"; then
@@ -91,8 +98,7 @@ elif [ $r == 2 ]; then
 
     apt clean
     apt update
-
-    sleep 10
+    sleep 5
     clear
 
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
@@ -101,9 +107,10 @@ elif [ $r == 2 ]; then
     apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
     apt-get install deb-multimedia-keyring -yy
+    apt clean
+    apt update
     sleep 5
-    apt-get update
-    sleep 10
+    clear
 
     apt update
     apt upgrade -yy
@@ -111,7 +118,7 @@ elif [ $r == 2 ]; then
     apt -t $deb_cn-backports upgrade -yy
 
 elif [ $r == 3 ]; then
-    cp ${dir}/dotfiles/3-sources.list /etc/apt/sources.list -rf
+    cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
 
     apt-get update -oAcquire::AllowInsecureRepositories=true
     wget https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb
