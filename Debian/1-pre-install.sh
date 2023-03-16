@@ -12,7 +12,9 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 
-apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools lz4 screen sudo neofetch isenkram-cli apt-listbugs apt-listchanges gpgv -y
+#apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools lz4 screen sudo neofetch isenkram-cli apt-listbugs apt-listchanges gpgv -y
+
+apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt bash-completion util-linux apt-transport-https coreutils dos2unix systemd-sysv lz4 sudo neofetch isenkram-cli apt-listbugs apt-listchanges gpgv linux-headers-$(uname -r) -y
 
 sleep 5
 
@@ -44,11 +46,9 @@ if [ $r == 1 ]; then
 
     echo "MULTIMEDIA"
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
-    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
-    apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
-    apt install deb-multimedia-keyring -y
+    apt install deb-multimedia-keyring -y --allow-unauthenticated
     apt clean
     apt update
     sleep 5
@@ -115,9 +115,8 @@ elif [ $r == 2 ]; then
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
     echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
-    apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
-    apt install deb-multimedia-keyring -y
+    apt install deb-multimedia-keyring -y --allow-unauthenticated
     apt clean
     apt update
     sleep 5
@@ -135,16 +134,17 @@ elif [ $r == 3 ]; then
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
     echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
-    apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
-    apt install deb-multimedia-keyring -y
+    apt install deb-multimedia-keyring -y --allow-unauthenticated
     apt clean
     apt update
     sleep 5
     clear
 
+    echo "FULL UPGRADE"
     apt upgrade -yy
     apt full-upgrade -yy
+    apt -t $deb_cn-backports upgrade -yy
 
 fi
 
