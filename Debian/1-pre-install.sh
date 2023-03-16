@@ -123,9 +123,9 @@ elif [ $r == 2 ]; then
     clear
 
     echo "FULL UPGRADE"
+    apt -t $deb_cn-backports upgrade -yy
     apt upgrade -yy
     apt full-upgrade -yy
-    apt -t $deb_cn-backports upgrade -yy
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
@@ -144,7 +144,6 @@ elif [ $r == 3 ]; then
     echo "FULL UPGRADE"
     apt upgrade -yy
     apt full-upgrade -yy
-    apt -t $deb_cn-backports upgrade -yy
 
 fi
 
@@ -182,9 +181,9 @@ diff_list=()
 #loop through the first list comparing an item from users_default with every item in users_system
 for i in "${!users_system[@]}"; do
 #begin looping through users_system
-    for x in "${!users_default[@]}";
+    for x in "${!users_default[@]}";do
 #compare the two items
-        if test ()"${users_system[i]}"  == "${users_default[x]}"; then
+        if test "${users_system[i]}"  == "${users_default[x]}"; then
 #add item to the common_list, then remove it from users_default and users_system so that we can
 #later use those to generate the diff_list
             unset 'users_default[x]'
