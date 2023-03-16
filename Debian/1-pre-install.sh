@@ -4,6 +4,7 @@ then
     sudo su -s "$0"
     exit
 fi
+date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
 
 ###################### BASICS PACKEGES ###############################
 clear
@@ -41,23 +42,31 @@ do
 if [ $r == 1 ]; then
     cp ${dir}/dotfiles/stable_sources.list /etc/apt/sources.list -rf
 
-    apt-get update -oAcquire::AllowInsecureRepositories=true
-    wget https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb
-    apt-get install deb-multimedia-keyring -yy
-    apt install ./deb-multimedia-keyring_2016.8.1_all.deb -y
+    echo "MULTIMEDIA"
+    echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
+    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
+    apt-get update --allow-releaseinfo-change
+    apt-get update -oAcquire::AllowInsecureRepositories=true
+    apt install deb-multimedia-keyring -y
+    apt clean
     apt update
+    sleep 5
+    clear
+
     apt upgrade -yy
     apt full-upgrade -yy
 
 elif [ $r == 2 ]; then
     clear
+    echo "SOURCE LIST"
     cp ${dir}/dotfiles/stable_sources.list /etc/apt/sources.list -rf
     apt clean
     apt update
     sleep 5
     clear
 
+    echo "BAKPORTS"
     deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
     deb_cn="$(echo "$deb_cn" | tr -d ' ')"
 
@@ -68,6 +77,7 @@ elif [ $r == 2 ]; then
     sleep 5
     clear
 
+    echo "MX REPOS"
     echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
     curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
@@ -101,19 +111,19 @@ elif [ $r == 2 ]; then
     sleep 5
     clear
 
+    echo "MULTIMEDIA"
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
     echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
     apt-get update --allow-releaseinfo-change
     apt-get update -oAcquire::AllowInsecureRepositories=true
-    apt update
-    apt-get install deb-multimedia-keyring -yy
+    apt install deb-multimedia-keyring -y
     apt clean
     apt update
     sleep 5
     clear
 
-    apt update
+    echo "FULL UPGRADE"
     apt upgrade -yy
     apt full-upgrade -yy
     apt -t $deb_cn-backports upgrade -yy
@@ -121,21 +131,20 @@ elif [ $r == 2 ]; then
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
 
-    apt-get update -oAcquire::AllowInsecureRepositories=true
-    wget https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2016.8.1_all.deb
-    apt-get install deb-multimedia-keyring -yy
-    apt install ./deb-multimedia-keyring_2016.8.1_all.deb -y
+    echo "MULTIMEDIA"
+    echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
+    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
+    apt-get update --allow-releaseinfo-change
+    apt-get update -oAcquire::AllowInsecureRepositories=true
+    apt install deb-multimedia-keyring -y
+    apt clean
     apt update
+    sleep 5
+    clear
+
     apt upgrade -yy
     apt full-upgrade -yy
-
-    for u in "${!diff_list[@]}"; do
-    echo -e "${diff_list[u]}  ALL=(ALL:ALL) ALL" >> /etc/sudoers
-    aux2="usermod -aG sudo ${diff_list[u]}"
-    eval $aux2
-    echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /home/${diff_list[u]}/.bashrc
-    done
 
 fi
 
