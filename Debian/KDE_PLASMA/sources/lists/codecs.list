@@ -1,17 +1,14 @@
 build-essential
 debconf
-debconf-2.0
 dpkg
 kmod
 libc6
 libdrm2
 libkmod2
 libpci3
-module-init-tools
 pciutils
 python3-apt
 python3-click
-python3-xkit
 python3:any
 udev
 ttf-mscorefonts-installer

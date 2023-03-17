@@ -228,6 +228,10 @@ function install_core_apps()
   check_installed "${utilities}"
   sudo apt install "util-linux*" -y
 
+  wget https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher_2.2.0-travis995.0f91801.bionic_amd64.deb
+  apt install ./appimagelauncher*.deb -y
+  rm appimagelauncher*.deb -y
+
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
   sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
@@ -251,6 +255,20 @@ function install_core_apps()
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
+  ##Ubuntu CodeName
+      #   ubu_cn_aux=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n2 | awk '{print $2}' | awk '{print tolower($0)}')
+      #   ubu_cn_aux="$(echo "$ubu_cn_aux" | tr -d ' ')"
+      #   ubu_cn=0
+      #   for item in $ubu_cn_aux
+      #   do
+      #         if test $ubu_cn == 0; then
+      #         ubu_cn=$item
+      #         fi
+      #   done
+
+    ubu_cn=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n1 | awk '{print $2}' | awk '{print tolower($0)}')
+    ubu_cn="$(echo "$ubu_cn" | tr -d ' ')"
+
  ##Pipewire & Wireplumber
   clear
   echo "INSTALL SYSTEM CORE APPS: "
@@ -259,14 +277,64 @@ function install_core_apps()
   echo " - Utilities"
   echo " - Pipewire & Wireplumber"
   sleep 3
+
+    ubu_cn=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n1 | awk '{print $2}' | awk '{print tolower($0)}')
+    ubu_cn="$(echo "$ubu_cn" | tr -d ' ')"
+
+  ###----------repo for debian
+  echo "deb http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubu_cn main" | sudo tee -a /etc/apt/sources.list.d/pipewire-upstream.list
+  echo "deb http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubu_cn main" | sudo tee -a /etc/apt/sources.list.d/wireplumber-upstream.list
+  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 25088A0359807596
+  apt update
+  apt upgrade -y
+  apt full-upgrade -y
+  ###------------------------
+
   sudo nala install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
   sudo nala install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
   sudo nala install pipewire-doc -y
-  sudo nala install wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} -y
+  sudo nala install libpipewire-module-x11-bell -y
+
+
+  sudo nala install wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} -y --no-fix-broken
+  sudo nala install wireplumber-locales -y
+
   systemctl --user --now disable pulseaudio.{socket,service}
   systemctl --user mask pulseaudio
   systemctl --user --now enable pipewire{,-pulse}.{socket,service}
   systemctl --user --now enable wireplumber.service
+
+  ##Firefox
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  echo " - Pipewire & Wireplumber"
+  echo " - Firefox Repo"
+
+  echo "deb http://archive.ubuntu.com/ubuntu $ubu_cn-updates main" | sudo tee -a /etc/apt/sources.list.d/ubuntu-$ubu_cn.list
+  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32
+  ##Fix deprecated Key Issue
+  sudo mv /etc/apt/trusted.gpg /etc/apt/ubuntu-$ubu_cn.gpg
+  sudo ln -s /etc/apt/ubuntu-$ubu_cn.gpg /etc/apt/trusted.gpg.d/ubuntu-$ubu_cn.gpg
+
+  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C
+  ##Fix deprecated Key Issue
+  sudo mv /etc/apt/trusted.gpg /etc/apt/ubuntu-$ubu_cn-updates.gpg
+  sudo ln -s /etc/apt/ubuntu-$ubu_cn-updates.gpg /etc/apt/trusted.gpg.d/ubuntu-$ubu_cn-updates.gpg
+
+
+  echo -e "Package: firefox*
+Pin: release a=focal-updates
+Pin-Priority: 500
+
+Package: *
+Pin: release a=focal-updates
+Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99$ubu_cn-updates
+  nala update
+
+  nala install firefox firefox-locale-es -y
 
  #Nerd Fonts
   clear
@@ -275,6 +343,7 @@ function install_core_apps()
   echo " - Codecs and Drivers"
   echo " - Utilities"
   echo " - Pipewire & Wireplumber"
+  echo " - Firefox Repo"
   echo " - Nerd Fonts"
   sleep 3
   mkdir /tmp/nerd_fonts/
@@ -305,14 +374,12 @@ function install_multimedia()
 clear
 echo -e "INSTALL MULTIMEDIA APPS: \n"
 sleep 3
-sudo echo -e "INSTALL MULTIMEDIA APPS: \n" >> packeges.txt
 check_installed "${multimedia}"
 }
 
 #EXTRA APPS
 function install_extra_apps()
 {
-sudo echo -e "INSTALL EXTRA APPS: \n" >> packeges.txt
 clear
 a=0
 f=0

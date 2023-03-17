@@ -14,7 +14,6 @@ p7zip
 unzip
 bat
 exa
-mainline
 v4l2loopback-utils
 neofetch
 printer-driver-cups-pdf
@@ -23,7 +22,6 @@ tesseract-ocr-spa
 gimagereader
 timeshift
 ksnip
-appimagelauncher
 pdfarranger
 qbittorrent
 usbutils
