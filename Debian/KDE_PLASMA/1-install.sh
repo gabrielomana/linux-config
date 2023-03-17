@@ -1,10 +1,6 @@
 #!/bin/bash
 cp ~/.bashrc ~/.bashrc_original
 
-
-echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
-sudo apt update && sudo apt install nala
-
 if command -v nala &> /dev/null; then
     sudo nala fetch --auto --fetches 5 -y
 else

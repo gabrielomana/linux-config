@@ -54,6 +54,9 @@ if [ $r == 1 ]; then
     sleep 5
     clear
 
+    echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
+    apt update
+
     apt upgrade -yy
     apt full-upgrade -yy
 
@@ -121,6 +124,9 @@ elif [ $r == 2 ]; then
     apt update
     sleep 5
     clear
+
+    echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
+    apt update
 
     echo "FULL UPGRADE"
     #apt -t $deb_cn-backports upgrade -yy
