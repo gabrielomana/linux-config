@@ -2,10 +2,10 @@
 cp ~/.bashrc ~/.bashrc_original
 
 
-wget https://gitlab.com/volian/volian-archive/uploads/b20bd8237a9b20f5a82f461ed0704ad4/volian-archive-keyring_0.1.0_all.deb
-wget https://gitlab.com/volian/volian-archive/uploads/d6b3a118de5384a0be2462905f7e4301/volian-archive-nala_0.1.0_all.deb
-sudo apt install ./volian-archive*.deb -y
-echo "deb-src https://deb.volian.org/volian/ scar main" | sudo tee -a /etc/apt/sources.list.d/volian-archive-scar-unstable.list
+# wget https://gitlab.com/volian/volian-archive/uploads/b20bd8237a9b20f5a82f461ed0704ad4/volian-archive-keyring_0.1.0_all.deb
+# wget https://gitlab.com/volian/volian-archive/uploads/d6b3a118de5384a0be2462905f7e4301/volian-archive-nala_0.1.0_all.deb
+# sudo apt install ./volian-archive*.deb -y
+# echo "deb-src https://deb.volian.org/volian/ scar main" | sudo tee -a /etc/apt/sources.list.d/volian-archive-scar-unstable.list
 
 if command -v nala &> /dev/null; then
     sudo nala fetch --auto --fetches 5 -y
@@ -35,26 +35,26 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 
 
 ########################## REPOSITORIES ###############################
-clear
-echo "ADD REPOSITORIES"
-sleep 3
-add_repos
+# clear
+# echo "ADD REPOSITORIES"
+# sleep 3
+# add_repos
 ######################### KDE PLASMA ###############################
 clear
 echo "INSTALL KDE PLASMA: "
 sleep 3
 install_kde
 ######################### CORE APPS ###############################
-clear
-echo "INSTALL SYSTEM CORE APPS: "
-sleep 3
-install_core_apps
+# clear
+# echo "INSTALL SYSTEM CORE APPS: "
+# sleep 3
+# install_core_apps
 
 ######################### MULTIMEDIA ###############################
-clear
-echo "INSTALL MULTIMEDIA APPS: "
-sleep 3
-install_multimedia
+# clear
+# echo "INSTALL MULTIMEDIA APPS: "
+# sleep 3
+# install_multimedia
 
 
 #########################################_END_ #################################################
