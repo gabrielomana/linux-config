@@ -105,11 +105,11 @@ elif [ $r == 2 ]; then
 #     mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
 #     ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
 #     fi
-#
-#     apt clean
-#     apt update
-#     sleep 5
-#     clear
+
+    apt clean
+    apt update
+    sleep 5
+    clear
 
     echo "MULTIMEDIA"
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
@@ -123,9 +123,9 @@ elif [ $r == 2 ]; then
     clear
 
     echo "FULL UPGRADE"
-#     apt -t $deb_cn-backports upgrade -yy
-#     apt upgrade -yy
-#     apt full-upgrade -yy
+    apt -t $deb_cn-backports upgrade -yy
+    apt upgrade -yy
+    apt full-upgrade -yy
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
