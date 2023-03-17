@@ -123,7 +123,7 @@ elif [ $r == 2 ]; then
     clear
 
     echo "FULL UPGRADE"
-    apt -t $deb_cn-backports upgrade -yy
+    #apt -t $deb_cn-backports upgrade -yy
     apt upgrade -yy
     apt full-upgrade -yy
 
@@ -161,6 +161,7 @@ dpkg -l | grep ^..r
 dpkg --remove --force-remove-reinstreq
 apt clean
 apt update
+apt install linux-headers-$(uname -r) -y
 
 
 ###################### SUDO+SUDOERS ###############################
