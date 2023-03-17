@@ -58,8 +58,8 @@ if [ $r == 1 ]; then
     apt update
     apt install nala-legacy -y
 
-    apt upgrade -yy
-    apt full-upgrade -yy
+    apt upgrade -y
+    apt full-upgrade -y
 
 elif [ $r == 2 ]; then
     clear
@@ -132,8 +132,8 @@ elif [ $r == 2 ]; then
 
     echo "FULL UPGRADE"
     #apt -t $deb_cn-backports upgrade -yy
-    apt upgrade -yy
-    apt full-upgrade -yy
+    apt upgrade -y
+    apt full-upgrade -y
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
