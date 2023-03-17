@@ -304,35 +304,6 @@ function install_core_apps()
   systemctl --user --now enable pipewire{,-pulse}.{socket,service}
   systemctl --user --now enable wireplumber.service
 
-  ##Firefox
-  clear
-  echo "INSTALL SYSTEM CORE APPS: "
-  echo " - Development tools and libraries"
-  echo " - Codecs and Drivers"
-  echo " - Utilities"
-  echo " - Pipewire & Wireplumber"
-  echo " - Firefox Repo"
-
-  echo "deb http://archive.ubuntu.com/ubuntu $ubu_cn-updates main" | sudo tee -a /etc/apt/sources.list.d/ubuntu-$ubu_cn.list
-  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32
-  ##Fix deprecated Key Issue
-  sudo mv /etc/apt/trusted.gpg /etc/apt/ubuntu-$ubu_cn.gpg
-  sudo ln -s /etc/apt/ubuntu-$ubu_cn.gpg /etc/apt/trusted.gpg.d/ubuntu-$ubu_cn.gpg
-
-  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C
-  ##Fix deprecated Key Issue
-  sudo mv /etc/apt/trusted.gpg /etc/apt/ubuntu-$ubu_cn-updates.gpg
-  sudo ln -s /etc/apt/ubuntu-$ubu_cn-updates.gpg /etc/apt/trusted.gpg.d/ubuntu-$ubu_cn-updates.gpg
-
-
-  echo -e "Package: firefox*
-Pin: release a=focal-updates
-Pin-Priority: 500
-
-Package: *
-Pin: release a=focal-updates
-Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99$ubu_cn-updates
-  nala update
 
   nala install firefox firefox-locale-es -y
 

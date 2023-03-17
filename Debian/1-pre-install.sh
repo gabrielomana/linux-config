@@ -82,6 +82,50 @@ elif [ $r == 2 ]; then
     sleep 5
     clear
 
+    echo "MX REPOS"
+    echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
+
+    curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    sleep 5
+    echo " "
+    echo " "
+    fi
+    curl -s https://mxrepo.com/mx25repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    fi
+
+    curl -s https://mxrepo.com/mx23repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    fi
+
+    curl -s https://mxrepo.com/mx21repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    fi
+
+    apt clean
+    apt update
+    sleep 5
+    clear
+
+
+  echo -e "Package: firefox*
+Pin: release a=mx
+Pin-Priority: 500
+
+Package: *
+Pin: release a=mx
+Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
+  nala update
+
     echo "MULTIMEDIA"
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
     echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
