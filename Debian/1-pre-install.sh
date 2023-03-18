@@ -82,6 +82,7 @@ elif [ $r == 2 ]; then
     sleep 5
     clear
 
+
     echo "MX REPOS"
     echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
@@ -121,10 +122,24 @@ elif [ $r == 2 ]; then
 Pin: release a=mx
 Pin-Priority: 500
 
+Package: webapp-manager*
+Pin: release a=mx
+Pin-Priority: 500
+
+Package: appimagelauncher*
+Pin: release a=mx
+Pin-Priority: 500
+
+Package: nala*
+Pin: release a=mx
+Pin-Priority: 500
+
 Package: *
 Pin: release a=mx
 Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
+
   nala update
+
 
     echo "MULTIMEDIA"
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
@@ -137,14 +152,15 @@ Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
     sleep 5
     clear
 
-    echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
-    apt update
-    apt install nala-legacy -y
+#     echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
+#     apt update
+#     apt install nala-legacy -y
 
     echo "FULL UPGRADE"
     #apt -t $deb_cn-backports upgrade -yy
     apt upgrade -yy
     apt full-upgrade -yy
+    sudo apt-get --only-upgrade -t $deb_cn-backports install linux-image-amd64 -y
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
