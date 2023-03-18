@@ -208,7 +208,6 @@ function install_core_apps()
   source ~/.profile
   source ~/.cargo/env
 
-
  ##Codecs and Drivers
   clear
   echo "INSTALL SYSTEM CORE APPS: "
@@ -227,10 +226,6 @@ function install_core_apps()
   sleep 3
   check_installed "${utilities}"
   sudo apt install "util-linux*" -y
-
-  wget https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher_2.2.0-travis995.0f91801.bionic_amd64.deb
-  apt install ./appimagelauncher*.deb -y
-  rm appimagelauncher*.deb -y
 
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
@@ -255,57 +250,41 @@ function install_core_apps()
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
-  ##Ubuntu CodeName
-      #   ubu_cn_aux=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n2 | awk '{print $2}' | awk '{print tolower($0)}')
-      #   ubu_cn_aux="$(echo "$ubu_cn_aux" | tr -d ' ')"
-      #   ubu_cn=0
-      #   for item in $ubu_cn_aux
-      #   do
-      #         if test $ubu_cn == 0; then
-      #         ubu_cn=$item
-      #         fi
-      #   done
-
-    ubu_cn=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n1 | awk '{print $2}' | awk '{print tolower($0)}')
-    ubu_cn="$(echo "$ubu_cn" | tr -d ' ')"
-
  ##Pipewire & Wireplumber
-  clear
-  echo "INSTALL SYSTEM CORE APPS: "
-  echo " - Development tools and libraries"
-  echo " - Codecs and Drivers"
-  echo " - Utilities"
-  echo " - Pipewire & Wireplumber"
-  sleep 3
+   clear
+   echo "INSTALL SYSTEM CORE APPS: "
+   echo " - Development tools and libraries"
+   echo " - Codecs and Drivers"
+   echo " - Utilities"
+   echo " - Pipewire & Wireplumber"
+   sleep 3
 
-    ubu_cn=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n1 | awk '{print $2}' | awk '{print tolower($0)}')
-    ubu_cn="$(echo "$ubu_cn" | tr -d ' ')"
+   deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
+   deb_cn="$(echo "$deb_cn" | tr -d ' ')"
 
-  ###----------repo for debian
-  echo "deb http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubu_cn main" | sudo tee -a /etc/apt/sources.list.d/pipewire-upstream.list
-  echo "deb http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubu_cn main" | sudo tee -a /etc/apt/sources.list.d/wireplumber-upstream.list
-  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 25088A0359807596
-  apt update
-  apt upgrade -y
-  apt full-upgrade -y
-  ###------------------------
-
-  sudo nala install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
-  sudo nala install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
-  sudo nala install pipewire-doc -y
-  sudo nala install libpipewire-module-x11-bell -y
+   current_cn=$(lsb_release -c | awk '{print $2}')
+   current_cn="$(echo "$current_cn" | tr -d ' ')"
 
 
-  sudo nala install wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} -y --no-fix-broken
-  sudo nala install wireplumber-locales -y
+  if test $current_cn == $deb_cn ;then
+    sudo nala install pipewire
+    sudo touch /etc/pipewire/media-session.d/with-pulseaudio
+    sudo cp /usr/share/doc/pipewire/examples/systemd/user/pipewire-pulse.* /etc/systemd/user/
+    // Check for new service files with:
+    systemctl --user daemon-reload
+    // Disable and stop the PulseAudio service with:
+    systemctl --user --now disable pulseaudio.service pulseaudio.socket
+    // Enable and start the new pipewire-pulse service with:
+    systemctl --user --now enable pipewire pipewire-pulse
+    systemctl --user mask pulseaudio
+    sudo nala libspa-0.2-bluetooth pulseaudio-module-bluetooth -y
 
-  systemctl --user --now disable pulseaudio.{socket,service}
-  systemctl --user mask pulseaudio
-  systemctl --user --now enable pipewire{,-pulse}.{socket,service}
-  systemctl --user --now enable wireplumber.service
+  else
+    sudo nala install wireplumber pipewire-media-session-
+    systemctl --user --now enable wireplumber.service
+  fi
 
-
-  nala install firefox firefox-locale-es -y
+  sudo nala install firefox firefox-locale-es webapp-manager appimagelauncher -y
 
  #Nerd Fonts
   clear
@@ -326,17 +305,17 @@ function install_core_apps()
   sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
   sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
 
- sudo mkdir /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
- sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
- sudo rm /tmp/nerd_fonts/ -rf
- sudo nala install fonts-noto-color-emoji -y
- sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
- fc-cache -f -v
+  sudo mkdir /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
+  sudo rm /tmp/nerd_fonts/ -rf
+  sudo nala install fonts-noto-color-emoji -y
+  sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
+  fc-cache -f -v
  }
 
 #MULTIMEDIA
@@ -370,6 +349,7 @@ sudo systemctl enable libvirtd
 clear
     if [ $f == 1 ]; then
       #flatpak
+      flatpak install flathub io.github.prateekmedia.appimagepool -y
       flatpak install flathub app.ytmdesktop.ytmdesktop -y
       flatpak install flathub tv.kodi.Kodi -y
       flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
