@@ -31,7 +31,7 @@ do
         echo "  1)Debian Stable"
         echo "  2)Debian Stable+Backports"
         echo "  3)Debian Testing"
-        read -p "> " b
+        read -p "> "
 
         case $b in
              1) a=1;r=1;clear;;
@@ -117,7 +117,6 @@ elif [ $r == 2 ]; then
     sleep 5
     clear
 
-
   echo -e "Package: firefox*
 Pin: release a=mx
 Pin-Priority: 500
@@ -130,16 +129,11 @@ Package: appimagelauncher*
 Pin: release a=mx
 Pin-Priority: 500
 
-Package: nala*
-Pin: release a=mx
-Pin-Priority: 500
-
 Package: *
 Pin: release a=mx
 Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
 
-  nala update
-
+    apt update
 
     echo "MULTIMEDIA"
     echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
@@ -152,9 +146,11 @@ Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
     sleep 5
     clear
 
-#     echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
-#     apt update
-#     apt install nala-legacy -y
+    echo "NALA"
+    echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
+
+    apt update
+    apt install nala-legacy -y
 
     echo "FULL UPGRADE"
     #apt -t $deb_cn-backports upgrade -yy
