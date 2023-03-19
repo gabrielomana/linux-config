@@ -31,7 +31,7 @@ do
         echo "  1)Debian Stable"
         echo "  2)Debian Stable+Backports"
         echo "  3)Debian Testing"
-        read -p "> "
+        read -p "> " b
 
         case $b in
              1) a=1;r=1;clear;;
