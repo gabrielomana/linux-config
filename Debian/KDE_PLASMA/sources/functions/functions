@@ -167,25 +167,25 @@ function install_kde {
   sudo systemctl enable sddm
   sudo nala install plasma-discover-backend-flatpak -y
 
-#   #CLEAN PLASMA
-#   clear
-#   echo "INSTALL KDE PLASMA: "
-#   echo " - Install KDEL Plasma Core"
-#   echo " - Remove apps and bloatware"
-#   sleep 3
-#   check_uninstalled "${kde_bloatware}"
-#   sudo apt-get update --fix-missing
-#   sudo apt-get install -f
-#
-#
-#   #KDE'S apps
-#   clear
-#   echo "INSTALL KDE PLASMA: "
-#   echo " - Install KDEL Plasma Core"
-#   echo " - Remove apps and bloatware"
-#   echo " - Install KDE's APPS"
-#   sleep 3
-#   check_installed "${kde_plasma_apps}"
+  #CLEAN PLASMA
+  clear
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDEL Plasma Core"
+  echo " - Remove apps and bloatware"
+  sleep 3
+  check_uninstalled "${kde_bloatware}"
+  sudo apt-get update --fix-missing
+  sudo apt-get install -f
+
+
+  #KDE'S apps
+  clear
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDEL Plasma Core"
+  echo " - Remove apps and bloatware"
+  echo " - Install KDE's APPS"
+  sleep 3
+  check_installed "${kde_plasma_apps}"
 
 }
 
@@ -270,21 +270,29 @@ function install_core_apps()
     sudo nala install pipewire
     sudo touch /etc/pipewire/media-session.d/with-pulseaudio
     sudo cp /usr/share/doc/pipewire/examples/systemd/user/pipewire-pulse.* /etc/systemd/user/
-    // Check for new service files with:
     systemctl --user daemon-reload
-    // Disable and stop the PulseAudio service with:
     systemctl --user --now disable pulseaudio.service pulseaudio.socket
-    // Enable and start the new pipewire-pulse service with:
     systemctl --user --now enable pipewire pipewire-pulse
     systemctl --user mask pulseaudio
-    sudo nala libspa-0.2-bluetooth pulseaudio-module-bluetooth -y
+    sudo nala install libspa-0.2-bluetooth pulseaudio-module-bluetooth -y
 
   else
     sudo nala install wireplumber pipewire-media-session-
     systemctl --user --now enable wireplumber.service
   fi
 
-  #sudo nala install firefox firefox-locale-es webapp-manager appimagelauncher -y
+  sudo nala install appimagelauncher firefox -y
+  sudo wget https://launchpad.net/~peppermintos/+archive/ubuntu/ice-dev/+files/ice_6.0.7_all.deb
+  sudo apt install ./ice_6.0.7_all.deb -y
+  sudo rm ice_6.0.7_all.deb
+
+
+  sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/y-ppa-manager_2021.07.15-1~webupd8~0_all.deb
+  sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/ppa-purge_0.2.8+bzr57+1~precise_all.deb
+  sudo apt install ./ppa-purge_0.2.8+bzr57+1~precise_all.deb -y
+  sudo apt install ./y-ppa-manager_2021.07.15-1~webupd8~0_all.deb -y
+  rm *.deb
+
 
  #Nerd Fonts
   clear

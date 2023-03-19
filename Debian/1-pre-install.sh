@@ -169,10 +169,6 @@ echo "MX REPOS"
 Pin: release a=mx
 Pin-Priority: 500
 
-Package: webapp-manager*
-Pin: release a=mx
-Pin-Priority: 500
-
 Package: appimagelauncher*
 Pin: release a=mx
 Pin-Priority: 500

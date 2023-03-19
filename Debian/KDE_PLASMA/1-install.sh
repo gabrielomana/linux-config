@@ -38,16 +38,16 @@ echo "INSTALL KDE PLASMA: "
 sleep 3
 install_kde
 # ######################### CORE APPS ###############################
-# clear
-# echo "INSTALL SYSTEM CORE APPS: "
-# sleep 3
-# install_core_apps
-#
-# ######################### MULTIMEDIA ###############################
-# clear
-# echo "INSTALL MULTIMEDIA APPS: "
-# sleep 3
-# install_multimedia
+clear
+echo "INSTALL SYSTEM CORE APPS: "
+sleep 3
+install_core_apps
+
+######################### MULTIMEDIA ###############################
+clear
+echo "INSTALL MULTIMEDIA APPS: "
+sleep 3
+install_multimedia
 
 
 #########################################_END_ #################################################

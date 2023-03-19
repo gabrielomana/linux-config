@@ -37,9 +37,9 @@ cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 
 
 ########## EXTRA APPS #############################################
-clear
-cd ${dir}
-install_extra_apps
+# clear
+# cd ${dir}
+# install_extra_apps
 
 
 ########## CLEAN & FINAL STEPS #############################################
@@ -52,21 +52,6 @@ sudo mintsources
 sudo apt update -y
 sudo nala update
 clear
-
-#ZSWAP+SWAPPINESS+GRUB
-sudo sysctl vm.swappiness=25
-
-sudo cp /etc/default/grub /etc/default/grub_old
-sudo cp ${dir}/dotfiles/grub /etc/default/grub
-sudo update-grub
-
-sudo su -c "echo 'z3fold' >> /etc/initramfs-tools/modules"
-sudo update-initramfs -u
-
-###mem="$(free -g | awk 'NR==2{printf "%s\n", $2}')"
-
-#KERNEL UPDATE
-sudo mainline-gtk
 
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
