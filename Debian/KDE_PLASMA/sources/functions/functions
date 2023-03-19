@@ -167,25 +167,25 @@ function install_kde {
   sudo systemctl enable sddm
   sudo nala install plasma-discover-backend-flatpak -y
 
-  #CLEAN PLASMA
-  clear
-  echo "INSTALL KDE PLASMA: "
-  echo " - Install KDEL Plasma Core"
-  echo " - Remove apps and bloatware"
-  sleep 3
-  check_uninstalled "${kde_bloatware}"
-  sudo apt-get update --fix-missing
-  sudo apt-get install -f
-
-
-  #KDE'S apps
-  clear
-  echo "INSTALL KDE PLASMA: "
-  echo " - Install KDEL Plasma Core"
-  echo " - Remove apps and bloatware"
-  echo " - Install KDE's APPS"
-  sleep 3
-  check_installed "${kde_plasma_apps}"
+#   #CLEAN PLASMA
+#   clear
+#   echo "INSTALL KDE PLASMA: "
+#   echo " - Install KDEL Plasma Core"
+#   echo " - Remove apps and bloatware"
+#   sleep 3
+#   check_uninstalled "${kde_bloatware}"
+#   sudo apt-get update --fix-missing
+#   sudo apt-get install -f
+#
+#
+#   #KDE'S apps
+#   clear
+#   echo "INSTALL KDE PLASMA: "
+#   echo " - Install KDEL Plasma Core"
+#   echo " - Remove apps and bloatware"
+#   echo " - Install KDE's APPS"
+#   sleep 3
+#   check_installed "${kde_plasma_apps}"
 
 }
 
@@ -284,7 +284,7 @@ function install_core_apps()
     systemctl --user --now enable wireplumber.service
   fi
 
-  sudo nala install firefox firefox-locale-es webapp-manager appimagelauncher -y
+  #sudo nala install firefox firefox-locale-es webapp-manager appimagelauncher -y
 
  #Nerd Fonts
   clear

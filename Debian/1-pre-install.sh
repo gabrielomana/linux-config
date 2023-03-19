@@ -83,7 +83,55 @@ elif [ $r == 2 ]; then
     clear
 
 
-    echo "MX REPOS"
+
+    echo "MULTIMEDIA"
+    echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
+    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
+
+    apt-get update -oAcquire::AllowInsecureRepositories=true
+    apt install deb-multimedia-keyring -y --allow-unauthenticated
+    apt clean
+    apt update
+    sleep 5
+    clear
+
+    echo "NALA"
+    echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
+
+    apt update
+    apt install nala-legacy -y
+
+    echo "FULL UPGRADE"
+    #apt -t $deb_cn-backports upgrade -yy
+    apt upgrade -yy
+    apt full-upgrade -yy
+    sudo apt-get --only-upgrade -t $deb_cn-backports install linux-image-amd64 -y
+
+elif [ $r == 3 ]; then
+    cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
+
+    echo "MULTIMEDIA"
+    echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
+    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
+
+    apt-get update -oAcquire::AllowInsecureRepositories=true
+    apt install deb-multimedia-keyring -y --allow-unauthenticated
+    apt clean
+    apt update
+    sleep 5
+    clear
+
+    echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
+    apt update
+    apt install nala -y
+
+    echo "FULL UPGRADE"
+    apt upgrade -yy
+    apt full-upgrade -yy
+
+fi
+
+echo "MX REPOS"
     echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
     curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
@@ -133,54 +181,8 @@ Package: *
 Pin: release a=mx
 Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
 
-    apt update
-
-    echo "MULTIMEDIA"
-    echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
-    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
-
-    apt-get update -oAcquire::AllowInsecureRepositories=true
-    apt install deb-multimedia-keyring -y --allow-unauthenticated
     apt clean
     apt update
-    sleep 5
-    clear
-
-    echo "NALA"
-    echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
-
-    apt update
-    apt install nala-legacy -y
-
-    echo "FULL UPGRADE"
-    #apt -t $deb_cn-backports upgrade -yy
-    apt upgrade -yy
-    apt full-upgrade -yy
-    sudo apt-get --only-upgrade -t $deb_cn-backports install linux-image-amd64 -y
-
-elif [ $r == 3 ]; then
-    cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
-
-    echo "MULTIMEDIA"
-    echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
-    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
-
-    apt-get update -oAcquire::AllowInsecureRepositories=true
-    apt install deb-multimedia-keyring -y --allow-unauthenticated
-    apt clean
-    apt update
-    sleep 5
-    clear
-
-    echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
-    apt update
-    apt install nala -y
-
-    echo "FULL UPGRADE"
-    apt upgrade -yy
-    apt full-upgrade -yy
-
-fi
 
 # ########## FULL UPDATE ##########################################
 clear
