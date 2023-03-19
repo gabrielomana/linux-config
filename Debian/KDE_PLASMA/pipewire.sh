@@ -25,3 +25,32 @@
     sudo nala install wireplumber pipewire-media-session-
     systemctl --user --now enable wireplumber.service
   fi
+
+
+#   sudo nala remove "libreoffice*" \
+# gwenview \
+# akregator \
+# kmail \
+# konversation \
+# krfb \
+# kmahjongg \
+# kmines \
+# dragonplayer \
+# elisa \
+# korganizer \
+# kontact \
+# kpat \
+# gimp \
+# k3b \
+# apper \
+# kmouth \
+# konqueror \
+# muon \
+# kontrast \
+# libreoffice-base-core \
+# libreoffice-common \
+# libreoffice-core \
+# libreoffice-math \
+# libreoffice-style-breeze \
+# libreoffice-style-colibre \
+# libreoffice-writer
