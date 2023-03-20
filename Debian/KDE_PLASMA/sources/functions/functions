@@ -84,7 +84,11 @@ sudo nala update
 clear
 
 ##### FLATPACKS ####
+
     echo "MX REPOS"
+    deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
+    deb_cn="$(echo "$deb_cn" | tr -d ' ')"
+
     echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
     curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
