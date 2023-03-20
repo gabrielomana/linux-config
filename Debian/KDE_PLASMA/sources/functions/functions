@@ -84,16 +84,67 @@ sudo nala update
 clear
 
 ##### FLATPACKS ####
-sudo nala install flatpak -y
-sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
-sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
-sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
+    echo "MX REPOS"
+    echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
-sudo flatpak remote-modify --system --prio=1 kde
-sudo flatpak remote-modify --system --prio=2 flathub
-sudo flatpak remote-modify --system --prio=3 elementary
-sudo flatpak remote-modify --system --prio=4 fedora
+    curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    sleep 5
+    echo " "
+    echo " "
+    fi
+    curl -s https://mxrepo.com/mx25repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    fi
+
+    curl -s https://mxrepo.com/mx23repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    fi
+
+    curl -s https://mxrepo.com/mx21repo.asc | apt-key add -
+    if test -f "/etc/apt/trusted.gpg"; then
+    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+    fi
+
+    apt clean
+    apt update
+    sleep 5
+    clear
+
+    echo -e "Package: firefox*
+    Pin: release a=mx
+    Pin-Priority: 500
+
+    Package: appimagelauncher*
+    Pin: release a=mx
+    Pin-Priority: 500
+
+    Package: webapp-manager*
+    Pin: release a=mx
+    Pin-Priority: 500
+
+    Package: *
+    Pin: release a=mx
+    Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
+
+
+    sudo nala install flatpak -y
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
+    sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
+    sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
+
+    sudo flatpak remote-modify --system --prio=1 kde
+    sudo flatpak remote-modify --system --prio=2 flathub
+    sudo flatpak remote-modify --system --prio=3 elementary
+    sudo flatpak remote-modify --system --prio=4 fedora
 }
 
 function add_extra_repos(){
@@ -102,32 +153,14 @@ sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://b
 echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
 ###### ONLY OFFICE ####
-sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
-sudo rm /tmp/*.gpg -rf
-sudo rm ~/.gnupg -rf
-sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
-sudo apt update
+mkdir -p -m 700 ~/.gnupg
+gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
+chmod 644 /tmp/onlyoffice.gpg
+sudo chown root:root /tmp/onlyoffice.gpg
+sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
+echo 'deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
+sudo nala update
 
-mkdir -p ~/.gnupg
-chmod 700 ~/.gnupg
-clear
-SUB='fallida'
-a=0
-while [ $a == 0 ]
-do
-key=$( gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5)
-sleep 3
-if grep -q "$SUB" <<< "$key"; then
-  sleep 1
-else
-  sleep 3
-  a=1
-  sudo chmod 644 /tmp/onlyoffice.gpg
-  sudo chown root:root /tmp/onlyoffice.gpg
-  sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
-  echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
-fi
-done
 
 ##BALENA ETCHER
 sudo nala install apt-transport-https -y
@@ -144,6 +177,7 @@ keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
 curl -1sLf \
   'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
   | sudo -E bash
+
 
 ##rEFInd PPA
 sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
@@ -281,17 +315,17 @@ function install_core_apps()
     systemctl --user --now enable wireplumber.service
   fi
 
-  sudo nala install appimagelauncher firefox -y
+  sudo nala install appimagelauncher webapp-manager firefox -y
   sudo wget https://launchpad.net/~peppermintos/+archive/ubuntu/ice-dev/+files/ice_6.0.7_all.deb
   sudo apt install ./ice_6.0.7_all.deb -y
   sudo rm ice_6.0.7_all.deb
 
 
-  sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/y-ppa-manager_2021.07.15-1~webupd8~0_all.deb
-  sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/ppa-purge_0.2.8+bzr57+1~precise_all.deb
-  sudo apt install ./ppa-purge_0.2.8+bzr57+1~precise_all.deb -y
-  sudo apt install ./y-ppa-manager_2021.07.15-1~webupd8~0_all.deb -y
-  rm *.deb
+#   sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/y-ppa-manager_2021.07.15-1~webupd8~0_all.deb
+#   sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/ppa-purge_0.2.8+bzr57+1~precise_all.deb
+#   sudo apt install ./ppa-purge_0.2.8+bzr57+1~precise_all.deb -y
+#   sudo apt install ./y-ppa-manager_2021.07.15-1~webupd8~0_all.deb -y
+#   rm *.deb
 
 
  #Nerd Fonts
@@ -379,12 +413,12 @@ clear
       sleep 5
       clear
 
-      balena=$(curl -s 'https://api.github.com/repos/balena-io/etcher/releases/latest' | grep browser_download_url | grep '[.]deb' | head -n 1 | cut -d '"' -f 4)
-      wget ${balena}
-      sudo apt install ./balena*.deb --install-suggests -y
-      sudo rm balena*.deb -rf
-      sleep 5
-      clear
+#       balena=$(curl -s 'https://api.github.com/repos/balena-io/etcher/releases/latest' | grep browser_download_url | grep '[.]deb' | head -n 1 | cut -d '"' -f 4)
+#       wget ${balena}
+#       sudo apt install ./balena*.deb --install-suggests -y
+#       sudo rm balena*.deb -rf
+#       sleep 5
+#       clear
 
       sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
       sudo chmod +x beeper.AppImage
