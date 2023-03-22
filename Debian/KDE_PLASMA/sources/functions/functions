@@ -55,10 +55,6 @@ function check_installed {
    c="sudo nala install "${list}" -y"
    c2="sudo apt install "${list2}" -y"
 
-   sudo su - -c "sudo echo $c >> packeges.txt"
-   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
-   sudo su - -c "sudo echo $c2 >> packeges.txt"
-   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
    eval $c
    for i in $list2; do
     sudo apt-get install -y $i
@@ -67,77 +63,6 @@ function check_installed {
 
 
 function add_repos(){
-sudo add-apt-repository ppa:webupd8team/y-ppa-manager -y
-
-
-
-###### QBITTORRENT ####
-sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/qbittorrent.gpg
-sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
-
-
-##### CLEAN ANH GET MISSINGS KEYS ####
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo nala update
-clear
-
-##### FLATPACKS ####
-
-    echo "MX REPOS"
-    deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
-    deb_cn="$(echo "$deb_cn" | tr -d ' ')"
-
-    echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
-
-    curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
-    if test -f "/etc/apt/trusted.gpg"; then
-    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    sleep 5
-    echo " "
-    echo " "
-    fi
-    curl -s https://mxrepo.com/mx25repo.asc | apt-key add -
-    if test -f "/etc/apt/trusted.gpg"; then
-    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    fi
-
-    curl -s https://mxrepo.com/mx23repo.asc | apt-key add -
-    if test -f "/etc/apt/trusted.gpg"; then
-    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    fi
-
-    curl -s https://mxrepo.com/mx21repo.asc | apt-key add -
-    if test -f "/etc/apt/trusted.gpg"; then
-    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    fi
-
-    apt clean
-    apt update
-    sleep 5
-    clear
-
-    echo -e "Package: firefox*
-    Pin: release a=mx
-    Pin-Priority: 500
-
-    Package: appimagelauncher*
-    Pin: release a=mx
-    Pin-Priority: 500
-
-    Package: webapp-manager*
-    Pin: release a=mx
-    Pin-Priority: 500
-
-    Package: *
-    Pin: release a=mx
-    Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
-
 
     sudo nala install flatpak -y
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
@@ -199,10 +124,9 @@ clear
 function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
-  sudo echo -e "INSTALL KDE PLASMA: \n" >> packeges.txt
-  check_installed "${kde_plasma}"
-  sudo systemctl set-default graphical.target
-  sudo systemctl enable sddm
+#   check_installed "${kde_plasma}"
+#   sudo systemctl set-default graphical.target
+#   sudo systemctl enable sddm
   sudo nala install plasma-discover-backend-flatpak -y
 
   #CLEAN PLASMA
@@ -234,7 +158,6 @@ function install_core_apps()
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   sleep 3
-  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${tools}"
   sudo npm install electron-store
   sudo wget https://sh.rustup.rs -O rustup-init.sh
@@ -252,7 +175,6 @@ function install_core_apps()
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   sleep 3
-  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${codecs}"
 
 ##Utilities
@@ -287,42 +209,6 @@ function install_core_apps()
   cargo install topgrade
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
-
- ##Pipewire & Wireplumber
-   clear
-   echo "INSTALL SYSTEM CORE APPS: "
-   echo " - Development tools and libraries"
-   echo " - Codecs and Drivers"
-   echo " - Utilities"
-   echo " - Pipewire & Wireplumber"
-   sleep 3
-
-   deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
-   deb_cn="$(echo "$deb_cn" | tr -d ' ')"
-
-   current_cn=$(lsb_release -c | awk '{print $2}')
-   current_cn="$(echo "$current_cn" | tr -d ' ')"
-
-
-  if test $current_cn == $deb_cn ;then
-    sudo nala install pipewire
-    sudo touch /etc/pipewire/media-session.d/with-pulseaudio
-    sudo cp /usr/share/doc/pipewire/examples/systemd/user/pipewire-pulse.* /etc/systemd/user/
-    systemctl --user daemon-reload
-    systemctl --user --now disable pulseaudio.service pulseaudio.socket
-    systemctl --user --now enable pipewire pipewire-pulse
-    systemctl --user mask pulseaudio
-    sudo nala install libspa-0.2-bluetooth pulseaudio-module-bluetooth -y
-
-  else
-    sudo nala install wireplumber pipewire-media-session-
-    systemctl --user --now enable wireplumber.service
-  fi
-
-  sudo nala install appimagelauncher webapp-manager firefox -y
-  sudo wget https://launchpad.net/~peppermintos/+archive/ubuntu/ice-dev/+files/ice_6.0.7_all.deb
-  sudo apt install ./ice_6.0.7_all.deb -y
-  sudo rm ice_6.0.7_all.deb
 
 
 #   sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/y-ppa-manager_2021.07.15-1~webupd8~0_all.deb

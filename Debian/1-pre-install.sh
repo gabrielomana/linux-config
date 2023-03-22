@@ -109,10 +109,13 @@ elif [ $r == 2 ]; then
 
 elif [ $r == 3 ]; then
     cp ${dir}/dotfiles/testing_sources.list /etc/apt/sources.list -rf
+    apt clean
+    apt update
+    sleep 5
+    clear
 
     echo "MULTIMEDIA"
-    echo -e "deb https://www.deb-multimedia.org stable main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
-    echo -e "deb https://www.deb-multimedia.org stable-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
+    echo -e "deb https://www.deb-multimedia.org testing main non-free" | sudo tee -a /etc/apt/sources.list.d/debian-multimedia.list
 
     apt-get update -oAcquire::AllowInsecureRepositories=true
     apt install deb-multimedia-keyring -y --allow-unauthenticated
@@ -127,7 +130,6 @@ elif [ $r == 3 ]; then
 
     echo "FULL UPGRADE"
     apt upgrade -yy
-    apt full-upgrade -yy
 
 fi
 
@@ -136,7 +138,6 @@ clear
 echo "FULL UPDATE"
 clear
 aptitude safe-upgrade -y
-apt dist-upgrade -y
 apt --fix-missing update
 apt update
 apt install -f

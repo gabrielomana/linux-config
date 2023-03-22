@@ -37,9 +37,9 @@ cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 
 
 ########## EXTRA APPS #############################################
-# clear
-# cd ${dir}
-# install_extra_apps
+clear
+cd ${dir}
+install_extra_apps
 
 
 ########## CLEAN & FINAL STEPS #############################################
