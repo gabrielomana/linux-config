@@ -1,66 +1,74 @@
 #!/bin/bash
-if [ "$(whoami)" != "root" ]
-then
-    sudo su -s "$0"
-    exit
-fi
-date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
-
-###################### BASICS PACKEGES ###############################
-clear
-echo "BASICS PACKEGES"
-sleep 3
 dir="$(pwd)"
 
-    echo "MX REPOS"
-    echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
+exta_apps="${dir}/sources/lists/exta_apps.list"
 
-    curl -s https://mxrepo.com/mx27repo.asc | apt-key add -
-    if test -f "/etc/apt/trusted.gpg"; then
-    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    sleep 5
-    echo " "
-    echo " "
-    fi
-    curl -s https://mxrepo.com/mx25repo.asc | apt-key add -
-    if test -f "/etc/apt/trusted.gpg"; then
-    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    fi
+. "${dir}"/sources/functions/zsh_starship
+. "${dir}"/sources/functions/functions
 
-    curl -s https://mxrepo.com/mx23repo.asc | apt-key add -
-    if test -f "/etc/apt/trusted.gpg"; then
-    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    fi
-
-    curl -s https://mxrepo.com/mx21repo.asc | apt-key add -
-    if test -f "/etc/apt/trusted.gpg"; then
-    mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-    ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-    fi
-
-    apt clean
-    apt update
-    sleep 5
-    clear
-
-    apt -t $deb_cn-backports upgrade -yy
-    apt upgrade -yy
-    apt full-upgrade -yy
-
-    # ########## FULL UPDATE ##########################################
+########## KONSOLE #############################################
+neofetch
 clear
-echo "FULL UPDATE"
+echo "KONSOLE & DOTFILES"
+sleep 3
+sudo wget https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip
+sudo unzip konsole.zip
+sudo cp konsole/* /usr/share/konsole/ -rf
+sudo rm konsole/ -rf
+sudo cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
+# sudo echo -e "[Desktop Entry]
+# DefaultProfile=konsole.profile
+#
+# [MainWindow]
+# RestorePositionForNextInstance=false
+# State=AAAA/wAAAAD9AAAAAQAAAAAAAAAAAAAAAPwCAAAAAvsAAAAcAFMAUwBIAE0AYQBuAGEAZwBlAHIARABvAGMAawAAAAAA/////wAAANMBAAAD+wAAACIAUQB1AGkAYwBrAEMAbwBtAG0AYQBuAGQAcwBEAG8AYwBrAAAAAAD/////AAAArQEAAAMAAAOLAAAB/QAAAAQAAAAEAAAACAAAAAj8AAAAAQAAAAIAAAACAAAAFgBtAGEAaQBuAFQAbwBvAGwAQgBhAHIBAAAAAP////8AAAAAAAAAAAAAABwAcwBlAHMAcwBpAG8AbgBUAG8AbwBsAGIAYQByAQAAARv/////AAAAAAAAAAA=
+# ToolBarsMovable=Disabled
+# Virtual1 Height 1920x977=585
+# Virtual1 Width 1920x977=907
+# Virtual1 XPosition 1920x977=451
+# Virtual1 YPosition 1920x977=36
+#
+# [UiSettings]
+# ColorScheme=" >> ~/.config/konsolerc
+
+
+cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
+cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
+
+
+########## EXTRA APPS #############################################
 clear
-aptitude safe-upgrade -y
-apt dist-upgrade -y
-apt --fix-missing update
-apt update
-apt install -f
-dpkg --configure -a
-dpkg -l | grep ^..r
-dpkg --remove --force-remove-reinstreq
-apt clean
-apt update
+cd ${dir}
+install_extra_apps
+
+
+########## CLEAN & FINAL STEPS #############################################
+clear
+echo "CLEAN & FINAL STEPS"
+sleep 3
+sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+sleep 3
+sudo apt update -y
+sudo nala update
+clear
+
+######## ZSH+OHMYZSH+STARSHIP #############################################
+
+cd ${dir}
+a=0
+f=0
+install_ZSH
+# while [ $a == 0 ]
+# do
+#         read -p "Do you wish to install ZSH+OHMYZSH+STARSHIP? " yn
+#         case $yn in
+#             [Yy]* ) a=1;install_ZSH;clear;;
+#             [Nn]* ) a=1;echo "OK";clear;;
+#             * ) echo "Please answer yes or no.";;
+#         esac
+#     done
+
+
+
+##############DUAL BOOT ####################
+#sudo nala install refind -y
