@@ -84,35 +84,11 @@ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=
 ###### ONLY OFFICE ####
 mkdir -p -m 700 ~/.gnupg
 gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
-chmod 644 /tmp/onlyoffice.gpg
+sudo chmod 644 /tmp/onlyoffice.gpg
 sudo chown root:root /tmp/onlyoffice.gpg
 sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
 echo 'deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
 sudo nala update
-
-
-##BALENA ETCHER
-sudo nala install apt-transport-https -y
-clear
-sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
-sudo rm /etc/apt/trusted.gpg.d/balena* -rf
-sudo rm /usr/share/keyrings/balena* -rf
-
-sudo apt-get clean
-sudo rm -rf "/var/lib/apt/lists/*balena*"
-sudo apt update
-clear
-keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
-curl -1sLf \
-  'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-  | sudo -E bash
-
-
-##rEFInd PPA
-sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
-sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
@@ -124,20 +100,20 @@ clear
 function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
-#   check_installed "${kde_plasma}"
-#   sudo systemctl set-default graphical.target
-#   sudo systemctl enable sddm
+  check_installed "${kde_plasma}"
+  sudo systemctl set-default graphical.target
+  sudo systemctl enable sddm
   sudo nala install plasma-discover-backend-flatpak -y
 
-  #CLEAN PLASMA
-  clear
-  echo "INSTALL KDE PLASMA: "
-  echo " - Install KDEL Plasma Core"
-  echo " - Remove apps and bloatware"
-  sleep 3
-  check_uninstalled "${kde_bloatware}"
-  sudo apt-get update --fix-missing
-  sudo apt-get install -f
+#   #CLEAN PLASMA
+#   clear
+#   echo "INSTALL KDE PLASMA: "
+#   echo " - Install KDEL Plasma Core"
+#   echo " - Remove apps and bloatware"
+#   sleep 3
+#   check_uninstalled "${kde_bloatware}"
+#   sudo apt-get update --fix-missing
+#   sudo apt-get install -f
 
 
   #KDE'S apps
@@ -209,14 +185,6 @@ function install_core_apps()
   cargo install topgrade
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
-
-
-#   sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/y-ppa-manager_2021.07.15-1~webupd8~0_all.deb
-#   sudo wget https://launchpad.net/~webupd8team/+archive/ubuntu/y-ppa-manager/+files/ppa-purge_0.2.8+bzr57+1~precise_all.deb
-#   sudo apt install ./ppa-purge_0.2.8+bzr57+1~precise_all.deb -y
-#   sudo apt install ./y-ppa-manager_2021.07.15-1~webupd8~0_all.deb -y
-#   rm *.deb
-
 
  #Nerd Fonts
   clear
@@ -294,7 +262,7 @@ clear
       #OTHERS
       clear
       sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
-      sudo pip3 /git/qr-tools/install -r requirements.txt
+      sudo pip /git/qr-tools/install -r requirements.txt
       sudo nala install qtqr -y
       sleep 5
       clear
@@ -302,13 +270,6 @@ clear
       sudo nala install -y onlyoffice-desktopeditors balena-etcher-electron
       sleep 5
       clear
-
-#       balena=$(curl -s 'https://api.github.com/repos/balena-io/etcher/releases/latest' | grep browser_download_url | grep '[.]deb' | head -n 1 | cut -d '"' -f 4)
-#       wget ${balena}
-#       sudo apt install ./balena*.deb --install-suggests -y
-#       sudo rm balena*.deb -rf
-#       sleep 5
-#       clear
 
       sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
       sudo chmod +x beeper.AppImage

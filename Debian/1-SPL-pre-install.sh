@@ -52,6 +52,7 @@ deb https://www.deb-multimedia.org stable main non-free"  | sudo tee -a /etc/apt
 echo "BAKPORTS"
 deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
 deb_cn="$(echo "$deb_cn" | tr -d ' ')"
+sudo rm /etc/apt/sources.list.d/debian-backports.list -rf
 echo -e "deb https://deb.debian.org/debian/ $deb_cn-backports main" | sudo tee -a /etc/apt/sources.list.d/debian-backports.list
 
 ##UPGRADE
@@ -100,6 +101,7 @@ systemctl --user --now enable wireplumber.service
 
 
 ##NALA
+sudo apt remove nala-legacy -y
 sudo apt install nala -y
 
 fi
@@ -107,18 +109,18 @@ fi
 ########### FULL UPDATE ##########################################
 clear
 echo "FULL UPDATE"
-aptitude safe-upgrade -y
-apt --fix-missing update
-apt update
-apt install -f
+sudo aptitude safe-upgrade -y
+sudo apt --fix-missing update
+sudo apt update
+sudo apt install -f
 
-dpkg --configure -a
-dpkg -l | grep ^..r
-dpkg --remove --force-remove-reinstreq
+sudo dpkg --configure -a
+sudo dpkg -l | grep ^..r
+sudo dpkg --remove --force-remove-reinstreq
 
-apt clean
-apt update
-apt install linux-headers-$(uname -r) -y
+sudo apt clean
+sudo apt update
+sudo apt install linux-headers-$(uname -r) -y
 
 
 
@@ -130,7 +132,7 @@ deb_cn="$(echo "$deb_cn" | tr -d ' ')"
 echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
 
 sudo rm /etc/apt/trusted.gpg -rf
-su -c "curl -s https://mxrepo.com/mx27repo.asc | apt-key add -"
+sudo curl -s https://mxrepo.com/mx21repo.asc | sudo apt-key add -
 if test -f "/etc/apt/trusted.gpg"; then
 sudo mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
 sudo ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
@@ -139,21 +141,21 @@ echo " "
 fi
 
 sudo rm /etc/apt/trusted.gpg -rf
-su -c "curl -s https://mxrepo.com/mx25repo.asc | apt-key add -"
+sudo curl -s https://mxrepo.com/mx21repo.asc | sudo apt-key add -
 if test -f "/etc/apt/trusted.gpg"; then
 sudo mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
 sudo ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
 fi
 
 sudo rm /etc/apt/trusted.gpg -rf
-su -c "curl -s https://mxrepo.com/mx23repo.asc | apt-key add -"
+sudo curl -s https://mxrepo.com/mx21repo.asc | sudo apt-key add -
 if test -f "/etc/apt/trusted.gpg"; then
 sudo mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
 sudo ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
 fi
 
 sudo rm /etc/apt/trusted.gpg -rf
-su -c "curl -s https://mxrepo.com/mx21repo.asc | apt-key add -"
+sudo curl -s https://mxrepo.com/mx21repo.asc | sudo apt-key add -
 if test -f "/etc/apt/trusted.gpg"; then
 sudo mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
 sudo ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
@@ -186,8 +188,7 @@ sleep 3
 
 USER=$(logname)
 aux2="/sbin/usermod -aG sudo ${USER}"
-su -c "eval $aux2"
-su -c "echo \"${USER} ALL=(ALL:ALL) ALL\" >> /etc/sudoers"
+su -c "eval $aux2 | echo \"${USER} ALL=(ALL:ALL) ALL\" >> /etc/sudoers"
 echo -e "export PATH=/sbin:/usr/sbin:$PATH" | sudo tee -a /home/${USER}/.bashrc
 source ~/.bashrc
 ####################### ZSWAP+SWAPPINESS+GRUB ###############################

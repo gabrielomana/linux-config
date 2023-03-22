@@ -20,7 +20,7 @@ mplayer
 pciutils
 python3-apt
 python3-click
-sudo nala install build-essential
+build-essential
 ttf-mscorefonts-installer
 udev
 x264
