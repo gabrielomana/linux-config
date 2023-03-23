@@ -12,8 +12,6 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 
-#apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools lz4 screen sudo neofetch isenkram-cli apt-listbugs apt-listchanges gpgv -y
-
 sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms isenkram-cli -y
 sleep 5
 rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
@@ -113,9 +111,6 @@ sudo apt update
 sudo apt install -f
 
 sudo dpkg --configure -a
-sudo dpkg -l | grep ^..r
-sudo dpkg --remove --force-remove-reinstreq
-
 sudo dpkg -l | grep ^..r | cut  -d " " -f 3 | xargs sudo dpkg --remove --force-remove-reinstreq
 
 
@@ -181,6 +176,13 @@ sudo nala fetch --auto --fetches 5 -y
 sudo nala update
 sudo nala upgrade -y
 
+
+###################### OTHER BASICS PACKEGES ###############################
+clear
+echo "OTHER BASICS PACKEGES"
+sleep 3
+
+sudo nala install apt-xapian-index netselect-apt tree bash-completion util-linux build-essential console-setup debian-reference-es linux-base lsb-release make man-db manpages memtest86+ coreutils dos2unix usbutils unrar-free zip rsync p7zip net-tools screen neofetch -y
 
 ###################### SUDO+SUDOERS ###############################
 clear
