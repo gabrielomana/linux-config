@@ -72,3 +72,6 @@ install_ZSH
 
 ##############DUAL BOOT ####################
 #sudo nala install refind -y
+
+##############DUAL BOOT ####################
+sudo nala install apt-listbugs apt-listchanges -y

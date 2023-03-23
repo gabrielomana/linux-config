@@ -14,10 +14,8 @@ dir="$(pwd)"
 
 #apt install aptitude curl wget apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt tree bash-completion util-linux build-essential dkms apt-transport-https bash-completion console-setup curl debian-reference-es linux-base lsb-release make man-db manpages memtest86+ gnupg linux-headers-$(uname -r) coreutils dos2unix systemd-sysv usbutils unrar-free zip rsync p7zip net-tools lz4 screen sudo neofetch isenkram-cli apt-listbugs apt-listchanges gpgv -y
 
-sudo apt install aptitude curl wget build-essential dkms apt-transport-https dirmngr apt-xapian-index software-properties-common ca-certificates gnupg dialog netselect-apt bash-completion util-linux apt-transport-https coreutils dos2unix systemd-sysv lz4 sudo neofetch isenkram-cli gpgv devscripts linux-headers-$(uname -r) -y
-
+sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms isenkram-cli -y
 sleep 5
-
 rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 
 ###################### BRANCH DEBIAN (REPOS) ###############################
@@ -27,7 +25,7 @@ r=0
 cp /etc/apt/sources.list /etc/apt/sources_old.list
 while [ $a -lt 1 ]
 do
-        echo "SELECT THE SPARYLINUX BRANCH YOU WANT TO INSTALL:"
+        echo "SELECT THE SPARKYLINUX BRANCH YOU WANT TO INSTALL:"
         echo "  1)Stable+Backports"
         echo "  2)Semi Rolling (Testing)"
         read -p "> " b
@@ -118,6 +116,9 @@ sudo dpkg --configure -a
 sudo dpkg -l | grep ^..r
 sudo dpkg --remove --force-remove-reinstreq
 
+sudo dpkg -l | grep ^..r | cut  -d " " -f 3 | xargs sudo dpkg --remove --force-remove-reinstreq
+
+
 sudo apt clean
 sudo apt update
 sudo apt install linux-headers-$(uname -r) -y
@@ -179,7 +180,7 @@ sudo apt update
 sudo nala fetch --auto --fetches 5 -y
 sudo nala update
 sudo nala upgrade -y
-sudo nala install firefox webapp-manager appimagelauncher balena-etcher apt-listbugs apt-listchanges -y
+
 
 ###################### SUDO+SUDOERS ###############################
 clear

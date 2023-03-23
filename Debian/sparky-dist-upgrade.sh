@@ -67,6 +67,6 @@ deb-src https://repo.sparkylinux.org/ orion main
 FOO
 
 apt update
-apt full-upgrade -y
-dpkg --configure -a
+apt full-upgrade -y --force-yes
+dpkg --configure -a --force-confnew
 
