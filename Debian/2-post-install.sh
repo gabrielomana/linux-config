@@ -40,6 +40,8 @@ cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml
 clear
 cd ${dir}
 install_extra_apps
+echo -e "[Users]
+HideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
 
 ########## CLEAN & FINAL STEPS #############################################

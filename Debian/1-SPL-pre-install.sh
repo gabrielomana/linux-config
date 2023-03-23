@@ -72,10 +72,10 @@ sudo apt install libspa-0.2-bluetooth pulseaudio-module-bluetooth -y
 sudo apt install nala-legacy -y
 
 elif [ $r == 2 ]; then
-
 su -c "sh ./sparky-dist-upgrade.sh"
 
 sudo rm -f /etc/apt/sources.list
+sudo rm -f /etc/apt/sources.list.d/mx*.list
 sudo rm /etc/apt/sources.list.d/*backports.list
 echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
 deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
@@ -179,7 +179,7 @@ sudo nala upgrade -y
 
 ###################### OTHER BASICS PACKEGES ###############################
 clear
-echo "OTHER BASICS PACKEGES"
+echo "OTHER BASICS PACKEGES"1
 sleep 3
 
 sudo nala install apt-xapian-index netselect-apt tree bash-completion util-linux build-essential console-setup debian-reference-es linux-base lsb-release make man-db manpages memtest86+ coreutils dos2unix usbutils unrar-free zip rsync p7zip net-tools screen neofetch -y

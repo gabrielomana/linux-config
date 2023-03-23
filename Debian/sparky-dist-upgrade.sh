@@ -65,8 +65,8 @@ deb-src https://repo.sparkylinux.org/ core main
 deb https://repo.sparkylinux.org/ orion main
 deb-src https://repo.sparkylinux.org/ orion main
 FOO
-
-apt update
-apt full-upgrade -y --force-yes
-dpkg --configure -a --force-confnew
+wget -O - https://repo.sparkylinux.org/sparky.gpg.key | sudo tee /usr/share/keyrings/sparky.gpg.key
+sudo apt update
+sudo apt full-upgrade -y --force-yes
+sudo dpkg --configure -a --force-confnew
 

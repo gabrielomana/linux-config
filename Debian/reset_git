@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /git/linux-config/
+sudo git reset --hard
+sudo git pull origin main
+sudo chmod +x *- R
