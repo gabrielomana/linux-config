@@ -8,7 +8,7 @@ wget
 curl
 git
 gdebi
-"dconf*"
+"^dconf*"
 cabextract
 fontconfig
 cmake
@@ -22,4 +22,5 @@ default-jre
 nodejs
 libssl-dev
 pkg-config
-pip
+python3-venv
+python3-pip

@@ -54,10 +54,13 @@ function check_installed {
   done < "${1}"
    c="sudo nala install "${list}" -y"
    c2="sudo apt install "${list2}" -y"
-
+   echo $c
+   echo ""
+   echo $c2
+   sleep 5
    eval $c
    for i in $list2; do
-    sudo apt-get install -y $i
+    sudo apt install -y $i
    done
 }
 
@@ -137,6 +140,9 @@ function install_core_apps()
   sleep 3
   check_installed "${tools}"
   sudo npm install electron-store
+  sudo -H pip3 install --upgrade pip
+
+
   sudo wget https://sh.rustup.rs -O rustup-init.sh
   sudo chmod 777 rustup-init.sh
   ./rustup-init.sh -y
@@ -263,7 +269,8 @@ clear
       #OTHERS
       clear
       sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
-      sudo pip /git/qr-tools/install -r requirements.txt
+      cd /git/qr-tools/
+      sudo pip3 install -r requirements.txt
       sudo nala install qtqr -y
       sleep 5
       clear
