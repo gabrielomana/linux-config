@@ -72,10 +72,14 @@ sudo apt install libspa-0.2-bluetooth pulseaudio-module-bluetooth -y
 sudo apt install nala-legacy -y
 
 elif [ $r == 2 ]; then
-sudo rm -f /etc/apt/sources.list
-sudo rm -f /etc/apt/sources.list.d/mx*.list
-sudo rm /etc/apt/sources.list.d/*backports.list
 su -c "sh ./sparky-dist-upgrade.sh"
+sudo rm /etc/apt/sources.list -f
+sudo rm /etc/apt/sources.list.d/mx.list -f
+sudo rm /etc/apt/mx.gpg -f
+sudo rm /etc/apt/trusted.gpg.d/mx.gpg -f
+sudo rm /etc/apt/preferences.d/99mx.pref -f
+sudo apt remove nala-legacy -y
+
 
 echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
 deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
@@ -97,7 +101,6 @@ systemctl --user --now enable wireplumber.service
 
 
 ##NALA
-sudo apt remove nala-legacy -y
 sudo apt install nala -y
 
 fi

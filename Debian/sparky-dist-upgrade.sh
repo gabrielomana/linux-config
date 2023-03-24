@@ -60,13 +60,20 @@ FOO
 
 rm -f /etc/apt/sources.list.d/sparky.list
 cat > /etc/apt/sources.list.d/sparky.list <<FOO
-deb https://repo.sparkylinux.org/ core main
-deb-src https://repo.sparkylinux.org/ core main
-deb https://repo.sparkylinux.org/ orion main
-deb-src https://repo.sparkylinux.org/ orion main
+deb [signed-by=/usr/share/keyrings/sparky.gpg.key] https://repo.sparkylinux.org/ core main
+deb-src [signed-by=/usr/share/keyrings/sparky.gpg.key] https://repo.sparkylinux.org/ core main
+deb [signed-by=/usr/share/keyrings/sparky.gpg.key] https://repo.sparkylinux.org/ orion main
+deb-src [signed-by=/usr/share/keyrings/sparky.gpg.key] https://repo.sparkylinux.org/ orion main
 FOO
 wget -O - https://repo.sparkylinux.org/sparky.gpg.key | sudo tee /usr/share/keyrings/sparky.gpg.key
+sudo rm -f /etc/apt/sources.list
+sudo rm -f /etc/apt/sources.list.d/mx*.list
+sudo rm -f /etc/apt/sources.list.d/*backports.list
+
+sudo apt-key del C40956B8
+sudo apt-key del D117204E
 sudo apt update
+
 sudo apt full-upgrade -y --force-yes
 sudo dpkg --configure -a --force-confnew
 
