@@ -108,7 +108,7 @@ fi
 ########### FULL UPDATE ##########################################
 clear
 echo "FULL UPDATE"
-sudo aptitude safe-upgrade -y
+sudo apt-get upgrade --with-new-pkgs --autoremove -y
 sudo apt --fix-missing update
 sudo apt update
 sudo apt install -f
@@ -117,6 +117,7 @@ sudo dpkg --configure -a
 sudo dpkg -l | grep ^..r | cut  -d " " -f 3 | xargs sudo dpkg --remove --force-remove-reinstreq
 
 
+sudo apt autoremove
 sudo apt clean
 sudo apt update
 sudo apt install linux-headers-$(uname -r) -y

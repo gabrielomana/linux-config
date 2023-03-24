@@ -141,6 +141,7 @@ function install_core_apps()
   check_installed "${tools}"
   sudo npm install electron-store
   sudo -H pip3 install --upgrade pip
+  sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
 
 
   sudo wget https://sh.rustup.rs -O rustup-init.sh
@@ -199,8 +200,6 @@ function install_core_apps()
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   echo " - Utilities"
-  echo " - Pipewire & Wireplumber"
-  echo " - Firefox Repo"
   echo " - Nerd Fonts"
   sleep 3
   mkdir /tmp/nerd_fonts/
@@ -253,18 +252,22 @@ do
 sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
 
+sudo echo -e "[Users]
+HideUsers=libvirt-qemu"  | sudo tee -a /etc/sddm.conf
+
+
 clear
     if [ $f == 1 ]; then
       #flatpak
-      flatpak install flathub io.github.prateekmedia.appimagepool -y
-      flatpak install flathub app.ytmdesktop.ytmdesktop -y
-      flatpak install flathub tv.kodi.Kodi -y
-      flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-      flatpak install flathub io.freetubeapp.FreeTube -y
-      flatpak install flathub com.github.tenderowl.frog -y
-      flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
-      flatpak install flathub org.phoenicis.playonlinux -y
-      flatpak install flathub com.usebottles.bottles -y
+#       flatpak install flathub io.github.prateekmedia.appimagepool -y
+#       flatpak install flathub app.ytmdesktop.ytmdesktop -y
+#       flatpak install flathub tv.kodi.Kodi -y
+#       flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+#       flatpak install flathub io.freetubeapp.FreeTube -y
+#       flatpak install flathub com.github.tenderowl.frog -y
+#       flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+#       flatpak install flathub org.phoenicis.playonlinux -y
+#       flatpak install flathub com.usebottles.bottles -y
 
       #OTHERS
       clear
