@@ -12,9 +12,11 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 sudo apt install locales -y
+sudo apt-get install locales-all -y
 sudo apt-get install language-pack-es -y
+export LANG=es_ES.UTF-8
 sudo dpkg-reconfigure locales
-sudo locale-gen
+sudo locale-gen "es_ES.UTF-8"
 
 sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms isenkram-cli -y
 sleep 5
