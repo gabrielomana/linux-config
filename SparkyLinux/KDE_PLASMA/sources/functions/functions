@@ -282,11 +282,11 @@ clear
       sleep 5
       clear
 
-      sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
-      sudo chmod +x beeper.AppImage
-      ./beeper.AppImage &>/dev/null &
-      sleep 5
-      clear
+#       sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
+#       sudo chmod +x beeper.AppImage
+#       ./beeper.AppImage &>/dev/null &
+#       sleep 5
+#       clear
   fi
 return
 }

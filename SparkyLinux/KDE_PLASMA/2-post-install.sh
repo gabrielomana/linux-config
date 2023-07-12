@@ -15,22 +15,6 @@ sudo wget https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip
 sudo unzip konsole.zip
 sudo cp konsole/* /usr/share/konsole/ -rf
 sudo rm konsole/ -rf
-sudo cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
-# sudo echo -e "[Desktop Entry]
-# DefaultProfile=konsole.profile
-#
-# [MainWindow]
-# RestorePositionForNextInstance=false
-# State=AAAA/wAAAAD9AAAAAQAAAAAAAAAAAAAAAPwCAAAAAvsAAAAcAFMAUwBIAE0AYQBuAGEAZwBlAHIARABvAGMAawAAAAAA/////wAAANMBAAAD+wAAACIAUQB1AGkAYwBrAEMAbwBtAG0AYQBuAGQAcwBEAG8AYwBrAAAAAAD/////AAAArQEAAAMAAAOLAAAB/QAAAAQAAAAEAAAACAAAAAj8AAAAAQAAAAIAAAACAAAAFgBtAGEAaQBuAFQAbwBvAGwAQgBhAHIBAAAAAP////8AAAAAAAAAAAAAABwAcwBlAHMAcwBpAG8AbgBUAG8AbwBsAGIAYQByAQAAARv/////AAAAAAAAAAA=
-# ToolBarsMovable=Disabled
-# Virtual1 Height 1920x977=585
-# Virtual1 Width 1920x977=907
-# Virtual1 XPosition 1920x977=451
-# Virtual1 YPosition 1920x977=36
-#
-# [UiSettings]
-# ColorScheme=" >> ~/.config/konsolerc
-
 
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
 cp -r dotfiles/topgrade.toml ~/.config/topgrade.toml

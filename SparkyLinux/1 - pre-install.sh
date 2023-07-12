@@ -6,17 +6,34 @@
 # fi
 # date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
 
+###################### LANGUAGE ###############################
+sudo apt install locales -y
+sudo apt-get install locales-all -y
+sudo apt-get install language-pack-es -y
+sudo dpkg-reconfigure locales
+sudo locale-gen "es_ES.UTF-8"
+sudo apt install hunspell-es -y
+sudo setxkbmap -layout 'es,es'
+export LC_ALL="es_ES.UTF-8"
+export LANGUAGE=\"es_ES.UTF-8\"
+export LC_CTYPE="es_ES.UTF-8"
+export LC_NUMERIC="es_ES.UTF-8"
+export LC_TIME="es_ES.UTF-8"
+export LC_COLLATE="es_ES.UTF-8"
+export LC_MONETARY="es_ES.UTF-8"
+export LC_MESSAGES="es_ES.UTF-8"
+export LC_PAPER="es_ES.UTF-8"
+export LC_NAME="es_ES.UTF-8"
+export LC_ADDRESS="es_ES.UTF-8"
+export LC_TELEPHONE="es_ES.UTF-8"
+export LC_MEASUREMENT="es_ES.UTF-8"
+export LC_IDENTIFICATION="es_ES.UTF-8"
+
 ###################### BASICS PACKEGES ###############################
 clear
 echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
-sudo apt install locales -y
-sudo apt-get install locales-all -y
-sudo apt-get install language-pack-es -y
-export LANG=es_ES.UTF-8
-sudo dpkg-reconfigure locales
-sudo locale-gen "es_ES.UTF-8"
 
 sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms isenkram-cli -y
 sleep 5
@@ -24,26 +41,19 @@ sudo rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 
 ###################### BRANCH DEBIAN (REPOS) ###############################
 
-# su -c "sh ./sparky-dist-upgrade.sh"
-# sudo rm /etc/apt/sources.list -f
-# sudo rm /etc/apt/sources.list.d/mx.list -f
-# sudo rm /etc/apt/mx.gpg -f
-# sudo rm /etc/apt/trusted.gpg.d/mx.gpg -f
-# sudo rm /etc/apt/preferences.d/99mx.pref -f
-# sudo apt remove nala-legacy -y
-#
-#
-# echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-# deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-# deb https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
-# deb-src https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
-# deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
-# deb-src https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
-# deb https://www.deb-multimedia.org testing main non-free"  | sudo tee -a /etc/apt/sources.list
+sudo rm /etc/apt/sources.list -f
+echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+deb https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
+deb-src https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
+deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
+deb-src https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
+deb https://www.deb-multimedia.org testing main non-free"  | sudo tee -a /etc/apt/sources.list
 
-##UPGRADE
-sudo apt update -y
-sudo apt full-upgrade -y
+sudo sed 's/orion/sisters/g' /etc/apt/sources.list.d/sparky.list
+
+#UPGRADE
+sudo sparky-upgrade -y
 sudo dpkg --configure -a
 
 ##PIPEWIRE
@@ -90,10 +100,6 @@ echo " "
 fi
 
 echo -e "Package: firefox
-Pin: release a=mx
-Pin-Priority: 500
-
-Package: appimagelauncher
 Pin: release a=mx
 Pin-Priority: 500
 
