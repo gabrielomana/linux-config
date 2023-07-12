@@ -127,6 +127,7 @@ alias la="exa -a --group-directories-first --icons"
 alias lt="exa --tree --level=2 --icons"
 alias lt3="exa --tree --level=3 --icons"
 alias lt4="exa --tree --level=4 --icons"
+alias lastversion="~/.local/pipx/venvs/lastversion/bin/./lastversion"
 alias kate="/usr/bin/flatpak run --branch=master --arch=x86_64 --command=kate --file-forwarding org.kde.kate"
 alias ytmdesktop="/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop"
 

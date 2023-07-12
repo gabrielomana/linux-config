@@ -129,6 +129,7 @@ alias la="exa -a --group-directories-first --icons"
 alias lt="exa --tree --level=2 --icons"
 alias lt3="exa --tree --level=3 --icons"
 alias lt4="exa --tree --level=4 --icons"
+alias lastversion="~/.local/pipx/venvs/lastversion/bin/./lastversion"
 
 #alias ohmyzsh="mate ~/.oh-my-zsh"
 

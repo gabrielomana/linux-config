@@ -35,7 +35,10 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 
-sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms isenkram-cli -y
+sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms isenkram-cli python3-pip pipx -y
+
+
+
 sleep 5
 sudo rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 

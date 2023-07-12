@@ -54,7 +54,9 @@ install_ZSH
 #         esac
 #     done
 
-
+fastfetch_v=$(lastversion https://github.com/fastfetch-cli/fastfetch/releases/latest)
+wget "https://github.com/fastfetch-cli/fastfetch/releases/download/$fastfetch_v/fastfetch-$fastfetch_v-Linux.deb"
+gdebi fastfetch*.deb
 
 ##############DUAL BOOT ####################
 #sudo nala install refind -y
