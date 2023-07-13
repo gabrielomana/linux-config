@@ -35,10 +35,7 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 
-sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms isenkram-cli python3-pip pipx -y
-
-
-
+sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms isenkram-cli cmake build-essential python3-pip pipx -y
 sleep 5
 sudo rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 
@@ -74,7 +71,6 @@ sudo apt-get upgrade --with-new-pkgs --autoremove -y
 sudo apt --fix-missing update
 sudo apt update
 sudo apt install -f
-
 sudo dpkg --configure -a
 sudo dpkg -l | grep ^..r | cut  -d " " -f 3 | xargs sudo dpkg --remove --force-remove-reinstreq
 
@@ -88,34 +84,34 @@ sudo apt install linux-headers-$(uname -r) -y
 
 ########### MX REPOS ##########################################
 
-echo "MX REPOS"
-deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
-deb_cn="$(echo "$deb_cn" | tr -d ' ')"
-echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
-
-sudo rm /etc/apt/trusted.gpg -rf
-sudo curl -s https://mxrepo.com/mx23repo.asc | sudo apt-key add -
-if test -f "/etc/apt/trusted.gpg"; then
-sudo mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
-sudo ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
-sleep 5
-echo " "
-fi
-
-echo -e "Package: firefox
-Pin: release a=mx
-Pin-Priority: 500
-
-Package: *
-Pin: release a=mx
-Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
-
-sudo apt clean
-sudo apt update
-
-sudo nala fetch --auto --fetches 5 -y
-sudo nala update
-sudo nala upgrade -y
+# echo "MX REPOS"
+# deb_cn=$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep ^Codename: | tail -n1 | awk '{print $2}')
+# deb_cn="$(echo "$deb_cn" | tr -d ' ')"
+# echo -e "deb https://mxrepo.com/mx/repo/ $deb_cn main non-free" | sudo tee -a /etc/apt/sources.list.d/mx.list
+#
+# sudo rm /etc/apt/trusted.gpg -rf
+# sudo curl -s https://mxrepo.com/mx23repo.asc | sudo apt-key add -
+# if test -f "/etc/apt/trusted.gpg"; then
+# sudo mv /etc/apt/trusted.gpg /etc/apt/mx.gpg
+# sudo ln -s /etc/apt/mx.gpg /etc/apt/trusted.gpg.d/mx.gpg
+# sleep 5
+# echo " "
+# fi
+#
+# echo -e "Package: firefox
+# Pin: release a=mx
+# Pin-Priority: 500
+#
+# Package: *
+# Pin: release a=mx
+# Pin-Priority: 1" | sudo tee -a /etc/apt/preferences.d/99mx.pref
+#
+# sudo apt clean
+# sudo apt update
+#
+# sudo nala fetch --auto --fetches 5 -y
+# sudo nala update
+# sudo nala upgrade -y
 
 
 ###################### OTHER BASICS PACKEGES ###############################
