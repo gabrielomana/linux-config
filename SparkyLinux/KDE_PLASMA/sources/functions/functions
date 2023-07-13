@@ -98,7 +98,6 @@ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=
 sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
 sudo nala update
 clear
-
 }
 
 function install_kde {
@@ -128,6 +127,7 @@ function install_kde {
   echo " - Install KDE's APPS"
   sleep 3
   check_installed "${kde_plasma_apps}"
+  sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
 
 }
 
@@ -141,7 +141,6 @@ function install_core_apps()
   check_installed "${tools}"
   sudo npm install electron-store
   sudo -H pip3 install --upgrade pip
-  sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
 
 
   sudo wget https://sh.rustup.rs -O rustup-init.sh

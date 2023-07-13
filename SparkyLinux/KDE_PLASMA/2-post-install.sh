@@ -32,7 +32,6 @@ echo "CLEAN & FINAL STEPS"
 sleep 3
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
 sleep 3
-sudo mintsources
 sudo apt update -y
 sudo nala update
 clear
