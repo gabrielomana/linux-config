@@ -22,7 +22,7 @@ fi
 sleep 5
 ######## dotfiles ##########
 clear
-sudo cp -f ${dir}/dotfiles/.zshrc /root/
+sudo cp -f ${dir}/../dotfiles/.zshrc /root/
 sudo mkdir -p /root/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
 
 if [ -f /root/.zcompdump ]; then
@@ -81,6 +81,15 @@ else
     sudo git clone https://github.com/MichaelAquilina/zsh-you-should-use.git /root/.oh-my-zsh/custom/plugins/you-should-use
 fi
 
+###fzf-tab
+sudo apt install fzf -y
+if [ -d /root/.oh-my-zsh/custom/plugins/fzf-tab ]; then
+    cd /root/.oh-my-zsh/custom/plugins/fzf-tab && git pull
+else
+    git clone --depth=1 https://github.com/Aloxaf/fzf-tab /root/.oh-my-zsh/custom/plugins/fzf-tab
+fi
+
+
 sleep 5
 ######## STARSHIP ##########
 clear
@@ -127,7 +136,7 @@ fi
 sleep 5
 ######## dotfiles ##########
 clear
-cp -f dotfiles/.zshrc ~/
+cp -f ../dotfiles/.zshrc ~/
 mkdir -p ~/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
 
 if [ -f ~/.zcompdump ]; then
@@ -183,6 +192,16 @@ if [ -d ~/.oh-my-zsh/custom/plugins/you-should-use ]; then
 else
     git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/custom/plugins/you-should-use
 fi
+
+
+###fzf-tab
+sudo apt install fzf -y
+if [ -d ~/.oh-my-zsh/custom/plugins/fzf-tab ]; then
+    cd ~/.oh-my-zsh/custom/plugins/fzf-tab && git pull
+else
+    git clone --depth=1 https://github.com/Aloxaf/fzf-tab ~/.oh-my-zsh/custom/plugins/fzf-tab
+fi
+
 sleep 5
 ######## STARSHIP ##########
 clear

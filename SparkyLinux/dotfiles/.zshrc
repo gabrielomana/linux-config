@@ -83,8 +83,10 @@ ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 plugins=(colored-man-pages
 	git
 	git-extras
+	fzf-tab
 	zsh-autopair
 	zsh-autosuggestions
+	zsh-completions
 	history-substring-search
 	zsh-syntax-highlighting
 	sudo
