@@ -53,13 +53,18 @@
     },
     {
     "keyColor": "cyan",
-    "type": "display",
-    "key": "  ├"
+    "type": "Disk",
+    "key": "  ├"
     },
     {
     "keyColor": "cyan",
     "type": "memory",
-    "key": "  ╰"
+    "key": "  ├"
+    },
+    {
+    "keyColor": "cyan",
+    "type": "display",
+    "key": "  ╰"
     },
     "break",
         /////POS
@@ -96,7 +101,7 @@
     {
     "keyColor": "green",
     "type": "Packages",
-    "key": "  ╰"
+    "key": "  ╰"
     },
     "break",
      /////DESKTOP
@@ -110,20 +115,20 @@
     "type": "WM",
     "key": "  ├"
     },
-    {
-    "keyColor": "yellow",
-    "type": "WMTheme",
-    "key": "  ├"
-    },
+    // {
+    // "keyColor": "yellow",
+    // "type": "WMTheme",
+    // "key": "  ├"
+    // },
     {
     "keyColor": "yellow",
     "type": "Theme",
-    "key": "  ├"
+    "key": "  ├"
     },
     {
     "keyColor": "yellow",
     "type": "Icons",
-    "key": "  ├"
+    "key": "  ├᪥"
     },
     {
     "keyColor": "yellow",
@@ -136,6 +141,10 @@
     "key": "  ╰🖯"
     },
     "break",
+            {
+    "type": "Weather",
+    "key": "   "
+    },
     {
     "type": "custom",
     "format": "   \\e[38m \\e[37m \\e[36m \\e[35m \\e[34m \\e[33m \\e[32m \\e[31m"
