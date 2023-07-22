@@ -75,9 +75,12 @@ install_ZSH
 
 
 fastfetch_v=$(lastversion https://github.com/fastfetch-cli/fastfetch/releases/latest)
-wget "https://github.com/fastfetch-cli/fastfetch/releases/download/$fastfetch_v/fastfetch-$fastfetch_v-Linux.deb"
-gdebi fastfetch*.deb
+sudo wget "https://github.com/fastfetch-cli/fastfetch/releases/download/$fastfetch_v/fastfetch-$fastfetch_v-Linux.deb"
+sudo gdebi fastfetch*.deb -y
 rm fastfetch*.deb -rf
+fastfetch --gen-config
+cp ../dotfiles/fastfetch_config.jsonc ~/.config/fastfetch/config.jsonc
+zsh
 
 ##############DUAL BOOT ####################
 #sudo nala install refind -y
