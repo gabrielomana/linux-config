@@ -226,7 +226,7 @@ function install_core_apps()
   sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
   sudo rm /tmp/nerd_fonts/ -rf
   sudo nala install fonts-noto-color-emoji -y
-  sudo cp ../../dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
+  sudo cp ../dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
   fc-cache -f -v
  }
 
@@ -285,6 +285,10 @@ clear
       clear
 
       sudo nala install -y onlyoffice-desktopeditors
+      sleep 5
+      clear
+
+       sudo nala install -y balena-etcher
       sleep 5
       clear
 

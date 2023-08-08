@@ -50,7 +50,7 @@ deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-fre
 deb-src https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
 deb https://www.deb-multimedia.org testing main non-free"  | sudo tee -a /etc/apt/sources.list
 
-sudo sed 's/orion/sisters/g' /etc/apt/sources.list.d/sparky.list
+sudo sed -i 's/orion/sisters/g' /etc/apt/sources.list.d/sparky.list
 
 #UPGRADE
 sudo sparky-upgrade -y
