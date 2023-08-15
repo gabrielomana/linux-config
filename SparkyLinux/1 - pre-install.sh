@@ -41,20 +41,20 @@ sudo rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 
 ###################### BRANCH DEBIAN (REPOS) ###############################
 
-sudo rm /etc/apt/sources.list -f
-echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-deb https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
-deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
-deb https://www.deb-multimedia.org testing main non-free"  | sudo tee -a /etc/apt/sources.list
-
-sudo sed -i 's/orion/sisters/g' /etc/apt/sources.list.d/sparky.list
-
-#UPGRADE
-sudo sparky-upgrade -y
-sudo dpkg --configure -a
+# sudo rm /etc/apt/sources.list -f
+# echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+# deb https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
+# deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
+# deb https://www.deb-multimedia.org testing main non-free"  | sudo tee -a /etc/apt/sources.list
+#
+# sudo sed -i 's/orion/sisters/g' /etc/apt/sources.list.d/sparky.list
+#
+# #UPGRADE
+# sudo sparky-upgrade -y
+# sudo dpkg --configure -a
 
 ##PIPEWIRE
 sudo apt install wireplumber pipewire-media-session- -y
