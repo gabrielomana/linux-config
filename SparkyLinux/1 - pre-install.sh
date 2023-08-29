@@ -10,7 +10,7 @@
 sudo apt install locales -y
 sudo apt-get install locales-all -y
 sudo apt-get install language-pack-es -y
-sudo dpkg-reconfigure locales
+#sudo dpkg-reconfigure locales
 sudo locale-gen "es_ES.UTF-8"
 sudo apt install hunspell-es -y
 sudo setxkbmap -layout 'es,es'
@@ -40,21 +40,21 @@ sleep 5
 sudo rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 
 ###################### BRANCH DEBIAN (REPOS) ###############################
-
-sudo rm /etc/apt/sources.list -f
-echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-deb https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
-deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
-deb https://www.deb-multimedia.org testing main non-free"  | sudo tee -a /etc/apt/sources.list
-
-sudo rm -f /etc/apt/sources.list.d/sparky.list
-echo -e "deb https://repo.sparkylinux.org/ core main
-deb-src https://repo.sparkylinux.org/ core main
-deb https://repo.sparkylinux.org/ sisters main
-deb-src https://repo.sparkylinux.org/ sisters main"  | sudo tee -a /etc/apt/sources.list.d/sparky.list
+#
+# sudo rm /etc/apt/sources.list -f
+# echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+# deb https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
+# deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
+# deb-src https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
+# deb https://www.deb-multimedia.org testing main non-free"  | sudo tee -a /etc/apt/sources.list
+#
+# sudo rm -f /etc/apt/sources.list.d/sparky.list
+# echo -e "deb https://repo.sparkylinux.org/ core main
+# deb-src https://repo.sparkylinux.org/ core main
+# deb https://repo.sparkylinux.org/ sisters main
+# deb-src https://repo.sparkylinux.org/ sisters main"  | sudo tee -a /etc/apt/sources.list.d/sparky.list
 
 sudo apt update
 sudo apt full-upgrade -y
