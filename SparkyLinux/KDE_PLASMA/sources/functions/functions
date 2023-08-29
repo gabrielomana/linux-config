@@ -275,20 +275,11 @@ clear
 #       flatpak install flathub org.phoenicis.playonlinux -y
 #       flatpak install flathub com.usebottles.bottles -y
 
-      #OTHERS
-      clear
-      sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
-      cd /git/qr-tools/
-      sudo pip3 install -r requirements.txt
-      sudo nala install qtqr -y
-      sleep 5
-      clear
-
       sudo nala install -y onlyoffice-desktopeditors
       sleep 5
       clear
 
-       sudo nala install -y balena-etcher
+      sudo nala install -y balena-etcher
       sleep 5
       clear
 

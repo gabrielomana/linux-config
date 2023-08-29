@@ -60,6 +60,15 @@ do
     esac
 done
 
+sudo rm /etc/apt/sources.list -f
+echo -e "deb http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
+deb-src http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian testing-updates main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian testing-updates main contrib non-free non-free-firmware
+deb http://deb-multimedia.org/ testing main non-free"  | sudo tee -a /etc/apt/sources.list
+sudo apt-get update && sudo apt-get upgrade && sudo apt-get dist-upgrade
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
 sleep 3
 sudo nala update

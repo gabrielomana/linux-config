@@ -40,22 +40,6 @@ sleep 5
 sudo rm /etc/apt/sources.list.d/isenkram-autoinstall-firmware.list
 
 ###################### BRANCH DEBIAN (REPOS) ###############################
-#
-# sudo rm /etc/apt/sources.list -f
-# echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-# deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-# deb https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
-# deb-src https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
-# deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
-# deb-src https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
-# deb https://www.deb-multimedia.org testing main non-free"  | sudo tee -a /etc/apt/sources.list
-#
-# sudo rm -f /etc/apt/sources.list.d/sparky.list
-# echo -e "deb https://repo.sparkylinux.org/ core main
-# deb-src https://repo.sparkylinux.org/ core main
-# deb https://repo.sparkylinux.org/ sisters main
-# deb-src https://repo.sparkylinux.org/ sisters main"  | sudo tee -a /etc/apt/sources.list.d/sparky.list
-
 sudo apt update
 sudo apt full-upgrade -y
 sudo dpkg --configure -a
@@ -83,7 +67,7 @@ clear
 echo "OTHER BASICS PACKEGES"1
 sleep 3
 
-sudo nala install apt-xapian-index netselect-apt tree bash-completion util-linux build-essential console-setup debian-reference-es linux-base lsb-release make man-db manpages memtest86+ coreutils dos2unix usbutils unrar-free zip rsync p7zip net-tools screen neofetch -y
+sudo nala install apt-xapian-index netselect-apt tree bash-completion util-linux build-essential console-setup debian-reference-es linux-base lsb-release make man-db manpages memtest86+ coreutils dos2unix usbutils python3-venv python3-pip unrar-free zip rsync p7zip net-tools screen neofetch -y
 
 ####################### ZSWAP+SWAPPINESS+GRUB ###############################
 clear
