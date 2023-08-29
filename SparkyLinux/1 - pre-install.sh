@@ -57,7 +57,7 @@ deb https://repo.sparkylinux.org/ sisters main
 deb-src https://repo.sparkylinux.org/ sisters main"  | sudo tee -a /etc/apt/sources.list.d/sparky.list
 
 sudo apt update
-sudo apt full-upgrade
+sudo apt full-upgrade -y
 sudo dpkg --configure -a
 sudo apt install -f
 sudo apt autoremove

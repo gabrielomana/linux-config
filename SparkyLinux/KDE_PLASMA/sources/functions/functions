@@ -301,3 +301,18 @@ clear
 return
 }
 
+#EXTRA APPS
+function rolling_branch()
+{
+
+wget https://sparkylinux.org/files/sparky-dist-upgrade78
+sudo chmod +x sparky-dist-upgrade78
+sudo ./sparky-dist-upgrade78
+sudo apt autoremove
+sudo apt clean
+sudo apt update
+sudo apt --fix-broken install
+sudo aptitude safe-upgrade -y
+sudo rm sparky-dist-upgrade78* -rf
+}
+

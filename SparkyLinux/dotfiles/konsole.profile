@@ -1,10 +1,17 @@
 [Appearance]
 ColorScheme=Oceanic-Next
-Font=JetBrainsMono NF,9.5,-1,5,57,0,0,0,0,0,Medium
+DimmValue=106
+EmojiFont=Noto Color Emoji,7,-1,5,50,0,0,0,0,0
+Font=JetBrainsMono NF,10,-1,5,63,0,0,0,0,0,SemiBold
+UseFontLineChararacters=true
 
 [General]
+DimWhenInactive=true
 Name=konsole
 Parent=FALLBACK/
-StartInCurrentSessionDir=false
-TerminalColumns=91
-TerminalRows=27
+TerminalColumns=118
+TerminalMargin=8
+TerminalRows=34
+
+[Scrolling]
+ScrollBarPosition=1

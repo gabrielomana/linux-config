@@ -33,6 +33,8 @@ sudo rm konsole/ -rf
 cp -r ../dotfiles/neofetch.conf ~/.config/neofetch/config.conf
 cp -r ../dotfiles/topgrade.toml ~/.config/topgrade.toml
 cp -r ../dotfiles/.nanorc ~/.config/.nanorc
+cp -r ../dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
+cp -r ../dotfiles/konsolerc ~/.config/konsolerc
 
 
 ########## EXTRA APPS #############################################
@@ -43,12 +45,26 @@ install_extra_apps
 
 ########## CLEAN & FINAL STEPS #############################################
 clear
-echo "CLEAN & FINAL STEPS"
+echo "ROLLING RELEASE"
 sleep 3
+clear
+a=0
+f=0
+while [ $a -lt 1 ]
+do
+    read -p "Do you want to move to the Rolling branch?? " yn
+    case $yn in
+        [Yy]* ) a=1;rolling_branch;f=1;clear;;
+        [Nn]* ) a=1;echo "OK";clear;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
 sleep 3
-sudo apt update -y
 sudo nala update
+sudo nala fetch --auto --fetches 5 -y
+sudo nala update; sudo nala upgrade -y; sudo nala install -f;
 clear
 
 
