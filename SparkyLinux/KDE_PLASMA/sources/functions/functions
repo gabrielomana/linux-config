@@ -305,7 +305,7 @@ return
 function rolling_branch()
 {
 
-wget https://sparkylinux.org/files/sparky-dist-upgrade78
+sudo wget https://sparkylinux.org/files/sparky-dist-upgrade78
 sudo chmod +x sparky-dist-upgrade78
 sudo ./sparky-dist-upgrade78
 sudo apt autoremove
