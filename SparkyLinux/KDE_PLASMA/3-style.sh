@@ -6,6 +6,10 @@ then
 fi
 dir="$(pwd)"
 
+exta_apps="${dir}/sources/lists/exta_apps.list"
+
+. "${dir}"/sources/functions/zsh_starship
+
 #POP_OS ICONS
 clear
 echo "POP_OS! ICONS"
@@ -78,7 +82,26 @@ sudo nala update && sudo nala install papirus-icon-theme kvantum -y
 
 okular ${dir}/customization_guide.pdf
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
-sudo nala update -y
-reboot
+sudo nala update; sudo nala upgrade -y; sudo nala install -f;
+
+####### DOTFILES+ZSH+OHMYZSH+STARSHIP #############################################
+clear
+echo "ZSH"
+sleep 3
+clear
+cd ${dir}
+a=0
+f=0
+install_ZSH
+# while [ $a == 0 ]
+# do
+#         read -p "Do you wish to install ZSH+OHMYZSH+STARSHIP? " yn
+#         case $yn in
+#             [Yy]* ) a=1;install_ZSH;clear;;
+#             [Nn]* ) a=1;echo "OK";clear;;
+#             * ) echo "Please answer yes or no.";;
+#         esac
+#     done
+
 
 

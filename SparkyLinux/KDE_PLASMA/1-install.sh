@@ -49,17 +49,18 @@ echo "INSTALL MULTIMEDIA APPS: "
 sleep 3
 install_multimedia
 
-
-#########################################_END_ #################################################
-
-
-########## FULL UPDATE ##########################################
+################################### FULL UPDATE ##########################################
 clear
 echo "FULL UPDATE"
-sudo nala clean
 sleep 3
-sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo apt --fix-broken install
-sudo aptitude safe-upgrade -y
+sudo apt update
 sudo apt full-upgrade -y
-sudo systemctl disable casper-md5check.service
-reboot
+sudo dpkg --configure -a
+sudo apt install -f
+sudo apt autoremove
+sudo apt clean
+sudo apt update
+sudo apt --fix-broken install
+sudo aptitude safe-upgrade -y
+sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo apt --fix-broken install
+sudo reboot
