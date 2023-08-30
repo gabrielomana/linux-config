@@ -86,14 +86,14 @@ function add_extra_repos() {
     sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
-    # Add OnlyOffice repository
-    mkdir -p -m 700 ~/.gnupg
-    sudo curl -fsSL https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE | gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --import
-    chmod 644 /tmp/onlyoffice.gpg
-    sudo chown root:root /tmp/onlyoffice.gpg
-    sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
-    echo "deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main" | sudo tee /etc/apt/sources.list.d/onlyoffice.list
-    sudo apt update
+#     # Add OnlyOffice repository
+#     mkdir -p -m 700 ~/.gnupg
+#     sudo curl -fsSL https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE | gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --import
+#     chmod 644 /tmp/onlyoffice.gpg
+#     sudo chown root:root /tmp/onlyoffice.gpg
+#     sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
+#     echo "deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main" | sudo tee /etc/apt/sources.list.d/onlyoffice.list
+#     sudo apt update
 
     # Clean and get missing keys
     keys=()
@@ -272,25 +272,21 @@ HideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
   clear
   if [ $f == 1 ]; then
+      # sudo nala install -y balena-etcher
+      # sleep 5
+      # clear
     # flatpak apps
-    sudo nala install -y onlyoffice-desktopeditors
-    sleep 5
-    clear
-
-    sudo nala install -y balena-etcher
-    sleep 5
-    clear
-
-    # More flatpak installs
-    # ...
-    # Uncomment and add more flatpak install commands here
-
-    # Example: Installing Beeper
-    # sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
-    # sudo chmod +x beeper.AppImage
-    # ./beeper.AppImage &>/dev/null &
-    # sleep 5
-    # clear
+      flatpak install flathub org.onlyoffice.desktopeditors -y
+      flatpak install flathub org.strawberrymusicplayer.strawberry
+      # flatpak install flathub io.github.prateekmedia.appimagepool -y
+      # flatpak install flathub app.ytmdesktop.ytmdesktop -y
+      # flatpak install flathub tv.kodi.Kodi -y
+      # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+      # flatpak install flathub io.freetubeapp.FreeTube -y
+      # flatpak install flathub com.github.tenderowl.frog -y
+      # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+      # flatpak install flathub org.phoenicis.playonlinux -y
+      # flatpak install flathub com.usebottles.bottles -y
   fi
   return
 }
