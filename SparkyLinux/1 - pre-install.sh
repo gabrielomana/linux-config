@@ -4,47 +4,47 @@
 #     sudo su -s "$0"
 #     exit
 # fi
-date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
-
-###################### LANGUAGE ###############################
-sudo apt install locales -y
-sudo apt-get install locales-all -y
-sudo apt-get install language-pack-es -y
-sudo locale-gen "es_ES.UTF-8"
-sudo apt install hunspell-es -y
-sudo setxkbmap -layout 'es,es'
-export LC_ALL="es_ES.UTF-8"
-export LANGUAGE=\"es_ES.UTF-8\"
-export LC_CTYPE="es_ES.UTF-8"
-export LC_NUMERIC="es_ES.UTF-8"
-export LC_TIME="es_ES.UTF-8"
-export LC_COLLATE="es_ES.UTF-8"
-export LC_MONETARY="es_ES.UTF-8"
-export LC_MESSAGES="es_ES.UTF-8"
-export LC_PAPER="es_ES.UTF-8"
-export LC_NAME="es_ES.UTF-8"
-export LC_ADDRESS="es_ES.UTF-8"
-export LC_TELEPHONE="es_ES.UTF-8"
-export LC_MEASUREMENT="es_ES.UTF-8"
-export LC_IDENTIFICATION="es_ES.UTF-8"
-
-###################### UPDATE ###############################
-sudo apt update
-sudo apt full-upgrade -y
-sudo dpkg --configure -a
-sudo apt install -f
-sudo apt autoremove
-sudo apt clean
-sudo apt update
-sudo apt --fix-broken install
-sudo aptitude safe-upgrade -y
-sudo apt install linux-headers-$(uname -r) -y
-
-
-##NALA
-sudo apt install nala -y
-sudo nala fetch --auto --fetches 5 -y
-sudo nala update; sudo nala upgrade -y; sudo nala install -f;
+# date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
+#
+# ###################### LANGUAGE ###############################
+# sudo apt install locales -y
+# sudo apt-get install locales-all -y
+# sudo apt-get install language-pack-es -y
+# sudo locale-gen "es_ES.UTF-8"
+# sudo apt install hunspell-es -y
+# sudo setxkbmap -layout 'es,es'
+# export LC_ALL="es_ES.UTF-8"
+# export LANGUAGE=\"es_ES.UTF-8\"
+# export LC_CTYPE="es_ES.UTF-8"
+# export LC_NUMERIC="es_ES.UTF-8"
+# export LC_TIME="es_ES.UTF-8"
+# export LC_COLLATE="es_ES.UTF-8"
+# export LC_MONETARY="es_ES.UTF-8"
+# export LC_MESSAGES="es_ES.UTF-8"
+# export LC_PAPER="es_ES.UTF-8"
+# export LC_NAME="es_ES.UTF-8"
+# export LC_ADDRESS="es_ES.UTF-8"
+# export LC_TELEPHONE="es_ES.UTF-8"
+# export LC_MEASUREMENT="es_ES.UTF-8"
+# export LC_IDENTIFICATION="es_ES.UTF-8"
+#
+# ###################### UPDATE ###############################
+# sudo apt update
+# sudo apt full-upgrade -y
+# sudo dpkg --configure -a
+# sudo apt install -f
+# sudo apt autoremove
+# sudo apt clean
+# sudo apt update
+# sudo apt --fix-broken install
+# sudo aptitude safe-upgrade -y
+# sudo apt install linux-headers-$(uname -r) -y
+#
+#
+# ##NALA
+# sudo apt install nala -y
+# sudo nala fetch --auto --fetches 5 -y
+# sudo nala update; sudo nala upgrade -y; sudo nala install -f;
 
 ###################### BASICS PACKEGES ###############################
 clear
@@ -55,7 +55,27 @@ dir="$(pwd)"
 sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms cmake build-essential python3-pip pipx -y
 sleep 10
 clear
-sudo apt install wireplumber pipewire-media-session-* libspa-0.2-bluetooth pulseaudio-module-bluetooth  -y
+
+sudo apt install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 -y
+sudo apt install gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} -y
+sudo apt install pipewire-doc -y
+sudo apt install libpipewire-module-x11-bell -y
+sudo apt install wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} -y
+sudo apt install wireplumber-locales -y
+sudo apt install pipewire pipewire-audio-client-libraries -y
+sleep 10
+clear
+sudo touch /etc/pipewire/media-session.d/with-pulseaudio
+sudo cp /usr/share/doc/pipewire/examples/systemd/user/pipewire-pulse.* /etc/systemd/user/
+
+systemctl --user --now disable pulseaudio.{socket,service}
+systemctl --user mask pulseaudio
+systemctl --user --now enable pipewire{,-pulse}.{socket,service}
+systemctl --user --now enable wireplumber.service
+sleep 10
+clear
+
+sudo apt install pipewire-media-session-* libspa-0.2-bluetooth pulseaudio-module-bluetooth  -y
 sleep 10
 clear
 
