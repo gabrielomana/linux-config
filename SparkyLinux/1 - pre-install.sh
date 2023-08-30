@@ -1,4 +1,6 @@
 #!/bin/bash
+dir="$(pwd)"
+. "${dir}"/KDE_PLASMA/sources/functions/functions
 
 date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
 
@@ -86,3 +88,4 @@ done
 
 # Reiniciar el sistema
 sudo reboot
+e
