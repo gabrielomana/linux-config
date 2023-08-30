@@ -52,7 +52,14 @@ echo "BASICS PACKEGES"
 sleep 3
 dir="$(pwd)"
 
-sudo nala install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms cmake build-essential python3-pip pipx wireplumber pipewire-media-session-* libspa-0.2-bluetooth pulseaudio-module-bluetooth -y
+sudo apt install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms cmake build-essential python3-pip pipx -y
+sleep 10
+clear
+sudo apt install wireplumber pipewire-media-session-* libspa-0.2-bluetooth pulseaudio-module-bluetooth  -y
+sleep 10
+clear
+
+#sudo nala install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms cmake build-essential python3-pip pipx wireplumber pipewire-media-session-* libspa-0.2-bluetooth pulseaudio-module-bluetooth --no-fix-broken -y
 sleep 5
 
 clear
@@ -60,7 +67,8 @@ echo "OTHER BASICS PACKEGES"1
 sleep 3
 
 sudo nala install apt-xapian-index netselect-apt tree bash-completion util-linux build-essential console-setup debian-reference-es linux-base lsb-release make man-db manpages memtest86+ coreutils dos2unix usbutils bleachbit python3-venv python3-pip unrar-free zip rsync p7zip net-tools screen neofetch -y
-sleep 3
+sleep 10
+clear
 
 ####################### ZSWAP+SWAPPINESS+GRUB ###############################
 clear
