@@ -1,73 +1,74 @@
 #!/bin/bash
-function check_uninstalled (){
+function check_uninstalled() {
   local package
   list=""
-  while read -r package; do
+  while IFS= read -r package; do
     [ -z "${package}" ] && continue
-
-        STR="${package}"
-        SUB='*'
-
-        case $STR in
-
-          *"$SUB"*)
-            list="${list} ${STR}"
-            ;;
-        esac
 
     if dpkg -s "${package}" >/dev/null 2>&1; then
       list="${list} ${package}"
     fi
   done < "${1}"
-   c="sudo nala remove --purge "${list}" -y"
-   clear
-   eval $c
-   sudo nala autoremove -y
-   sudo nala install -f
-   sudo nala clean
-   sudo apt-get autoclean
-   clear
+
+  c="sudo nala remove --purge ${list} -y"
+  clear
+  eval "$c"
+  sudo nala autoremove -y
+  sudo nala install -f
+  sudo nala clean
+  sudo apt-get autoclean
+  clear
 }
 
-function check_installed {
+
+function check_installed() {
   local package
   local to_install=()
+  local to_install_apt=()
   list=""
   list2=""
-  while read -r package; do
+
+  while IFS= read -r package; do
     [ -z "${package}" ] && continue
 
-        STR="${package}"
-        SUB='*'
-
-        case $STR in
-
-          *"$SUB"*)
-            list2="${list2} ${STR}"
-            ;;
-        esac
-  if !(dpkg -s "${package}" >/dev/null 2>&1); then
-    if !(nala show "${package}" 2>&1 | grep -q "Error: "); then
-      list="${list} ${package}"
+    if dpkg -s "${package}" >/dev/null 2>&1; then
+      continue
     fi
-  fi
+
+    if nala show "${package}" 2>&1 | grep -q "Error: "; then
+      continue
+    fi
+
+    STR="${package}"
+    SUB='*'
+
+    case $STR in
+      *"$SUB"*)
+        list2="${list2} ${STR}"
+        ;;
+      *)
+        list="${list} ${package}"
+        ;;
+    esac
   done < "${1}"
-   c="sudo nala install "${list}" -y"
-   c2="sudo apt install "${list2}" -y"
-   echo $c
-   echo ""
-   echo $c2
-   sleep 5
-   eval $c
-   for i in $list2; do
-    sudo apt install -y $i
-   done
+
+  if [ -n "$list" ]; then
+    c="sudo nala install ${list} -y"
+    eval $c
+  fi
+
+  if [ -n "$list2" ]; then
+    for i in $list2; do
+      to_install_apt+=($i)
+    done
+    sudo apt install -y "${to_install_apt[@]}"
+  fi
 }
 
 
-function add_repos(){
-
+function add_repos() {
     sudo nala install flatpak -y
+
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
     sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
@@ -79,69 +80,74 @@ function add_repos(){
     sudo flatpak remote-modify --system --prio=4 fedora
 }
 
-function add_extra_repos(){
-###### BRAVE BROWSER ####
-sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
-###### ONLY OFFICE ####
+function add_extra_repos() {
+    # Add Brave Browser repository
+    sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
-  mkdir -p -m 700 ~/.gnupg
-  sudo curl -fsSL https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE | gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --import
-  chmod 644 /tmp/onlyoffice.gpg
-  sudo chown root:root /tmp/onlyoffice.gpg
-  sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
-  echo "deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main" | sudo tee /etc/apt/sources.list.d/onlyoffice.list
-  sudo apt update
+    # Add OnlyOffice repository
+    mkdir -p -m 700 ~/.gnupg
+    sudo curl -fsSL https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE | gpg --no-default-keyring --keyring gnupg-ring:/tmp/onlyoffice.gpg --import
+    chmod 644 /tmp/onlyoffice.gpg
+    sudo chown root:root /tmp/onlyoffice.gpg
+    sudo mv /tmp/onlyoffice.gpg /usr/share/keyrings/onlyoffice.gpg
+    echo "deb [signed-by=/usr/share/keyrings/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main" | sudo tee /etc/apt/sources.list.d/onlyoffice.list
+    sudo apt update
 
-##### CLEAN ANH GET MISSINGS KEYS ####
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo nala update
-clear
+    # Clean and get missing keys
+    keys=()
+    sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do
+        if ! [[ ${keys[@]} =~ "$key" ]]; then
+            sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"
+            keys+=("$key")
+        fi
+    done
+    sudo nala update
+    clear
 }
 
-function install_kde {
-  echo "INSTALL KDE PLASMA: "
+
+
+function install_kde() {
+  echo "INSTALL KDE PLASMA:"
   echo " - Install KDE Plasma Core"
   check_installed "${kde_plasma}"
   sudo systemctl set-default graphical.target
   sudo systemctl enable sddm
   sudo nala install plasma-discover-backend-flatpak -y
 
-#   #CLEAN PLASMA
-#   clear
-#   echo "INSTALL KDE PLASMA: "
-#   echo " - Install KDEL Plasma Core"
-#   echo " - Remove apps and bloatware"
-#   sleep 3
-#   check_uninstalled "${kde_bloatware}"
-#   sudo apt-get update --fix-missing
-#   sudo apt-get install -f
+  #CLEAN PLASMA (Puedes habilitar esta parte si lo deseas)
+  # clear
+  # echo "INSTALL KDE PLASMA:"
+  # echo " - Install KDE Plasma Core"
+  # echo " - Remove apps and bloatware"
+  # sleep 3
+  # check_uninstalled "${kde_bloatware}"
+  # sudo apt-get update --fix-missing
+  # sudo apt-get install -f
 
-
-  #KDE'S apps
+  #KDE's apps
   clear
-  echo "INSTALL KDE PLASMA: "
-  echo " - Install KDEL Plasma Core"
+  echo "INSTALL KDE PLASMA:"
+  echo " - Install KDE Plasma Core"
   echo " - Remove apps and bloatware"
   echo " - Install KDE's APPS"
   sleep 3
   check_installed "${kde_plasma_apps}"
   sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
-
 }
 
-function install_core_apps()
-{
- #Development tools and libraries
+
+function install_core_apps() {
+  # Development tools and libraries
   clear
-  echo "INSTALL SYSTEM CORE APPS: "
+  echo "INSTALL SYSTEM CORE APPS:"
   echo " - Development tools and libraries"
   sleep 3
   check_installed "${tools}"
   sudo npm install electron-store
   sudo -H pip3 install --upgrade pip
-
 
   sudo wget https://sh.rustup.rs -O rustup-init.sh
   sudo chmod 777 rustup-init.sh
@@ -152,17 +158,17 @@ function install_core_apps()
   source ~/.profile
   source ~/.cargo/env
 
- ##Codecs and Drivers
+  # Codecs and Drivers
   clear
-  echo "INSTALL SYSTEM CORE APPS: "
+  echo "INSTALL SYSTEM CORE APPS:"
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   sleep 3
   check_installed "${codecs}"
 
-##Utilities
+  # Utilities
   clear
-  echo "INSTALL SYSTEM CORE APPS: "
+  echo "INSTALL SYSTEM CORE APPS:"
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   echo " - Utilities"
@@ -175,8 +181,7 @@ function install_core_apps()
 
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"" >> ~/aux.txt
-
+  echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"" >> ~/aux.txt
 
   rm -rf ~/.bashrc
   mv ~/aux.txt ~/.bashrc
@@ -184,11 +189,10 @@ function install_core_apps()
 
   sudo cp /root/.bashrc /root/.bashrc_old
   sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\""  | sudo tee -a /root/aux.txt
+  echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"" | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
   sudo source /root/.bashrc
-
 
   sudo npm install -g hblock
   hblock
@@ -198,11 +202,9 @@ function install_core_apps()
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
-
-
- #Nerd Fonts
+  # Nerd Fonts
   clear
-  echo "INSTALL SYSTEM CORE APPS: "
+  echo "INSTALL SYSTEM CORE APPS:"
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   echo " - Utilities"
@@ -228,82 +230,138 @@ function install_core_apps()
   sudo nala install fonts-noto-color-emoji -y
   sudo cp ../dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
   fc-cache -f -v
- }
-
-#MULTIMEDIA
-function install_multimedia()
-{
-clear
-echo -e "INSTALL MULTIMEDIA APPS: \n"
-sleep 3
-check_installed "${multimedia}"
 }
 
-#EXTRA APPS
-function install_extra_apps()
-{
-clear
-a=0
-f=0
-while [ $a -lt 1 ]
-do
-        read -p "Do you wish to install Extra APPS? " yn
-        case $yn in
-            [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";f=1;clear;;
-            [Nn]* ) a=1;echo "OK";clear;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
-
-sudo systemctl start libvirtd
-sudo systemctl enable libvirtd
-
-sudo echo -e "[Users]
-HideUsers=libvirt-qemu"  | sudo tee -a /etc/sddm.conf
 
 
-clear
-    if [ $f == 1 ]; then
-      #flatpak
-#       flatpak install flathub io.github.prateekmedia.appimagepool -y
-#       flatpak install flathub app.ytmdesktop.ytmdesktop -y
-#       flatpak install flathub tv.kodi.Kodi -y
-#       flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-#       flatpak install flathub io.freetubeapp.FreeTube -y
-#       flatpak install flathub com.github.tenderowl.frog -y
-#       flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
-#       flatpak install flathub org.phoenicis.playonlinux -y
-#       flatpak install flathub com.usebottles.bottles -y
+function install_multimedia() {
+  clear
+  echo "INSTALL MULTIMEDIA APPS: "
+  sleep 3
+  check_installed "${multimedia}"
+}
 
-      sudo nala install -y onlyoffice-desktopeditors
-      sleep 5
-      clear
+function install_extra_apps() {
+  clear
+  a=0
+  f=0
+  while [ $a -lt 1 ]; do
+    read -p "Do you wish to install Extra APPS? " yn
+    case $yn in
+      [Yy]* )
+        a=1
+        add_extra_repos
+        check_installed "${extra_apps}"
+        f=1
+        clear
+        ;;
+      [Nn]* )
+        a=1
+        echo "OK"
+        clear
+        ;;
+      * ) echo "Please answer yes or no.";;
+    esac
+  done
 
-      sudo nala install -y balena-etcher
-      sleep 5
-      clear
+  sudo systemctl start libvirtd
+  sudo systemctl enable libvirtd
 
-#       sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
-#       sudo chmod +x beeper.AppImage
-#       ./beeper.AppImage &>/dev/null &
-#       sleep 5
-#       clear
+  sudo echo -e "[Users]
+HideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
+
+  clear
+  if [ $f == 1 ]; then
+    # flatpak apps
+    sudo nala install -y onlyoffice-desktopeditors
+    sleep 5
+    clear
+
+    sudo nala install -y balena-etcher
+    sleep 5
+    clear
+
+    # More flatpak installs
+    # ...
+    # Uncomment and add more flatpak install commands here
+
+    # Example: Installing Beeper
+    # sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
+    # sudo chmod +x beeper.AppImage
+    # ./beeper.AppImage &>/dev/null &
+    # sleep 5
+    # clear
   fi
-return
+  return
 }
 
-#EXTRA APPS
-function rolling_branch()
-{
 
-sudo wget https://sparkylinux.org/files/sparky-dist-upgrade78
-sudo chmod +x sparky-dist-upgrade78
-sudo ./sparky-dist-upgrade78
-sudo apt autoremove
-sudo apt clean
-sudo apt update
-sudo apt --fix-broken install
-sudo aptitude safe-upgrade -y
-sudo rm sparky-dist-upgrade78* -rf
+
+function rolling_branch() {
+
+  DEPS="bash coreutils dialog grep iputils-ping sparky-info sudo"
+
+  PINGTEST0=$(ping -c 1 debian.org | grep [0-9])
+  if [ -z "$PINGTEST0" ]; then
+    echo "Debian server is offline... exiting..."
+    exit 1
+  fi
+
+  PINGTEST1=$(ping -c 1 sparkylinux.org | grep [0-9])
+  if [ -z "$PINGTEST1" ]; then
+    echo "Sparky server is offline... exiting..."
+    exit 1
+  fi
+
+  OSCODE=$(grep Orion /etc/lsb-release)
+  if [ -z "$OSCODE" ]; then
+    echo "This is not Sparky 7 Orion Belt... exiting..."
+    exit 1
+  fi
+
+  sudo rm -f /etc/apt/sources.list
+  echo -e "deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
+deb-src http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+deb http://deb-multimedia.org/ trixie main non-free" | sudo tee -a /etc/apt/sources.list
+
+  sudo rm -f /etc/apt/sources.list.d/sparky.list
+  echo -e "deb https://repo.sparkylinux.org/ core main
+deb-src https://repo.sparkylinux.org/ core main
+deb https://repo.sparkylinux.org/ sisters main
+deb-src https://repo.sparkylinux.org/ sisters main" | sudo tee -a /etc/apt/sources.list.d/sparky.list
+
+  sudo apt update
+  sudo apt full-upgrade
+  sudo dpkg --configure -a
+  sudo apt install -f
+
+  sudo apt autoremove
+  sudo apt clean
+  sudo apt update
+  sudo apt --fix-broken install
+  sudo aptitude safe-upgrade -y
+
+  # Move to testing
+  clear
+  sudo rm /etc/apt/sources.list -f
+  echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+deb https://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
+deb-src https://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
+deb https://deb.debian.org/debian testing-updates main contrib non-free non-free-firmware
+deb-src https://deb.debian.org/debian testing-updates main contrib non-free non-free-firmware
+deb https://deb-multimedia.org/ testing main non-free" | sudo tee -a /etc/apt/sources.list
+
+  sudo apt-get update && sudo apt-get upgrade && sudo apt-get dist-upgrade
+  sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+  sleep 3
+  sudo nala update
+  sudo nala fetch --auto --fetches 5 -y
+  sudo nala update && sudo nala upgrade -y && sudo nala install -f && sudo apt --fix-broken install
+  clear
 }
 
