@@ -78,35 +78,37 @@ dir="$(pwd)"
 clear
 a=0
 f=0
-while [ $a -lt 1 ]; do
-    read -p "¿Quieres cambiar a la rama Rolling? " yn
-    case $yn in
-        [Yy]* ) a=1; rolling_branch; f=1; clear;;
-        [Nn]* ) a=1; echo "OK"; clear;;
-        * ) echo "Por favor, responde sí o no.";;
-    esac
-done
+while [ $a -lt 1 ]
+do
+        read -p "¿Quieres cambiar a la rama Rolling?" yn
+        case $yn in
+            [Yy]* ) a=1;f=1;clear;;
+            [Nn]* ) a=1;echo "OK";clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
 
 if [ $f == 1 ]; then
- DEPS="bash coreutils dialog grep iputils-ping sparky-info sudo"
 
-  PINGTEST0=$(ping -c 1 debian.org | grep [0-9])
-  if [ -z "$PINGTEST0" ]; then
-    echo "Debian server is offline... exiting..."
-    exit 1
-  fi
+DEPS="bash coreutils dialog grep iputils-ping sparky-info sudo"
 
-  PINGTEST1=$(ping -c 1 sparkylinux.org | grep [0-9])
-  if [ -z "$PINGTEST1" ]; then
-    echo "Sparky server is offline... exiting..."
-    exit 1
-  fi
+PINGTEST0=$(ping -c 1 debian.org | grep [0-9])
+if [ "$PINGTEST0" = "" ]; then
+	echo "Debian server is offline... exiting..."
+	exit 1
+fi
 
-  OSCODE=$(grep Orion /etc/lsb-release)
-  if [ -z "$OSCODE" ]; then
-    echo "This is not Sparky 7 Orion Belt... exiting..."
-    exit 1
-  fi
+PINGTEST1=$(ping -c 1 sparkylinux.org | grep [0-9])
+if [ "$PINGTEST1" = "" ]; then
+	echo "Sparky server is offline... exiting..."
+	exit 1
+fi
+
+OSCODE="`cat /etc/lsb-release | grep Orion`"
+if [ "$OSCODE" = "" ]; then
+	echo "This is not Sparky 7 Orion Belt... exiting..."
+	exit 1
+fi
 
   sudo rm -f /etc/apt/sources.list
   echo -e "deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
