@@ -92,19 +92,19 @@ if [ $f == 1 ]; then
 
     DEPS="bash coreutils dialog grep iputils-ping sparky-info sudo"
 
-    PINGTEST0=$(ping -c 1 debian.org | grep [0-9])
+    PINGTEST0=$(sudo ping -c 1 debian.org | grep [0-9])
     if [ "$PINGTEST0" = "" ]; then
         echo "Debian server is offline... exiting..."
         exit 1
     fi
 
-    PINGTEST1=$(ping -c 1 sparkylinux.org | grep [0-9])
+    PINGTEST1=$(sudo ping -c 1 sparkylinux.org | grep [0-9])
     if [ "$PINGTEST1" = "" ]; then
         echo "Sparky server is offline... exiting..."
         exit 1
     fi
 
-    OSCODE="`cat /etc/lsb-release | grep Orion`"
+    OSCODE="`sudo cat /etc/lsb-release | grep Orion`"
     if [ "$OSCODE" = "" ]; then
         echo "This is not Sparky 7 Orion Belt... exiting..."
         exit 1
