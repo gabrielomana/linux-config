@@ -1,13 +1,6 @@
 #!/bin/bash
 
-# Comprueba si el usuario es root, si no lo es, ejecuta el script como root
-if [ "$(whoami)" != "root" ]; then
-    echo "Este script debe ser ejecutado como root."
-    exit 1
-fi
-
-# Sincroniza la fecha con un servidor NTP confiable
-sudo ntpdate pool.ntp.org
+date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
 
 # Instalación y configuración de idioma y locales
 sudo apt update
