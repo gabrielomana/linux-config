@@ -59,10 +59,10 @@ install_multimedia
 ########## FULL UPDATE ##########################################
 clear
 echo "FULL UPDATE"
-sudo nala clean
+sudo dnf clean all
 sleep 3
-sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo apt --fix-broken install
-sudo aptitude safe-upgrade -y
-sudo apt full-upgrade -y
-sudo systemctl disable casper-md5check.service
-reboot
+sudo dnf update -y
+sudo dnf upgrade -y
+sudo dnf install -f -y
+
+sudo reboot

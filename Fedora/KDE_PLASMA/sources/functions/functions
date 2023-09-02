@@ -1,33 +1,31 @@
 #!/bin/bash
-function check_uninstalled (){
+function check_uninstalled() {
   local package
   list=""
+
   while read -r package; do
-    [ -z "${package}" ] && continue
+    [ -z "$package" ] && continue
 
-        STR="${package}"
-        SUB='*'
-
-        case $STR in
-
-          *"$SUB"*)
-            list="${list} ${STR}"
-            ;;
-        esac
-
-    if dpkg -s "${package}" >/dev/null 2>&1; then
-      list="${list} ${package}"
+    if dnf list installed "$package" >/dev/null 2>&1; then
+      list+=" $package"
     fi
-  done < "${1}"
-   c="sudo nala remove --purge "${list}" -y"
-   clear
-   eval $c
-   sudo nala autoremove -y
-   sudo nala install -f
-   sudo nala clean
-   sudo apt-get autoclean
-   clear
+  done < "$1"
+
+  if [ -n "$list" ]; then
+    sudo dnf remove -y $list
+    sudo dnf autoremove -y
+    sudo dnf install -f
+    sudo dnf clean all
+    clear
+  else
+    clear
+    echo "No packages to remove."
+  fi
 }
+
+# Usage example:
+# check_uninstalled "package_list.txt"
+
 
 function check_installed {
     list_file="$1"
@@ -132,21 +130,18 @@ sudo dnf makecache --refresh
 function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
-  sudo dnf -y install  @"Hardware Support" @"base-x" @"Fonts" @"Common NetworkManager Submodules"
+
   check_installed "${kde_plasma}"
-  sudo systemctl set-default graphical.target
   sudo systemctl enable sddm
+  sudo systemctl set-default graphical.target
+  sudo systemctl start sddm
   sudo numlockx on
   echo "$(cat /etc/sddm.conf | sed -E s/'^\#?Numlock\=.*$'/'Numlock=on'/)" | sudo tee /etc/sddm.conf && sudo systemctl daemon-reload
   sleep 3
 
   #CLEAN PLASMA
   clear
-  sudo dnf -y remove gwenview akregator kmail konversation krfb kmahjongg kmines dragonplayer elisa-player korganizer kontact kpat
-  sudo dnf -y groupremove "LibreOffice"
-  sudo dnf -y remove libreoffice-*
-  sudo dnf -y autoremove
-  echo "*************************************************************************************"
+  check_uninstalled "${kde_bloatware}"
   sleep 7
 
 
@@ -158,16 +153,14 @@ function install_kde {
   echo " - Install KDE's APPS"
   sleep 3
   check_installed "${kde_plasma_apps}"
-
 }
 
-function install_core_apps()
-{
- #Development tools and libraries
+function install_core_apps() {
+  # Development tools and libraries
   sudo dnf install -y npm
   sudo npm install -g electron-store
 
-  # Instalación de Rust
+  # Rust Installation
   sudo curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   chmod +x install-rustup.sh
   ./install-rustup.sh
@@ -176,14 +169,14 @@ function install_core_apps()
   source "$HOME/.profile"
   source "$HOME/.cargo/env"
 
-
- ##Codecs and Drivers
+  # Codecs and Drivers
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   sleep 3
-  # Instalación y actualización de grupos de paquetes
+
+  # Installation and update of package groups
   sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
   sudo dnf -y groupupdate multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
   sudo dnf -y groupupdate sound-and-video
@@ -192,75 +185,11 @@ function install_core_apps()
   sudo dnf -y groupupdate sound-and-video
   sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 
-
-  # Instalación de paquetes adicionales
+  # Additional package installation
   sudo dnf -y install 'lame*' --exclude=lame-devel
   check_installed "${codecs}"
 
-  #Virtual Machine Drivers
-    # Import necessary functions
-      source /usr/share/dnf/plugins/rpmfusion-installer
-    # Check if we are in a virtual machine
-      if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
-      # We are on a physical machine
-    else
-      # We are in a virtual machine
-
-      # Identify the hypervisor
-      hypervisor=$(cat /sys/class/dmi/id/product_name)
-
-      # Install the guest drivers
-      if [[ "$hypervisor" =~ "VMware" ]]; then
-        sudo dnf install --enablerepo=rpmfusion-nonfree vmware-tools
-      elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
-        sudo dnf install --enablerepo=rpmfusion-nonfree hyperv-tools
-      elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
-        sudo dnf install --enablerepo=rpmfusion-nonfree virtualbox-guest-additions-iso
-        mount /dev/cdrom /mnt/cdrom
-        ./VBoxLinuxAdditions.run
-        umount /mnt/cdrom
-      elif [[ "$hypervisor" =~ "KVM" ]]; then
-        sudo dnf install --enablerepo=rpmfusion-nonfree libvirt-guest-tools
-      fi
-    fi
-
-  #Identifies your processor, and installs the appropriate drivers and microcodes
-    # Import necessary functions
-    source /usr/share/dnf/plugins/rpmfusion-installer
-
-    # Identify the processor
-    cpu_name=$(lscpu | grep "Model name" | awk '{print $2}')
-
-    # Install the drivers and microcodes
-    if [[ "$cpu_name" =~ "Intel" ]]; then
-      dnf install --enablerepo=rpmfusion-nonfree akmods-intel-ucode intel-microcode
-    elif [[ "$cpu_name" =~ "AMD" ]]; then
-      dnf install --enablerepo=rpmfusion-nonfree akmods-amd-ucode amd-microcode
-    else
-      echo "Failed to identify processor"
-    fi
-
-  # Instalación de controladores de gráficos (INTEL, AMD, NVIDIA)
-  clear
-  echo "INSTALL GRAPHICS DRIVERS"
-    gpu_info=$(lspci | grep -i "VGA compatible controller")
-
-    if echo "$gpu_info" | grep -q "NVIDIA"; then
-        sudo dnf install akmods-nvidia nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
-        sudo dnf install -y nvidia-vaapi-driver
-    fi
-
-    if echo "$gpu_info" | grep -q "Advanced Micro Devices"; then
-        sudo dnf install akmods-amdgpu radeon-profile vdpau-driver-all amdgpu-pro
-        sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
-        sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
-    fi
-
-    if echo "$gpu_info" | grep -q "Intel"; then
-      sudo dnf install vdpau-driver-all intel-media-driver
-    fi
-
-##Utilities
+  # Utilities
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
@@ -268,7 +197,6 @@ function install_core_apps()
   echo " - Utilities"
   sleep 3
   check_installed "${utilities}"
-  sudo apt install "util-linux*" -y
 
   numlockx on
   sudo numlockx on
@@ -287,11 +215,10 @@ function install_core_apps()
 
   sudo cp /root/.bashrc /root/.bashrc_old
   sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
   sudo source /root/.bashrc
-
 
   sudo npm install -g hblock
   hblock
@@ -301,7 +228,72 @@ function install_core_apps()
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
- #Nerd Fonts
+  #EXTRA DRIVERS
+  # Virtual Machine Drivers
+  # Import necessary functions
+  source /usr/share/dnf/plugins/rpmfusion-installer
+
+  # Check if we are in a virtual machine
+  if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
+    # We are on a physical machine
+  else
+    # We are in a virtual machine
+
+    # Identify the hypervisor
+    hypervisor=$(cat /sys/class/dmi/id/product_name)
+
+    # Install the guest drivers
+    if [[ "$hypervisor" =~ "VMware" ]]; then
+      sudo dnf install --enablerepo=rpmfusion-nonfree vmware-tools
+    elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
+      sudo dnf install --enablerepo=rpmfusion-nonfree hyperv-tools
+    elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
+      sudo dnf install --enablerepo=rpmfusion-nonfree virtualbox-guest-additions-iso
+      mount /dev/cdrom /mnt/cdrom
+      ./VBoxLinuxAdditions.run
+      umount /mnt/cdrom
+    elif [[ "$hypervisor" =~ "KVM" ]]; then
+      sudo dnf install --enablerepo=rpmfusion-nonfree libvirt-guest-tools
+    fi
+  fi
+
+  # Identifies your processor and installs the appropriate drivers and microcodes
+  # Import necessary functions
+  source /usr/share/dnf/plugins/rpmfusion-installer
+
+  # Identify the processor
+  cpu_name=$(lscpu | grep "Model name" | awk '{print $2}')
+
+  # Install the drivers and microcodes
+  if [[ "$cpu_name" =~ "Intel" ]]; then
+    dnf install --enablerepo=rpmfusion-nonfree akmods-intel-ucode intel-microcode
+  elif [[ "$cpu_name" =~ "AMD" ]]; then
+    dnf install --enablerepo=rpmfusion-nonfree akmods-amd-ucode amd-microcode
+  else
+    echo "Failed to identify processor"
+  fi
+
+  # Graphics Drivers Installation (INTEL, AMD, NVIDIA)
+  clear
+  echo "INSTALL GRAPHICS DRIVERS"
+  gpu_info=$(lspci | grep -i "VGA compatible controller")
+
+  if echo "$gpu_info" | grep -q "NVIDIA"; then
+    sudo dnf install akmods-nvidia nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
+    sudo dnf install -y nvidia-vaapi-driver
+  fi
+
+  if echo "$gpu_info" | grep -q "Advanced Micro Devices"; then
+    sudo dnf install akmods-amdgpu radeon-profile vdpau-driver-all amdgpu-pro
+    sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
+    sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
+  fi
+
+  if echo "$gpu_info" | grep -q "Intel"; then
+    sudo dnf install vdpau-driver-all intel-media-driver
+  fi
+
+  # Nerd Fonts
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
@@ -331,6 +323,7 @@ function install_core_apps()
   sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
   fc-cache -f -v
 }
+
 
 #MULTIMEDIA
 function install_multimedia()
@@ -374,6 +367,8 @@ clear
       sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
       sudo dnf install -y dejavu-fonts* google-roboto-fonts
       sudo fc-cache -fv
+
+      #OnlyOffice
       sudo yum install onlyoffice-desktopeditors -y
 
 

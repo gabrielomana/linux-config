@@ -1,11 +1,8 @@
-kde-plasma-desktop
+"KDE Plasma Workspaces"
+"Hardware Support"
+"Wayland"
+"X11"
+"Wifi"
+plasma-desktop-minimal
 plasma-workspace-wayland
 plasma-wayland-session
-sddm-theme-breeze
-kcalc
-systemsettings
-baloo
-kio
-kwin-addons
-plasma-thunderbolt
-plasma-vault

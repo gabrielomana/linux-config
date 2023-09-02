@@ -1,7 +1,6 @@
 samba
 screen
 bleachbit
-apt-utils
 bash-completion
 openssl
 finger
@@ -14,12 +13,11 @@ p7zip
 unzip
 bat
 exa
-mainline
 v4l2loopback-utils
 neofetch
-printer-driver-cups-pdf
+cups-pdf
 grub-customizer
-tesseract-ocr-spa
+tesseract-spa
 gimagereader
 timeshift
 ksnip
@@ -27,4 +25,4 @@ appimagelauncher
 pdfarranger
 qbittorrent
 topgrade
-
+util-linux-core

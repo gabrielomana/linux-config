@@ -225,5 +225,3 @@ function install_ZSH() {
     return
 }
 
-# Calling the main function
-install_ZSH
