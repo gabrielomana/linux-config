@@ -1,0 +1,399 @@
+#!/bin/bash
+function check_uninstalled (){
+  local package
+  list=""
+  while read -r package; do
+    [ -z "${package}" ] && continue
+
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
+
+    if dpkg -s "${package}" >/dev/null 2>&1; then
+      list="${list} ${package}"
+    fi
+  done < "${1}"
+   c="sudo nala remove --purge "${list}" -y"
+   clear
+   eval $c
+   sudo nala autoremove -y
+   sudo nala install -f
+   sudo nala clean
+   sudo apt-get autoclean
+   clear
+}
+
+function check_installed {
+    list_file="$1"
+    output_file="installation.log"
+
+    if [ ! -f "$list_file" ]; then
+        echo "The list file '$list_file' does not exist."
+        exit 1
+    fi
+
+    groups=()
+    packages=()
+
+    while read -r line; do
+        line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+        if [[ $line == \"*\" ]]; then
+            package_or_group=$(echo "$line" | sed 's/"//g')
+        else
+            package_or_group="$line"
+        fi
+
+        if ! dnf list --installed "$package_or_group" | grep -qE "^$package_or_group" && dnf list "$package_or_group" | grep -qE "^$package_or_group"; then
+            if [[ $line == \"*\" ]]; then
+                groups+=("$package_or_group")
+            else
+                packages+=("$package_or_group")
+            fi
+        fi
+    done < "$list_file"
+
+    [ ${#groups[@]} -gt 0 ] && sudo dnf groupinstall -y "${groups[@]}" >> "$output_file" 2>&1
+    [ ${#packages[@]} -gt 0 ] && sudo dnf install -y "${packages[@]}" >> "$output_file" 2>&1
+
+#    echo "Installation process completed. Check '$output_file' for details."
+}
+
+
+function clean_fedora {
+
+}
+
+function add_repos(){
+clear
+echo "REPOS"
+
+sudo dnf clean all
+  clear
+  # Configuración general de DNF
+  sudo echo -e "[main]\ngpgcheck=1\ninstallonly_limit=3\nclean_requirements_on_remove=True\nbest=False\nskip_if_unavailable=True\n#Speed\nfastestmirror=True\nmax_parallel_downloads=10\ndefaultyes=True\nkeepcache=True\ndeltarpm=True" | sudo tee /etc/dnf/dnf.conf
+
+  # Limpieza y actualización de repositorios
+  sudo dnf clean all
+  sudo dnf makecache --refresh
+  sudo dnf -y install fedora-workstation-repositories
+  sudo dnf -y install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+  sudo dnf groupupdate core
+
+  # Instalación de paquetes esenciales
+  sudo dnf clean all
+  sudo dnf makecache --refresh
+  sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo
+
+  # Configuración de repositorios de Flatpak
+  clear
+  echo "Configurando repositorios de Flatpak..."
+  sleep 3
+  sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
+  sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
+  sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
+
+  sudo flatpak remote-modify --system --prio=1 kde
+  sudo flatpak remote-modify --system --prio=2 flathub
+  sudo flatpak remote-modify --system --prio=3 elementary
+  sudo flatpak remote-modify --system --prio=4 fedora
+}
+
+function add_extra_repos(){
+
+##EXTRA REPOS
+sudo dnf -y copr enable refi64/webapp-manager
+sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/
+sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+curl -1sLf \
+   'https://dl.cloudsmith.io/public/balena/etcher/setup.rpm.sh' \
+   | sudo -E bash
+
+sudo yum -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
+sudo dnf -y copr enable ayoungdukie/Personal_Repo
+
+sudo rpm --import https://raw.githubusercontent.com/UnitedRPMs/unitedrpms/master/URPMS-GPG-PUBLICKEY-Fedora
+sudo dnf -y install https://github.com/UnitedRPMs/unitedrpms/releases/download/20/unitedrpms-$(rpm -E %fedora)-20.fc$(rpm -E %fedora).noarch.rpm
+
+sudo dnf makecache --refresh
+
+}
+
+function install_kde {
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDE Plasma Core"
+  sudo dnf -y install  @"Hardware Support" @"base-x" @"Fonts" @"Common NetworkManager Submodules"
+  check_installed "${kde_plasma}"
+  sudo systemctl set-default graphical.target
+  sudo systemctl enable sddm
+  sudo numlockx on
+  echo "$(cat /etc/sddm.conf | sed -E s/'^\#?Numlock\=.*$'/'Numlock=on'/)" | sudo tee /etc/sddm.conf && sudo systemctl daemon-reload
+  sleep 3
+
+  #CLEAN PLASMA
+  clear
+  sudo dnf -y remove gwenview akregator kmail konversation krfb kmahjongg kmines dragonplayer elisa-player korganizer kontact kpat
+  sudo dnf -y groupremove "LibreOffice"
+  sudo dnf -y remove libreoffice-*
+  sudo dnf -y autoremove
+  echo "*************************************************************************************"
+  sleep 7
+
+
+  #KDE'S apps
+  clear
+  echo "INSTALL KDE PLASMA: "
+  echo " - Install KDEL Plasma Core"
+  echo " - Remove apps and bloatware"
+  echo " - Install KDE's APPS"
+  sleep 3
+  check_installed "${kde_plasma_apps}"
+
+}
+
+function install_core_apps()
+{
+ #Development tools and libraries
+  sudo dnf install -y npm
+  sudo npm install -g electron-store
+
+  # Instalación de Rust
+  sudo curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  chmod +x install-rustup.sh
+  ./install-rustup.sh
+
+  source "$HOME/.cargo/env"
+  source "$HOME/.profile"
+  source "$HOME/.cargo/env"
+
+
+ ##Codecs and Drivers
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  sleep 3
+  # Instalación y actualización de grupos de paquetes
+  sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
+  sudo dnf -y groupupdate multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+  sudo dnf -y groupupdate sound-and-video
+  sudo dnf -y groupupdate core
+  sudo dnf -y groupupdate multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+  sudo dnf -y groupupdate sound-and-video
+  sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+
+
+  # Instalación de paquetes adicionales
+  sudo dnf -y install 'lame*' --exclude=lame-devel
+  check_installed "${codecs}"
+
+  #Virtual Machine Drivers
+    # Import necessary functions
+      source /usr/share/dnf/plugins/rpmfusion-installer
+    # Check if we are in a virtual machine
+      if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
+      # We are on a physical machine
+    else
+      # We are in a virtual machine
+
+      # Identify the hypervisor
+      hypervisor=$(cat /sys/class/dmi/id/product_name)
+
+      # Install the guest drivers
+      if [[ "$hypervisor" =~ "VMware" ]]; then
+        sudo dnf install --enablerepo=rpmfusion-nonfree vmware-tools
+      elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
+        sudo dnf install --enablerepo=rpmfusion-nonfree hyperv-tools
+      elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
+        sudo dnf install --enablerepo=rpmfusion-nonfree virtualbox-guest-additions-iso
+        mount /dev/cdrom /mnt/cdrom
+        ./VBoxLinuxAdditions.run
+        umount /mnt/cdrom
+      elif [[ "$hypervisor" =~ "KVM" ]]; then
+        sudo dnf install --enablerepo=rpmfusion-nonfree libvirt-guest-tools
+      fi
+    fi
+
+  #Identifies your processor, and installs the appropriate drivers and microcodes
+    # Import necessary functions
+    source /usr/share/dnf/plugins/rpmfusion-installer
+
+    # Identify the processor
+    cpu_name=$(lscpu | grep "Model name" | awk '{print $2}')
+
+    # Install the drivers and microcodes
+    if [[ "$cpu_name" =~ "Intel" ]]; then
+      dnf install --enablerepo=rpmfusion-nonfree akmods-intel-ucode intel-microcode
+    elif [[ "$cpu_name" =~ "AMD" ]]; then
+      dnf install --enablerepo=rpmfusion-nonfree akmods-amd-ucode amd-microcode
+    else
+      echo "Failed to identify processor"
+    fi
+
+  # Instalación de controladores de gráficos (INTEL, AMD, NVIDIA)
+  clear
+  echo "INSTALL GRAPHICS DRIVERS"
+    gpu_info=$(lspci | grep -i "VGA compatible controller")
+
+    if echo "$gpu_info" | grep -q "NVIDIA"; then
+        sudo dnf install akmods-nvidia nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
+        sudo dnf install -y nvidia-vaapi-driver
+    fi
+
+    if echo "$gpu_info" | grep -q "Advanced Micro Devices"; then
+        sudo dnf install akmods-amdgpu radeon-profile vdpau-driver-all amdgpu-pro
+        sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
+        sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
+    fi
+
+    if echo "$gpu_info" | grep -q "Intel"; then
+      sudo dnf install vdpau-driver-all intel-media-driver
+    fi
+
+##Utilities
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  sleep 3
+  check_installed "${utilities}"
+  sudo apt install "util-linux*" -y
+
+  numlockx on
+  sudo numlockx on
+  sudo sed -i 's/^\#?Numlock\=.*$/Numlock=on/' /etc/sddm.conf
+  sudo systemctl daemon-reload
+  sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts
+  sudo fc-cache -fv
+  sudo dnf swap ffmpeg-free ffmpeg --allowerasin
+
+  cp ~/.bashrc ~/.bashrc_old
+  cp ~/.bashrc ~/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
+  rm -rf ~/.bashrc
+  mv ~/aux.txt ~/.bashrc
+  source ~/.bashrc
+
+  sudo cp /root/.bashrc /root/.bashrc_old
+  sudo cp /root/.bashrc /root/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
+  sudo rm -rf /root/.bashrc
+  sudo mv /root/aux.txt /root/.bashrc
+  sudo source /root/.bashrc
+
+
+  sudo npm install -g hblock
+  hblock
+
+  cargo install cargo-update
+  cargo install topgrade
+  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
+  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
+
+ #Nerd Fonts
+  clear
+  echo "INSTALL SYSTEM CORE APPS: "
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  echo " - Pipewire & Wireplumber"
+  echo " - Nerd Fonts"
+  sleep 3
+  mkdir /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip -P /tmp/nerd_fonts/
+
+  sudo unzip /tmp/nerd_fonts/JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono
+  sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
+  sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
+
+  sudo mkdir /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
+  sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
+  sudo rm /tmp/nerd_fonts/ -rf
+  sudo dnf install -y fonts-noto-color-emoji
+  sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
+  fc-cache -f -v
+}
+
+#MULTIMEDIA
+function install_multimedia()
+{
+clear
+echo -e "INSTALL MULTIMEDIA APPS: \n"
+sleep 3
+check_installed "${multimedia}"
+}
+
+#EXTRA APPS
+function install_extra_apps()
+{
+clear
+a=0
+f=0
+while [ $a -lt 1 ]
+do
+        read -p "Do you wish to install Extra APPS? " yn
+        case $yn in
+            [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";f=1;clear;;
+            [Nn]* ) a=1;echo "OK";clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+
+sudo systemctl start libvirtd
+sudo systemctl enable libvirtd
+
+
+
+clear
+    if [ $f == 1 ]; then
+
+      sudo cargo install cargo-update
+      sudo timedatectl set-local-rtc 1
+      sudo systemctl start libvirtd
+      sudo systemctl enable libvirtd
+
+      #FONTS
+      sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
+      sudo dnf install -y dejavu-fonts* google-roboto-fonts
+      sudo fc-cache -fv
+      sudo yum install onlyoffice-desktopeditors -y
+
+
+      #flatpak
+#         flatpak install -y flathub app.ytmdesktop.ytmdesktop
+#         flatpak install -y flathub tv.kodi.Kodi
+#         flatpak install -y flathub io.github.mimbrero.WhatsAppDesktop
+#         flatpak install -y flathub io.freetubeapp.FreeTube
+#         flatpak install -y flathub com.github.tenderowl.frog
+#         flatpak install -y flathub com.github.vkohaupt.vokoscreenNG
+#         flatpak install -y flathub org.phoenicis.playonlinux
+#         flatpak install -y flathub com.usebottles.bottles
+#         flatpak install -y flathub us.zoom.Zoom
+#         flatpak install -y flathub com.anydesk.Anydesk
+#         flatpak install -y flathub com.microsoft.Teams
+#         flatpak install -y flathub com.github.bajoja.indicator-kdeconnect
+
+      #OTHERS
+
+  fi
+return
+}
+

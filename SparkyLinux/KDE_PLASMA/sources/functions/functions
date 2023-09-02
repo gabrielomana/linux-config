@@ -165,6 +165,55 @@ function install_core_apps() {
   echo " - Codecs and Drivers"
   sleep 3
   check_installed "${codecs}"
+  #!/bin/bash
+
+    # Graphics Drivers Installation (INTEL, AMD, NVIDIA)
+    echo "INSTALL GRAPHICS DRIVERS"
+    gpu_info=$(lspci | grep -i "VGA compatible controller")
+
+    if echo "$gpu_info" | grep -q "NVIDIA"; then
+        sudo apt-get install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
+        sudo apt-get install -y nvidia-vaapi-driver
+    fi
+
+    if echo "$gpu_info" | grep -q "Advanced Micro Devices"; then
+        sudo apt-get install -y firmware-amd-graphics amdgpu-pro
+        sudo apt-get install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
+    fi
+
+    if echo "$gpu_info" | grep -q "Intel"; then
+        sudo apt-get install -y firmware-misc-nonfree
+        sudo apt-get install -y i965-va-driver
+    fi
+
+    # Identify your processor and install the appropriate drivers and microcodes
+    echo "IDENTIFYING PROCESSOR AND INSTALLING DRIVERS AND MICROCODES"
+    cpu_name=$(lscpu | grep "Model name" | awk '{print $2}')
+
+    if echo "$cpu_name" | grep -q "Intel"; then
+        sudo apt-get install -y intel-microcode
+    elif echo "$cpu_name" | grep -q "AMD"; then
+        sudo apt-get install -y amd64-microcode
+    else
+        echo "Failed to identify the processor."
+    fi
+
+    # Virtual Machine Drivers
+    echo "INSTALL VIRTUAL MACHINE DRIVERS"
+    if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
+      hypervisor=$(cat /sys/class/dmi/id/product_name)
+
+      if [[ "$hypervisor" =~ "VMware" ]]; then
+          sudo apt-get install -y open-vm-tools
+      elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
+          sudo apt-get install -y hyperv-daemons
+      elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
+          sudo apt-get install -y virtualbox-guest-dkms virtualbox-guest-utils
+      elif [[ "$hypervisor" =~ "KVM" ]]; then
+          sudo apt-get install -y qemu-guest-agent
+      fi
+    fi
+
 
   # Utilities
   clear
@@ -242,51 +291,38 @@ function install_multimedia() {
 }
 
 function install_extra_apps() {
-  clear
-  a=0
-  f=0
-  while [ $a -lt 1 ]; do
-    read -p "Do you wish to install Extra APPS? " yn
-    case $yn in
-      [Yy]* )
-        a=1
-        add_extra_repos
-        check_installed "${extra_apps}"
-        f=1
-        clear
-        ;;
-      [Nn]* )
-        a=1
-        echo "OK"
-        clear
-        ;;
-      * ) echo "Please answer yes or no.";;
-    esac
-  done
 
+  while [ $a -lt 1 ]
+do
+    read -p "Do you wish to install Extra APPS? " yn
+        case $yn in
+            [Yy]* ) a=1;f=1;add_extra_repos;heck_installed "${extra_apps}";;
+            [Nn]* ) a=1;echo "OK";clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+
+  # Start and enable libvirtd service
   sudo systemctl start libvirtd
   sudo systemctl enable libvirtd
 
-  sudo echo -e "[Users]
-HideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
+  # Add libvirt-qemu to HideUsers in sddm.conf
+  sudo echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
   clear
-  if [ $f == 1 ]; then
-      # sudo nala install -y balena-etcher
-      # sleep 5
-      # clear
-    # flatpak apps
-      flatpak install flathub org.onlyoffice.desktopeditors -y
-      flatpak install flathub org.strawberrymusicplayer.strawberry
-      # flatpak install flathub io.github.prateekmedia.appimagepool -y
-      # flatpak install flathub app.ytmdesktop.ytmdesktop -y
-      # flatpak install flathub tv.kodi.Kodi -y
-      # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-      # flatpak install flathub io.freetubeapp.FreeTube -y
-      # flatpak install flathub com.github.tenderowl.frog -y
-      # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
-      # flatpak install flathub org.phoenicis.playonlinux -y
-      # flatpak install flathub com.usebottles.bottles -y
+  if [ $f -eq 1 ]; then
+    # Uncomment and modify these lines as needed to install flatpak apps
+    # flatpak install flathub org.onlyoffice.desktopeditors -y
+    # flatpak install flathub org.strawberrymusicplayer.strawberry -y
+    # flatpak install flathub io.github.prateekmedia.appimagepool -y
+    # flatpak install flathub app.ytmdesktop.ytmdesktop -y
+    # flatpak install flathub tv.kodi.Kodi -y
+    # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+    # flatpak install flathub io.freetubeapp.FreeTube -y
+    # flatpak install flathub com.github.tenderowl.frog -y
+    # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+    # flatpak install flathub org.phoenicis.playonlinux -y
+    # flatpak install flathub com.usebottles.bottles -y
   fi
   return
 }

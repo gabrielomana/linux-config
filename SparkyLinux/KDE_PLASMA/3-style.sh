@@ -67,12 +67,7 @@ sleep 3
 # PAPIRUS
 clear
 echo "INSTALL PAPIRUS"
-sudo sh -c "echo 'deb http://ppa.launchpad.net/papirus/papirus/ubuntu focal main' > /etc/apt/sources.list.d/papirus-ppa.list"
-sudo apt-get install dirmngr -y
-sudo gpg --no-default-keyzring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/papirus.gpg --keyserver keyserver.ubuntu.com --recv E58A9D36647CAE7F
-sudo chmod 644 /etc/apt/trusted.gpg.d/papirus.gpg
-sudo apt-get update
-sudo nala update && sudo nala install papirus-icon-theme kvantum -y
+sudo apt install papirus-icon-theme *kvantum* -y
 
 okular ${dir}/customization_guide.pdf
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry

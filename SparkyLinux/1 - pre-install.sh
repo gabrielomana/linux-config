@@ -140,7 +140,7 @@ deb https://deb.debian.org/debian testing-updates main contrib non-free non-free
 deb-src https://deb.debian.org/debian testing-updates main contrib non-free non-free-firmware
 deb https://deb-multimedia.org/ testing main non-free" | sudo tee /etc/apt/sources.list
 
-  sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get full-upgrade -y && sudo apt-get dist-upgrade -y && && sudo apt --fix-broken install && sudo aptitude safe-upgrade -y
+  sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get full-upgrade -y && sudo apt-get dist-upgrade -y && sudo apt --fix-broken install && sudo aptitude safe-upgrade -y
   sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
   sleep 3
   sudo nala fetch --auto --fetches 5 -y
