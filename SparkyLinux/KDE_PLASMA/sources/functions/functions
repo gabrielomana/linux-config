@@ -312,7 +312,7 @@ do
   clear
   if [ $f -eq 1 ]; then
     # Uncomment and modify these lines as needed to install flatpak apps
-    # flatpak install flathub org.onlyoffice.desktopeditors -y
+     flatpak install flathub org.onlyoffice.desktopeditors -y
     # flatpak install flathub org.strawberrymusicplayer.strawberry -y
     # flatpak install flathub io.github.prateekmedia.appimagepool -y
     # flatpak install flathub app.ytmdesktop.ytmdesktop -y
