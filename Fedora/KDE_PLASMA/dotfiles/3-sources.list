@@ -1,0 +1,20 @@
+
+#------------------------------------------------------------------------------#
+#                   OFFICIAL DEBIAN REPOS
+#------------------------------------------------------------------------------#
+
+## Oficiales testing
+deb http://deb.debian.org/debian testing main contrib non-free
+deb http://security.debian.org/ testing-security main contrib non-free
+
+
+#------------------------------------------------------------------------------#
+#                      UNOFFICIAL  REPOS
+#------------------------------------------------------------------------------#
+
+###### 3rd Party Binary Repos
+###Debian Multimedia
+deb https://www.deb-multimedia.org testing main non-free
+
+
+##################################################################################
