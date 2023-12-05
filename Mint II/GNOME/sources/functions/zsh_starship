@@ -1,0 +1,192 @@
+#!/bin/bash
+function install_ZSH_ROOT()
+{
+echo "install_ZSH_ROOT"
+sleep 10
+######## BackUp .zshrc ##########
+if mv -n /root/.zshrc /root/.zshrc-backup-$(date +"%Y-%m-%d"); then # backup .zshrc
+    echo -e "Backed up the current .zshrc to .zshrc-backup-date\n"
+fi
+
+
+######## Installing oh-my-zsh ##########
+clear
+echo -e "Installing oh-my-zsh\n"
+
+if [ -d /root/.oh-my-zsh ]; then
+    echo -e "oh-my-zsh is already installed\n"
+    sudo git -C /root/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
+else
+    sudo git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git /root/.oh-my-zsh
+fi
+sleep 5
+######## dotfiles ##########
+clear
+sudo cp -f dotfiles/.zshrc /root/
+sudo mkdir -p /root/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
+
+if [ -f /root/.zcompdump ]; then
+    sudo mv /root/.zcompdump* /root/.cache/zsh/
+fi
+sleep 5
+######## Plugins ##########
+clear
+###ZSH-AUTOPAIR
+if [ -d /root/.oh-my-zshcustom/custom/plugins/zsh-autopair ]; then
+    cd /root/.oh-my-zsh/custom/plugins/zsh-autopair && git pull
+else
+    sudo git clone https://github.com/hlissner/zsh-autopair /root/.oh-my-zsh/custom/plugins/zsh-autopair
+fi
+
+###zsh-autosuggestions
+if [ -d /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions ]; then
+    cd /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions && git pull
+else
+    sudo git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+fi
+
+###zsh-completions
+if [ -d /root/.oh-my-zsh/custom/plugins/zsh-completions ]; then
+    cd /root/.oh-my-zsh/custom/plugins/zsh-completions && git pull
+else
+    sudo git clone --depth=1 https://github.com/zsh-users/zsh-completions /root/.oh-my-zsh/custom/plugins/zsh-completions
+fi
+
+###zsh-history-substring-search
+if [ -d /root/.oh-my-zsh/custom/plugins/zsh-history-substring-search ]; then
+    cd /root/.oh-my-zsh/custom/plugins/zsh-history-substring-search && git pull
+else
+    sudo git clone --depth=1 https://github.com/zsh-users/zsh-history-substring-search /root/.oh-my-zsh/custom/plugins/zsh-history-substring-search
+fi
+
+###zsh-syntax-highlighting
+if [ -d /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting ]; then
+    cd /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting && git pull
+else
+    sudo git clone https://github.com/zsh-users/zsh-syntax-highlighting.git /root/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+fi
+
+###you-should-use
+if [ -d /root/.oh-my-zsh/custom/plugins/you-should-use ]; then
+    cd /root/.oh-my-zsh/custom/plugins/you-should-use && git pull
+else
+    sudo git clone https://github.com/MichaelAquilina/zsh-you-should-use.git /root/.oh-my-zsh/custom/plugins/you-should-use
+fi
+
+sleep 5
+######## STARSHIP ##########
+clear
+echo -e "Root: STARSHIP"
+sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_1.toml -O /root/.config/starship.toml
+sleep 5
+
+}
+
+function install_ZSH()
+{
+clear
+########Install ZSH##########
+if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
+    echo -e "ZSH and Git are already installed\n"
+else
+    if sudo nala install zsh git wget -y || sudo pacman -S zsh git wget || sudo dnf install -y zsh git wget || sudo yum install -y zsh git wget || sudo brew install git zsh wget || pkg install git zsh wget ; then
+        echo -e "zsh wget and git Installed\n"
+    else
+        echo -e "Please install the following packages first, then try again: zsh git wget \n" && exit
+    fi
+fi
+
+
+######## BackUp .zshrc ##########
+if mv -n ~/.zshrc ~/.zshrc-backup-$(date +"%Y-%m-%d"); then # backup .zshrc
+    echo -e "Backed up the current .zshrc to .zshrc-backup-date\n"
+fi
+
+
+######## Installing oh-my-zsh ##########
+clear
+if [ -d ~/.oh-my-zsh ]; then
+    echo -e "oh-my-zsh is already installed\n"
+    git -C ~/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
+else
+    git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
+fi
+sleep 5
+######## dotfiles ##########
+clear
+cp -f dotfiles/.zshrc ~/
+mkdir -p ~/.cache/zsh/                # this will be used to store .zcompdump zsh completion cache files which normally clutter $HOME
+
+if [ -f ~/.zcompdump ]; then
+    mv ~/.zcompdump* ~/.cache/zsh/
+fi
+sleep 5
+######## Plugins ##########
+clear
+###ZSH-EXA
+if [ -d ~/.oh-my-zsh/custom/plugins/zsh-exa ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-exa && git pull
+else
+    git clone https://github.com/ptavares/zsh-exa.git ~/.oh-my-zsh/custom/plugins/zsh-exa
+fi
+###ZSH-AUTOPAIR
+if [ -d ~/.oh-my-zshcustom/custom/plugins/zsh-autopair ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-autopair && git pull
+else
+    git clone https://github.com/hlissner/zsh-autopair ~/.oh-my-zsh/custom/plugins/zsh-autopair
+fi
+
+###zsh-autosuggestions
+if [ -d ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions && git pull
+else
+    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+fi
+
+###zsh-completions
+if [ -d ~/.oh-my-zsh/custom/plugins/zsh-completions ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-completions && git pull
+else
+    git clone --depth=1 https://github.com/zsh-users/zsh-completions ~/.oh-my-zsh/custom/plugins/zsh-completions
+fi
+
+###zsh-history-substring-search
+if [ -d ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search && git pull
+else
+    git clone --depth=1 https://github.com/zsh-users/zsh-history-substring-search ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
+fi
+
+###zsh-syntax-highlighting
+if [ -d ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting ]; then
+    cd ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting && git pull
+else
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+fi
+
+###you-should-use
+if [ -d ~/.oh-my-zsh/custom/plugins/you-should-use ]; then
+    cd ~/.oh-my-zsh/custom/plugins/you-should-use && git pull
+else
+    git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ~/.oh-my-zsh/custom/plugins/you-should-use
+fi
+sleep 5
+######## STARSHIP ##########
+clear
+curl -sS https://starship.rs/install.sh | sh
+wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_3.toml -O ~/.config/starship.toml
+sleep 5
+
+######## REBOOT ZSH ##########
+# source ~/.zshrc
+clear
+echo -e "\nSudo access is needed to change default shell\n"
+if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
+    echo "ZSH in user: OK"
+    echo "installing ZSH in root..."
+    sleep 3
+else
+    echo -e "Something is wrong"
+fi
+return
+}

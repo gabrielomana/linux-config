@@ -1,0 +1,98 @@
+show_listitem() {
+  #echo -e $'\033[1;37m'"$*"$'\033[0m'
+}
+show_error() {
+  #echo -e $'\033[1;31m'"$*"$'\033[0m' 1>&2
+}
+show_info() {
+  #echo -e $'\033[1;32m'"$*"$'\033[0m'
+}
+show_warning() {
+  #echo -e $'\033[1;33m'"$*"$'\033[0m'
+}
+show_question() {
+  #echo -e $'\033[1;34m'"$*"$'\033[0m'
+}
+ask_question() {
+  #read -r -p $'\033[1;34m'"$* "$'\033[0m' var
+  #echo "${var}"
+}
+show_success() {
+  #echo -e $'\033[1;35m'"$*"$'\033[0m'
+}
+show_header() {
+  #echo -e $'\033[1;36m'"$*"$'\033[0m'
+}
+show_listitem() {
+  #echo -e $'\033[1;37m'"$*"$'\033[0m'
+}
+
+function check_uninstalled {
+  local package
+  list=""
+  while read -r package; do
+    [ -z "${package}" ] && continue
+
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
+
+    if dpkg -s "${package}" >/dev/null 2>&1; then
+       #show_listitem "Purging ${package}."
+       #sudo apt purge --autoremove "${package}"n
+      list="${list} ${package}"
+    fi
+  done < "${1}"
+  c="sudo nala remove --purge "${list}" -y"
+  clear
+#   echo $c
+#   sleep 5
+  eval $c
+  sudo nala autoremove -y
+  sudo nala install -f
+  sudo nala clean
+  sudo apt-get autoclean
+  clear
+}
+
+function check_installed {
+  local package
+  list=""
+  z="";
+
+  while read -r package; do
+    [ -z "${package}" ] && continue
+
+        STR="${package}"
+        SUB='*'
+
+        case $STR in
+
+          *"$SUB"*)
+            list="${list} ${STR}"
+            ;;
+        esac
+
+    # Check if package is installed already before installing.
+    if dpkg -s "${package}" >/dev/null 2>&1; then
+      $z=""
+    else
+       #First check if the package exists in the repos.
+      if ! (apt-cache showsrc "${package}" 2>&1 | grep -q "W: "); then
+        #show_listitem "Installing ${package}."
+        #sudo apt-get -y install "${package}"
+        list="${list} ${package}"
+      fi
+    fi
+  done < "${1}"
+  c="sudo nala install "${list}" -y"
+#   echo $c
+#   sleep 5
+  eval $c
+}
