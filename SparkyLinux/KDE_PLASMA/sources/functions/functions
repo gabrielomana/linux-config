@@ -310,7 +310,7 @@ do
   sudo echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
   clear
-  if [ $f -eq 1 ]; then
+  if [ $f == 1 ]; then
     # Uncomment and modify these lines as needed to install flatpak apps
      flatpak install flathub org.onlyoffice.desktopeditors -y
     # flatpak install flathub org.strawberrymusicplayer.strawberry -y
