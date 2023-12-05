@@ -129,7 +129,6 @@ function add_repos() {
   }
 
   # Add repositories
-  add_repo_with_key "ppa:cappelikan/ppa" "mainline"
   add_repo_with_key "ppa:graphics-drivers/ppa" "nvidia"
   add_repo_with_key "ppa:danielrichter2007/grub-customizer" "grub-customizer"
   add_repo_with_key "ppa:appimagelauncher-team/stable" "appimagelauncher"
@@ -281,7 +280,6 @@ function install_core_apps() {
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   sleep 3
-  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
   check_installed "${tools}"
 
   # Install Node.js module
@@ -297,13 +295,56 @@ function install_core_apps() {
   source ~/.profile
   source ~/.cargo/env
 
+  # Graphics Drivers Installation (INTEL, AMD, NVIDIA)
+  echo "INSTALL GRAPHICS DRIVERS"
+  gpu_info=$(lspci | grep -i "VGA compatible controller")
+
+  if echo "$gpu_info" | grep -q "NVIDIA"; then
+      sudo apt-get install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
+      sudo apt-get install -y nvidia-vaapi-driver
+  elif echo "$gpu_info" | grep -q "Advanced Micro Devices"; then
+      sudo apt-get install -y firmware-amd-graphics amdgpu-pro
+      sudo apt-get install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
+  elif echo "$gpu_info" | grep -q "Intel"; then
+      sudo apt-get install -y firmware-misc-nonfree
+      sudo apt-get install -y i965-va-driver
+  fi
+
+  # Identify your processor and install the appropriate drivers and microcodes
+  echo "IDENTIFYING PROCESSOR AND INSTALLING DRIVERS AND MICROCODES"
+  cpu_name=$(lscpu | grep "Model name" | awk '{print $2}')
+
+  if echo "$cpu_name" | grep -q "Intel"; then
+      sudo apt-get install -y intel-microcode
+  elif echo "$cpu_name" | grep -q "AMD"; then
+      sudo apt-get install -y amd64-microcode
+  else
+      echo "Failed to identify the processor."
+  fi
+
+  # Virtual Machine Drivers
+  echo "INSTALL VIRTUAL MACHINE DRIVERS"
+  if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
+    hypervisor=$(cat /sys/class/dmi/id/product_name)
+
+    if [[ "$hypervisor" =~ "VMware" ]]; then
+        sudo apt-get install -y open-vm-tools
+    elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
+        sudo apt-get install -y hyperv-daemons
+    elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
+        sudo apt-get install -y virtualbox-guest-dkms virtualbox-guest-utils
+    elif [[ "$hypervisor" =~ "KVM" ]]; then
+        sudo apt-get install -y qemu-guest-agent
+    fi
+  fi
+
   # Codecs and Drivers
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   sleep 3
-  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packeges.txt
+  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packages.txt
   check_installed "${codecs}"
 
   # Utilities
@@ -389,6 +430,7 @@ function install_core_apps() {
 }
 
 
+
 #MULTIMEDIA
 function install_multimedia()
 {
@@ -460,11 +502,11 @@ function install_extra_apps() {
     sleep 5
     clear
 
-    sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
-    sudo chmod +x beeper.AppImage
-    ./beeper.AppImage &>/dev/null &
-    sleep 5
-    clear
+    # sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
+    # sudo chmod +x beeper.AppImage
+    # ./beeper.AppImage &>/dev/null &
+    # sleep 5
+    # clear
   fi
 
   return
