@@ -108,9 +108,9 @@ function add_repos() {
   sudo add-apt-repository multiverse -y
 
   # Add backports repository
-  codename=$(curl -sSL http://changelogs.ubuntu.com/meta-release | grep -Po -m1 "(?<=^Version: )\w+")
+  codename=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n1 | cut -d ' ' -f 2 | tr '[:upper:]' '[:lower:]')
   echo "deb http://archive.ubuntu.com/ubuntu/ $codename-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
-  echo "deb-src http://archive.ubuntu.com/ubuntu/ $codename-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
+  #echo "deb-src http://archive.ubuntu.com/ubuntu/ $codename-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
 
   # Array to store keys
   declare -a keys=()
