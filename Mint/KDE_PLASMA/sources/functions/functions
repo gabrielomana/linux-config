@@ -100,9 +100,11 @@ function uninstall_xfce {
 }
 
 function add_repos(){
+sudo nala install gpg -y
 sudo add-apt-repository multiverse -y
-echo -e "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
-echo -e "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse"| sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
+codename=$(curl -sSL http://changelogs.ubuntu.com/meta-release | grep -Po -m1 "(?<=^Version: )\w+")
+echo -e "deb http://archive.ubuntu.com/ubuntu/ $codename-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
+echo -e "deb-src http://archive.ubuntu.com/ubuntu/ $codename-backports main restricted universe multiverse"| sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
 
 ##### KERNEL INSTALLER ####
 sudo add-apt-repository ppa:cappelikan/ppa -y
@@ -163,6 +165,12 @@ sudo add-apt-repository ppa:qbittorrent-team/qbittorrent-stable -y
 ##Fix deprecated Key MINT issue
 sudo mv /etc/apt/trusted.gpg /etc/apt/qbittorrent.gpg
 sudo ln -s /etc/apt/qbittorrent.gpg /etc/apt/trusted.gpg.d/qbittorrent.gpg
+
+###### EZA ####
+sudo mkdir -p /etc/apt/keyrings
+wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
+sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
 
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
@@ -317,14 +325,14 @@ function install_core_apps()
 
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"eza\"\nalias ls=\"eza --icons\"\nalias ll=\"eza -lah --icons\"\nalias la=\"eza -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
   rm -rf ~/.bashrc
   mv ~/aux.txt ~/.bashrc
   source ~/.bashrc
 
   sudo cp /root/.bashrc /root/.bashrc_old
   sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
+  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"eza\"\nalias ls=\"eza --icons\"\nalias ll=\"eza -lah --icons\"\nalias la=\"eza -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\""  | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
   sudo source /root/.bashrc
