@@ -83,8 +83,10 @@ ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 plugins=(colored-man-pages
 	git
 	git-extras
+	fzf-tab
 	zsh-autopair
 	zsh-autosuggestions
+	zsh-completions
 	history-substring-search
 	zsh-syntax-highlighting
 	sudo
@@ -97,7 +99,7 @@ source $ZSH/oh-my-zsh.sh
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
-# You may need to manually set your language environment
+# You may need to manually set your language environmentgedi
 # export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
@@ -118,8 +120,6 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 alias zshr="source ~/.zshrc"
 alias cat="batcat -f"
-alias "kedit"="kwrite"
-alias "gedit"="kwrite"
 alias fupdate="topgrade &&  sudo hblock -O /etc/host"
 alias l="exa "
 alias ls="exa --group-directories-first --icons"
@@ -129,13 +129,16 @@ alias la="exa -a --group-directories-first --icons"
 alias lt="exa --tree --level=2 --icons"
 alias lt3="exa --tree --level=3 --icons"
 alias lt4="exa --tree --level=4 --icons"
+alias lastversion="~/.local/pipx/venvs/lastversion/bin/./lastversion"
+alias kate="/usr/bin/flatpak run --branch=master --arch=x86_64 --command=kate --file-forwarding org.kde.kate"
+alias ytmdesktop="/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop"
 
 #alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-#[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-# ~/.zshrc
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
+        source /etc/profile.d/vte.sh
+fi
 eval "$(starship init zsh)"
-
-

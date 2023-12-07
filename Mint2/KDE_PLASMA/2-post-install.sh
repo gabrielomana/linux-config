@@ -13,8 +13,8 @@ echo "KONSOLE & DOTFILES"
 sleep 3
 
 dir="$(pwd)"
-sudo git clone https://github.com/fastfetch-cli/fastfetch.git /git/linux-config/SparkyLinux/KDE_PLASMA/fastfetch/
-cd /git/linux-config/SparkyLinux/KDE_PLASMA/fastfetch/
+sudo git clone https://github.com/fastfetch-cli/fastfetch.git /tmp/fastfetch/
+cd /tmp/fastfetch/
 sudo mkdir -p build
 cd build
 sudo cmake ..
@@ -23,7 +23,6 @@ sudo cp fastfetch flashfetch /usr/bin/
 cd ${dir}
 fastfetch --gen-config-force
 cp -r dotfiles/fastfetch_config.jsonc ~/.config/fastfetch/config.jsonc
-cp -r dotfiles/sparky ~/.config/fastfetch/sparky
 
 sudo wget https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip
 sudo unzip konsole.zip
