@@ -174,64 +174,36 @@ function add_repos() {
 
 
 function add_extra_repos(){
-###### BRAVE BROWSER ####
-sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
-
-###### ONLY OFFICE ####
-sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
-sudo rm /tmp/*.gpg -rf
-sudo rm ~/.gnupg -rf
-sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
-sudo apt update
-
-mkdir -p ~/.gnupg
-chmod 700 ~/.gnupg
-clear
-SUB='fallida'
-a=0
-while [ $a == 0 ]
-do
-key=$( gnupg-ring:/tmp/onlyoffice.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5)
-sleep 3
-if grep -q "$SUB" <<< "$key"; then
-  sleep 1
-else
-  sleep 3
-  a=1
-  sudo chmod 644 /tmp/onlyoffice.gpg
-  sudo chown root:root /tmp/onlyoffice.gpg
-  sudo mv /tmp/onlyoffice.gpg /etc/apt/trusted.gpg.d/
-  echo 'deb https://download.onlyoffice.com/repo/debian squeeze main' | sudo tee -a /etc/apt/sources.list.d/onlyoffice.list
-fi
-done
+# Add Brave Browser repository
+    sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
 ##BALENA ETCHER
-sudo nala install apt-transport-https -y
-clear
-sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
-sudo rm /etc/apt/trusted.gpg.d/balena* -rf
-sudo rm /usr/share/keyrings/balena* -rf
+  sudo nala install apt-transport-https -y
+  clear
+  sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
+  sudo rm /etc/apt/trusted.gpg.d/balena* -rf
+  sudo rm /usr/share/keyrings/balena* -rf
 
-sudo apt-get clean
-sudo rm -rf "/var/lib/apt/lists/*balena*"
-sudo apt update
-clear
-keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
-curl -1sLf \
-  'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-  | sudo -E bash
+  sudo apt-get clean
+  sudo rm -rf "/var/lib/apt/lists/*balena*"
+  sudo apt update
+  clear
+  keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
+  curl -1sLf \
+    'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
+    | sudo -E bash
 
 ##rEFInd PPA
-sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
-sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
+  sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
+  ##Fix deprecated Key MINT issue
+  sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
+  sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo nala update
-clear
+  sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+  sudo nala update
+  clear
 
 }
 
@@ -282,8 +254,10 @@ function install_core_apps() {
   sleep 3
   check_installed "${tools}"
 
+
   # Install Node.js module
   sudo npm install -g electron-store
+  sudo -H pip3 install --upgrade pip
 
   # Install Rust
   sudo wget https://sh.rustup.rs -O rustup-init.sh
@@ -429,8 +403,6 @@ function install_core_apps() {
   fc-cache -f -v
 }
 
-
-
 #MULTIMEDIA
 function install_multimedia()
 {
@@ -443,72 +415,39 @@ check_installed "${multimedia}"
 
 #EXTRA APPS
 function install_extra_apps() {
-  sudo echo -e "INSTALL EXTRA APPS: \n" >> packeges.txt
-  clear
-  a=0
-  f=0
 
-  while [ $a -lt 1 ]; do
+  while [ $a -lt 1 ]
+do
     read -p "Do you wish to install Extra APPS? " yn
-    case $yn in
-      [Yy]* ) 
-        a=1
-        add_extra_repos
-        check_installed "${extra_apps}"
-        f=1
-        clear
-        ;;
-      [Nn]* ) 
-        a=1
-        echo "OK"
-        clear
-        ;;
-      * ) 
-        echo "Please answer yes or no."
-        ;;
-    esac
-  done
+        case $yn in
+            [Yy]* ) a=1;f=1;add_extra_repos;heck_installed "${extra_apps}";;
+            [Nn]* ) a=1;echo "OK";clear;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
 
+  # Start and enable libvirtd service
   sudo systemctl start libvirtd
   sudo systemctl enable libvirtd
 
+  # Add libvirt-qemu to HideUsers in sddm.conf
+  sudo echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
+
+  clear
   if [ $f == 1 ]; then
-    # Flatpak
-    flatpak install flathub app.ytmdesktop.ytmdesktop -y
-    flatpak install flathub tv.kodi.Kodi -y
-    flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-    flatpak install flathub io.freetubeapp.FreeTube -y
-    flatpak install flathub com.github.tenderowl.frog -y
-    flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
-    flatpak install flathub org.phoenicis.playonlinux -y
-    flatpak install flathub com.usebottles.bottles -y
-
-    # Others
-    clear
-    sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
-    sudo pip3 install -r /git/qr-tools/requirements.txt
-    sudo nala install qtqr -y
-    sleep 5
-    clear
-
-    sudo nala install -y onlyoffice-desktopeditors balena-etcher-electron
-    sleep 5
-    clear
-
-    balena=$(curl -s 'https://api.github.com/repos/balena-io/etcher/releases/latest' | grep browser_download_url | grep '[.]deb' | head -n 1 | cut -d '"' -f 4)
-    wget ${balena}
-    sudo apt install ./balena*.deb --install-suggests -y
-    sudo rm balena*.deb -rf
-    sleep 5
-    clear
-
-    # sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
-    # sudo chmod +x beeper.AppImage
-    # ./beeper.AppImage &>/dev/null &
-    # sleep 5
-    # clear
+    # Uncomment and modify these lines as needed to install flatpak apps
+     flatpak install flathub org.onlyoffice.desktopeditors -y
+    # flatpak install flathub org.strawberrymusicplayer.strawberry -y
+    # flatpak install flathub io.github.prateekmedia.appimagepool -y
+    # flatpak install flathub app.ytmdesktop.ytmdesktop -y
+    # flatpak install flathub tv.kodi.Kodi -y
+    # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+    # flatpak install flathub io.freetubeapp.FreeTube -y
+    # flatpak install flathub com.github.tenderowl.frog -y
+    # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+    # flatpak install flathub org.phoenicis.playonlinux -y
+    # flatpak install flathub com.usebottles.bottles -y
   fi
-
   return
 }
 

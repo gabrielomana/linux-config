@@ -107,8 +107,6 @@ function add_extra_repos() {
     clear
 }
 
-
-
 function install_kde() {
   echo "INSTALL KDE PLASMA:"
   echo " - Install KDE Plasma Core"
@@ -280,8 +278,6 @@ function install_core_apps() {
   sudo cp ../dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
   fc-cache -f -v
 }
-
-
 
 function install_multimedia() {
   clear

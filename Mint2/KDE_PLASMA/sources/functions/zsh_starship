@@ -1,0 +1,178 @@
+#!/bin/bash
+
+function install_ZSH_ROOT() {
+    echo "install_ZSH_ROOT"
+    sleep 10
+
+    backup_zshrc_root() {
+        mv -n /root/.zshrc /root/.zshrc-backup-$(date +"%Y-%m-%d") &> /dev/null
+    }
+
+    install_oh_my_zsh_root() {
+        if [ ! -d /root/.oh-my-zsh ]; then
+            sudo git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git /root/.oh-my-zsh
+        fi
+    }
+
+    copy_dotfiles_root() {
+        sudo cp -f "${dir}/../dotfiles/.zshrc" /root/
+        sudo mkdir -p /root/.cache/zsh/
+        [ -f /root/.zcompdump ] && sudo mv /root/.zcompdump* /root/.cache/zsh/
+    }
+
+    install_plugin_root() {
+        local plugin_name="$1"
+        local plugin_url="$2"
+        local plugin_path="/root/.oh-my-zsh/custom/plugins/$plugin_name"
+
+        if [ ! -d "$plugin_path" ]; then
+            sudo git clone --depth=1 "$plugin_url" "$plugin_path"
+        else
+            sudo git -C "$plugin_path" pull
+        fi
+    }
+
+    install_plugins_root() {
+        local plugins=(
+            "zsh-exa:https://github.com/ptavares/zsh-exa.git"
+            "zsh-autopair:https://github.com/hlissner/zsh-autopair"
+            "zsh-autosuggestions:https://github.com/zsh-users/zsh-autosuggestions"
+            "zsh-completions:https://github.com/zsh-users/zsh-completions"
+            "zsh-history-substring-search:https://github.com/zsh-users/zsh-history-substring-search"
+            "zsh-syntax-highlighting:https://github.com/zsh-users/zsh-syntax-highlighting.git"
+            "you-should-use:https://github.com/MichaelAquilina/zsh-you-should-use.git"
+            "fzf-tab:https://github.com/Aloxaf/fzf-tab"
+        )
+
+        for plugin in "${plugins[@]}"; do
+            local plugin_name="${plugin%%:*}"
+            local plugin_url="${plugin#*:}"
+            install_plugin_root "$plugin_name" "$plugin_url"
+        done
+    }
+
+    install_starship_root() {
+        echo -e "Root: STARSHIP"
+        sudo wget https://starship.rs/install.sh
+        sudo chmod +x install.sh
+        sudo sh ./install.sh &> /dev/null
+        sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_1.toml -O /root/.config/starship.toml
+    }
+
+    clear
+    backup_zshrc_root
+    install_oh_my_zsh_root
+    copy_dotfiles_root
+    install_plugins_root
+    install_starship_root
+    sudo su - -c "chsh -s /bin/zsh root"
+}
+
+
+function install_ZSH() {
+    check_dependencies() {
+        local dependencies=("zsh" "git" "wget")
+
+        for dep in "${dependencies[@]}"; do
+            command -v "$dep" &> /dev/null || return 1
+        done
+
+        return 0
+    }
+
+    install_dependencies() {
+        local package_manager
+
+        if command -v sudo &> /dev/null; then
+            package_manager="sudo nala install"
+        elif command -v pacman &> /dev/null; then
+            package_manager="sudo pacman -S"
+        elif command -v dnf &> /dev/null; then
+            package_manager="sudo dnf install -y"
+        elif command -v yum &> /dev/null; then
+            package_manager="sudo yum install -y"
+        elif command -v brew &> /dev/null; then
+            package_manager="sudo brew install"
+        elif command -v pkg &> /dev/null; then
+            package_manager="pkg install"
+        else
+            echo "Error: Unsupported package manager."
+            exit 1
+        fi
+
+        $package_manager "${dependencies[@]}" || {
+            echo -e "Please install the following packages first: ${dependencies[*]}\n" && exit 1
+        }
+    }
+
+    backup_zshrc() {
+        mv -n ~/.zshrc ~/.zshrc-backup-$(date +"%Y-%m-%d") &> /dev/null
+    }
+
+    install_oh_my_zsh() {
+        if [ ! -d ~/.oh-my-zsh ]; then
+            git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
+        fi
+    }
+
+    copy_dotfiles() {
+        cp -f ../dotfiles/.zshrc ~/ && mkdir -p ~/.cache/zsh/
+        [ -f ~/.zcompdump ] && mv ~/.zcompdump* ~/.cache/zsh/
+    }
+
+    install_plugin() {
+        local plugin_name="$1"
+        local plugin_url="$2"
+        local plugin_path="$HOME/.oh-my-zsh/custom/plugins/$plugin_name"
+
+        if [ ! -d "$plugin_path" ]; then
+            git clone --depth=1 "$plugin_url" "$plugin_path"
+        fi
+    }
+
+    install_plugins() {
+        local plugins=(
+            "zsh-exa:https://github.com/ptavares/zsh-exa.git"
+            "zsh-autopair:https://github.com/hlissner/zsh-autopair"
+            "zsh-autosuggestions:https://github.com/zsh-users/zsh-autosuggestions"
+            "zsh-completions:https://github.com/zsh-users/zsh-completions"
+            "zsh-history-substring-search:https://github.com/zsh-users/zsh-history-substring-search"
+            "zsh-syntax-highlighting:https://github.com/zsh-users/zsh-syntax-highlighting.git"
+            "you-should-use:https://github.com/MichaelAquilina/zsh-you-should-use.git"
+            "fzf-tab:https://github.com/Aloxaf/fzf-tab"
+        )
+
+        for plugin in "${plugins[@]}"; do
+            local plugin_name="${plugin%%:*}"
+            local plugin_url="${plugin#*:}"
+            install_plugin "$plugin_name" "$plugin_url"
+        done
+    }
+
+    install_starship() {
+        curl -sS https://starship.rs/install.sh | sh &> /dev/null
+        wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_1.toml -O ~/.config/starship.toml
+    }
+
+    reboot_zsh() {
+        if chsh -s "$(command -v zsh)" && /bin/zsh -i -c 'omz update'; then
+            install_ZSH_ROOT
+        fi
+    }
+
+    clear
+    check_dependencies || install_dependencies
+    backup_zshrc
+    install_oh_my_zsh
+    copy_dotfiles
+    install_plugins
+    install_starship
+    reboot_zsh
+}
+
+# Function to be called if installing ZSH in root is needed
+function install_ZSH_ROOT() {
+    # Add any additional steps needed for root ZSH installation
+    return
+}
+
