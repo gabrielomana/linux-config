@@ -23,7 +23,7 @@ function install_ZSH_ROOT() {
 
     ######## dotfiles ##########
     clear
-    sudo cp -f $HOME/dotfiles/.zshrc /root/
+    sudo cp -f /dotfiles/.zshrc /root/
     sudo mkdir -p /root/.cache/zsh/
 
     if [ -f /root/.zcompdump ]; then
@@ -34,11 +34,11 @@ function install_ZSH_ROOT() {
     ######## Plugins ##########
     clear
     ###ZSH-EXA
-    if [ -d /root/.oh-my-zsh/custom/plugins/zsh-exa ]; then
-        cd /root/.oh-my-zsh/custom/plugins/zsh-exa && sudo git pull
-    else
-        sudo git clone https://github.com/ptavares/zsh-exa.git /root/.oh-my-zsh/custom/plugins/zsh-exa
-    fi
+    # if [ -d /root/.oh-my-zsh/custom/plugins/zsh-exa ]; then
+    #     cd /root/.oh-my-zsh/custom/plugins/zsh-exa && sudo git pull
+    # else
+    #     sudo git clone https://github.com/ptavares/zsh-exa.git /root/.oh-my-zsh/custom/plugins/zsh-exa
+    # fi
 
     ###ZSH-AUTOPAIR
     if [ -d /root/.oh-my-zsh/custom/plugins/zsh-autopair ]; then
@@ -136,7 +136,7 @@ function install_ZSH() {
 
     ######## dotfiles ##########
     clear
-    cp -f $HOME/dotfiles/.zsh
+    cp -f dotfiles/.zsh
 
 rc ~/
     mkdir -p ~/.cache/zsh/
@@ -149,11 +149,11 @@ rc ~/
     ######## Plugins ##########
     clear
     ###ZSH-EXA
-    if [ -d ~/.oh-my-zsh/custom/plugins/zsh-exa ]; then
-        cd ~/.oh-my-zsh/custom/plugins/zsh-exa && git pull
-    else
-        git clone https://github.com/ptavares/zsh-exa.git ~/.oh-my-zsh/custom/plugins/zsh-exa
-    fi
+    # if [ -d ~/.oh-my-zsh/custom/plugins/zsh-exa ]; then
+    #     cd ~/.oh-my-zsh/custom/plugins/zsh-exa && git pull
+    # else
+    #     git clone https://github.com/ptavares/zsh-exa.git ~/.oh-my-zsh/custom/plugins/zsh-exa
+    # fi
 
     ###ZSH-AUTOPAIR
     if [ -d ~/.oh-my-zsh/custom/plugins/zsh-autopair ]; then
