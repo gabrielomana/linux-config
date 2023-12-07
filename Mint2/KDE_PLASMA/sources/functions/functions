@@ -55,10 +55,6 @@ function check_installed {
    c="sudo nala install "${list}" -y"
    c2="sudo apt install "${list2}" -y"
 
-   sudo su - -c "sudo echo $c >> packeges.txt"
-   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
-   sudo su - -c "sudo echo $c2 >> packeges.txt"
-   sudo su - -c "echo -e \"\n\n\" >> packeges.txt"
    eval $c
    for i in $list2; do
     sudo apt-get install -y $i
@@ -139,13 +135,6 @@ function add_repos() {
   add_repo_with_key "ppa:pipewire-debian/wireplumber-upstream" "wireplumber"
   add_repo_with_key "ppa:qbittorrent-team/qbittorrent-stable" "qbittorrent"
 
-  # Add EZA repository
-  sudo mkdir -p /etc/apt/keyrings
-  wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-  echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
-  sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
-  keys+=("gierens")
-
   # Clean and get missing keys
   sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do
     if ! [[ "${keys[@]}" =~ "$key" ]]; then
@@ -211,7 +200,6 @@ function install_kde {
   # Print installation steps
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
-  sudo echo -e "INSTALL KDE PLASMA: \n" >> packeges.txt
 
   # Check if KDE Plasma is already installed
   check_installed "${kde_plasma}"
@@ -318,7 +306,6 @@ function install_core_apps() {
   echo " - Development tools and libraries"
   echo " - Codecs and Drivers"
   sleep 3
-  sudo echo -e "INSTALL SYSTEM CORE APPS: \n" >> packages.txt
   check_installed "${codecs}"
 
   # Utilities
@@ -351,6 +338,7 @@ function install_core_apps() {
 
   cargo install cargo-update
   cargo install topgrade
+  cargo install eza
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
@@ -409,7 +397,7 @@ function install_multimedia()
 clear
 echo -e "INSTALL MULTIMEDIA APPS: \n"
 sleep 3
-sudo echo -e "INSTALL MULTIMEDIA APPS: \n" >> packeges.txt
+
 check_installed "${multimedia}"
 }
 

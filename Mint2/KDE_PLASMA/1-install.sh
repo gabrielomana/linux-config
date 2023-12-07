@@ -65,4 +65,4 @@ sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo apt --fix-bro
 sudo aptitude safe-upgrade -y
 sudo apt full-upgrade -y
 sudo systemctl disable casper-md5check.service
-reboot
+sudo reboot
