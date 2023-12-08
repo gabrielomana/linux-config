@@ -80,53 +80,25 @@ sudo apt update
 sudo sh -c 'echo "APT::Periodic::Update-Package-Lists \"1\";\nAPT::Periodic::Download-Upgradeable-Packages \"0\";\nAPT::Periodic::AutocleanInterval \"0\";\nAPT::Periodic::Unattended-Upgrade \"1\";" > /etc/apt/apt.conf.d/10periodic'
 sudo sh -c 'echo "Unattended-Upgrade::Allowed-Origins {\n\t\"${distro_id}:${distro_codename}-security\";\n\t\"${distro_id}:${distro_codename}-updates\";\n\t\"${distro_id}ESM:${distro_codename}\";\n};" > /etc/apt/apt.conf.d/50unattended-upgrades'
 
-#!/bin/bash
-
-# Function to determine XanMod kernel version based on CPU features
-get_xanmod_version() {
-    while IFS= read -r line; do
-        if [[ ! $line =~ flags ]]; then
-            exit 1
-        fi
-    done < "/proc/cpuinfo"
-
-    if grep -E "lm|cmov|cx8|fpu|fxsr|mmx|syscall|sse2" "/proc/cpuinfo" &> /dev/null; then
-        level=1
-    fi
-
-    if [[ $level -eq 1 && $(grep -E "cx16|lahf|popcnt|sse4_1|sse4_2|ssse3" "/proc/cpuinfo" | wc -l) -eq 6 ]]; then
-        level=2
-    fi
-
-    if [[ $level -eq 2 && $(grep -E "avx|avx2|bmi1|bmi2|f16c|fma|abm|movbe|xsave" "/proc/cpuinfo" | wc -l) -eq 9 ]]; then
-        level=3
-    fi
-
-    if [[ $level -eq 3 && $(grep -E "avx512f|avx512bw|avx512cd|avx512dq|avx512vl" "/proc/cpuinfo" | wc -l) -eq 5 ]]; then
-        level=4
-    fi
-
-    if [[ $level -gt 0 ]]; then
-        echo "v$level"
-    else
+awk_script='
+    BEGIN {
+        while (!/flags/) if (getline < "/proc/cpuinfo" != 1) exit 1
+        if (/lm/&&/cmov/&&/cx8/&&/fpu/&&/fxsr/&&/mmx/&&/syscall/&&/sse2/) level = 1
+        if (level == 1 && /cx16/&&/lahf/&&/popcnt/&&/sse4_1/&&/sse4_2/&&/ssse3/) level = 2
+        if (level == 2 && /avx/&&/avx2/&&/bmi1/&&/bmi2/&&/f16c/&&/fma/&&/abm/&&/movbe/&&/xsave/) level = 3
+        if (level == 3 && /avx512f/&&/avx512bw/&&/avx512cd/&&/avx512dq/&&/avx512vl/) level = 4
+        if (level > 0) { print "x86-64-v" level; exit level + 1 }
         exit 1
-    fi
-}
+    }
+'
 
-# Get XanMod version
-xanmod_version=$(get_xanmod_version)
+# Ejecuta el script AWK y guarda la salida en una variable
+ver=$(awk "$awk_script")
 
-if [ $? -eq 0 ]; then
-    # Install XanMod kernel
-    sudo apt update
-    sudo apt install -y linux-xanmod-lts"$xanmod_version"
-    echo "XanMod kernel $xanmod_version installed successfully."
-else
-    echo "Error: Unable to determine XanMod kernel version based on CPU features."
-fi
-
-
+# Instala el kernel XanMod utilizando la variable ver
+sudo apt install linux-xanmod-lts$ver -y
 sudo update-initramfs -u
+
 
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
