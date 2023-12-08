@@ -86,7 +86,7 @@ awk_script='
         if (level == 1 && /cx16/&&/lahf/&&/popcnt/&&/sse4_1/&&/sse4_2/&&/ssse3/) level = 2
         if (level == 2 && /avx/&&/avx2/&&/bmi1/&&/bmi2/&&/f16c/&&/fma/&&/abm/&&/movbe/&&/xsave/) level = 3
         if (level == 3 && /avx512f/&&/avx512bw/&&/avx512cd/&&/avx512dq/&&/avx512vl/) level = 4
-        if (level > 0) { print "x86-64-v" level; exit level + 1 }
+        if (level > 0) { print "v" level; exit level + 1 }
         exit 1
     }
 '
@@ -95,7 +95,7 @@ awk_script='
 ver=$(awk "$awk_script")
 
 # Instala el kernel XanMod utilizando la variable ver
-sudo apt linux-xanmod-rt-x64$ver -y
+sudo apt install linux-xanmod-lts-x64$ver -y
 sudo update-initramfs -u
 
 
