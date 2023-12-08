@@ -80,7 +80,10 @@ sudo apt update
 sudo sh -c 'echo "APT::Periodic::Update-Package-Lists \"1\";\nAPT::Periodic::Download-Upgradeable-Packages \"0\";\nAPT::Periodic::AutocleanInterval \"0\";\nAPT::Periodic::Unattended-Upgrade \"1\";" > /etc/apt/apt.conf.d/10periodic'
 sudo sh -c 'echo "Unattended-Upgrade::Allowed-Origins {\n\t\"${distro_id}:${distro_codename}-security\";\n\t\"${distro_id}:${distro_codename}-updates\";\n\t\"${distro_id}ESM:${distro_codename}\";\n};" > /etc/apt/apt.conf.d/50unattended-upgrades'
 
-BEGIN{
+#!/bin/bash
+
+# Function to determine XanMod kernel version based on CPU features
+get_xanmod_version() {
     while ((getline < "/proc/cpuinfo") > 0) {
         if (!/flags/) {
             exit 1
@@ -99,17 +102,23 @@ BEGIN{
         level = 4
     }
     if (level > 0) {
-        ver = level
-        exit level + 1
+        return "v" level
     }
     exit 1
 }
 
-# Append "v" to the version for the package name
-ver = "v"ver
+# Get XanMod version
+xanmod_version=$(get_xanmod_version)
 
-# Install the package using apt
-system("sudo apt install linux-xanmod-lts" ver " -y")
+if [ $? -eq 0 ]; then
+    # Install XanMod kernel
+    sudo apt update
+    sudo apt install -y linux-xanmod-lts"$xanmod_version"
+    echo "XanMod kernel v$xanmod_version installed successfully."
+else
+    echo "Error: Unable to determine XanMod kernel version based on CPU features."
+fi
+
 
 sudo update-initramfs -u
 
