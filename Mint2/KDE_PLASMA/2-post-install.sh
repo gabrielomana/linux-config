@@ -84,27 +84,33 @@ sudo sh -c 'echo "Unattended-Upgrade::Allowed-Origins {\n\t\"${distro_id}:${dist
 
 # Function to determine XanMod kernel version based on CPU features
 get_xanmod_version() {
-    while ((getline < "/proc/cpuinfo") > 0) {
-        if (!/flags/) {
+    while IFS= read -r line; do
+        if [[ ! $line =~ flags ]]; then
             exit 1
-        }
-    }
-    if (/lm/ && /cmov/ && /cx8/ && /fpu/ && /fxsr/ && /mmx/ && /syscall/ && /sse2/) {
-        level = 1
-    }
-    if (level == 1 && /cx16/ && /lahf/ && /popcnt/ && /sse4_1/ && /sse4_2/ && /ssse3/) {
-        level = 2
-    }
-    if (level == 2 && /avx/ && /avx2/ && /bmi1/ && /bmi2/ && /f16c/ && /fma/ && /abm/ && /movbe/ && /xsave/) {
-        level = 3
-    }
-    if (level == 3 && /avx512f/ && /avx512bw/ && /avx512cd/ && /avx512dq/ && /avx512vl/) {
-        level = 4
-    }
-    if (level > 0) {
-        return "v" level
-    }
-    exit 1
+        fi
+    done < "/proc/cpuinfo"
+
+    if grep -E "lm|cmov|cx8|fpu|fxsr|mmx|syscall|sse2" "/proc/cpuinfo" &> /dev/null; then
+        level=1
+    fi
+
+    if [[ $level -eq 1 && $(grep -E "cx16|lahf|popcnt|sse4_1|sse4_2|ssse3" "/proc/cpuinfo" | wc -l) -eq 6 ]]; then
+        level=2
+    fi
+
+    if [[ $level -eq 2 && $(grep -E "avx|avx2|bmi1|bmi2|f16c|fma|abm|movbe|xsave" "/proc/cpuinfo" | wc -l) -eq 9 ]]; then
+        level=3
+    fi
+
+    if [[ $level -eq 3 && $(grep -E "avx512f|avx512bw|avx512cd|avx512dq|avx512vl" "/proc/cpuinfo" | wc -l) -eq 5 ]]; then
+        level=4
+    fi
+
+    if [[ $level -gt 0 ]]; then
+        echo "v$level"
+    else
+        exit 1
+    fi
 }
 
 # Get XanMod version
@@ -114,7 +120,7 @@ if [ $? -eq 0 ]; then
     # Install XanMod kernel
     sudo apt update
     sudo apt install -y linux-xanmod-lts"$xanmod_version"
-    echo "XanMod kernel v$xanmod_version installed successfully."
+    echo "XanMod kernel $xanmod_version installed successfully."
 else
     echo "Error: Unable to determine XanMod kernel version based on CPU features."
 fi
