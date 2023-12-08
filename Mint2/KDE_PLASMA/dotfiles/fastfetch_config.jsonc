@@ -1,7 +1,7 @@
 {
-  "$schema": "https://raw.githubusercontent.com/fastfetch-cli/fastfetch/dev/src/data/json_schema.jsonc",
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
-    "source": "/home/gabriel/.config/fastfetch/sparky", // https://en.wikipedia.org/wiki/Linux#/media/File:Tux.svg
+    //"source": "/home/gabriel/.config/fastfetch/sparky", // https://en.wikipedia.org/wiki/Linux#/media/File:Tux.svg
     // "type": "iterm",
     // "source": "/home/gabriel/.config/fastfetch/SparkyLinux.png", // https://en.wikipedia.org/wiki/Linux#/media/File:Tux.svg
     "width": 15,
@@ -11,21 +11,10 @@
       "left": 1,
       "right": 2
     },
-        "color": {
+    "color": {
       "1": "37",
       "2": "38"
     }
-  },
-  "general": {
-    "allowSlowOperations": true
-  },
-  "display": {
-    "color": {
-      "title": "red"
-    },
-    "percentType": 9,
-    "hideCursor": false,
-    "separator": "   "
   },
   "modules": [
     "title",
@@ -140,10 +129,11 @@
     "type": "Cursor",
     "key": "  ╰🖯"
     },
+
     "break",
     {
-    "type": "custom",
-    "format": "   \\e[38m \\e[37m \\e[36m \\e[35m \\e[34m \\e[33m \\e[32m \\e[31m"
+      "type": "custom",
+      "format": " \u001b[90m  \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m  \u001b[38m"
     }
   ]
 }
