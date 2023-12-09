@@ -21,6 +21,7 @@ sudo cmake ..
 sudo cmake --build . --target fastfetch --target flashfetch
 sudo cp fastfetch flashfetch /usr/bin/
 cd ${dir}
+mkdir ~/.config/fastfetch/
 fastfetch --gen-config-force
 cp -r dotfiles/fastfetch_config.jsonc ~/.config/fastfetch/config.jsonc
 
