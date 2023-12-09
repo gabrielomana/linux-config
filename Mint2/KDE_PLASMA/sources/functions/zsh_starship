@@ -136,9 +136,7 @@ function install_ZSH() {
 
     ######## dotfiles ##########
     clear
-    cp -f dotfiles/.zsh
-
-rc ~/
+    cp -f dotfiles/.zshrc ~/
     mkdir -p ~/.cache/zsh/
 
     if [ -f ~/.zcompdump ]; then
