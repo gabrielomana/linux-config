@@ -21,13 +21,13 @@ function install_ZSH_ROOT() {
     fi
     sleep 5
 
-    ######## dotfiles ##########
+   ######## dotfiles ##########
     clear
-    sudo cp -f /dotfiles/.zshrc /root/
-    sudo mkdir -p /root/.cache/zsh/
+    cp -f dotfiles/.zshrc ~/
+    mkdir -p ~/.cache/zsh/
 
-    if [ -f /root/.zcompdump ]; then
-        sudo mv /root/.zcompdump* /root/.cache/zsh/
+    if [ -f ~/.zcompdump ]; then
+        mv ~/.zcompdump* ~/.cache/zsh/
     fi
     sleep 5
 

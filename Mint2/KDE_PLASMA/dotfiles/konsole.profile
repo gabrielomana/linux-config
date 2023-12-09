@@ -1,4 +1,4 @@
-Appearance]
+[Appearance]
 ColorScheme=Oceanic-Next-custom
 DimmValue=106
 EmojiFont=Noto Color Emoji,12,-1,5,50,0,0,0,0,0
