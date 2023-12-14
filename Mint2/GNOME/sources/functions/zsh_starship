@@ -77,7 +77,7 @@ sleep 5
 ######## STARSHIP ##########
 clear
 echo -e "Root: STARSHIP"
-sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/starship_1.toml -O /root/.config/starship.toml
+sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O /root/.config/starship.toml
 sleep 5
 
 }
