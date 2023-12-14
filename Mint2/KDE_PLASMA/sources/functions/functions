@@ -425,13 +425,21 @@ do
   sudo systemctl start libvirtd
   sudo systemctl enable libvirtd
 
-  # Add libvirt-qemu to HideUsers in sddm.conf
+  #Visual Studio Code
+  wget -q -O vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
+  sudo dpkg -i --force-all vscode.deb
+  sudo apt-get install -y -f
+  rm vscode.deb
+
+
+
   sudo echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
   clear
   if [ $f == 1 ]; then
     # Uncomment and modify these lines as needed to install flatpak apps
      flatpak install flathub org.onlyoffice.desktopeditors -y
+     flatpak install flathub com.github.dail8859.NotepadNext -y
     # flatpak install flathub org.strawberrymusicplayer.strawberry -y
     # flatpak install flathub io.github.prateekmedia.appimagepool -y
     # flatpak install flathub app.ytmdesktop.ytmdesktop -y
