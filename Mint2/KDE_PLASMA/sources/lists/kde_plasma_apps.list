@@ -13,6 +13,7 @@ kfind
 kget
 kinfocenter
 "kio*"
+kdesu
 krdc
 kaccounts-providers
 kio-gdrive
