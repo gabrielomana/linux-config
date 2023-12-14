@@ -409,37 +409,40 @@ check_installed "${multimedia}"
 }
 
 #EXTRA APPS
+Aquí tienes el script corregido:
+
 function install_extra_apps() {
 
-  while [ $a -lt 1 ]
-do
-    read -p "Do you wish to install Extra APPS? " yn
-        case $yn in
-            [Yy]* ) a=1;f=1;add_extra_repos;heck_installed "${extra_apps}";;
-            [Nn]* ) a=1;echo "OK";clear;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
+  a=0
+  f=0
 
-  # Start and enable libvirtd service
+  while [ $a -lt 1 ]; do
+    read -p "Do you wish to install Extra APPS? " yn
+    case $yn in
+      [Yy]* ) a=1; f=1; add_extra_repos; check_installed "${extra_apps}";;
+      [Nn]* ) a=1; echo "OK"; clear;;
+      * ) echo "Please answer yes or no.";;
+    esac
+  done
+
+  # Iniciar y habilitar el servicio libvirtd
   sudo systemctl start libvirtd
   sudo systemctl enable libvirtd
 
-  #Visual Studio Code
+  # Visual Studio Code
   wget -q -O vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
   sudo dpkg -i --force-all vscode.deb
   sudo apt-get install -y -f
   rm vscode.deb
 
-
-
-  sudo echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
+  echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
   clear
+
   if [ $f == 1 ]; then
-    # Uncomment and modify these lines as needed to install flatpak apps
-     flatpak install flathub org.onlyoffice.desktopeditors -y
-     flatpak install flathub com.github.dail8859.NotepadNext -y
+    # Descomenta y modifica estas líneas según sea necesario para instalar aplicaciones flatpak
+    flatpak install flathub org.onlyoffice.desktopeditors -y
+    flatpak install flathub com.github.dail8859.NotepadNext -y
     # flatpak install flathub org.strawberrymusicplayer.strawberry -y
     # flatpak install flathub io.github.prateekmedia.appimagepool -y
     # flatpak install flathub app.ytmdesktop.ytmdesktop -y
@@ -451,7 +454,7 @@ do
     # flatpak install flathub org.phoenicis.playonlinux -y
     # flatpak install flathub com.usebottles.bottles -y
   fi
+
   return
 }
-
 
