@@ -1,6 +1,6 @@
 #!/bin/bash
 dir="$(pwd)"
-exta_apps="${dir}/sources/lists/exta_apps.list"
+extra_apps="${dir}/sources/lists/extra_apps.list"
 
 # Incluir funciones
 . "${dir}/sources/functions/zsh_starship"

@@ -245,7 +245,9 @@ function install_core_apps() {
 
   # Install Node.js module
   sudo npm install -g electron-store
+  npm install -g electron-store
   sudo -H pip3 install --upgrade pip
+  pip3 install --upgrade pip
 
   # Install Rust
   sudo wget https://sh.rustup.rs -O rustup-init.sh
@@ -435,10 +437,10 @@ function install_extra_apps() {
   sudo systemctl enable libvirtd
 
   # Visual Studio Code
-  wget -q -O vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
+  sudo wget -q -O vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
   sudo dpkg -i --force-all vscode.deb
   sudo apt-get install -y -f
-  rm vscode.deb
+  sudo rm vscode.deb -y
 
   echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
