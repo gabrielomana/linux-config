@@ -29,7 +29,7 @@ function check_uninstalled (){
    clear
 }
 
-function check_installed() {
+function check_installed {
   local package
   local to_install=()
   list=""
@@ -167,21 +167,6 @@ function add_extra_repos(){
     sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
-# ##BALENA ETCHER
-#   sudo nala install apt-transport-https -y
-#   clear
-#   sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
-#   sudo rm /etc/apt/trusted.gpg.d/balena* -rf
-#   sudo rm /usr/share/keyrings/balena* -rf
-
-#   sudo apt-get clean
-#   sudo rm -rf "/var/lib/apt/lists/*balena*"
-#   sudo apt update
-#   clear
-#   keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
-#   curl -1sLf \
-#     'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-#     | sudo -E bash
 
 ##rEFInd PPA
   sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
@@ -320,8 +305,8 @@ function install_core_apps() {
   check_installed "${utilities}"
   sudo apt install "util-linux*" -y
 
-  pip install lastversion
-  pip ensurepath
+  sudo pip install lastversion
+  sudo pip ensurepath
 
   # EZA
   sudo mkdir -p /etc/apt/keyrings
@@ -440,7 +425,19 @@ function install_extra_apps() {
   sudo wget -q -O vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
   sudo dpkg -i --force-all vscode.deb
   sudo apt-get install -y -f
-  sudo rm vscode.deb -y
+  sudo rm vscode.deb -rf
+
+  # BALENA ETCHER
+  # Obtener la última versión de Balena Etcher con lastversion
+  balena_version=$(lastversion balena-io/etcher)
+  # Descargar el paquete .deb
+  sudo wget "https://github.com/balena-io/etcher/releases/download/v$balena_version/balena-etcher_$balena_version_amd64.deb"
+  # Instalar Balena Etcher
+  sudo apt install "./balena-etcher_$balena_version_amd64.deb" -y
+  # Eliminar el paquete descargado después de la instalación (opcional)
+  rm "balena-etcher_$balena_version_amd64.deb" -rf
+
+
 
   echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
