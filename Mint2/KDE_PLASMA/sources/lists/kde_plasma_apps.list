@@ -5,6 +5,7 @@ knotes
 "kde-config-cron*"
 krename
 kamoso
+kolourpaint
 kid3
 kcolorchooser
 kcharselect
@@ -13,7 +14,8 @@ kfind
 kget
 kinfocenter
 "kio*"
-kdesu
+kio-admin
+kleopatra
 krdc
 kaccounts-providers
 kio-gdrive
