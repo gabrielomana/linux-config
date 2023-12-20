@@ -39,6 +39,7 @@ cleanup = true
 
 [git]
 max_concurrency = 5
+push_predefined = false
 # Additional git repositories to pull
 repos = [
 #    "~/src/*/",

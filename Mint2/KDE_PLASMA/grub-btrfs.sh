@@ -1,54 +1,54 @@
 #!/bin/bash
+# Verificar si la partición root está montada en un volumen BTRFS
+if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
+    # Ajustar compresión en /etc/fstab
+    sudo sed -i 's|defaults,noatime,space_cache=v2|defaults,noatime,space_cache=v2,compress=zstd:3|g' /etc/fstab
 
-# Adjust compression in /etc/fstab
-sed -i 's|defaults,noatime,space_cache=v2|defaults,noatime,space_cache=v2,compress=zstd:3|g' /etc/fstab
+    # Defragmentar y comprimir datos existentes
+    sudo btrfs filesystem defragment / -r -czstd
 
-# Defragment and compress existing data
-sudo btrfs fi defragment / -r -czstd
+    # Crear subvolúmenes adicionales
+    sudo btrfs subvolume create /@log
+    sudo btrfs subvolume create /@cache
+    sudo btrfs subvolume create /@tmp
 
-# Create additional subvolumes
-btrfs subvolume create /@log
-btrfs subvolume create /@cache
-btrfs subvolume create /@tmp
+    # Mover contenidos a nuevos subvolúmenes
+    sudo mv /@/var/cache/* /@cache/
+    sudo mv /@/var/log/* /@log/
+    
+    # Obtener el UUID del volumen BTRFS
+    UUID=$(lsblk -o UUID / | sed -n 2p)
 
-# Move contents to new subvolumes
-mv /@/var/cache/* /@cache/
-mv /@/var/log/* /@log/
+    # Ajustar compresión en /etc/fstab con los nuevos subvolúmenes
+    sudo echo "UUID=$UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@log 0 2" >> /etc/fstab
+    sudo echo "UUID=$UUID /var/cache btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@cache 0 2" >> /etc/fstab
+    sudo echo "UUID=$UUID /var/tmp btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@tmp 0 2" >> /etc/fstab
 
-# Adjust fstab for new subvolumes
-# Limpiar pantalla
-clear
-# Mostrar el estado actual de /etc/fstab
-echo "Estado actual de /etc/fstab:"
-cat /etc/fstab
-# Solicitar UUID para /var/log
-read -p "Ingresa el UUID para /var/log: " log
-# Solicitar UUID para /var/cache
-read -p "Ingresa el UUID para /var/cache: " cache
-# Solicitar UUID para /var/tmp
-read -p "Ingresa el UUID para /var/tmp: " tmp
-# Ajustar compression en /etc/fstab
-echo "UUID=$log /var/log btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@log 0 2" >> /@/etc/fstab
-echo "UUID=$cache /var/cache btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@cache 0 2" >> /@/etc/fstab
-echo "UUID=$tmp /var/tmp btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@tmp 0 2" >> /@/etc/fstab
+    # Automatizar el proceso de modificación en grub-btrfsd
+    sudo sed -i 's|ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' /etc/systemd/system/grub-btrfsd.service
 
-# Install Timeshift
-sudo apt install timeshift
+    # Instalar Timeshift
+    sudo apt install timeshift
 
-# Install grub-btrfs from sources
-sudo apt install build-essential git
-mkdir -p ~/git
-cd ~/git
-git clone https://github.com/Antynea/grub-btrfs.git
-cd grub-btrfs
-sudo make install
+    # Instalar grub-btrfs desde las fuentes
+    sudo apt install build-essential git
+    mkdir -p ~/git
+    cd ~/git
+    git clone https://github.com/Antynea/grub-btrfs.git
+    cd grub-btrfs
+    sudo make install
 
-# Configure grub-btrfs to monitor Timeshift snapshots
-sudo update-grub
-sudo apt install inotify-tools
-sudo systemctl edit --full grub-btrfsd
-# Change ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots to ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto
+    # Configurar grub-btrfs para monitorear instantáneas de Timeshift
+    sudo update-grub
+    sudo apt install inotify-tools
+    sudo systemctl edit --full grub-btrfsd
+    # Cambiar ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots a ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto
 
-# Start grub-btrfsd and enable at boot
-sudo systemctl start grub-btrfsd
-sudo systemctl enable grub-btrfsd
+    # Iniciar grub-btrfsd y habilitar en el arranque
+    sudo systemctl start grub-btrfsd
+    sudo systemctl enable grub-btrfsd
+
+    echo "Configuración realizada con éxito."
+else
+    echo "La partición root no está montada en un volumen BTRFS."
+fi
