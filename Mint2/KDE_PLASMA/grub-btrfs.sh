@@ -31,11 +31,9 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     sudo apt install timeshift
 
     # Instalar grub-btrfs desde las fuentes
-    sudo apt install build-essential git
-    mkdir -p ~/git
-    cd ~/git
-    git clone https://github.com/Antynea/grub-btrfs.git
-    cd grub-btrfs
+    sudo nala install build-essential git -y
+    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/
+    cd /git/grub-btrfs
     sudo make install
 
     # Configurar grub-btrfs para monitorear instantáneas de Timeshift
