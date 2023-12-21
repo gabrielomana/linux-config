@@ -422,10 +422,37 @@ function install_extra_apps() {
   sudo systemctl enable libvirtd
 
   # Visual Studio Code
-  sudo wget -q -O vscode.deb "https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
-  sudo dpkg -i --force-all vscode.deb
-  sudo apt-get install -y -f
-  sudo rm vscode.deb -rf
+    sudo apt install software-properties-common apt-transport-https wget -y
+    wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+    sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+    sudo apt install code
+    # Instalar la extensión para cambiar la tipografía
+    code --install-extension naumovs.theme-oceanicnext
+    code --install-extension id-ruby.Jetbrains-Mono
+
+    # Configurar la tipografía y el esquema de colores en settings.json
+    echo '{
+        "editor.fontFamily": "'JetBrainsMono Nerd Font', Menlo, Monaco, "Courier New", monospace",
+        "editor.fontLigatures": true,
+        "editor.fontSize": 14,
+        "editor.lineHeight": 24,
+        "editor.fontWeight": "400",
+        "workbench.colorTheme": "Oceanic Next"
+    }' >> ~/.config/Code/User/settings.json
+    # Configurar el esquema de colores en settings.json
+    echo '{
+        "workbench.colorTheme": "Oceanic Next",
+    }' >> ~/.config/Code/User/settings.json
+
+
+    # Instalar extensiones para funcionalidades adicionales
+    code --install-extension vscode-icons-team.vscode-icons  # Iconos para archivos
+    code --install-extension eamodio.gitlens  # GitLens para integración avanzada con Git
+    code --install-extension coenraads.bracket-pair-colorizer-2  # Resalta los pares de corchetes
+    code --install-extension json.schneider.json-autocomplete  # Autocompletar JSON
+    #code --install-extension ritwickdey.LiveServer  # Servidor en vivo para HTML, CSS y JS
+    code --install-extension yzhang.markdown-all-in-one  # Mejoras para la edición de Markdown
+    #code --install-extension formulahendry.code-runner  # Ejecutar código directamente desde el editor
 
   # BALENA ETCHER
   # Obtener la última versión de Balena Etcher con lastversion
@@ -447,6 +474,7 @@ function install_extra_apps() {
     # Descomenta y modifica estas líneas según sea necesario para instalar aplicaciones flatpak
     flatpak install flathub org.onlyoffice.desktopeditors -y
     flatpak install flathub com.github.dail8859.NotepadNext -y
+    flatpak install flathub org.flameshot.Flameshot -y
     # flatpak install flathub org.strawberrymusicplayer.strawberry -y
     # flatpak install flathub io.github.prateekmedia.appimagepool -y
     # flatpak install flathub app.ytmdesktop.ytmdesktop -y
