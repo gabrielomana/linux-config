@@ -129,25 +129,29 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     sudo sed -i 's|ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' /etc/systemd/system/grub-btrfsd.service
 
     # Instalar Timeshift
-    sudo apt install timeshift
+    sudo apt install timeshift -y
 
     # Instalar grub-btrfs desde las fuentes
     sudo nala install build-essential git -y
-    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/
+    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
     cd /git/grub-btrfs
     sudo make install
 
     # Configurar grub-btrfs para monitorear instantáneas de Timeshift
     sudo update-grub
-    sudo apt install inotify-tools
-    sudo systemctl edit --full grub-btrfsd
+    sudo apt install inotify-tools -y
+    #sudo systemctl edit --full grub-btrfsd
     # Cambiar ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots a ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto
+    sudo sed -i 's|ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' /etc/systemd/system/grub-btrfsd.service
 
     # Iniciar grub-btrfsd y habilitar en el arranque
     sudo systemctl start grub-btrfsd
     sudo systemctl enable grub-btrfsd
+    sudo systemctl daemon-reload
+    sudo systemctl restart grub-btrfsd
 
     echo "Configuración realizada con éxito."
+
 else
     echo "La partición root no está montada en un volumen BTRFS."
 fi
