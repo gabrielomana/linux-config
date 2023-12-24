@@ -110,18 +110,22 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
 
     # Modificar el archivo /etc/fstab para la partición raíz
-    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=zstd:3 0       1|" "/etc/fstab"
+    #sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=zstd:3 0       1|" "/etc/fstab"
+    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=lzo 0       1|" "/etc/fstab"
+
 
     # Modificar el archivo /etc/fstab para la partición home
-    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@home 0       2|" "/etc/fstab"
+    #sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@home 0       2|" "/etc/fstab"
+    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
 
     # Limpiar la pantalla
     clear
     cat /etc/fstab
 
     # Desfragmentar el sistema de archivos Btrfs
-    sudo btrfs filesystem defragment / -r -czstd
-
+    #sudo btrfs filesystem defragment / -r -czstd
+    sudo btrfs filesystem defragment / -r -clzo
+    
     # Crear subvolúmenes adicionales
     sudo btrfs subvolume create /mnt/@log
     sudo btrfs subvolume create /mnt/@cache
