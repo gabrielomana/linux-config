@@ -103,56 +103,102 @@ sudo update-initramfs -u
 ##################### GRUB-BTRFS ####################################
 # Verificar si la partición root está en Btrfs
 if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
-    # Ajustar compresión en /etc/fstab
-    sudo sed -i 's|defaults,noatime,space_cache=v2|defaults,noatime,space_cache=v2,compress=zstd:3|g' /etc/fstab
+    # Obtener el UUID de la partición raíz
+    ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
 
-    # Defragmentar y comprimir datos existentes
+    # Obtener el UUID de la partición home
+    HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
+
+    # Modificar el archivo /etc/fstab para la partición raíz
+    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=zstd:3 0       1|" "/etc/fstab"
+
+    # Modificar el archivo /etc/fstab para la partición home
+    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@home 0       2|" "/etc/fstab"
+
+    # Limpiar la pantalla
+    clear
+    cat /etc/fstab
+
+    # Desfragmentar el sistema de archivos Btrfs
     sudo btrfs filesystem defragment / -r -czstd
 
     # Crear subvolúmenes adicionales
-    sudo btrfs subvolume create /@log
-    sudo btrfs subvolume create /@cache
-    sudo btrfs subvolume create /@tmp
+    sudo btrfs subvolume create /mnt/@log
+    sudo btrfs subvolume create /mnt/@cache
+    sudo btrfs subvolume create /mnt/@tmp
 
-    # Mover contenidos a nuevos subvolúmenes
-    sudo mv /@/var/cache/* /@cache/
-    sudo mv /@/var/log/* /@log/
+    # Función para manejar errores
+    handle_error() {
+        echo "Ocurrió un error durante la transferencia. No se realizaron eliminaciones."
+    }
 
-    # Obtener el UUID del volumen BTRFS
+    # Definir directorios de origen y destino
+    SOURCE_CACHE_DIR="/var/cache"
+    DEST_CACHE_DIR="/mnt/@cache"
+    SOURCE_LOG_DIR="/var/log"
+    DEST_LOG_DIR="/mnt/@log"
+
+    # Verificar si hay archivos en el directorio de origen
+    if [ -n "$(ls -A $SOURCE_CACHE_DIR)" ]; then
+        # Intentar mover el contenido de /var/cache a /@cache
+        if sudo rsync -avP $SOURCE_CACHE_DIR/* $DEST_CACHE_DIR/; then
+            # Si el primer rsync es exitoso, intentar el segundo rsync
+            if sudo rsync -avP $SOURCE_LOG_DIR/* $DEST_LOG_DIR/; then
+                # Si ambos rsync son exitosos, eliminar los datos originales
+                sudo rm -rf $SOURCE_CACHE_DIR/*
+                sudo rm -rf $SOURCE_LOG_DIR/*
+            else
+                # Si el segundo rsync falla, manejar el error
+                handle_error
+            fi
+        else
+            # Si el primer rsync falla, manejar el error
+            handle_error
+        fi
+    else
+        echo "El directorio $SOURCE_CACHE_DIR está vacío. No se realizaron operaciones."
+    fi
+
+    # Verificar si el archivo fstab existe
     fstab="/etc/fstab"
-    UUID=$(grep '/ ' "$fstab" | awk '{print $1}' | cut -d= -f2 | tr -d '#' | tr -d '\n')
-
-    # Ajustar compresión en /etc/fstab con los nuevos subvolúmenes
-    echo "UUID=$UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@log 0 2" | sudo tee -a "$fstab"
-    echo "UUID=$UUID /var/cache btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@cache 0 2" | sudo tee -a "$fstab"
-    echo "UUID=$UUID /var/tmp btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@tmp 0 2" | sudo tee -a "$fstab"
+    if [ -e "$fstab" ]; then
+        # Ajustar compresión en /etc/fstab con los nuevos subvolúmenes
+        echo "# Adding New Subvolumes" | sudo tee -a "$fstab"
+        echo "UUID=$ROOT_UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@log 0 2" | sudo tee -a "$fstab"
+        echo "UUID=$ROOT_UUID /var/cache btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@cache 0 2" | sudo tee -a "$fstab"
+        echo "UUID=$ROOT_UUID /var/tmp btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@tmp 0 2" | sudo tee -a "$fstab"
+    else
+        echo "El archivo $fstab no existe. Verifica la ruta del archivo."
+    fi
 
     # Instalar Timeshift
     sudo apt install timeshift -y
 
-    # Instalar grub-btrfs desde las fuentes
+    # Instalar herramientas de compilación y git
     sudo apt install build-essential git -y
+
+    # Clonar el repositorio de grub-btrfs y compilar e instalar
     sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
     cd /git/grub-btrfs
     sudo make install
 
-    # Iniciar grub-btrfsd y habilitar en el arranque
+    # Instalar inotify-tools
+    sudo apt install inotify-tools -y
+
+    # Modificar el archivo del servicio para agregar --timeshift-auto
+    SERVICE_FILE="/etc/systemd/system/grub-btrfsd.service"
+    sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
+
+    # Recargar la configuración de systemd
+    sudo systemctl daemon-reload
+
+    # Reiniciar el servicio
+    sudo systemctl restart grub-btrfsd
     sudo systemctl start grub-btrfsd
     sudo systemctl enable grub-btrfsd
 
-    # Automatizar el proceso de modificación en grub-btrfsd
-    sudo sed -i 's|ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' /etc/systemd/system/grub-btrfsd.service
-
-    # Configurar grub-btrfs para monitorear instantáneas de Timeshift
+    # Actualizar grub
     sudo update-grub
-    sudo apt install inotify-tools -y
-    sudo sed -i 's|ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' /etc/systemd/system/grub-btrfsd.service
-
-    # Iniciar grub-btrfsd y habilitar en el arranque
-    sudo systemctl daemon-reload
-    sudo systemctl restart grub-btrfsd
-
-    echo "Configuración realizada con éxito."
 
 else
     echo "La partición root no está montada en un volumen BTRFS."
