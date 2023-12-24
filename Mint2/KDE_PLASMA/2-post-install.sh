@@ -111,7 +111,7 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
 
     # Modificar el archivo /etc/fstab para la partición raíz
     #sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=zstd:3 0       1|" "/etc/fstab"
-    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=lzo 0       1|" "/etc/fstab"
+    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
 
 
     # Modificar el archivo /etc/fstab para la partición home
@@ -125,52 +125,55 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     # Desfragmentar el sistema de archivos Btrfs
     #sudo btrfs filesystem defragment / -r -czstd
     sudo btrfs filesystem defragment / -r -clzo
-    
+
     # Crear subvolúmenes adicionales
     sudo btrfs subvolume create /mnt/@log
     sudo btrfs subvolume create /mnt/@cache
     sudo btrfs subvolume create /mnt/@tmp
 
-    # Función para manejar errores
-    handle_error() {
-        echo "Ocurrió un error durante la transferencia. No se realizaron eliminaciones."
-    }
+    sudo mv /var/cache/* /mnt/@cache/ -rf
+    sudo mv /var/log/* /mnt/@log/ -rf
 
-    # Definir directorios de origen y destino
-    SOURCE_CACHE_DIR="/var/cache"
-    DEST_CACHE_DIR="/mnt/@cache"
-    SOURCE_LOG_DIR="/var/log"
-    DEST_LOG_DIR="/mnt/@log"
+    # # Función para manejar errores
+    # handle_error() {
+    #     echo "Ocurrió un error durante la transferencia. No se realizaron eliminaciones."
+    # }
 
-    # Verificar si hay archivos en el directorio de origen
-    if [ -n "$(ls -A $SOURCE_CACHE_DIR)" ]; then
-        # Intentar mover el contenido de /var/cache a /@cache
-        if sudo rsync -avP $SOURCE_CACHE_DIR/* $DEST_CACHE_DIR/; then
-            # Si el primer rsync es exitoso, intentar el segundo rsync
-            if sudo rsync -avP $SOURCE_LOG_DIR/* $DEST_LOG_DIR/; then
-                # Si ambos rsync son exitosos, eliminar los datos originales
-                sudo rm -rf $SOURCE_CACHE_DIR/*
-                sudo rm -rf $SOURCE_LOG_DIR/*
-            else
-                # Si el segundo rsync falla, manejar el error
-                handle_error
-            fi
-        else
-            # Si el primer rsync falla, manejar el error
-            handle_error
-        fi
-    else
-        echo "El directorio $SOURCE_CACHE_DIR está vacío. No se realizaron operaciones."
-    fi
+    # # Definir directorios de origen y destino
+    # SOURCE_CACHE_DIR="/var/cache"
+    # DEST_CACHE_DIR="/mnt/@cache"
+    # SOURCE_LOG_DIR="/var/log"
+    # DEST_LOG_DIR="/mnt/@log"
 
+    # # Verificar si hay archivos en el directorio de origen
+    # if [ -n "$(ls -A $SOURCE_CACHE_DIR)" ]; then
+    #     # Intentar mover el contenido de /var/cache a /@cache
+    #     if sudo rsync -avP $SOURCE_CACHE_DIR/* $DEST_CACHE_DIR/; then
+    #         # Si el primer rsync es exitoso, intentar el segundo rsync
+    #         if sudo rsync -avP $SOURCE_LOG_DIR/* $DEST_LOG_DIR/; then
+    #             # Si ambos rsync son exitosos, eliminar los datos originales
+    #             sudo rm -rf $SOURCE_CACHE_DIR/*
+    #             sudo rm -rf $SOURCE_LOG_DIR/*
+    #         else
+    #             # Si el segundo rsync falla, manejar el error
+    #             handle_error
+    #         fi
+    #     else
+    #         # Si el primer rsync falla, manejar el error
+    #         handle_error
+    #     fi
+    # else
+    #     echo "El directorio $SOURCE_CACHE_DIR está vacío. No se realizaron operaciones."
+    # fi
+    ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
     # Verificar si el archivo fstab existe
     fstab="/etc/fstab"
     if [ -e "$fstab" ]; then
         # Ajustar compresión en /etc/fstab con los nuevos subvolúmenes
         echo "# Adding New Subvolumes" | sudo tee -a "$fstab"
-        echo "UUID=$ROOT_UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@log 0 2" | sudo tee -a "$fstab"
-        echo "UUID=$ROOT_UUID /var/cache btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@cache 0 2" | sudo tee -a "$fstab"
-        echo "UUID=$ROOT_UUID /var/tmp btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@tmp 0 2" | sudo tee -a "$fstab"
+        echo "UUID=$ROOT_UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@log 0 2" | sudo tee -a "$fstab"
+        echo "UUID=$ROOT_UUID /var/cache btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@cache 0 2" | sudo tee -a "$fstab"
+        echo "UUID=$ROOT_UUID /var/tmp btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@tmp 0 2" | sudo tee -a "$fstab"
     else
         echo "El archivo $fstab no existe. Verifica la ruta del archivo."
     fi
