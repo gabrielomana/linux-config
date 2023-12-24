@@ -120,7 +120,7 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
 
     # Obtener el UUID del volumen BTRFS
     fstab="/etc/fstab"
-    UUID=$(grep '/ ' "$fstab" | awk '{print $1}' | cut -d= -f2 | tr -d '#')
+    UUID=$(grep '/ ' "$fstab" | awk '{print $1}' | cut -d= -f2 | tr -d '#' | tr -d '\n')
 
     # Ajustar compresión en /etc/fstab con los nuevos subvolúmenes
     echo "UUID=$UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=zstd:3,subvol=@log 0 2" | sudo tee -a "$fstab"
