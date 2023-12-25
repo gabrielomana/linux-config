@@ -519,8 +519,41 @@ function install_extra_apps() {
   # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
   # flatpak install flathub org.phoenicis.playonlinux -y
   # flatpak install flathub com.usebottles.bottles -y
-  fi
 
-  return
+  #KODI + ACESTREAM
+
+  flatpak install flathub tv.kodi.Kodi -y
+  # Obtener enlace de la última versión de AceStream
+  last_version_link=$(lastversion --assets https://github.com/bro2020/acestream-appimage/releases)
+
+  # Directorio de instalación
+  install_dir="/opt/AceStream"
+
+  # Crear directorio si no existe y asignar permisos 777
+  sudo mkdir -p "$install_dir"
+  sudo chmod 777 "$install_dir"
+
+  # Descargar la última versión
+  sudo wget -O "$install_dir/AceStream.AppImage" "$last_version_link"
+
+  # Descargar la imagen y guardar como acestream_logo.png
+  sudo wget -O "$install_dir/acestream_logo.png" "https://avatars.githubusercontent.com/u/15086619?v=4"
+
+  # Dar permisos de ejecución
+  sudo chmod +x "$install_dir/AceStream.AppImage"
+
+  # Crear lanzador de aplicación
+  desktop_file="/usr/share/applications/acestream.desktop"
+  echo "[Desktop Entry]
+  Name=AceStream
+  Exec=konsole -e '/opt/AceStream/AceStream.AppImage --client-console --no-sandbox'
+  Icon=/opt/AceStream/acestream_logo.png
+  Type=Application
+  Categories=Network;" | sudo tee "$desktop_file"
+
+
+    fi
+
+return
 }
 
