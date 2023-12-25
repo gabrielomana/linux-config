@@ -5,6 +5,7 @@ extra_apps="${dir}/sources/lists/extra_apps.list"
 # Incluir funciones
 . "${dir}/sources/functions/zsh_starship"
 . "${dir}/sources/functions/functions"
+sudo chmod 1777 /var/tmp/
 
 ########## KONSOLE #############################################
 neofetch
@@ -44,6 +45,9 @@ sudo rm -rf /tmp/konsole/
 
 # Configurar perfil de Konsole
 cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
+
+# Configurar featherpad
+cp -r dotfiles/fp.conf ~/.config/featherpad/fp.conf
 
 # Configurar neofetch y topgrade
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
@@ -98,115 +102,6 @@ ver=$(awk "$awk_script")
 # Instala el kernel XanMod utilizando la variable ver
 sudo apt install linux-xanmod-lts-x64$ver -y
 sudo update-initramfs -u
-
-# Verificar si la partición root está en Btrfs
-if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
-    # Obtener el UUID de la partición raíz
-    ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
-
-    # Obtener el UUID de la partición home
-    HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
-
-    # Modificar el archivo /etc/fstab para la partición raíz
-    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
-
-    # Modificar el archivo /etc/fstab para la partición home
-    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
-
-    # Limpiar la pantalla
-    clear
-    cat /etc/fstab
-
-    # Desfragmentar el sistema de archivos Btrfs
-    sudo btrfs filesystem defragment / -r -clzo
-
-    # Crear subvolúmenes adicionales
-    root_partition=$(df -h / | awk 'NR==2 {print $1}')
-    echo "La raíz está montada en la partición: $root_partition"
-
-    # Creamos el directorio /mnt si no existe
-    sudo mkdir -p /mnt
-
-    # Montamos la partición raíz en /mnt
-    sudo mount $root_partition /mnt
-
-    # Crear subvolúmenes adicionales
-    sudo btrfs subvolume create /mnt/@log
-    sudo btrfs subvolume create /mnt/@cache
-    sudo btrfs subvolume create /mnt/@tmp
-
-    # Mover los contenidos existentes de /var/cache y /var/log a los nuevos subvolúmenes
-    sudo mv /var/cache/* /mnt/@cache/
-    sudo mv /var/log/* /mnt/@log/
-
-    # Obtener el UUID de la partición raíz
-    ROOT_UUID=$(blkid -s UUID -o value $root_partition)
-
-    # Verificar si el archivo fstab existe
-    fstab="/etc/fstab"
-    if [ -e "$fstab" ]; then
-        # Ajustar compresión en /etc/fstab con los nuevos subvolúmenes
-        {
-            echo "# Adding New Subvolumes"
-            echo "UUID=$ROOT_UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@log 0 2"
-            echo "UUID=$ROOT_UUID /var/cache btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@cache 0 2"
-            echo "UUID=$ROOT_UUID /var/tmp btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@tmp 0 2"
-        } | sudo tee -a "$fstab" > /dev/null
-    else
-        echo "El archivo $fstab no existe. Verifica la ruta del archivo."
-    fi
-
-    # Desmontar la partición /mnt
-    sudo umount /mnt
-    echo "La partición /mnt ha sido desmontada."
-
-    # Instalar Timeshift
-    sudo apt install timeshift -y
-
-    # Instalar herramientas de compilación y git
-    sudo apt install build-essential git -y
-
-    # Clonar el repositorio de grub-btrfs y compilar e instalar
-    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
-    (
-        cd /git/grub-btrfs || exit
-        sudo make install
-    )
-
-     # Instalar inotify-tools
-    sudo apt install inotify-tools -y
-
-    # Modificar el archivo del servicio para agregar --timeshift-auto
-    SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
-    sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
-
-    # Recargar la configuración de systemd
-    sudo systemctl daemon-reload
-
-    # Cambia el nombre del archivo timeshift-gtk en /usr/bin/
-    sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
-
-    # Crea un nuevo archivo timeshift-gtk con el contenido dado
-    echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
-
-    # Otorga permisos de ejecución al nuevo archivo
-    sudo chmod +x /usr/bin/timeshift-gtk
-
-    sudo systemctl stop timeshift && sudo systemctl disable timeshift
-    sudo chmod +s /usr/bin/grub-btrfsd
-
-
-    # Reiniciar el servicio
-    sudo systemctl restart grub-btrfsd
-    sudo systemctl start grub-btrfsd
-    sudo systemctl enable grub-btrfsd
-
-    # Actualizar grub
-    sudo update-grub
-
-else
-    echo "La partición root no está montada en un volumen BTRFS."
-fi
 
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################

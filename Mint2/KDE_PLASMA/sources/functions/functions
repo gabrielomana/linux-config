@@ -153,6 +153,7 @@ function add_repos() {
   sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
   sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
   sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
+  sudo chmod 1777 /var/tmp/
 
   # Set priorities for Flatpak remotes
   sudo flatpak remote-modify --system --prio=1 kde
@@ -167,6 +168,13 @@ function add_extra_repos(){
     sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
+# Add VSCODE repository
+sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+sudo apt install software-properties-common apt-transport-https wget -y
+wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+ ##Fix deprecated Key MINT issue
+  sudo mv /etc/apt/trusted.gpg /etc/apt/vscode.gpg
+  sudo ln -s /etc/apt/vscode.gpg /etc/apt/trusted.gpg.d/vscode.gpg
 
 ##rEFInd PPA
   sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
@@ -308,6 +316,33 @@ function install_core_apps() {
   sudo pip install lastversion
   sudo pip ensurepath
 
+  #flameshot
+
+    # Archivo de configuración
+    archivo_config="$HOME/.config/kglobalshortcutsrc"
+
+    # Contenido de los atajos
+    atajo_flameshot="[org.flameshot.Flameshot.desktop]
+    Capture=Print,none,Tomar captura de pantalla
+    Configure=Ctrl+Shift+Print,none,Configurar
+    Launcher=Ctrl+Print,none,Open launcher
+    _k_friendly_name=Flameshot
+    _launch=none,none,Flameshot"
+
+    atajo_plasma="[PlasmaShortcuts]
+    Print=flameshot gui"
+
+    atajo_script="[flameshot.desktop]
+    _k_friendly_name=\\sgui --raw | tesseract stdin stdout | awk '{if (NR>1) print p; p=$0}' | xclip -in -selection clipboard
+    _launch=Ctrl+Shift+P,none,flameshot gui --raw | tesseract stdin stdout | awk '{if (NR>1) print p; p=$0}' | xclip -in -selection clipboard"
+
+    # Añadir atajos directamente
+    echo -e "$atajo_flameshot" | sudo tee -a "$archivo_config" > /dev/null
+    echo -e "$atajo_plasma" | sudo tee -a "$archivo_config" > /dev/null
+    echo -e "$atajo_script" | sudo tee -a "$archivo_config" > /dev/null
+    # Ejecutar kbuildsycoca5 con sudo
+    sudo kbuildsycoca5
+
   # EZA
   sudo mkdir -p /etc/apt/keyrings
   wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
@@ -316,21 +351,21 @@ function install_core_apps() {
   sudo apt update
   sudo apt install -y eza
 
-  # Configurar aliases
+  # Configurar aliases en el archivo de usuario
   cp ~/.bashrc ~/.bashrc_old
   cp ~/.bashrc ~/aux.txt
-  echo -e "alias cat=\"batcat -f\"\nalias l=\"eza\"\nalias ls=\"eza --icons\"\nalias ll=\"eza -lah --icons\"\nalias la=\"eza -a --icons\"\nalias fupdate=\"topgrade && sudo hblock -O /etc/host\"\nalias featherpad='kedit'" >> ~/aux.txt
+  echo -e "alias cat=\"batcat -f\"\nalias l=\"eza\"\nalias ls=\"eza --icons\"\nalias ll=\"eza -lah --icons\"\nalias la=\"eza -a --icons\"\nalias fupdate=\"topgrade && sudo hblock -O /etc/host\"\nalias featherpad='kedit'\nalias kedit='featherpad'" >> ~/aux.txt
   rm -rf ~/.bashrc
   mv ~/aux.txt ~/.bashrc
   source ~/.bashrc
 
+  # Configurar aliases en el archivo de root
   sudo cp /root/.bashrc /root/.bashrc_old
   sudo cp /root/.bashrc /root/aux.txt
-  echo -e "alias cat=\"batcat -f\"\nalias l=\"eza\"\nalias ls=\"eza --icons\"\nalias ll=\"eza -lah --icons\"\nalias la=\"eza -a --icons\"\nalias fupdate=\"topgrade && sudo hblock -O /etc/host\"\nalias featherpad='kedit'" | sudo tee -a /root/aux.txt
+  echo -e "alias cat=\"batcat -f\"\nalias l=\"eza\"\nalias ls=\"eza --icons\"\nalias ll=\"eza -lah --icons\"\nalias la=\"eza -a --icons\"\nalias fupdate=\"topgrade && sudo hblock -O /etc/host\"\nalias featherpad='kedit'\nalias kedit='featherpad'" | sudo tee -a /root/aux.txt
   sudo rm -rf /root/.bashrc
   sudo mv /root/aux.txt /root/.bashrc
   sudo source /root/.bashrc
-
 
   sudo npm install -g hblock
   hblock
@@ -401,10 +436,7 @@ check_installed "${multimedia}"
 }
 
 #EXTRA APPS
-Aquí tienes el script corregido:
-
 function install_extra_apps() {
-
   a=0
   f=0
 
@@ -417,42 +449,47 @@ function install_extra_apps() {
     esac
   done
 
+  if [ $f == 1 ]; then
+    #Instalar APPS
+
   # Iniciar y habilitar el servicio libvirtd
   sudo systemctl start libvirtd
   sudo systemctl enable libvirtd
+  echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
-  # Visual Studio Code
-    sudo apt install software-properties-common apt-transport-https wget -y
-    wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
-    sudo apt install code
-    # Instalar la extensión para cambiar la tipografía
-    code --install-extension naumovs.theme-oceanicnext
-    code --install-extension id-ruby.Jetbrains-Mono
+  # Borrar el archivo de configuración existente, si existe
+  sudo rm -f ~/.config/Code/User/settings.json
 
-    # Configurar la tipografía y el esquema de colores en settings.json
-    echo '{
-        "editor.fontFamily": "'JetBrainsMono Nerd Font', Menlo, Monaco, "Courier New", monospace",
-        "editor.fontLigatures": true,
-        "editor.fontSize": 14,
-        "editor.lineHeight": 24,
-        "editor.fontWeight": "400",
-        "workbench.colorTheme": "Oceanic Next"
-    }' >> ~/.config/Code/User/settings.json
-    # Configurar el esquema de colores en settings.json
-    echo '{
-        "workbench.colorTheme": "Oceanic Next",
-    }' >> ~/.config/Code/User/settings.json
+  # Configurar Visual Studio Code
+  echo '{
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true,
+      "prettier.singleQuote": true,
+      "prettier.trailingComma": "all",
+      "prettier.jsxSingleQuote": true,
+      "prettier.printWidth": 80,
+      "editor.fontFamily": "\"JetBrainsMono Nerd Font\", Menlo, Monaco, \"Courier New\", monospace, \"Noto Color Emoji\"",
+      "editor.fontLigatures": true,
+      "editor.fontSize": 14,
+      "editor.lineHeight": 24,
+      "editor.fontWeight": "400",
+      "workbench.colorTheme": "One Monokai"
+  }' | sudo tee -a ~/.config/Code/User/settings.json
 
+  # Instalar extensiones adicionales
+  code --install-extension naumovs.theme-onemonokai
+  code --install-extension id-ruby.Jetbrains-Mono
+  code --install-extension vscode-icons-team.vscode-icons
+  code --install-extension eamodio.gitlens
+  code --install-extension coenraads.bracket-pair-colorizer-2
+  code --install-extension json.schneider.json-autocomplete
+  code --install-extension yzhang.markdown-all-in-one
+  code --install-extension shakram02.bash-beautify
+  code --install-extension KevinRose.vsc-python-indent
+  code --install-extension hb432.prettier-eslint-typescript
+  code --install-extension bodil.prettier-toml
+  code --install-extension be5invis.toml
 
-    # Instalar extensiones para funcionalidades adicionales
-    code --install-extension vscode-icons-team.vscode-icons  # Iconos para archivos
-    code --install-extension eamodio.gitlens  # GitLens para integración avanzada con Git
-    code --install-extension coenraads.bracket-pair-colorizer-2  # Resalta los pares de corchetes
-    code --install-extension json.schneider.json-autocomplete  # Autocompletar JSON
-    #code --install-extension ritwickdey.LiveServer  # Servidor en vivo para HTML, CSS y JS
-    code --install-extension yzhang.markdown-all-in-one  # Mejoras para la edición de Markdown
-    #code --install-extension formulahendry.code-runner  # Ejecutar código directamente desde el editor
 
   # BALENA ETCHER
   # Obtener la última versión de Balena Etcher con lastversion
@@ -463,28 +500,22 @@ function install_extra_apps() {
   sudo apt install "./balena-etcher_$balena_version_amd64.deb" -y
   # Eliminar el paquete descargado después de la instalación (opcional)
   rm "balena-etcher_$balena_version_amd64.deb" -rf
-
-
-
-  echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
-
   clear
 
-  if [ $f == 1 ]; then
-    # Descomenta y modifica estas líneas según sea necesario para instalar aplicaciones flatpak
-    flatpak install flathub org.onlyoffice.desktopeditors -y
-    flatpak install flathub com.github.dail8859.NotepadNext -y
-    flatpak install flathub org.flameshot.Flameshot -y
-    # flatpak install flathub org.strawberrymusicplayer.strawberry -y
-    # flatpak install flathub io.github.prateekmedia.appimagepool -y
-    # flatpak install flathub app.ytmdesktop.ytmdesktop -y
-    # flatpak install flathub tv.kodi.Kodi -y
-    # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-    # flatpak install flathub io.freetubeapp.FreeTube -y
-    # flatpak install flathub com.github.tenderowl.frog -y
-    # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
-    # flatpak install flathub org.phoenicis.playonlinux -y
-    # flatpak install flathub com.usebottles.bottles -y
+  # Descomenta y modifica estas líneas según sea necesario para instalar aplicaciones flatpak
+  flatpak install flathub org.onlyoffice.desktopeditors -y
+  flatpak install flathub com.github.dail8859.NotepadNext -y
+  flatpak install flathub org.localsend.localsend_app -y
+  flatpak install flathub org.strawberrymusicplayer.strawberry -y
+  # flatpak install flathub io.github.prateekmedia.appimagepool -y
+  # flatpak install flathub app.ytmdesktop.ytmdesktop -y
+  # flatpak install flathub tv.kodi.Kodi -y
+  # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+  # flatpak install flathub io.freetubeapp.FreeTube -y
+  # flatpak install flathub com.github.tenderowl.frog -y
+  # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+  # flatpak install flathub org.phoenicis.playonlinux -y
+  # flatpak install flathub com.usebottles.bottles -y
   fi
 
   return
