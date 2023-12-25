@@ -481,7 +481,6 @@ function install_extra_apps() {
   code --install-extension id-ruby.Jetbrains-Mono
   code --install-extension vscode-icons-team.vscode-icons
   code --install-extension eamodio.gitlens
-  code --install-extension coenraads.bracket-pair-colorizer-2
   code --install-extension json.schneider.json-autocomplete
   code --install-extension yzhang.markdown-all-in-one
   code --install-extension shakram02.bash-beautify
@@ -493,13 +492,17 @@ function install_extra_apps() {
 
   # BALENA ETCHER
   # Obtener la última versión de Balena Etcher con lastversion
-  balena_version=$(lastversion balena-io/etcher)
+  arch="_amd64"
+  balena_version=$(curl -sSLI -o /dev/null -w %{url_effective} https://github.com/balena-io/etcher/releases/latest | awk -F / '{print $NF}' | sed 's/^v//')
+  echo "https://github.com/balena-io/etcher/releases/download/v$balena_version/balena-etcher_$balena_version$arch.deb"
   # Descargar el paquete .deb
-  sudo wget "https://github.com/balena-io/etcher/releases/download/v$balena_version/balena-etcher_$balena_version_amd64.deb"
+  sudo wget "https://github.com/balena-io/etcher/releases/download/v$balena_version/balena-etcher_$balena_version$arch.deb"
   # Instalar Balena Etcher
-  sudo apt install "./balena-etcher_$balena_version_amd64.deb" -y
+  sudo chmod o+r balena-etcher*
+  sudo apt install ./balena-etcher*.deb -y
   # Eliminar el paquete descargado después de la instalación (opcional)
-  rm "balena-etcher_$balena_version_amd64.deb" -rf
+  rm balena-etcher* -rf
+
   clear
 
   # Descomenta y modifica estas líneas según sea necesario para instalar aplicaciones flatpak
