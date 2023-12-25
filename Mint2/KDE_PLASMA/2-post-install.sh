@@ -105,14 +105,8 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     # Obtener el UUID de la partición raíz
     ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
 
-    # Obtener el UUID de la partición home
-    HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
-
     # Modificar el archivo /etc/fstab para la partición raíz
-    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
-
-    # Modificar el archivo /etc/fstab para la partición home
-    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
+    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@ 0 1|" "/etc/fstab"
 
     # Limpiar la pantalla
     clear
@@ -122,26 +116,13 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     sudo btrfs filesystem defragment / -r -clzo
 
     # Crear subvolúmenes adicionales
-    root_partition=$(df -h / | awk 'NR==2 {print $1}')
-    echo "La raíz está montada en la partición: $root_partition"
-
-    # Creamos el directorio /mnt si no existe
-    sudo mkdir -p /mnt
-
-    # Montamos la partición raíz en /mnt
-    sudo mount $root_partition /mnt
-
-    # Crear subvolúmenes adicionales
-    sudo btrfs subvolume create /mnt/@log
-    sudo btrfs subvolume create /mnt/@cache
-    sudo btrfs subvolume create /mnt/@tmp
+    sudo btrfs subvolume create /@log
+    sudo btrfs subvolume create /@cache
+    sudo btrfs subvolume create /@tmp
 
     # Mover los contenidos existentes de /var/cache y /var/log a los nuevos subvolúmenes
-    sudo mv /var/cache/* /mnt/@cache/
-    sudo mv /var/log/* /mnt/@log/
-
-    # Obtener el UUID de la partición raíz
-    ROOT_UUID=$(blkid -s UUID -o value $root_partition)
+    sudo mv /var/cache/* /@cache/
+    sudo mv /var/log/* /@log/
 
     # Verificar si el archivo fstab existe
     fstab="/etc/fstab"
@@ -156,10 +137,6 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     else
         echo "El archivo $fstab no existe. Verifica la ruta del archivo."
     fi
-
-    # Desmontar la partición /mnt
-    sudo umount /mnt
-    echo "La partición /mnt ha sido desmontada."
 
     # Instalar Timeshift
     sudo apt install timeshift -y
@@ -184,9 +161,23 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     # Recargar la configuración de systemd
     sudo systemctl daemon-reload
 
+    # Cambiar el nombre del archivo timeshift-gtk en /usr/bin/
+    sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
+
+    # Crear un nuevo archivo timeshift-gtk con el contenido dado
+    echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
+
+    # Otorgar permisos de ejecución al nuevo archivo
+    sudo chmod +x /usr/bin/timeshift-gtk
+
+    # Desactivar y detener el servicio de Timeshift
+    sudo systemctl stop timeshift && sudo systemctl disable timeshift
+
+    # Establecer el bit de setuid en grub-btrfsd
+    sudo chmod +s /usr/bin/grub-btrfsd
+
     # Reiniciar el servicio
     sudo systemctl restart grub-btrfsd
-    sudo systemctl start grub-btrfsd
     sudo systemctl enable grub-btrfsd
 
     # Actualizar grub
@@ -195,6 +186,7 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
 else
     echo "La partición root no está montada en un volumen BTRFS."
 fi
+
 
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
