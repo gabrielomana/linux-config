@@ -76,7 +76,7 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     # Desfragmentar el sistema de archivos Btrfs
     sudo btrfs filesystem defragment / -r -clzo
 
-    # Crear subvolúmenes adicionales
+    # Montar el dispositivo Btrfs
     root_partition=$(df -h / | awk 'NR==2 {print $1}')
     echo "La raíz está montada en la partición: $root_partition"
 
@@ -95,6 +95,12 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     sudo mv /var/cache/* /mnt/@cache/
     sudo mv /var/log/* /mnt/@log/
 
+    # Balanceo para duplicar metadatos y sistema
+    sudo btrfs balance start -m /mnt
+
+    # Balanceo para configurar datos y reserva global como no duplicados
+    sudo btrfs balance start -d -s /mnt
+
     # Verificar si el archivo fstab existe
     fstab="/etc/fstab"
     if [ -e "$fstab" ]; then
@@ -109,9 +115,13 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
         echo "El archivo $fstab no existe. Verifica la ruta del archivo."
     fi
 
-    # Desmontar la partición /mnt
+    # Desmontar el dispositivo Btrfs
     sudo umount /mnt
-    echo "La partición /mnt ha sido desmontada."
+
+    # Establecer permisos para /var/tmp, /var/cache y /var/log
+    sudo chmod 1777 /var/tmp/
+    sudo chmod 1777 /var/cache/
+    sudo chmod 1777 /var/log/
 
     # Instalar Timeshift
     sudo apt install timeshift -y
