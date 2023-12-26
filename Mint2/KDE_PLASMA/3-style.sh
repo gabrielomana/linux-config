@@ -12,7 +12,7 @@ extra_apps="${dir}/sources/lists/extra_apps.list"
 # POP_OS ICONS
 clear
 echo "POP_OS! ICONS"
-wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/KDE/Pop_Os-Icons.tar.gz
+wget https://github.com/gabrielomana/Pop_Os-Icons/releases/download/untagged-5332b869d5320087256f/Pop_Os-Icons.tar.gz
 sudo tar -xvf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 rm Pop_Os-Icons.tar.gz -rf
 sleep 3

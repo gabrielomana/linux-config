@@ -53,7 +53,17 @@ sleep 3
 install_multimedia
 
 
-#########################################_END_ #################################################
+########## FULL UPDATE ##########################################
+clear
+echo "FULL UPDATE"
+sudo nala clean
+sleep 3
+sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo apt --fix-broken install
+sudo aptitude safe-upgrade -y
+sudo apt full-upgrade -y
+sudo systemctl disable casper-md5check.service
+
+######################################### BTRFS | TIMESHIFT | GRUB-BTRFS #################################################
 # Verificar si la partición root está en Btrfs
 if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     # Obtener el UUID de la partición raíz
@@ -173,14 +183,7 @@ else
     echo "La partición root no está montada en un volumen BTRFS."
 fi
 
-
-########## FULL UPDATE ##########################################
-clear
-echo "FULL UPDATE"
-sudo nala clean
-sleep 3
-sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo apt --fix-broken install
-sudo aptitude safe-upgrade -y
-sudo apt full-upgrade -y
-sudo systemctl disable casper-md5check.service
 sudo reboot
+
+
+
