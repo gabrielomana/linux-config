@@ -12,7 +12,7 @@ extra_apps="${dir}/sources/lists/extra_apps.list"
 # POP_OS ICONS
 clear
 echo "POP_OS! ICONS"
-wget https://github.com/gabrielomana/Pop_Os-Icons/releases/download/untagged-5332b869d5320087256f/Pop_Os-Icons.tar.gz
+sudo wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/Pop_Os-Icons.tar.gz
 sudo tar -xvf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 rm Pop_Os-Icons.tar.gz -rf
 sleep 3
@@ -70,5 +70,7 @@ sudo apt install papirus-icon-theme *kvantum* -y
 
 okular ${dir}/customization_guide.pdf
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+
+clear
 topgrade
 sudo reboot

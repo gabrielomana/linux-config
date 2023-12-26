@@ -5,7 +5,11 @@ extra_apps="${dir}/sources/lists/extra_apps.list"
 # Incluir funciones
 . "${dir}/sources/functions/zsh_starship"
 . "${dir}/sources/functions/functions"
-sudo chmod 1777 /var/tmp/
+
+
+ sudo chmod 1777 /var/tmp/
+ sudo chmod 1777 /var/cache/
+ sudo chmod 1777 /var/log/
 
 ########## KONSOLE #############################################
 neofetch

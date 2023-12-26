@@ -9,6 +9,7 @@ else
     fi
 fi
 sudo nala update
+sudo chmod -R a+rw /git/
 
 dir="$(pwd)"
 
