@@ -14,6 +14,7 @@ kfind
 kget
 kinfocenter
 "kio*"
+kio*
 kio-admin
 kleopatra
 krdc
@@ -24,6 +25,7 @@ plasma-nm
 plasma-pa
 "plasma-widget*"
 plasma-widget*
+plasma-widgets-addons
 ffmpegthumbs
 ark
 okular
