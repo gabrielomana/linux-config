@@ -23,8 +23,11 @@ kbackup
 plasma-nm
 plasma-pa
 "plasma-widget*"
+plasma-widget*
 ffmpegthumbs
 ark
 okular
 ksystemlog
 kde-config-cron
+kdeplasma-addons
+kdeplasma-addon*

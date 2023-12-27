@@ -50,7 +50,11 @@ sudo rm -rf /tmp/konsole/
 # Configurar perfil de Konsole
 cp -r dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile
 
-# Configurar featherpad
+# Confiqurar featherpad
+featherpad &
+sleep 3
+killall featherpad
+sleep 1
 cp -r dotfiles/fp.conf ~/.config/featherpad/fp.conf
 
 # Configurar neofetch y topgrade

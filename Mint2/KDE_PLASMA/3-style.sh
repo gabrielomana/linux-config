@@ -72,5 +72,10 @@ okular ${dir}/customization_guide.pdf
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
 
 clear
+sudo GNUTLS_CPUID_OVERRIDE=0x1 apt-get update
+# Definir la variable de entorno
+export GNUTLS_CPUID_OVERRIDE=0x1
+# Agregar la línea al archivo /etc/environment
+echo "export GNUTLS_CPUID_OVERRIDE=0x1" | sudo tee -a /etc/environment
 topgrade
 sudo reboot
