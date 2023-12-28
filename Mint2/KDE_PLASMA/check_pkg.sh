@@ -8,12 +8,12 @@ function check_installed {
   while IFS= read -r package; do
     [ -z "${package}" ] && continue
 
-    if dpkg -l "${package}" 2>/dev/null | grep -q "ii"; then
+    if dpkg-query -W -f='${Status}\n' "${package}" 2>/dev/null | grep -q "install ok installed"; then
       echo "El paquete ${package} ya está instalado."
     else
       # Verificar si el paquete es un patrón y obtener la lista de paquetes que coinciden
       if [[ "${package}" == *'*'* ]]; then
-        matching_packages=($(apt list "${package}" 2>/dev/null | grep -oP "^\S+"))
+        matching_packages=($(apt search "${package}" | grep -oP "^\S+"))
         if [ ${#matching_packages[@]} -eq 0 ]; then
           echo "No hay paquetes que coincidan con el patrón ${package} en los repositorios."
         else
@@ -54,6 +54,7 @@ package=("kcalc" "kate" "kmix" "knotes" "kde-config-cron*" "krename" "kamoso" "k
   "ffmpegthumbs" "ark" "okular" "ksystemlog" "kde-config-cron" "kdeplasma-addons" "kdeplasma-addon*")
 
 check_installed "${package}"
+
 
 
 
