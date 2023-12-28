@@ -1,4 +1,7 @@
 #!/bin/bash
+dir="$(pwd)"
+kde_plasma="${dir}/sources/lists/kde_plasma.list"
+kde_plasma_apps="${dir}/sources/lists/kde_plasma_apps.list"
 
 function check_installed {
   local package_list="$1"
@@ -43,42 +46,7 @@ function check_installed {
   fi
 }
 
-# Ejemplo de lista de paquetes
-package_list="kcalc
-kate
-kmix
-knotes
-kde-config-cron*
-krename
-kamoso
-kolourpaint
-kid3
-kcolorchooser
-kcharselect
-kdenetwork-filesharing
-kfind
-kget
-kinfocenter
-kio*
-kio-admin
-kleopatra
-krdc
-kaccounts-providers
-kio-gdrive
-kbackup
-plasma-nm
-plasma-pa
-plasma-widget*
-plasma-widgets-addons
-ffmpegthumbs
-ark
-okular
-ksystemlog
-kde-config-cron
-kdeplasma-addons
-kdeplasma-addon*"
-
-check_installed "${package_list}"
+check_installed "${kde_plasma_apps}"
 
 
 
