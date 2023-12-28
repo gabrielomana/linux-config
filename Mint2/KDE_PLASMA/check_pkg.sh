@@ -10,7 +10,7 @@ function check_installed {
 
     # Verificar si el paquete es un patrón y obtener la lista de paquetes que coinciden
     if [[ "${package}" == *'*'* ]]; then
-      matching_packages=($(apt search --names-only "${package}" | grep -oP "^\S+"))
+      matching_packages=($(apt search "${package}" | grep -oP "^[\S]+"))
       if [ ${#matching_packages[@]} -eq 0 ]; then
         echo "No hay paquetes que coincidan con el patrón ${package} en los repositorios."
       else
@@ -19,7 +19,7 @@ function check_installed {
     else
       # Verificar si el paquete existe en los repositorios
       if apt show "${package}" &>/dev/null; then
-        list="${list} ${package}"
+        list="${list} \"${package}\""
       else
         echo "El paquete ${package} no existe en los repositorios."
       fi
@@ -48,7 +48,7 @@ package_list="kcalc
 kate
 kmix
 knotes
-\"kde-config-cron*\"
+kde-config-cron*
 krename
 kamoso
 kolourpaint
@@ -59,7 +59,7 @@ kdenetwork-filesharing
 kfind
 kget
 kinfocenter
-\"kio*\"
+kio*
 kio-admin
 kleopatra
 krdc
@@ -68,7 +68,7 @@ kio-gdrive
 kbackup
 plasma-nm
 plasma-pa
-\"plasma-widget*\"
+plasma-widget*
 plasma-widgets-addons
 ffmpegthumbs
 ark
@@ -76,9 +76,10 @@ okular
 ksystemlog
 kde-config-cron
 kdeplasma-addons
-\"kdeplasma-addon*\""
+kdeplasma-addon*"
 
 check_installed "${package_list}"
+
 
 
 
