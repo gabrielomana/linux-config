@@ -1,9 +1,10 @@
+#!/bin/bash
 function check_installed {
   local package
   local to_install=()
   list=""
   list2=""
-  while read -r package; do
+  while IFS= read -r package; do
     [ -z "${package}" ] && continue
 
     STR="${package}"
@@ -31,42 +32,48 @@ function check_installed {
   echo $c2
 }
 
-package=(
-  "kcalc"
-  "kate"
-  "kmix"
-  "knotes"
-  "\"kde-config-cron*\""
-  "krename"
-  "kamoso"
-  "kolourpaint"
-  "kid3"
-  "kcolorchooser"
-  "kcharselect"
-  "kdenetwork-filesharing"
-  "kfind"
-  "kget"
-  "kinfocenter"
-  "\"kio*\""
-  "\"kio*\""
-  "kio-admin"
-  "kleopatra"
-  "krdc"
-  "kaccounts-providers"
-  "kio-gdrive"
-  "kbackup"
-  "plasma-nm"
-  "plasma-pa"
-  "\"plasma-widget*\""
-  "\"plasma-widget*\""
-  "plasma-widgets-addons"
-  "ffmpegthumbs"
-  "ark"
-  "okular"
-  "ksystemlog"
-  "kde-config-cron"
-  "kdeplasma-addons"
-  "\"kdeplasma-addon*\""
+package=("kcalc" "kate" "kmix" "knotes" "\"kde-config-cron*\"" "krename" "kamoso" "kolourpaint" "kid3" "kcolorchooser"
+  "kcharselect" "kdenetwork-filesharing" "kfind" "kget" "kinfocenter" "\"kio*\"" "\"kio*\"" "kio-admin" "kleopatra"
+  "krdc" "kaccounts-providers" "kio-gdrive" "kbackup" "plasma-nm" "plasma-pa" "\"plasma-widget*\"" "\"plasma-widget*\""
+  "plasma-widgets-addons" "ffmpegthumbs" "ark" "okular" "ksystemlog" "kde-config-cron" "kdeplasma-addons" "\"kdeplasma-addon*\"")
+
+package_2=(
+"kcalc"
+"kate"
+"kmix"
+"knotes"
+"\"kde-config-cron*\""
+"krename"
+"kamoso"
+"kolourpaint"
+"kid3"
+"kcolorchooser"
+"kcharselect"
+"kdenetwork-filesharing"
+"kfind"
+"kget"
+"kinfocenter"
+"\"kio*\""
+"\"kio*\""
+"kio-admin"
+"kleopatra"
+"krdc"
+"kaccounts-providers"
+"kio-gdrive"
+"kbackup"
+"plasma-nm"
+"plasma-pa"
+"\"plasma-widget*\""
+"\"plasma-widget*\""
+"plasma-widgets-addons"
+"ffmpegthumbs"
+"ark"
+"okular"
+"ksystemlog"
+"kde-config-cron"
+"kdeplasma-addons"
+"\"kdeplasma-addon*\""
 )
+
 
 check_installed "${package}"
