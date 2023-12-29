@@ -177,7 +177,7 @@ wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add
   sudo ln -s /etc/apt/vscode.gpg /etc/apt/trusted.gpg.d/vscode.gpg
 
 ##rEFInd PPA
-  sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
+  sudo add-apt-repository ppa:rodsmith/refind -y
   ##Fix deprecated Key MINT issue
   sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
   sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
@@ -242,42 +242,59 @@ function install_core_apps() {
   sudo -H pip3 install --upgrade pip
   pip3 install --upgrade pip
 
-  # Install Rust
-  sudo wget https://sh.rustup.rs -O rustup-init.sh
-  sudo chmod +x rustup-init.sh
-  ./rustup-init.sh -y
+  
+Gabriel Omaña <gabrielomana@gmail.com>
+13:52 (hace 1 minuto)
+para mí
+
+# Install Rust
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   source "$HOME/.cargo/env"
   rm rustup-init.sh -rf
-
   source ~/.profile
   source ~/.cargo/env
 
+  CARGO_BIN_DIR=$(echo $HOME/.cargo/bin)
+  ROOT_SHELL=$(sudo cat /etc/passwd | grep "^root:" | awk -F: '{print $7}')
+  case "$ROOT_SHELL" in
+    "/bin/bash")
+      echo "export PATH=\$PATH:$CARGO_BIN_DIR" | sudo tee -a /root/.bashrc > /dev/null
+      ;;
+    "/bin/zsh")
+      echo "export PATH=\$PATH:$CARGO_BIN_DIR" | sudo tee -a /root/.zshrc > /dev/null
+      ;;
+    *)
+      echo "Unknown root shell type: $ROOT_SHELL"
+      ;;
+  esac
+
   # Graphics Drivers Installation (INTEL, AMD, NVIDIA)
   echo "INSTALL GRAPHICS DRIVERS"
-  gpu_info=$(lspci | grep -i "VGA compatible controller")
+  gpu_info=$(lspci | grep -Ei "VGA compatible controller")
 
-  if echo "$gpu_info" | grep -q "NVIDIA"; then
+  if echo "$gpu_info" | grep -qi "NVIDIA"; then
       sudo apt-get install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
       sudo apt-get install -y nvidia-vaapi-driver
-  elif echo "$gpu_info" | grep -q "Advanced Micro Devices"; then
+  elif echo "$gpu_info" | grep -qi "Advanced Micro Devices"; then
       sudo apt-get install -y firmware-amd-graphics amdgpu-pro
       sudo apt-get install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
-  elif echo "$gpu_info" | grep -q "Intel"; then
+  elif echo "$gpu_info" | grep -qi "Intel"; then
       sudo apt-get install -y firmware-misc-nonfree
       sudo apt-get install -y i965-va-driver
   fi
 
   # Identify your processor and install the appropriate drivers and microcodes
   echo "IDENTIFYING PROCESSOR AND INSTALLING DRIVERS AND MICROCODES"
-  cpu_name=$(lscpu | grep "Model name" | awk '{print $2}')
+  cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
 
-  if echo "$cpu_name" | grep -q "Intel"; then
-      sudo apt-get install -y intel-microcode
-  elif echo "$cpu_name" | grep -q "AMD"; then
-      sudo apt-get install -y amd64-microcode
+  if echo "$cpu_name" | grep -qi "intel"; then
+    sudo apt-get install -y intel-microcode
+  elif echo "$cpu_name" | grep -qi "amd"; then
+    sudo apt-get install -y amd64-microcode
   else
-      echo "Failed to identify the processor."
+    echo "Failed to identify the processor."
   fi
+
 
   # Virtual Machine Drivers
   echo "INSTALL VIRTUAL MACHINE DRIVERS"
@@ -348,7 +365,7 @@ function install_core_apps() {
 
   cargo install cargo-update
   cargo install topgrade
-  sudo cargo install eza
+  cargo install eza
 
   # Configurar aliases en el archivo de usuario
   cp ~/.bashrc ~/.bashrc_old
@@ -487,6 +504,7 @@ code --install-extension "esbenp.prettier-vscode"
 
   # BALENA ETCHER
   # Obtener la última versión de Balena Etcher con lastversion
+  sudo apt remove balena-etcher -y
   arch="_amd64"
   balena_version=$(curl -sSLI -o /dev/null -w %{url_effective} https://github.com/balena-io/etcher/releases/latest | awk -F / '{print $NF}' | sed 's/^v//')
   echo "https://github.com/balena-io/etcher/releases/download/v$balena_version/balena-etcher_$balena_version$arch.deb"
@@ -551,4 +569,3 @@ code --install-extension "esbenp.prettier-vscode"
 
 return
 }
-

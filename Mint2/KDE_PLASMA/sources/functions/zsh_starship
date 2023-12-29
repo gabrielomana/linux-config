@@ -103,6 +103,8 @@ function install_ZSH_ROOT() {
 
     ######## REBOOT ZSH ##########
     sudo su - -c "chsh -s /bin/zsh root"
+    CARGO_BIN_DIR=$(echo $HOME/.cargo/bin)
+    echo "export PATH=\$PATH:$CARGO_BIN_DIR" | sudo tee -a /root/.zshrc > /dev/null
 }
 
 function install_ZSH() {
