@@ -32,33 +32,49 @@ function check_uninstalled (){
 function check_installed {
   local package
   local to_install=()
-  list=""
+  list1=""
   list2=""
   while read -r package; do
     [ -z "${package}" ] && continue
 
-        STR="${package}"
-        SUB='*'
+    STR="${package}"
+    SUB='*'
 
-        case $STR in
+    case $STR in
+      *"$SUB"*)
+        # Si la línea contiene un asterisco, agrega a la lista2 con comillas si no las tiene
+        if [[ ! "${STR}" =~ ^\" ]]; then
+          STR="\"${STR}\""
+        fi
+        # Valida si el patrón es correcto para que aptitude encuentre paquetes
+        # Ejecutar el comando aptitude search con el patrón y almacenar la salida en una variable
+        resultado=$(aptitude search "${STR}" 2>/dev/null)
+        # Verificar si la salida contiene al menos una línea, lo que indica que hay paquetes disponibles
+        if [ -n "$resultado" ]; then
+        list2="${list2} ${STR}"
+        fi
+    ;;
 
-          *"$SUB"*)
-            list2="${list2} ${STR}"
-            ;;
-        esac
-  if !(dpkg -s "${package}" >/dev/null 2>&1); then
-    if !(nala show "${package}" 2>&1 | grep -q "Error: "); then
-      list="${list} ${package}"
-    fi
-  fi
+      *)
+        # Si no hay asterisco, se verifica la existencia del paquete antes de agregarlo a la lista1
+        #if !(dpkg -s "${package}" >/dev/null 2>&1); then
+          if !(apt show "${package}" 2>&1 | grep -q "N: Unable to locate package"); then
+            list1="${list1} ${package}"
+          fi
+        #fi
+        ;;
+    esac
+
   done < "${1}"
-   c="sudo nala install "${list}" -y"
-   c2="sudo apt install "${list2}" -y"
 
-   eval $c
-   for i in $list2; do
-    sudo apt-get install -y $i
-   done
+  # Construye los comandos de instalación para nala y apt
+  list3="${list1}${list2}"
+  c="sudo nala install ${list3} -y"
+
+  echo "Comando para nala:"
+  echo $c
+  eval $c
+
 }
 
 
