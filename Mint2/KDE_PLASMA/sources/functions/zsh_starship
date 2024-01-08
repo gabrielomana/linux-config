@@ -81,7 +81,7 @@ function install_ZSH() {
     fi
     sleep 5
 
-   # Cambiar la ruta de los plugins a una ubicación global
+    # Cambiar la ruta de los plugins a una ubicación global
     custom_plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
 
     # Verificar si la ruta existe
@@ -92,24 +92,34 @@ function install_ZSH() {
         sudo chmod 1777 "$custom_plugins_path"
     fi
 
-    clear
-    plugins=(
-        "zsh-autopair"
-        "zsh-autosuggestions"
-        "zsh-completions"
-        "zsh-history-substring-search"
-        "zsh-syntax-highlighting"
-        "you-should-use"
-        "fzf-tab"
+    # Lista de repositorios a clonar
+    repositories=(
+        "https://github.com/hlissner/zsh-autopair.git"
+        "https://github.com/zsh-users/zsh-autosuggestions.git"
+        "https://github.com/zsh-users/zsh-completions.git"
+        "https://github.com/zsh-users/zsh-history-substring-search.git"
+        "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+        "https://github.com/MichaelAquilina/zsh-you-should-use.git"
+        "https://github.com/Aloxaf/fzf-tab.git"
     )
 
-    for plugin in "${plugins[@]}"; do
-        if [ -d "$plugins_path$plugin" ]; then
-            cd "$plugins_path$plugin" && git pull
+    # Clonar e instalar los repositorios
+    for repository in "${repositories[@]}"; do
+        plugin_name=$(basename "$repository" .git)
+        plugin_path="$custom_plugins_path$plugin_name"
+
+        if [ -d "$plugin_path" ]; then
+            # Actualizar el repositorio si ya existe
+            echo "Actualizando $plugin_name..."
+            git -C "$plugin_path" pull
         else
-            git clone --depth=1 "https://github.com/zsh-users/$plugin" "$plugins_path$plugin"
+            # Clonar el repositorio si no existe
+            echo "Clonando $repository en $plugin_path..."
+            git clone "$repository" "$plugin_path"
         fi
     done
+
+    echo "Repositorios clonados e instalados en $custom_plugins_path."
 
     # Instalar fzf para fzf-tab
     sudo apt install fzf -y
