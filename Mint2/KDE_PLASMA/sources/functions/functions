@@ -258,11 +258,6 @@ function install_core_apps() {
   sudo -H pip3 install --upgrade pip
   pip3 install --upgrade pip
 
-  
-Gabriel Omaña <gabrielomana@gmail.com>
-13:52 (hace 1 minuto)
-para mí
-
 # Install Rust
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   source "$HOME/.cargo/env"
