@@ -79,7 +79,7 @@ ZSH_THEME="robbyrussell"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-
+ZSH_CUSTOM="/usr/share/oh-my-zsh/custom"
 plugins=(colored-man-pages
 	git
 	git-extras
