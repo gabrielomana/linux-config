@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Install Rust
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  rustup_install_command="curl https://sh.rustup.rs -sSf | sh -s -- -y"
+  eval "$rustup_install_command"
   source "$HOME/.cargo/env"
   rm rustup-init.sh -rf
   source ~/.profile
@@ -106,8 +107,15 @@ function install_ZSH() {
     sleep 5
 
     # Cambiar la ruta de los plugins a una ubicación global
-    plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
+    custom_plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
 
+    # Verificar si la ruta existe
+    if [ ! -d "$custom_plugins_path" ]; then
+        # Crear la ruta si no existe
+        sudo mkdir -p "$custom_plugins_path"
+        # Asignar permisos 1777 a la ruta
+        sudo chmod 1777 "$custom_plugins_path"
+    fi
     clear
     plugins=(
         "zsh-autopair"

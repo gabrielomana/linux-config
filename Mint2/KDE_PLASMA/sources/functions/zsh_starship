@@ -81,8 +81,16 @@ function install_ZSH() {
     fi
     sleep 5
 
-    # Cambiar la ruta de los plugins a una ubicación global
-    plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
+   # Cambiar la ruta de los plugins a una ubicación global
+    custom_plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
+
+    # Verificar si la ruta existe
+    if [ ! -d "$custom_plugins_path" ]; then
+        # Crear la ruta si no existe
+        sudo mkdir -p "$custom_plugins_path"
+        # Asignar permisos 1777 a la ruta
+        sudo chmod 1777 "$custom_plugins_path"
+    fi
 
     clear
     plugins=(

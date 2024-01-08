@@ -259,7 +259,8 @@ function install_core_apps() {
   pip3 install --upgrade pip
 
 # Install Rust
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  rustup_install_command="curl https://sh.rustup.rs -sSf | sh -s -- -y"
+  eval "$rustup_install_command"
   source "$HOME/.cargo/env"
   rm rustup-init.sh -rf
   source ~/.profile
