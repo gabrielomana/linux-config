@@ -11,6 +11,19 @@ export PATH=$HOME/.cargo/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
+ZSH_CUSTOM="/usr/share/oh-my-zsh/custom"
+ZSH_DISABLE_COMPFIX=true
+
+# Añadido para optimizar la carga de zsh-completions
+fpath+=("${ZSH_CUSTOM:-"$ZSH/custom"}/plugins/zsh-completions/src")
+
+# Auto Completion And Additional Settings
+#autoload -U compinit
+#compinit
+zstyle ':completion:*' menu select
+# export HISTFILE=~/.zsh_history
+# export HISTSIZE=5000
+# export SAVEHIST=5000
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -78,20 +91,20 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-ZSH_CUSTOM="/usr/share/oh-my-zsh/custom"
-plugins=(colored-man-pages
-	git
-	git-extras
-	fzf-tab
-	zsh-autopair
-	zsh-autosuggestions
-	zsh-completions
-	history-substring-search
-	zsh-syntax-highlighting
-	sudo
-	dirhistory
-	you-should-use)
+plugins=(
+  colored-man-pages
+  git
+  git-extras
+  fzf-tab
+  zsh-autopair
+  zsh-autosuggestions
+  zsh-completions
+  history-substring-search
+  zsh-syntax-highlighting
+  sudo
+  dirhistory
+  you-should-use
+)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -123,16 +136,41 @@ alias cat="batcat -f"
 alias ocat="/usr/bin/cat"
 alias fupdate="topgrade &&  sudo hblock -O /etc/host"
 alias l="eza "
-alias ls="eza --group-directories-first --icons"
-alias ll="eza -lbGFhmua --group-directories-first --no-permissions --icons"
-alias llp="eza -lbGFhmua --group-directories-first --icons"
-alias la="eza -a --group-directories-first --icons"
-alias lt="eza --tree --level=2 --icons"
-alias lt3="eza --tree --level=3 --icons"
-alias lt4="eza --tree --level=4 --icons"
+# alias ls="eza --group-directories-first --icons"
+# alias ll="eza -lbGFhmua --group-directories-first --no-permissions --icons"
+# alias llp="eza -lbGFhmua --group-directories-first --icons"
+# alias la="eza -a --group-directories-first --icons"
+# alias lt="eza --tree --level=2 --icons"
+# alias lt3="eza --tree --level=3 --icons"
+# alias lt4="eza --tree --level=4 --icons"
 alias lastversion="~/.local/pipx/venvs/lastversion/bin/./lastversion"
 alias kedit="/usr/bin/featherpad"
 alias ytmdesktop="/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop"
+
+function ls() {
+  if [[ $# -eq 0 ]]; then
+    # Si no hay argumentos, ejecuta eza con los sufijos adicionales
+    eza --group-directories-first --icons
+  else
+    case $1 in
+      ls) shift; eza $@ --group-directories-first --icons;;
+      ll) shift; eza $@ -lbGFhmua --group-directories-first --no-permissions --icons;;
+      llp) shift; eza $@ -lbGFhmua --group-directories-first --icons;;
+      la) shift; eza $@ -a --group-directories-first --icons;;
+      lt) shift; eza $@ --tree --level=2 --icons;;
+      lt3) shift; eza $@ --tree --level=3 --icons;;
+      lt4) shift; eza $@ --tree --level=4 --icons;;
+      *)
+        # Agregamos la opción --color solo si es un terminal interactivo
+        if [ -t 1 ]; then
+          eza $@ --group-directories-first --icons --color
+        else
+          eza $@ --group-directories-first --icons
+        fi
+        ;;
+    esac
+  fi
+}
 
 #alias ohmyzsh="mate ~/.oh-my-zsh"
 
@@ -140,6 +178,6 @@ alias ytmdesktop="/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=s
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
-        source /etc/profile.d/vte.sh
+  source /etc/profile.d/vte.sh
 fi
 eval "$(starship init zsh)"

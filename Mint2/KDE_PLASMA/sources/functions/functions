@@ -387,16 +387,50 @@ function install_core_apps() {
   mv ~/aux.txt ~/.bashrc
   source ~/.bashrc
 
-  # Configurar aliases en el archivo de root
-  sudo cp /root/.bashrc /root/.bashrc_old
-  sudo cp /root/.bashrc /root/aux.txt
-  echo -e "alias cat=\"batcat -f\"\nalias l=\"eza\"\nalias ls=\"eza --icons\"\nalias ll=\"eza -lah --icons\"\nalias la=\"eza -a --icons\"\nalias fupdate=\"topgrade && sudo hblock -O /etc/host\"\nalias featherpad='kedit'\nalias kedit='featherpad'" | sudo tee -a /root/aux.txt
-  sudo rm -rf /root/.bashrc
-  sudo mv /root/aux.txt /root/.bashrc
-  sudo source /root/.bashrc
+# Copiar el archivo .bashrc existente como respaldo
+cp ~/.bashrc ~/.bashrc_old
 
-  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
-  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
+# Definir nuevos alias
+new_aliases="# Extra aliases
+alias cat=\"batcat -f\"
+alias ocat=\"/usr/bin/cat\"
+alias fupdate=\"topgrade && sudo hblock -O /etc/host\"
+alias l=\"eza\"
+alias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"
+alias kedit=\"/usr/bin/featherpad\"
+alias ytmdesktop=\"/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop\"
+
+function ls() {
+  if [[ \$# -eq 0 ]]; then
+    # Si no hay argumentos, ejecuta eza con los sufijos adicionales
+    eza --group-directories-first --icons
+  else
+    case \$1 in
+      ls) shift; eza \$@ --group-directories-first --icons;;
+      ll) shift; eza \$@ -lbGFhmua --group-directories-first --no-permissions --icons;;
+      llp) shift; eza \$@ -lbGFhmua --group-directories-first --icons;;
+      la) shift; eza \$@ -a --group-directories-first --icons;;
+      lt) shift; eza \$@ --tree --level=2 --icons;;
+      lt3) shift; eza \$@ --tree --level=3 --icons;;
+      lt4) shift; eza \$@ --tree --level=4 --icons;;
+      *)
+        # Agregamos la opción --color solo si es un terminal interactivo
+        if [ -t 1 ]; then
+          eza \$@ --group-directories-first --icons --color
+        else
+          eza \$@ --group-directories-first --icons
+        fi
+        ;;
+    esac
+  fi
+}"
+
+# Agregar nuevos alias al final del archivo .bashrc
+echo -e "$new_aliases" >> ~/.bashrc
+echo -e "$new_aliases" | sudo tee -a /root/.bashrc
+
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
   # Pipewire & Wireplumber
   clear
