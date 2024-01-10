@@ -11,7 +11,9 @@ extra_apps="${dir}/sources/lists/extra_apps.list"
  sudo chmod 1777 /var/cache/
  sudo chmod 1777 /var/log/
 
-########## KONSOLE #############################################
+########## TERMINAL #############################################
+sudo cp /etc/profile.d/vte-* /etc/profile.d/vte.sh
+cp -r dotfiles/TILIX/tilix ~/.config/
 neofetch
 clear
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
