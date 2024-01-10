@@ -3,6 +3,17 @@ dir="$(pwd)"
 . "${dir}"/KDE_PLASMA/sources/functions/functions
 
 date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
+#SUDO
+# Installing sudo
+sudo apt install sudo -y
+# Adding current user to the sudoers list
+echo "$USER ALL=(ALL:ALL) ALL" | sudo tee -a /etc/sudoers
+# Verifying if the line was added successfully
+if grep -q "$USER" /etc/sudoers; then
+  echo "User $USER successfully added to the sudoers list."
+else
+  echo "Error adding user $USER to the sudoers list."
+fi
 
 # Instalación y configuración de idioma y locales
 sudo apt update
@@ -111,34 +122,49 @@ if [ $f == 1 ]; then
 
   # Update Debian and Sparky repositories
   sudo rm -f /etc/apt/sources.list
-  echo -e "deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
-deb-src http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
-deb http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
-deb-src http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
-deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
-deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
-deb http://deb-multimedia.org/ trixie main non-free" | sudo tee /etc/apt/sources.list
+
+  echo -e "deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+  deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+  deb http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
+  deb-src http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
+  deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+  deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+  deb http://deb-multimedia.org/ trixie main non-free" | sudo tee /etc/apt/sources.list
+
 
   sudo rm -f /etc/apt/sources.list.d/sparky.list
+
   echo -e "deb https://repo.sparkylinux.org/ core main
-deb-src https://repo.sparkylinux.org/ core main
-deb https://repo.sparkylinux.org/ sisters main
-deb-src https://repo.sparkylinux.org/ sisters main" | sudo tee /etc/apt/sources.list.d/sparky.list
+  deb-src https://repo.sparkylinux.org/ core main
+  deb https://repo.sparkylinux.org/ sisters main
+  deb-src https://repo.sparkylinux.org/ sisters main" | sudo tee /etc/apt/sources.list.d/sparky.list
 
   sudo apt update
   sudo apt full-upgrade -y
   sudo dpkg --configure -a
   sudo apt install -f
+  sudo dpkg-reconfigure -a
+  sudo apt install -f
 
   # Switch to testing
   sudo rm /etc/apt/sources.list
-  echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-deb https://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
-deb-src https://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
-deb https://deb.debian.org/debian testing-updates main contrib non-free non-free-firmware
-deb-src https://deb.debian.org/debian testing-updates main contrib non-free non-free-firmware
-deb https://deb-multimedia.org/ testing main non-free" | sudo tee /etc/apt/sources.list
+  
+  echo -e "deb http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+  deb-src http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+  deb http://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
+  deb-src http://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
+  deb http://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
+  deb-src http://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
+  deb https://deb-multimedia.org/ testing main contrib non-free non-free-firmware" | sudo tee /etc/apt/sources.list
+
+  #Config Unstable Security Updates
+    # Pre-requisitos e instalación
+    sudo apt install -y debsecan
+    curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release | sudo tee /etc/apt/apt.conf.d/00default-release > /dev/null
+    curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/debsecan-apt-priority | sudo tee /usr/sbin/debsecan-apt-priority > /dev/null
+    curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/99debsecan | sudo tee /etc/apt/apt.conf.d/99debsecan > /dev/null
+    sudo chmod 755 /usr/sbin/debsecan-apt-priority
+    sudo ln -sf /var/lib/debsecan/apt_preferences /etc/apt/preferences.d/unstable-security-packages
 
   sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get full-upgrade -y && sudo apt-get dist-upgrade -y && sudo apt --fix-broken install && sudo aptitude safe-upgrade -y
   sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
