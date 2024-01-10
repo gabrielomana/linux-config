@@ -221,7 +221,7 @@ function install_ZSH() {
   esac
 
 # Install_ZSH
-  install_ZSH
+  #install_ZSH
 
 # Install_ZSH_root
-  install_ZSH_ROOT
+  #install_ZSH_ROOT
