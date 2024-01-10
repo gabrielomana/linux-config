@@ -1,33 +1,49 @@
 #!/bin/bash
 
-function check_uninstalled (){
+function check_uninstalled() {
   local package
-  list=""
+  local to_remove=()
+
   while read -r package; do
     [ -z "${package}" ] && continue
 
-        STR="${package}"
-        SUB='*'
+    STR="${package}"
+    SUB='*'
 
-        case $STR in
+    case $STR in
+      *"$SUB"*)
+        # Si la línea contiene un asterisco, agrega a la lista con comillas si no las tiene
+        if [[ ! "${STR}" =~ ^\" ]]; then
+          STR="\"${STR}\""
+        fi
 
-          *"$SUB"*)
-            list="${list} ${STR}"
-            ;;
-        esac
+        # Valida si el patrón es correcto para que aptitude encuentre paquetes
+        resultado=$(aptitude search "${STR}" 2>/dev/null)
 
-    if dpkg -s "${package}" >/dev/null 2>&1; then
-      list="${list} ${package}"
-    fi
+        # Verificar si la salida contiene al menos una línea, lo que indica que hay paquetes disponibles
+        if [ -n "$resultado" ]; then
+          to_remove+=("${STR}")
+        fi
+        ;;
+      *)
+        # Verifica la existencia del paquete antes de agregarlo a la lista
+        if dpkg -s "${package}" >/dev/null 2>&1; then
+          to_remove+=("${package}")
+        fi
+        ;;
+    esac
   done < "${1}"
-   c="sudo nala remove --purge "${list}" -y"
-   clear
-   eval $c
-   sudo nala autoremove -y
-   sudo nala install -f
-   sudo nala clean
-   sudo apt-get autoclean
-   clear
+
+  # Construye y ejecuta el comando para nala
+  c_remove="sudo nala remove --purge ${to_remove[@]} -y"
+  eval $c_remove
+
+  # Ejecuta comandos adicionales
+  sudo nala autoremove -y
+  sudo nala install -f
+  sudo nala clean
+  sudo apt-get autoclean
+  clear
 }
 
 function check_installed {
