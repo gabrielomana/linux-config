@@ -1,18 +1,43 @@
 #!/bin/bash
 function check_uninstalled() {
   local package
-  list=""
-  while IFS= read -r package; do
+  local to_remove=()
+
+  while read -r package; do
     [ -z "${package}" ] && continue
 
-    if dpkg -s "${package}" >/dev/null 2>&1; then
-      list="${list} ${package}"
-    fi
+    STR="${package}"
+    SUB='*'
+
+    case $STR in
+      *"$SUB"*)
+        # Si la línea contiene un asterisco, agrega a la lista con comillas si no las tiene
+        if [[ ! "${STR}" =~ ^\" ]]; then
+          STR="\"${STR}\""
+        fi
+
+        # Valida si el patrón es correcto para que aptitude encuentre paquetes
+        resultado=$(aptitude search "${STR}" 2>/dev/null)
+
+        # Verificar si la salida contiene al menos una línea, lo que indica que hay paquetes disponibles
+        if [ -n "$resultado" ]; then
+          to_remove+=("${STR}")
+        fi
+        ;;
+      *)
+        # Verifica la existencia del paquete antes de agregarlo a la lista
+        if dpkg -s "${package}" >/dev/null 2>&1; then
+          to_remove+=("${package}")
+        fi
+        ;;
+    esac
   done < "${1}"
 
-  c="sudo nala remove --purge ${list} -y"
-  clear
-  eval "$c"
+  # Construye y ejecuta el comando para nala
+  c_remove="sudo nala remove --purge ${to_remove[@]} -y"
+  eval $c_remove
+
+  # Ejecuta comandos adicionales
   sudo nala autoremove -y
   sudo nala install -f
   sudo nala clean
@@ -20,51 +45,62 @@ function check_uninstalled() {
   clear
 }
 
-
-function check_installed() {
+function check_installed {
   local package
   local to_install=()
-  local to_install_apt=()
-  list=""
+  list1=""
   list2=""
-
-  while IFS= read -r package; do
+  while read -r package; do
     [ -z "${package}" ] && continue
-
-    if dpkg -s "${package}" >/dev/null 2>&1; then
-      continue
-    fi
-
-    if nala show "${package}" 2>&1 | grep -q "Error: "; then
-      continue
-    fi
 
     STR="${package}"
     SUB='*'
 
     case $STR in
       *"$SUB"*)
-        list2="${list2} ${STR}"
-        ;;
+        # Si la línea contiene un asterisco, agrega a la lista2 con comillas si no las tiene
+        if [[ ! "${STR}" =~ ^\" ]]; then
+          STR="\"${STR}\""
+        fi
+        # Valida si el patrón es correcto para que aptitude encuentre paquetes
+        # Ejecutar el comando aptitude search con el patrón y almacenar la salida en una variable
+        resultado=$(aptitude search "${STR}" 2>/dev/null)
+        # Verificar si la salida contiene al menos una línea, lo que indica que hay paquetes disponibles
+        if [ -n "$resultado" ]; then
+          list2="${list2} ${STR}"
+        fi
+      ;;
+
       *)
-        list="${list} ${package}"
+        # Si no hay asterisco, se verifica la existencia del paquete antes de agregarlo a la lista1
+        if !(dpkg -s "${package}" >/dev/null 2>&1); then
+          list1="${list1} ${package}"
+        fi
         ;;
     esac
+
   done < "${1}"
 
-  if [ -n "$list" ]; then
-    c="sudo nala install ${list} -y"
-    eval $c
-  fi
-
-  if [ -n "$list2" ]; then
-    for i in $list2; do
-      to_install_apt+=($i)
-    done
-    sudo apt install -y "${to_install_apt[@]}"
-  fi
+  # Construye los comandos de instalación para nala y apt
+  list3="${list1}${list2}"
+  c="sudo nala install ${list3} -y"
+  c_alt="sudo apt install ${list3} -y"
+  echo "Comando para nala:"
+  echo $c
+    try {
+      eval $c
+      eval $c_alt
+    } catch {
+      c_1="sudo aptitude install -y ${list1}"
+      c_2="sudo aptitude install -y ${list2}"
+      c_3="sudo apt-get install -y ${list1}"
+      c_4="sudo apt-get install -y ${list2}"
+      eval $c_1
+      eval $c_2
+      eval $c_3
+      eval $c_4
+    }
 }
-
 
 function add_repos() {
     sudo nala install flatpak -y
@@ -85,6 +121,13 @@ function add_extra_repos() {
     # Add Brave Browser repository
     sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+    # Add VSCODE repository
+    sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+    wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+    sudo mv /etc/apt/trusted.gpg /etc/apt/vscode.gpg
+    sudo ln -s /etc/apt/vscode.gpg /etc/apt/trusted.gpg.d/vscode.gpg
+
+
 
 #     # Add OnlyOffice repository
 #     mkdir -p -m 700 ~/.gnupg
@@ -136,6 +179,37 @@ function install_kde() {
   sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
 }
 
+function flameshot_shortcuts_KDE() {
+    # Ruta del escritorio
+    desktop_path="$HOME/$(xdg-user-dir DESKTOP)"
+    # Contenido del archivo
+    script_content="flameshot gui --raw | convert - -resize 400% png:- | tesseract stdin stdout | awk '{printf \"%s\", (NR>1 ? \"\\n\" : \"\") $0}' | xclip -in -selection clipboard"
+    # Ruta completa del archivo en el escritorio
+    file_path="$desktop_path/flameshot_OCR.txt"
+    # Forzar la creación y reemplazo del archivo
+    echo -e "$script_content" > "$file_path"
+
+    # Archivo de configuración
+    archivo_config="$HOME/.config/kglobalshortcutsrc"
+    # Contenido de los atajos
+    atajo_flameshot="[org.flameshot.Flameshot.desktop]
+    Capture=Print,none,Tomar captura de pantalla
+    Configure=Ctrl+Shift+Print,none,Configurar
+    Launcher=Ctrl+Print,none,Open launcher
+    _k_friendly_name=Flameshot
+    _launch=none,none,Flameshot"
+
+    atajo_plasma="[PlasmaShortcuts]
+    Print=flameshot gui"
+
+    # Añadir atajos directamente
+    echo -e "$atajo_flameshot" | sudo tee -a "$archivo_config" > /dev/null
+    echo -e "$atajo_plasma" | sudo tee -a "$archivo_config" > /dev/null
+
+    # Ejecutar kbuildsycoca5 con sudo
+    sudo kbuildsycoca5
+}
+
 
 function install_core_apps() {
   # Development tools and libraries
@@ -145,6 +219,7 @@ function install_core_apps() {
   sleep 3
   check_installed "${tools}"
   sudo npm install electron-store
+  npm install electron-store
   sudo -H pip3 install --upgrade pip
 
   sudo wget https://sh.rustup.rs -O rustup-init.sh
@@ -226,26 +301,53 @@ function install_core_apps() {
   pipx install lastversion
   pipx ensurepath
 
-  cp ~/.bashrc ~/.bashrc_old
-  cp ~/.bashrc ~/aux.txt
-  echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"" >> ~/aux.txt
-
-  rm -rf ~/.bashrc
-  mv ~/aux.txt ~/.bashrc
-  source ~/.bashrc
-
-  sudo cp /root/.bashrc /root/.bashrc_old
-  sudo cp /root/.bashrc /root/aux.txt
-  echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"" | sudo tee -a /root/aux.txt
-  sudo rm -rf /root/.bashrc
-  sudo mv /root/aux.txt /root/.bashrc
-  sudo source /root/.bashrc
-
   sudo npm install -g hblock
+  npm install -g hblock
   hblock
 
   cargo install cargo-update
   cargo install topgrade
+  cargo install eza
+
+  # Definir nuevos alias
+  new_aliases="# Extra aliases
+  alias cat=\"batcat -f\"
+  alias ocat=\"/usr/bin/cat\"
+  alias fupdate=\"topgrade && sudo hblock -O /etc/host\"
+  alias l=\"eza\"
+  alias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"
+  alias kedit=\"/usr/bin/featherpad\"
+  alias ytmdesktop=\"/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop\"
+
+  function ls() {
+    if [[ \$# -eq 0 ]]; then
+      # Si no hay argumentos, ejecuta eza con los sufijos adicionales
+      eza --group-directories-first --icons
+    else
+      case \$1 in
+        ls) shift; eza \$@ --group-directories-first --icons;;
+        ll) shift; eza \$@ -lbGFhmua --group-directories-first --no-permissions --icons;;
+        llp) shift; eza \$@ -lbGFhmua --group-directories-first --icons;;
+        la) shift; eza \$@ -a --group-directories-first --icons;;
+        lt) shift; eza \$@ --tree --level=2 --icons;;
+        lt3) shift; eza \$@ --tree --level=3 --icons;;
+        lt4) shift; eza \$@ --tree --level=4 --icons;;
+        *)
+          # Agregamos la opción --color solo si es un terminal interactivo
+          if [ -t 1 ]; then
+            eza \$@ --group-directories-first --icons --color
+          else
+            eza \$@ --group-directories-first --icons
+          fi
+          ;;
+      esac
+    fi
+  }"
+
+  # Agregar nuevos alias al final del archivo .bashrc
+  echo -e "$new_aliases" >> ~/.bashrc
+  echo -e "$new_aliases" | sudo tee -a /root/.bashrc
+
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
@@ -277,6 +379,7 @@ function install_core_apps() {
   sudo nala install fonts-noto-color-emoji -y
   sudo cp ../dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
   fc-cache -f -v
+  flameshot_shortcuts_KDE
 }
 
 function install_multimedia() {
@@ -306,19 +409,89 @@ do
   sudo echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
   clear
-  if [ $f == 1 ]; then
-    # Uncomment and modify these lines as needed to install flatpak apps
-     flatpak install flathub org.onlyoffice.desktopeditors -y
-    # flatpak install flathub org.strawberrymusicplayer.strawberry -y
+    if [ $f == 1 ]; then
+    # Descomenta y modifica estas líneas según sea necesario para instalar aplicaciones flatpak
+    flatpak install flathub org.onlyoffice.desktopeditors -y
+    flatpak install flathub com.github.dail8859.NotepadNext -y
+    flatpak install flathub org.localsend.localsend_app -y
+    flatpak install flathub org.strawberrymusicplayer.strawberry -y
     # flatpak install flathub io.github.prateekmedia.appimagepool -y
     # flatpak install flathub app.ytmdesktop.ytmdesktop -y
     # flatpak install flathub tv.kodi.Kodi -y
     # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
     # flatpak install flathub io.freetubeapp.FreeTube -y
     # flatpak install flathub com.github.tenderowl.frog -y
-    # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+    flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
     # flatpak install flathub org.phoenicis.playonlinux -y
     # flatpak install flathub com.usebottles.bottles -y
+    
+    # Instalar Visual Studio Code
+    sudo nala install code -y
+
+    # Borrar el archivo de configuración existente, si existe
+    sudo rm -f ~/.config/Code/User/settings.json
+
+    # Configurar Visual Studio Code
+    echo '{
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "prettier.singleQuote": true,
+        "prettier.trailingComma": "all",
+        "prettier.jsxSingleQuote": true,
+        "prettier.printWidth": 80,
+        "editor.fontFamily": "\"JetBrainsMono Nerd Font\", Menlo, Monaco, \"Courier New\", monospace, \"Noto Color Emoji\"",
+        "editor.fontLigatures": true,
+        "editor.fontSize": 14,
+        "editor.lineHeight": 24,
+        "editor.fontWeight": "400",
+        "workbench.colorTheme": "One Monokai"
+    }' | sudo tee -a ~/.config/Code/User/settings.json
+
+    # Instalar extensiones adicionales
+    code --install-extension "azemoh.one-monokai"
+    code --install-extension "NarasimaPandiyan.jetbrainsmono"
+    code --install-extension "vscode-icons-team.vscode-icons"
+    code --install-extension "ZainChen.json"
+    code --install-extension "shakram02.bash-beautify"
+    code --install-extension "KevinRose.vsc-python-indent"
+    code --install-extension "hb432.prettier-eslint-typescript"
+    code --install-extension "bodil.prettier-toml"
+    code --install-extension "be5invis.toml"
+    code --install-extension "ms-vscode.powershell"
+    code --install-extension "formulahendry.auto-close-tag"
+    code --install-extension "streetsidesoftware.code-spell-checker"
+    code --install-extension "esbenp.prettier-vscode"
+
+    # Instalar Kodi mediante Flatpak
+    sudo flatpak install flathub tv.kodi.Kodi -y
+
+    # Obtener enlace de la última versión de AceStream
+    last_version_link=$(lastversion --assets https://github.com/bro2020/acestream-appimage/releases)
+
+    # Directorio de instalación
+    install_dir="/opt/AceStream"
+
+    # Crear directorio si no existe y asignar permisos 777
+    sudo mkdir -p "$install_dir"
+    sudo chmod 777 "$install_dir"
+
+    # Descargar la última versión
+    sudo wget -O "$install_dir/AceStream.AppImage" "$last_version_link"
+
+    # Descargar la imagen y guardar como acestream_logo.png
+    sudo wget -O "$install_dir/acestream_logo.png" "https://avatars.githubusercontent.com/u/15086619?v=4"
+
+    # Dar permisos de ejecución
+    sudo chmod +x "$install_dir/AceStream.AppImage"
+
+    # Crear lanzador de aplicación
+    desktop_file="/usr/share/applications/acestream.desktop"
+    echo "[Desktop Entry]
+    Name=AceStream
+    Exec=konsole -e '/opt/AceStream/AceStream.AppImage --client-console --no-sandbox'
+    Icon=/opt/AceStream/acestream_logo.png
+    Type=Application
+    Categories=Network;" | sudo tee "$desktop_file"
   fi
-  return
+return
 }

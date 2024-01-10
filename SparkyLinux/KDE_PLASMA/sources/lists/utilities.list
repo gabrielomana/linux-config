@@ -13,7 +13,6 @@ unrar
 p7zip
 unzip
 bat
-exa
 v4l2loopback-utils
 neofetch
 printer-driver-cups-pdf
@@ -21,12 +20,10 @@ grub-customizer
 tesseract-ocr-spa
 gimagereader
 timeshift
-ksnip
 pdfarranger
 qbittorrent
 usbutils
 rar
-unrar
 firefox-sparky
 appimagelauncher
 balena-etcher
@@ -37,3 +34,10 @@ sparky-codecs
 sparky-desktop-data
 sparky-welcome
 sparky-wine
+featherpad
+flameshot
+xclip
+xsel
+grim
+liblzo2-2
+catfish

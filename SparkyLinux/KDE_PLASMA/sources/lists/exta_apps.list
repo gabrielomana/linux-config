@@ -1,5 +1,4 @@
 brave-browser
-brave-browser
 filezilla
 kdenlive
 qemu-utils
@@ -28,3 +27,7 @@ clamav
 clamtk
 variety
 webapp-manager
+qemu
+virt-top
+code
+qtqr

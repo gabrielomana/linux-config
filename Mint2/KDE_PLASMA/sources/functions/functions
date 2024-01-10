@@ -68,17 +68,15 @@ function check_installed {
         resultado=$(aptitude search "${STR}" 2>/dev/null)
         # Verificar si la salida contiene al menos una línea, lo que indica que hay paquetes disponibles
         if [ -n "$resultado" ]; then
-        list2="${list2} ${STR}"
+          list2="${list2} ${STR}"
         fi
-    ;;
+      ;;
 
       *)
         # Si no hay asterisco, se verifica la existencia del paquete antes de agregarlo a la lista1
-        #if !(dpkg -s "${package}" >/dev/null 2>&1); then
-          if !(apt show "${package}" 2>&1 | grep -q "N: Unable to locate package"); then
-            list1="${list1} ${package}"
-          fi
-        #fi
+        if !(dpkg -s "${package}" >/dev/null 2>&1); then
+          list1="${list1} ${package}"
+        fi
         ;;
     esac
 
@@ -90,8 +88,15 @@ function check_installed {
   c_alt="sudo apt install ${list3} -y"
   echo "Comando para nala:"
   echo $c
-  eval $c
-  eval $c_alt
+    try {
+      eval $c
+      eval $c_alt
+    } catch {
+      c_1="sudo aptitude install -y ${list1}"
+      c_2="sudo aptitude install -y ${list2}"
+      eval $c_1
+      eval $c_2
+    }
 }
 
 function uninstall_xfce {
@@ -258,7 +263,7 @@ function install_kde {
 
  function flameshot_shortcuts_KDE() {
     # Ruta del escritorio
-    desktop_path="$HOME/Desktop"
+    desktop_path="$HOME/$(xdg-user-dir DESKTOP)"
     # Contenido del archivo
     script_content="flameshot gui --raw | convert - -resize 400% png:- | tesseract stdin stdout | awk '{printf \"%s\", (NR>1 ? \"\\n\" : \"\") $0}' | xclip -in -selection clipboard"
     # Ruta completa del archivo en el escritorio
@@ -397,7 +402,7 @@ function install_core_apps(){
   cargo install topgrade
   cargo install eza
 
-  flameshot_OCR
+  flameshot_shortcuts_KDE
 
 # Copiar el archivo .bashrc existente como respaldo
 cp ~/.bashrc ~/.bashrc_old
