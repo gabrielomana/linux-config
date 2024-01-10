@@ -1,14 +1,17 @@
 #!/bin/bash
 dir="$(pwd)"
+extra_apps="${dir}/sources/lists/extra_apps.list"
 
-exta_apps="${dir}/sources/lists/exta_apps.list"
+# Incluir funciones
+. "${dir}/sources/functions/zsh_starship"
+. "${dir}/sources/functions/functions"
 
-. "${dir}"/sources/functions/zsh_starship
-. "${dir}"/sources/functions/functions
 
-########## TERMINAL #############################################
-sudo cp /etc/profile.d/vte-* /etc/profile.d/vte.sh
-cp -r dotfiles/TILIX/tilix ~/.config/
+ sudo chmod 1777 /var/tmp/
+ sudo chmod 1777 /var/cache/
+ sudo chmod 1777 /var/log/
+
+########## KONSOLE #############################################
 neofetch
 clear
 cp -r dotfiles/neofetch.conf ~/.config/neofetch/config.conf
@@ -26,6 +29,7 @@ install_extra_apps
 clear
 echo "CLEAN & FINAL STEPS"
 sleep 3
+# Limpiar y actualizar el sistema
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
 sleep 3
 sudo mintsources
@@ -33,103 +37,49 @@ sudo apt update -y
 sudo nala update
 clear
 
-
-
 #ZSWAP+SWAPPINESS+GRUB
 sudo sysctl vm.swappiness=25
 
 sudo cp /etc/default/grub /etc/default/grub_old
-sudo cp ${dir}/dotfiles/grub /etc/default/grub
+sudo cp "${dir}/dotfiles/grub" /etc/default/grub
 sudo update-grub
-
 sudo su -c "echo 'z3fold' >> /etc/initramfs-tools/modules"
 sudo update-initramfs -u
 
-###mem="$(free -g | awk 'NR==2{printf "%s\n", $2}')"
+# Actualizar el kernel usando Xanmod
+wget -qO - https://dl.xanmod.org/archive.key | gpg --yes --dearmor | sudo tee /usr/share/keyrings/xanmod-archive-keyring.gpg > /dev/null
+echo 'deb [signed-by=/usr/share/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-release.list > /dev/null
+sudo apt update
+sudo sh -c 'echo "APT::Periodic::Update-Package-Lists \"1\";\nAPT::Periodic::Download-Upgradeable-Packages \"0\";\nAPT::Periodic::AutocleanInterval \"0\";\nAPT::Periodic::Unattended-Upgrade \"1\";" > /etc/apt/apt.conf.d/10periodic'
+sudo sh -c 'echo "Unattended-Upgrade::Allowed-Origins {\n\t\"${distro_id}:${distro_codename}-security\";\n\t\"${distro_id}:${distro_codename}-updates\";\n\t\"${distro_id}ESM:${distro_codename}\";\n};" > /etc/apt/apt.conf.d/50unattended-upgrades'
 
-#KERNEL UPDATE
-clear
-a=0
-k=0
-while [ $a -lt 1 ]
-do
-        read -p "Do you wish to install XANMOD KERNEL? " yn
-        case $yn in
-            [Yy]* ) a=1;install_kernel;k=1;clear;;
-            [Nn]* ) a=1;echo "OK";k=0;clear;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
+awk_script='
+    BEGIN {
+        while (!/flags/) if (getline < "/proc/cpuinfo" != 1) exit 1
+        if (/lm/&&/cmov/&&/cx8/&&/fpu/&&/fxsr/&&/mmx/&&/syscall/&&/sse2/) level = 1
+        if (level == 1 && /cx16/&&/lahf/&&/popcnt/&&/sse4_1/&&/sse4_2/&&/ssse3/) level = 2
+        if (level == 2 && /avx/&&/avx2/&&/bmi1/&&/bmi2/&&/f16c/&&/fma/&&/abm/&&/movbe/&&/xsave/) level = 3
+        if (level == 3 && /avx512f/&&/avx512bw/&&/avx512cd/&&/avx512dq/&&/avx512vl/) level = 4
+        if (level > 0) { print "v" level; exit level + 1 }
+        exit 1
+    }
+'
 
-if [ $k == 1 ]; then
-wget -qO - https://dl.xanmod.org/archive.key | sudo gpg --dearmor -o /usr/share/keyrings/xanmod-archive-keyring.gpg
-echo 'deb [signed-by=/usr/share/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-release.list
-sudo nala update
-SCRIPT_PATH="${dir}/check_xanmod.sh"
-# or
-kernel=$("$SCRIPT_PATH")
-get_kernel="sudo nala install $kernel -y"
-eval $get_kernel
-fi
+# Ejecuta el script AWK y guarda la salida en una variable
+ver=$(awk "$awk_script")
+
+# Instala el kernel XanMod utilizando la variable ver
+sudo apt install linux-xanmod-lts-x64$ver -y
+sudo update-initramfs -u
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
-clear
-echo "ZSH+OHMYZSH+STARSHIP"
-sleep 3
-
-cd ${dir}
-a=0
-f=0
+cd "${dir}"
 install_ZSH
-install_ZSH_ROOT
 
 ############## DUAL BOOT ####################
-clear
-echo "DUAL BOOT"
-sleep 3
+# Descomenta la siguiente línea si deseas instalar refind
+# sudo nala install refind -y
 
-a=0
-r=0
-while [ $a -lt 1 ]
-do
-        read -p "Do you wish to install DUAL BOOT SYSTEM? " yn
-        case $yn in
-            [Yy]* ) a=1;r=1;clear;;
-            [Nn]* ) a=1;echo "OK";k=0;clear;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
-
-     if [ $r == 1 ]; then
-     ##rEFInd PPA
-     sudo add-apt-repository sudo add-apt-repository ppa:rodsmith/refind -y
-     ##Fix deprecated Key MINT issue
-     sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
-     sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
-
-     sudo nala install refind -y
-    fi
-done
-
-
-############## GRUB-BTRFS ####################
-clear
-echo "GRUB-BTRFS"
-sleep 3
-
-SCRIPT_PATH="${dir}/check_filesystem.sh"
-# or
-file_sys=$("$SCRIPT_PATH")
-get_fs="$file_sys"
-eval "$get_fs"
-#collect result in $r
-fs=$(eval "$?")
-
-     if [ $fs == "btrfs" ]; then
-        sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
-        cd /git/grub-btrfs/
-        sudo make install
-    fi
 
 ############## EXTENSIONS ####################
 

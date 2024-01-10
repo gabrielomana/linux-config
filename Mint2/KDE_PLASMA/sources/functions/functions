@@ -1,4 +1,5 @@
 #!/bin/bash
+
 function check_uninstalled (){
   local package
   list=""
@@ -77,7 +78,6 @@ function check_installed {
 
 }
 
-
 function uninstall_xfce {
   check_uninstalled "${xfce}"
 
@@ -111,7 +111,6 @@ function uninstall_xfce {
   sudo dpkg --configure -a
   sudo apt --fix-broken install
 }
-
 
 function add_repos() {
   sudo nala install gpg -y
@@ -178,7 +177,6 @@ function add_repos() {
   sudo flatpak remote-modify --system --prio=4 fedora
 }
 
-
 function add_extra_repos(){
 # Add Brave Browser repository
     sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
@@ -242,9 +240,40 @@ function install_kde {
   check_installed "${kde_plasma_apps}"
 }
 
+ function flameshot_shortcuts_KDE() {
+    # Ruta del escritorio
+    desktop_path="$HOME/Desktop"
+    # Contenido del archivo
+    script_content="flameshot gui --raw | convert - -resize 400% png:- | tesseract stdin stdout | awk '{printf \"%s\", (NR>1 ? \"\\n\" : \"\") $0}' | xclip -in -selection clipboard"
+    # Ruta completa del archivo en el escritorio
+    file_path="$desktop_path/flameshot_OCR.txt"
+    # Forzar la creación y reemplazo del archivo
+    echo -e "$script_content" > "$file_path"
 
-function install_core_apps() {
-  # Development tools and libraries
+    
+    # Archivo de configuración
+    archivo_config="$HOME/.config/kglobalshortcutsrc"
+    # Contenido de los atajos
+    atajo_flameshot="[org.flameshot.Flameshot.desktop]
+    Capture=Print,none,Tomar captura de pantalla
+    Configure=Ctrl+Shift+Print,none,Configurar
+    Launcher=Ctrl+Print,none,Open launcher
+    _k_friendly_name=Flameshot
+    _launch=none,none,Flameshot"
+
+    atajo_plasma="[PlasmaShortcuts]
+    Print=flameshot gui"
+
+    # Añadir atajos directamente
+    echo -e "$atajo_flameshot" | sudo tee -a "$archivo_config" > /dev/null
+    echo -e "$atajo_plasma" | sudo tee -a "$archivo_config" > /dev/null
+
+    # Ejecutar kbuildsycoca5 con sudo
+    sudo kbuildsycoca5
+}
+
+function install_core_apps(){
+  ##Development tools and libraries
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
@@ -324,7 +353,7 @@ function install_core_apps() {
     fi
   fi
 
-  # Codecs and Drivers
+  #Codecs and Drivers
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
@@ -332,7 +361,7 @@ function install_core_apps() {
   sleep 3
   check_installed "${codecs}"
 
-  # Utilities
+  ##Utilities
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
@@ -345,33 +374,6 @@ function install_core_apps() {
   sudo pip install lastversion
   sudo pip ensurepath
 
-  #flameshot
-
-    # Archivo de configuración
-    archivo_config="$HOME/.config/kglobalshortcutsrc"
-
-    # Contenido de los atajos
-    atajo_flameshot="[org.flameshot.Flameshot.desktop]
-    Capture=Print,none,Tomar captura de pantalla
-    Configure=Ctrl+Shift+Print,none,Configurar
-    Launcher=Ctrl+Print,none,Open launcher
-    _k_friendly_name=Flameshot
-    _launch=none,none,Flameshot"
-
-    atajo_plasma="[PlasmaShortcuts]
-    Print=flameshot gui"
-
-    atajo_script="[flameshot.desktop]
-    _k_friendly_name=\\sgui --raw | tesseract stdin stdout | awk '{if (NR>1) print p; p=$0}' | xclip -in -selection clipboard
-    _launch=Ctrl+Shift+P,none,flameshot gui --raw | tesseract stdin stdout | awk '{if (NR>1) print p; p=$0}' | xclip -in -selection clipboard"
-
-    # Añadir atajos directamente
-    echo -e "$atajo_flameshot" | sudo tee -a "$archivo_config" > /dev/null
-    echo -e "$atajo_plasma" | sudo tee -a "$archivo_config" > /dev/null
-    echo -e "$atajo_script" | sudo tee -a "$archivo_config" > /dev/null
-    # Ejecutar kbuildsycoca5 con sudo
-    sudo kbuildsycoca5
-
   sudo npm install -g hblock
   hblock
 
@@ -379,13 +381,7 @@ function install_core_apps() {
   cargo install topgrade
   cargo install eza
 
-  # Configurar aliases en el archivo de usuario
-  cp ~/.bashrc ~/.bashrc_old
-  cp ~/.bashrc ~/aux.txt
-  echo -e "alias cat=\"batcat -f\"\nalias l=\"eza\"\nalias ls=\"eza --icons\"\nalias ll=\"eza -lah --icons\"\nalias la=\"eza -a --icons\"\nalias fupdate=\"topgrade && sudo hblock -O /etc/host\"\nalias featherpad='kedit'\nalias kedit='featherpad'" >> ~/aux.txt
-  rm -rf ~/.bashrc
-  mv ~/aux.txt ~/.bashrc
-  source ~/.bashrc
+  flameshot_OCR
 
 # Copiar el archivo .bashrc existente como respaldo
 cp ~/.bashrc ~/.bashrc_old
@@ -432,7 +428,7 @@ echo -e "$new_aliases" | sudo tee -a /root/.bashrc
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
 echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
-  # Pipewire & Wireplumber
+  ##Pipewire & Wireplumber
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
@@ -449,7 +445,10 @@ echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/
   systemctl --user --now enable pipewire{,-pulse}.{socket,service}
   systemctl --user --now enable wireplumber.service
 
-  # Nerd Fonts
+  sudo nala install pulseaudio -y
+  sudo nala install pavucontrol -y
+
+ #Nerd Fonts
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
@@ -475,7 +474,6 @@ echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/
   sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
   sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
   sudo rm /tmp/nerd_fonts/ -rf
-
   sudo nala install fonts-noto-color-emoji -y
   sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
   fc-cache -f -v
@@ -487,7 +485,6 @@ function install_multimedia()
 clear
 echo -e "INSTALL MULTIMEDIA APPS: \n"
 sleep 3
-
 check_installed "${multimedia}"
 }
 
@@ -575,7 +572,7 @@ code --install-extension "esbenp.prettier-vscode"
   # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
   # flatpak install flathub io.freetubeapp.FreeTube -y
   # flatpak install flathub com.github.tenderowl.frog -y
-  # flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+  flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
   # flatpak install flathub org.phoenicis.playonlinux -y
   # flatpak install flathub com.usebottles.bottles -y
 

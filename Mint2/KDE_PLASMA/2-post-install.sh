@@ -73,12 +73,15 @@ sleep 3
 
 # Limpiar y actualizar el sistema
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+sleep 3
 sudo mintsources
 sudo apt update -y
 sudo nala update
+clear
 
-# Configurar swappiness, GRUB y actualizar el kernel
+#ZSWAP+SWAPPINESS+GRUB
 sudo sysctl vm.swappiness=25
+
 sudo cp /etc/default/grub /etc/default/grub_old
 sudo cp "${dir}/dotfiles/grub" /etc/default/grub
 sudo update-grub
@@ -110,7 +113,6 @@ ver=$(awk "$awk_script")
 # Instala el kernel XanMod utilizando la variable ver
 sudo apt install linux-xanmod-lts-x64$ver -y
 sudo update-initramfs -u
-
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
 cd "${dir}"

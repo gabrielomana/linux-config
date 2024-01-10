@@ -23,175 +23,190 @@ function check_uninstalled (){
    c="sudo nala remove --purge "${list}" -y"
    clear
    eval $c
+   sudo nala autoremove -y
+   sudo nala install -f
+   sudo nala clean
+   sudo apt-get autoclean
+   clear
 }
 
 function check_installed {
   local package
   local to_install=()
-  list=""
+  list1=""
   list2=""
   while read -r package; do
     [ -z "${package}" ] && continue
-        STR="${package}"
-        SUB='*'
 
-        case $STR in
+    STR="${package}"
+    SUB='*'
 
-          *"$SUB"*)
-            list2="${list2} ${STR}"
-            ;;
-        esac
-  if !(dpkg -s "${package}" >/dev/null 2>&1); then
-    if !(nala show "${package}" 2>&1 | grep -q "Error: "); then
-      list="${list} ${package}"
-    fi
-  fi
+    case $STR in
+      *"$SUB"*)
+        # Si la línea contiene un asterisco, agrega a la lista2 con comillas si no las tiene
+        if [[ ! "${STR}" =~ ^\" ]]; then
+          STR="\"${STR}\""
+        fi
+        # Valida si el patrón es correcto para que aptitude encuentre paquetes
+        # Ejecutar el comando aptitude search con el patrón y almacenar la salida en una variable
+        resultado=$(aptitude search "${STR}" 2>/dev/null)
+        # Verificar si la salida contiene al menos una línea, lo que indica que hay paquetes disponibles
+        if [ -n "$resultado" ]; then
+        list2="${list2} ${STR}"
+        fi
+    ;;
+
+      *)
+        # Si no hay asterisco, se verifica la existencia del paquete antes de agregarlo a la lista1
+        #if !(dpkg -s "${package}" >/dev/null 2>&1); then
+          if !(apt show "${package}" 2>&1 | grep -q "N: Unable to locate package"); then
+            list1="${list1} ${package}"
+          fi
+        #fi
+        ;;
+    esac
+
   done < "${1}"
-   c="sudo nala install "${list}" -y"
-   c2="sudo apt install "${list2}" -y"
-   eval $c
 
-   for i in $list2; do
-    sudo apt-get install -y $i
-   done
+  # Construye los comandos de instalación para nala y apt
+  list3="${list1}${list2}"
+  c="sudo nala install ${list3} -y"
+
+  echo "Comando para nala:"
+  echo $c
+  eval $c
+
 }
-
 
 function uninstall_xfce {
   check_uninstalled "${xfce}"
+
+  # Fix missing packages
   clear
-  echo "UNINSTALL XFCE: "
-  echo " - Fix missing"
+  echo "UNINSTALL XFCE: Fixing missing packages"
   sleep 3
   sudo apt-get update --fix-missing
   sudo apt-get install -f
 
+  # Remove XFCE-related folders
   clear
-  echo "UNINSTALL XFCE: "
-  echo " - Fix missing"
-  echo " - Remove folders"
+  echo "UNINSTALL XFCE: Removing XFCE folders"
   sleep 3
-  sudo rm /usr/share/xfce4/ -rf
-  sudo rm /usr/share/thunar/ -rf
-  sudo rm /usr/share/themes/Mint* -rf
-  sudo rm /usr/share/themes/mint* -rf
-  sudo rm /usr/share/Thunar -rf
-  rm ~/.config/Thunar -rf
-  rm ~/.config/caja -rf
-  rm ~/.config/xfce4 -rf
+  sudo rm -rf /usr/share/xfce4/
+  sudo rm -rf /usr/share/thunar/
+  sudo rm -rf /usr/share/themes/Mint*
+  sudo rm -rf /usr/share/themes/mint*
+  sudo rm -rf /usr/share/Thunar
+  rm -rf ~/.config/Thunar
+  rm -rf ~/.config/caja
+  rm -rf ~/.config/xfce4
 
+  # Update and clean
   clear
-  echo "UNINSTALL XFCE: "
-  echo " - Fix missing"
-  echo " - Remove folders"
-  echo " - Update & clean"
+  echo "UNINSTALL XFCE: Updating & cleaning"
   sleep 3
-  sudo nala update; sudo nala upgrade -y; sudo nala install -f; sudo dpkg --configure -a; sudo apt --fix-broken install
-
+  sudo apt update
+  sudo apt upgrade -y
+  sudo apt install -f
+  sudo dpkg --configure -a
+  sudo apt --fix-broken install
 }
 
-function add_repos(){
-sudo add-apt-repository multiverse -y
+function add_repos() {
+  sudo nala install gpg -y
 
-##### KERNEL INSTALLER ####
-sudo add-apt-repository ppa:cappelikan/ppa -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/mainline.gpg
-sudo ln -s /etc/apt/mainline.gpg /etc/apt/trusted.gpg.d/mainline.gpg
+  # Add multiverse repository
+  sudo add-apt-repository multiverse -y
 
-##### NVIDIA ####
-sudo add-apt-repository ppa:graphics-drivers/ppa -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/nvidia.gpg
-sudo ln -s /etc/apt/nvidia.gpg /etc/apt/trusted.gpg.d/nvidia.gpg
+  # Add backports repository
+  codename=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n1 | cut -d ' ' -f 2 | tr '[:upper:]' '[:lower:]')
+  echo "deb http://archive.ubuntu.com/ubuntu/ $codename-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-package-repositories.list
+  #echo "deb-src http://archive.ubuntu.com/ubuntu/ $codename-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/official-source-repositories.list
 
-##### GRUB CUSTOMIZER ####
-sudo add-apt-repository ppa:danielrichter2007/grub-customizer -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/grub-customizer.gpg
-sudo ln -s /etc/apt/grub-customizer.gpg /etc/apt/trusted.gpg.d/grub-customizer.gpg
+  # Array to store keys
+  declare -a keys=()
 
-##### APP IMAGE LAUNCHER ####
-sudo add-apt-repository ppa:appimagelauncher-team/stable -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/appimagelauncher.gpg
-sudo ln -s /etc/apt/appimagelauncher.gpg /etc/apt/trusted.gpg.d/appimagelauncher.gpg
+  # Function to fix deprecated Mint issue
+  fix_mint_issue() {
+    sudo mv /etc/apt/trusted.gpg "/etc/apt/$1.gpg"
+    sudo ln -s "/etc/apt/$1.gpg" "/etc/apt/trusted.gpg.d/$1.gpg"
+  }
 
-##### PIPEWIRE ####
-sudo add-apt-repository ppa:pipewire-debian/pipewire-upstream -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/pipewire.gpg
-sudo ln -s /etc/apt/pipewire.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
+  # Add repositories with keys
+  add_repo_with_key() {
+    sudo add-apt-repository "$1" -y
+    fix_mint_issue "$2"
+    keys+=("$2")
+  }
 
-##### WIREPLUMBER ####
-sudo add-apt-repository ppa:pipewire-debian/wireplumber-upstream -y
-##Fix deprecated Key MINT issue
-sudo mv /etc/apt/trusted.gpg /etc/apt/wireplumber.gpg
-sudo ln -s /etc/apt/wireplumber.gpg /etc/apt/trusted.gpg.d/wireplumber.gpg
+  # Add repositories
+  add_repo_with_key "ppa:graphics-drivers/ppa" "nvidia"
+  add_repo_with_key "ppa:danielrichter2007/grub-customizer" "grub-customizer"
+  add_repo_with_key "ppa:appimagelauncher-team/stable" "appimagelauncher"
+  add_repo_with_key "ppa:kubuntu-ppa/backports" "kubuntu_backports"
+  add_repo_with_key "ppa:kubuntu-ppa/backports-extra" "kubuntu_backports_extra"
+  add_repo_with_key "ppa:ubuntustudio-ppa/backports" "ubuntustudio"
+  add_repo_with_key "ppa:pipewire-debian/pipewire-upstream" "pipewire"
+  add_repo_with_key "ppa:pipewire-debian/wireplumber-upstream" "wireplumber"
+  add_repo_with_key "ppa:qbittorrent-team/qbittorrent-stable" "qbittorrent"
 
+  # Clean and get missing keys
+  sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do
+    if ! [[ "${keys[@]}" =~ "$key" ]]; then
+      sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"
+      keys+=("$key")
+    fi
+  done
 
-##### POP OS ####
-# sentence=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1)
-# a=0
-# ulv=""
-# for word in $sentence
-# do
-#
-#
-#
-# if [ $a == 1 ] ; then
-#
-#
-#     ulv=$word
-# fi
-# a=1
-#
-# done
-# ulv= echo -e ""${ulv} | sed 's/ //g'
-#
-# sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 63C46DF0140D738961429F4E204DD8AEC33A7AFF
-# ##Fix deprecated Key MINT issue
-# sudo mv /etc/apt/trusted.gpg /etc/apt/pop_os.gpg
-# sudo ln -s /etc/apt/pop_os.gpg /etc/apt/trusted.gpg.d/pop_os.gpg
-# echo -e "deb http://apt.pop-os.org/proprietary ${ulv} main" | sudo tee -a /etc/apt/sources.list.d/pop_os.list
-# echo -e "deb http://apt.pop-os.org/ubuntu ${ulv}-backports main multiverse restricted universe"| sudo tee -a /etc/apt/sources.list.d/pop_os.list
+  # Update and clear
+  sudo nala update
+  clear
 
+  # Install Flatpaks
+  sudo nala install flatpak -y
+  sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
+  sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
+  sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
+  sudo chmod 1777 /var/tmp/
 
-
-##### CLEAN ANH GET MISSINGS KEYS ####
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo nala update
-clear
-
-##### FLATPACKS ####
-sudo nala install flatpak -y
-sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
-sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
-sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
-
-sudo flatpak remote-modify --system --prio=1 kde
-sudo flatpak remote-modify --system --prio=2 flathub
-sudo flatpak remote-modify --system --prio=3 elementary
-sudo flatpak remote-modify --system --prio=4 fedora
+  # Set priorities for Flatpak remotes
+  sudo flatpak remote-modify --system --prio=1 kde
+  sudo flatpak remote-modify --system --prio=2 flathub
+  sudo flatpak remote-modify --system --prio=3 elementary
+  sudo flatpak remote-modify --system --prio=4 fedora
 }
 
 function add_extra_repos(){
-###### BRAVE BROWSER ####
-sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+# Add Brave Browser repository
+    sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
 
+# Add VSCODE repository
+sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+sudo apt install software-properties-common apt-transport-https wget -y
+wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+ ##Fix deprecated Key MINT issue
+  sudo mv /etc/apt/trusted.gpg /etc/apt/vscode.gpg
+  sudo ln -s /etc/apt/vscode.gpg /etc/apt/trusted.gpg.d/vscode.gpg
+
+##rEFInd PPA
+  sudo add-apt-repository ppa:rodsmith/refind -y
+  ##Fix deprecated Key MINT issue
+  sudo mv /etc/apt/trusted.gpg /etc/apt/refind.gpg
+  sudo ln -s /etc/apt/refind.gpg /etc/apt/trusted.gpg.d/refind.gpg
 
 ##### CLEAN ANH GET MISSINGS KEYS ####
-sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
-sudo nala update
-clear
+  sudo apt update 2>&1 1>/dev/null | sed -ne 's/.NO_PUBKEY //p' | while read key; do if ! [[ ${keys[]} =~ "$key" ]]; then sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net:80 --recv-keys "$key"; keys+=("$key"); fi; done
+  sudo nala update
+  clear
 
 }
 
 function install_gnome {
   echo "INSTALL GNOME: "
-  echo " - Install GNOME Core"
+  
+  # Install GNOME Core
   check_installed "${gnome}"
   sleep 3
   clear
@@ -199,26 +214,22 @@ function install_gnome {
   sudo systemctl set-default graphical.target
   sudo dpkg-reconfigure gdm3
   sudo nala install gnome-software-plugin-flatpak -y
-  cd ${dir}
+  
+  # Set background image
   sudo cp dotfiles/themes/kristopher-roller-110203-unsplash.jpg /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
 
+  ## GDM3 Configuration
+  sudo nala install gdm3 -y
+  sudo dpkg-reconfigure gdm3
+  sudo nala install libglib2.0-dev dconf-cli -y
+  sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
+  sudo bash /git/gdm-tools/install.sh
+  sudo set-gdm-theme set -b /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
+  sudo cp dotfiles/ubuntu-logo.png /usr/share/plymouth/ubuntu-logo.png -rf
 
-  ##GDM3
-    sudo nala install gdm3 -y
-    sudo dpkg-reconfigure gdm3
-    sudo nala install libglib2.0-dev dconf-cli -y
-    sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
-    cd /git/gdm-tools/
-    sudo ./install.sh
-    sudo set-gdm-theme set -b /usr/share/backgrounds/kristopher-roller-110203-unsplash.jpg
-    cd ${dir}
-    sudo cp dotfiles/ubuntu-logo.png /usr/share/plymouth/ubuntu-logo.png -rf
-
-
-
-  #CLEAN GNOME
+  # Clean GNOME
   clear
-  echo "INSTALL GNOME: "
+  echo "CLEAN GNOME: "
   echo " - Install GNOME Core"
   echo " - Remove apps and bloatware"
   sleep 3
@@ -226,72 +237,97 @@ function install_gnome {
   sudo apt-get update --fix-missing
   sudo apt-get install -f
 
-  sudo mkdir /usr/share/wayland-sessions/hidden
+  # Create hidden directories for sessions
+  sudo mkdir -p /usr/share/wayland-sessions/hidden
+  sudo mkdir -p /usr/share/xsessions/hidden
 
-  sudo dpkg-divert --rename \
-  --divert /usr/share/wayland-sessions/hidden/gnome-classic.desktop \
-  --add /usr/share/wayland-sessions/gnome-classic.desktop
-
-  sudo dpkg-divert --rename \
-  --divert /usr/share/wayland-sessions/hidden/gnome-classic-xorg.desktop \
-  --add /usr/share/wayland-sessions/gnome-classic-xorg.desktop
-
-  sudo dpkg-divert --rename \
-  --divert /usr/share/wayland-sessions/hidden/gnome-classic-wayland.desktop \
-  --add /usr/share/wayland-sessions/gnome-classic-wayland.desktop
-
-    sudo dpkg-divert --rename \
-  --divert /usr/share/wayland-sessions/hidden/ubuntu.desktop \
-  --add /usr/share/wayland-sessions/ubuntu.desktop
-
-      sudo dpkg-divert --rename \
-  --divert /usr/share/wayland-sessions/hidden/ubuntu-wayland.desktop \
-  --add /usr/share/wayland-sessions/ubuntu-wayland.desktop
-
-    sudo dpkg-divert --rename \
-  --divert /usr/share/wayland-sessions/hidden/ubuntu-xorg.desktop \
-  --add /usr/share/wayland-sessions/ubuntu-xorg.desktop
-
-
-
-  sudo mkdir /usr/share/xsessions/hidden
-
-  sudo dpkg-divert --rename \
-  --divert /usr/share/xsessions/hidden/gnome-classic.desktop \
-  --add /usr/share/xsessions/gnome-classic.desktop
-
-  sudo dpkg-divert --rename \
-  --divert /usr/share/xsessions/hidden/gnome-classic-xorg.desktop \
-  --add /usr/share/xsessions/gnome-classic-xorg.desktop
-
-    sudo dpkg-divert --rename \
-  --divert /usr/share/xsessions/hidden/ubuntu.desktop \
-  --add /usr/share/xsessions/ubuntu.desktop
-
-    sudo dpkg-divert --rename \
-  --divert /usr/share/xsessions/hidden/ubuntu-xorg.desktop \
-  --add /usr/share/xsessions/ubuntu-xorg.desktop
-
+  # Divert sessions to hidden directories
+  for session in gnome-classic gnome-classic-xorg gnome-classic-wayland ubuntu ubuntu-wayland ubuntu-xorg; do
+    sudo dpkg-divert --rename --divert "/usr/share/wayland-sessions/hidden/${session}.desktop" --add "/usr/share/wayland-sessions/${session}.desktop"
+    sudo dpkg-divert --rename --divert "/usr/share/xsessions/hidden/${session}.desktop" --add "/usr/share/xsessions/${session}.desktop"
+  done
 }
 
-function install_core_apps()
-{
+
+
+function install_core_apps(){
 ##Development tools and libraries
   clear
   echo "INSTALL SYSTEM CORE APPS: "
   echo " - Development tools and libraries"
   sleep 3
   check_installed "${tools}"
-  sudo npm install electron-store
-  sudo wget https://sh.rustup.rs -O rustup-init.sh
-  sudo chmod 777 rustup-init.sh
-  ./rustup-init.sh -y
-  source "$HOME/.cargo/env"
-  sudo rm rustup-init.sh -rf
+   # Install Node.js module
+  sudo npm install -g electron-store
+  npm install -g electron-store
+  sudo -H pip3 install --upgrade pip
+  pip3 install --upgrade pip
 
+# Install Rust
+  rustup_install_command="curl https://sh.rustup.rs -sSf | sh -s -- -y"
+  eval "$rustup_install_command"
+  source "$HOME/.cargo/env"
+  rm rustup-init.sh -rf
   source ~/.profile
   source ~/.cargo/env
 
+  CARGO_BIN_DIR=$(echo $HOME/.cargo/bin)
+  ROOT_SHELL=$(sudo cat /etc/passwd | grep "^root:" | awk -F: '{print $7}')
+  case "$ROOT_SHELL" in
+    "/bin/bash")
+      echo "export PATH=\$PATH:$CARGO_BIN_DIR" | sudo tee -a /root/.bashrc > /dev/null
+      ;;
+    "/bin/zsh")
+      echo "export PATH=\$PATH:$CARGO_BIN_DIR" | sudo tee -a /root/.zshrc > /dev/null
+      ;;
+    *)
+      echo "Unknown root shell type: $ROOT_SHELL"
+      ;;
+  esac
+
+  # Graphics Drivers Installation (INTEL, AMD, NVIDIA)
+  echo "INSTALL GRAPHICS DRIVERS"
+  gpu_info=$(lspci | grep -Ei "VGA compatible controller")
+
+  if echo "$gpu_info" | grep -qi "NVIDIA"; then
+      sudo apt-get install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
+      sudo apt-get install -y nvidia-vaapi-driver
+  elif echo "$gpu_info" | grep -qi "Advanced Micro Devices"; then
+      sudo apt-get install -y firmware-amd-graphics amdgpu-pro
+      sudo apt-get install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
+  elif echo "$gpu_info" | grep -qi "Intel"; then
+      sudo apt-get install -y firmware-misc-nonfree
+      sudo apt-get install -y i965-va-driver
+  fi
+
+  # Identify your processor and install the appropriate drivers and microcodes
+  echo "IDENTIFYING PROCESSOR AND INSTALLING DRIVERS AND MICROCODES"
+  cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
+
+  if echo "$cpu_name" | grep -qi "intel"; then
+    sudo apt-get install -y intel-microcode
+  elif echo "$cpu_name" | grep -qi "amd"; then
+    sudo apt-get install -y amd64-microcode
+  else
+    echo "Failed to identify the processor."
+  fi
+
+
+  # Virtual Machine Drivers
+  echo "INSTALL VIRTUAL MACHINE DRIVERS"
+  if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
+    hypervisor=$(cat /sys/class/dmi/id/product_name)
+
+    if [[ "$hypervisor" =~ "VMware" ]]; then
+        sudo apt-get install -y open-vm-tools
+    elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
+        sudo apt-get install -y hyperv-daemons
+    elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
+        sudo apt-get install -y virtualbox-guest-dkms virtualbox-guest-utils
+    elif [[ "$hypervisor" =~ "KVM" ]]; then
+        sudo apt-get install -y qemu-guest-agent
+    fi
+  fi
 
  #Codecs and Drivers
   clear
@@ -310,29 +346,87 @@ function install_core_apps()
   sleep 3
   check_installed "${utilities}"
   sudo apt install "util-linux*" -y
+  
+  sudo pip install lastversion
+  sudo pip ensurepath
+ #flameshot
 
-  cp ~/.bashrc ~/.bashrc_old
-  cp ~/.bashrc ~/aux.txt
-  sudo echo -e "alias gedit=\"gnome-text-editor\"\nalias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias kate=\"/usr/bin/flatpak run --branch=master --arch=x86_64 --command=kate --file-forwarding org.kde.kate\"\nalias ytmdesktop=\"/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop\"" >> ~/aux.txt
-  rm -rf ~/.bashrc
-  mv ~/aux.txt ~/.bashrc
-  source ~/.bashrc
+    # Archivo de configuración
+    archivo_config="$HOME/.config/kglobalshortcutsrc"
 
-  sudo cp /root/.bashrc /root/.bashrc_old
-  sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "alias gedit=\"gnome-text-editor\"\nalias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"\nalias kate=\"/usr/bin/flatpak run --branch=master --arch=x86_64 --command=kate --file-forwarding org.kde.kate\"\nalias ytmdesktop=\"/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop\""  | sudo tee -a /root/aux.txt
-  sudo rm -rf /root/.bashrc
-  sudo mv /root/aux.txt /root/.bashrc
+    # Contenido de los atajos
+    atajo_flameshot="[org.flameshot.Flameshot.desktop]
+    Capture=Print,none,Tomar captura de pantalla
+    Configure=Ctrl+Shift+Print,none,Configurar
+    Launcher=Ctrl+Print,none,Open launcher
+    _k_friendly_name=Flameshot
+    _launch=none,none,Flameshot"
 
-   sudo gsettings set org.gnome.desktop.default-applications.terminal exec 'tilix'
+    atajo_plasma="[PlasmaShortcuts]
+    Print=flameshot gui"
 
-   sudo npm install -g hblock
-   hblock
+    atajo_script="[flameshot.desktop]
+    _k_friendly_name=\\sgui --raw | tesseract stdin stdout | awk '{if (NR>1) print p; p=$0}' | xclip -in -selection clipboard
+    _launch=Ctrl+Shift+P,none,flameshot gui --raw | tesseract stdin stdout | awk '{if (NR>1) print p; p=$0}' | xclip -in -selection clipboard"
 
-   cargo install cargo-update
-   cargo install topgrade
-   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
-   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
+    # Añadir atajos directamente
+    echo -e "$atajo_flameshot" | sudo tee -a "$archivo_config" > /dev/null
+    echo -e "$atajo_plasma" | sudo tee -a "$archivo_config" > /dev/null
+    echo -e "$atajo_script" | sudo tee -a "$archivo_config" > /dev/null
+    # Ejecutar kbuildsycoca5 con sudo
+    sudo kbuildsycoca5
+
+  sudo npm install -g hblock
+  hblock
+
+  cargo install cargo-update
+  cargo install topgrade
+  cargo install eza
+
+# Copiar el archivo .bashrc existente como respaldo
+cp ~/.bashrc ~/.bashrc_old
+
+# Definir nuevos alias
+new_aliases="# Extra aliases
+alias cat=\"batcat -f\"
+alias ocat=\"/usr/bin/cat\"
+alias fupdate=\"topgrade && sudo hblock -O /etc/host\"
+alias l=\"eza\"
+alias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"
+alias kedit=\"/usr/bin/featherpad\"
+alias ytmdesktop=\"/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop\"
+
+function ls() {
+  if [[ \$# -eq 0 ]]; then
+    # Si no hay argumentos, ejecuta eza con los sufijos adicionales
+    eza --group-directories-first --icons
+  else
+    case \$1 in
+      ls) shift; eza \$@ --group-directories-first --icons;;
+      ll) shift; eza \$@ -lbGFhmua --group-directories-first --no-permissions --icons;;
+      llp) shift; eza \$@ -lbGFhmua --group-directories-first --icons;;
+      la) shift; eza \$@ -a --group-directories-first --icons;;
+      lt) shift; eza \$@ --tree --level=2 --icons;;
+      lt3) shift; eza \$@ --tree --level=3 --icons;;
+      lt4) shift; eza \$@ --tree --level=4 --icons;;
+      *)
+        # Agregamos la opción --color solo si es un terminal interactivo
+        if [ -t 1 ]; then
+          eza \$@ --group-directories-first --icons --color
+        else
+          eza \$@ --group-directories-first --icons
+        fi
+        ;;
+    esac
+  fi
+}"
+
+# Agregar nuevos alias al final del archivo .bashrc
+echo -e "$new_aliases" >> ~/.bashrc
+echo -e "$new_aliases" | sudo tee -a /root/.bashrc
+
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
+echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
  ##Pipewire & Wireplumber
   clear
@@ -353,7 +447,6 @@ function install_core_apps()
 
   sudo nala install pulseaudio -y
   sudo nala install pavucontrol -y
-
 
  #Nerd Fonts
   clear
@@ -420,120 +513,126 @@ sudo rm /usr/share/xsessions/*classic* -rf
 }
 
 #EXTRA APPS
-function install_extra_apps()
-{
-clear
-a=0
-f=0
-while [ $a -lt 1 ]
-do
-        read -p "Do you wish to install Extra APPS? " yn
-        case $yn in
-            [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";f=1;clear;;
-            [Nn]* ) a=1;echo "OK";clear;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
+function install_extra_apps() {
+  a=0
+  f=0
 
-sudo systemctl start libvirtd
-sudo systemctl enable libvirtd
+  while [ $a -lt 1 ]; do
+    read -p "Do you wish to install Extra APPS? " yn
+    case $yn in
+      [Yy]* ) a=1; f=1; add_extra_repos; check_installed "${extra_apps}";;
+      [Nn]* ) a=1; echo "OK"; clear;;
+      * ) echo "Please answer yes or no.";;
+    esac
+  done
 
-clear
-    if [ $f == 1 ]; then
+  if [ $f == 1 ]; then
+    #Instalar APPS
 
-      ###### ONLY OFFICE ####
-      clear
-      a=0
-      f=0
-      while [ $a == 0 ]
-      do
-        sudo rm /etc/apt/sources.list.d/onlyoffice.list -rf
-        sudo rm /etc/apt/trusted.gpg.d/onlyoffice.gpg -rf
-        sudo rm /tmp/*.gpg -rf
-        sudo rm ~/.gnupg -rf
+  # Iniciar y habilitar el servicio libvirtd
+  sudo systemctl start libvirtd
+  sudo systemctl enable libvirtd
+  echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
-        curl https://example.com/key.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null  # ascii-armored key
-        curl https://example.com/key.gpg | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null  # non-ascii-armored key
-        mkdir -p ~/.gnupg && chmod 700 ~/.gnupg && gpg --no-default-keyring --keyring /tmp/onlyoffice_keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5 && gpg --no-default-keyring --keyring /tmp/onlyoffice_keyring.gpg --export | sudo tee /etc/apt/trusted.gpg.d/onlyoffice.gpg > /dev/null && rm /tmp/onlyoffice_keyring.gpg  # keyserver
+  # Borrar el archivo de configuración existente, si existe
+  sudo rm -f ~/.config/Code/User/settings.json
 
+  # Configurar Visual Studio Code
+  echo '{
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true,
+      "prettier.singleQuote": true,
+      "prettier.trailingComma": "all",
+      "prettier.jsxSingleQuote": true,
+      "prettier.printWidth": 80,
+      "editor.fontFamily": "\"JetBrainsMono Nerd Font\", Menlo, Monaco, \"Courier New\", monospace, \"Noto Color Emoji\"",
+      "editor.fontLigatures": true,
+      "editor.fontSize": 14,
+      "editor.lineHeight": 24,
+      "editor.fontWeight": "400",
+      "workbench.colorTheme": "One Monokai"
+  }' | sudo tee -a ~/.config/Code/User/settings.json
 
-        echo deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/onlyoffice.gpg] https://download.onlyoffice.com/repo/debian squeeze main | sudo tee /etc/apt/sources.list.d/onlyoffice.list
-
-        sudo nala update
-
-        sudo nala install -y onlyoffice-desktopeditors
-
-        if command -v onlyoffice-desktopeditors ; then
-            a=1
-        else
-            f=${f}+1
-            if [ $f == 10 ] ; then
-                a=1
-                flatpak install flathub org.onlyoffice.desktopeditors -y
-            fi
-        fi
-      done
-
-      ##BALENA ETCHER
-      clear
-      a=0
-      f=0
-      sudo nala install apt-transport-https -y
-      while [ $a == 0 ]
-      do
-        sudo rm /etc/apt/sources.list.d/balena-etcher.list -rf
-        sudo rm "/etc/apt/trusted.gpg.d/balena*" -rf
-        sudo rm "/usr/share/keyrings/balena*" -rf
-        sudo rm -rf "/var/lib/apt/lists/*balena*"
-        sudo nala update
-        clear
-
-        keyring_location=/usr/share/keyrings/balena-etcher-archive-keyring.gpg
-        curl -1sLf \
-          'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh' \
-          | sudo -E bash
-
-        sudo nala update
-        sudo nala install balena-etcher
-
-      if command -v balena-etcher ; then
-            a=1
-      fi
-      done
-
-      ##flatpak
-      flatpak install kde org.kde.kdenlive -y
-      flatpak install kde org.kde.kate -y
-      flatpak install flathub org.videolan.VLC -y
-      flatpak install flathub org.ksnip.ksnip -y
-      flatpak install flathub app.ytmdesktop.ytmdesktop -y
-      flatpak install flathub tv.kodi.Kodi -y
-      flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
-      flatpak install flathub io.freetubeapp.FreeTube -y
-      flatpak install flathub com.github.tenderowl.frog -y
-      flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
-      flatpak install flathub org.qbittorrent.qBittorrent -y
-      flatpak install flathub org.phoenicis.playonlinux -y
-      flatpak install flathub com.usebottles.bottles -y
+  # Instalar extensiones adicionales
+code --install-extension "azemoh.one-monokai"
+code --install-extension "NarasimaPandiyan.jetbrainsmono"
+code --install-extension "vscode-icons-team.vscode-icons"
+code --install-extension "ZainChen.json"
+code --install-extension "shakram02.bash-beautify"
+code --install-extension "KevinRose.vsc-python-indent"
+code --install-extension "hb432.prettier-eslint-typescript"
+code --install-extension "bodil.prettier-toml"
+code --install-extension "be5invis.toml"
+code --install-extension "ms-vscode.powershell"
+code --install-extension "formulahendry.auto-close-tag"
+code --install-extension "streetsidesoftware.code-spell-checker"
+code --install-extension "esbenp.prettier-vscode"
 
 
-      ##OTHERS
-      clear
-      sudo git clone https://github.com/coder12341/qr-tools.git /git/qr-tools/
-      cd ${dir}
-      cd /git/qr-tools/
-      sudo pip install -r requirements.txt
-      sudo nala install qtqr -y
-      sleep 5
-      clear
+  # BALENA ETCHER
+  # Obtener la última versión de Balena Etcher con lastversion
+  sudo apt remove balena-etcher -y
+  arch="_amd64"
+  balena_version=$(curl -sSLI -o /dev/null -w %{url_effective} https://github.com/balena-io/etcher/releases/latest | awk -F / '{print $NF}' | sed 's/^v//')
+  echo "https://github.com/balena-io/etcher/releases/download/v$balena_version/balena-etcher_$balena_version$arch.deb"
+  # Descargar el paquete .deb
+  sudo wget "https://github.com/balena-io/etcher/releases/download/v$balena_version/balena-etcher_$balena_version$arch.deb"
+  # Instalar Balena Etcher
+  sudo chmod o+r balena-etcher*
+  sudo apt install ./balena-etcher*.deb -y
+  # Eliminar el paquete descargado después de la instalación (opcional)
+  rm balena-etcher* -rf
 
-      cd ${dir}
-      sudo wget https://download.beeper.com/linux/appImage/x64/ -O beeper.AppImage
-      sudo chmod +x beeper.AppImage
-      ./beeper.AppImage &>/dev/null &
-      sleep 5
-      clear
-  fi
+  clear
+
+  # Descomenta y modifica estas líneas según sea necesario para instalar aplicaciones flatpak
+  flatpak install flathub org.onlyoffice.desktopeditors -y
+  flatpak install flathub com.github.dail8859.NotepadNext -y
+  flatpak install flathub org.localsend.localsend_app -y
+  flatpak install flathub org.strawberrymusicplayer.strawberry -y
+  # flatpak install flathub io.github.prateekmedia.appimagepool -y
+  # flatpak install flathub app.ytmdesktop.ytmdesktop -y
+  # flatpak install flathub tv.kodi.Kodi -y
+  # flatpak install flathub io.github.mimbrero.WhatsAppDesktop -y
+  # flatpak install flathub io.freetubeapp.FreeTube -y
+  # flatpak install flathub com.github.tenderowl.frog -y
+  flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
+  # flatpak install flathub org.phoenicis.playonlinux -y
+  # flatpak install flathub com.usebottles.bottles -y
+
+  #KODI + ACESTREAM
+
+  flatpak install flathub tv.kodi.Kodi -y
+  # Obtener enlace de la última versión de AceStream
+  last_version_link=$(lastversion --assets https://github.com/bro2020/acestream-appimage/releases)
+
+  # Directorio de instalación
+  install_dir="/opt/AceStream"
+
+  # Crear directorio si no existe y asignar permisos 777
+  sudo mkdir -p "$install_dir"
+  sudo chmod 777 "$install_dir"
+
+  # Descargar la última versión
+  sudo wget -O "$install_dir/AceStream.AppImage" "$last_version_link"
+
+  # Descargar la imagen y guardar como acestream_logo.png
+  sudo wget -O "$install_dir/acestream_logo.png" "https://avatars.githubusercontent.com/u/15086619?v=4"
+
+  # Dar permisos de ejecución
+  sudo chmod +x "$install_dir/AceStream.AppImage"
+
+  # Crear lanzador de aplicación
+  desktop_file="/usr/share/applications/acestream.desktop"
+  echo "[Desktop Entry]
+  Name=AceStream
+  Exec=konsole -e '/opt/AceStream/AceStream.AppImage --client-console --no-sandbox'
+  Icon=/opt/AceStream/acestream_logo.png
+  Type=Application
+  Categories=Network;" | sudo tee "$desktop_file"
+
+
+    fi
+
 return
 }
-
