@@ -101,34 +101,9 @@ if [ $f == 1 ]; then
     fi
 
   # Update Debian and Sparky repositories
-  sudo rm -f /etc/apt/sources.list
-
-  echo -e "deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
-  deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
-  deb http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
-  deb-src http://security.debian.org/debian-security/ trixie-security/updates main contrib non-free non-free-firmware
-  deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
-  deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
-  deb http://deb-multimedia.org/ trixie main non-free" | sudo tee /etc/apt/sources.list
-
-
-  sudo rm -f /etc/apt/sources.list.d/sparky.list
-
-  echo -e "deb https://repo.sparkylinux.org/ core main
-  deb-src https://repo.sparkylinux.org/ core main
-  deb https://repo.sparkylinux.org/ sisters main
-  deb-src https://repo.sparkylinux.org/ sisters main" | sudo tee /etc/apt/sources.list.d/sparky.list
-
-  sudo apt update
-  sudo apt full-upgrade -y
-  sudo dpkg --configure -a
-  sudo apt install -f
-  sudo dpkg-reconfigure -a
-  sudo apt install -f
-
-  # Switch to testing
-  sudo rm /etc/apt/sources.list
   
+  # Switch to testing
+  sudo rm /etc/apt/sources.list 
   echo -e "deb http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
   deb-src http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
   deb http://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
@@ -137,22 +112,35 @@ if [ $f == 1 ]; then
   deb-src http://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
   deb https://deb-multimedia.org/ testing main contrib non-free non-free-firmware" | sudo tee /etc/apt/sources.list
 
-  #Config Unstable Security Updates
-    # Pre-requisitos e instalación
-    sudo apt install -y debsecan
-    set -ex
-    curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release | sudo tee /etc/apt/apt.conf.d/00default-release > /dev/null
-    curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/debsecan-apt-priority | sudo tee /usr/sbin/debsecan-apt-priority > /dev/null
-    curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/99debsecan | sudo tee /etc/apt/apt.conf.d/99debsecan > /dev/null
-    sudo chmod 755 /usr/sbin/debsecan-apt-priority
-    sudo ln -sf /var/lib/debsecan/apt_preferences /etc/apt/preferences.d/unstable-security-packages
+  sudo rm -f /etc/apt/sources.list.d/sparky.list
+  echo -e "deb https://repo.sparkylinux.org/ core main
+  deb-src https://repo.sparkylinux.org/ core main
+  deb https://repo.sparkylinux.org/ sisters main
+  deb-src https://repo.sparkylinux.org/ sisters main" | sudo tee /etc/apt/sources.list.d/sparky.list
 
-    sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get full-upgrade -y && sudo apt-get dist-upgrade -y && sudo apt --fix-broken install && sudo aptitude safe-upgrade -y
-    sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
-    sleep 3
-    sudo nala fetch --auto --fetches 5 -y
-    sudo nala update
-    clear
+  sudo apt update
+  # sudo apt full-upgrade -y
+  # sudo dpkg --configure -a
+  # sudo apt install -f
+  # sudo dpkg-reconfigure -a
+  # sudo apt install -f
 
-fi
-sudo reboot
+#   #Config Unstable Security Updates
+#     # Pre-requisitos e instalación
+#     sudo apt install -y debsecan
+#     set -ex
+#     curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release | sudo tee /etc/apt/apt.conf.d/00default-release > /dev/null
+#     curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/debsecan-apt-priority | sudo tee /usr/sbin/debsecan-apt-priority > /dev/null
+#     curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/99debsecan | sudo tee /etc/apt/apt.conf.d/99debsecan > /dev/null
+#     sudo chmod 755 /usr/sbin/debsecan-apt-priority
+#     sudo ln -sf /var/lib/debsecan/apt_preferences /etc/apt/preferences.d/unstable-security-packages
+
+#     sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get full-upgrade -y && sudo apt-get dist-upgrade -y && sudo apt --fix-broken install && sudo aptitude safe-upgrade -y
+#     sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+#     sleep 3
+#     sudo nala fetch --auto --fetches 5 -y
+#     sudo nala update
+#     clear
+
+# fi
+# sudo reboot
