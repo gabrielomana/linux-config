@@ -168,15 +168,16 @@ if [ $f == 1 ]; then
   deb-src http://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
   deb http://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
   deb-src http://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
-  deb https://deb-multimedia.org/ testing main contrib non-free non-free-firmware" | sudo tee /etc/apt/sources.list
+  deb https://deb-multimedia.org/ testing main non-free" | sudo tee /etc/apt/sources.list
 
   sudo rm -f /etc/apt/sources.list.d/sparky.list
   echo -e "deb https://repo.sparkylinux.org/ core main
   deb-src https://repo.sparkylinux.org/ core main
   deb https://repo.sparkylinux.org/ sisters main
   deb-src https://repo.sparkylinux.org/ sisters main" | sudo tee /etc/apt/sources.list.d/sparky.list
-
   sudo apt update
+  sudo mv /etc/apt/trusted.gpg "/etc/apt/trusted.gpg.d/sparky.gpg"
+  sudo ln -s "/etc/apt/sparky.gpg" "/etc/apt/trusted.gpg.d/sparky.gpg"
   # sudo apt full-upgrade -y
   # sudo dpkg --configure -a
   # sudo apt install -f
