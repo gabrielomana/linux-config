@@ -179,6 +179,23 @@ if [ $f == 1 ]; then
   sudo mv /etc/apt/trusted.gpg "/etc/apt/trusted.gpg.d/sparky.gpg"
   sudo ln -s "/etc/apt/sparky.gpg" "/etc/apt/trusted.gpg.d/sparky.gpg"
 
+  # Función para buscar y reemplazar en el archivo nala.list
+    local file_path="/etc/apt/sources.list.d/nala-sources.list"
+    local codename=$(curl -s https://www.debian.org/releases/testing/ | grep "<h1>" | sed -n 's/.*(\(.*\)).*/\1/p')
+
+    if [ -f "$file_path" ]; then
+        sudo sed -i "s/$codename/testing/g" "$file_path"
+    else
+        echo "El archivo $file_path no existe."
+    fi
+
+# Mostrar los resultados
+echo "Versión estable más reciente (stable): $stable"
+echo "Próxima versión estable (testing): $testing"
+
+# Reemplazar la palabra correspondiente en nala.list
+replace_codename_in_nala_list "$testing"
+
   sudo nala update -y
   sudo apt full-upgrade -y
   sudo apt dist-upgrade -y
