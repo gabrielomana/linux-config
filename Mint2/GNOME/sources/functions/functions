@@ -52,17 +52,15 @@ function check_installed {
         resultado=$(aptitude search "${STR}" 2>/dev/null)
         # Verificar si la salida contiene al menos una línea, lo que indica que hay paquetes disponibles
         if [ -n "$resultado" ]; then
-        list2="${list2} ${STR}"
+          list2="${list2} ${STR}"
         fi
-    ;;
+      ;;
 
       *)
         # Si no hay asterisco, se verifica la existencia del paquete antes de agregarlo a la lista1
-        #if !(dpkg -s "${package}" >/dev/null 2>&1); then
-          if !(apt show "${package}" 2>&1 | grep -q "N: Unable to locate package"); then
-            list1="${list1} ${package}"
-          fi
-        #fi
+        if !(dpkg -s "${package}" >/dev/null 2>&1); then
+          list1="${list1} ${package}"
+        fi
         ;;
     esac
 
@@ -70,11 +68,15 @@ function check_installed {
 
   # Construye los comandos de instalación para nala y apt
   list3="${list1}${list2}"
-  c="sudo nala install ${list3} -y"
 
-  echo "Comando para nala:"
-  echo $c
-  eval $c
+    c="sudo nala install ${list3} -y"
+    echo "Comando para nala:"
+    echo $c
+    if ! (eval $c); then
+        for i in $list3; do
+            sudo apt-get install -y $i 2>/dev/null
+        done
+    fi
 
 }
 
@@ -351,30 +353,14 @@ function install_core_apps(){
   sudo pip ensurepath
  #flameshot
 
-    # Archivo de configuración
-    archivo_config="$HOME/.config/kglobalshortcutsrc"
-
-    # Contenido de los atajos
-    atajo_flameshot="[org.flameshot.Flameshot.desktop]
-    Capture=Print,none,Tomar captura de pantalla
-    Configure=Ctrl+Shift+Print,none,Configurar
-    Launcher=Ctrl+Print,none,Open launcher
-    _k_friendly_name=Flameshot
-    _launch=none,none,Flameshot"
-
-    atajo_plasma="[PlasmaShortcuts]
-    Print=flameshot gui"
-
-    atajo_script="[flameshot.desktop]
-    _k_friendly_name=\\sgui --raw | tesseract stdin stdout | awk '{if (NR>1) print p; p=$0}' | xclip -in -selection clipboard
-    _launch=Ctrl+Shift+P,none,flameshot gui --raw | tesseract stdin stdout | awk '{if (NR>1) print p; p=$0}' | xclip -in -selection clipboard"
-
-    # Añadir atajos directamente
-    echo -e "$atajo_flameshot" | sudo tee -a "$archivo_config" > /dev/null
-    echo -e "$atajo_plasma" | sudo tee -a "$archivo_config" > /dev/null
-    echo -e "$atajo_script" | sudo tee -a "$archivo_config" > /dev/null
-    # Ejecutar kbuildsycoca5 con sudo
-    sudo kbuildsycoca5
+   # Ruta del escritorio
+    desktop_path="$HOME/$(xdg-user-dir DESKTOP)"
+    # Contenido del archivo
+    script_content="flameshot gui --raw | convert - -resize 400% png:- | tesseract stdin stdout | awk '{printf \"%s\", (NR>1 ? \"\\n\" : \"\") $0}' | xclip -in -selection clipboard"
+    # Ruta completa del archivo en el escritorio
+    file_path="$desktop_path/flameshot_OCR.txt"
+    # Forzar la creación y reemplazo del archivo
+    echo -e "$script_content" > "$file_path"
 
   sudo npm install -g hblock
   hblock

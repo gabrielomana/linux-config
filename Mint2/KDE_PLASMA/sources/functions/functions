@@ -84,13 +84,17 @@ function check_installed {
 
   # Construye los comandos de instalación para nala y apt
   list3="${list1}${list2}"
-  c="sudo nala install ${list3} -y"
-  c_alt_1="sudo aptitude install -y ${list1} || true"
-  c_alt_2="sudo aptitude install -y ${list2} || true"
-  echo "Comando para nala:"
-  echo $c
-  eval $c
-  eval $c_alt
+
+    c="sudo nala install ${list3} -y"
+    echo "Comando para nala:"
+    echo $c
+    if ! (eval $c); then
+        for i in $list3; do
+            sudo apt-get install -y $i 2>/dev/null
+        done
+    fi
+
+
 }
 
 function uninstall_xfce {
