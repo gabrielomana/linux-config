@@ -86,3 +86,4 @@ install_ZSH
 ############## EXTENSIONS ####################
 
 firefox dotfiles/extensions.html
+sudo aptitude safe-upgrade -y

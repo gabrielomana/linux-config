@@ -37,7 +37,7 @@ clear
 echo "ADD REPOSITORIES"
 sleep 3
 add_repos
-######################### KDE PLASMA ###############################
+######################### GNOME ###############################
 clear
 echo "INSTALL GNOME: "
 sleep 3
