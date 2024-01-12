@@ -180,11 +180,15 @@ if [ $f == 1 ]; then
   sudo ln -s "/etc/apt/sparky.gpg" "/etc/apt/trusted.gpg.d/sparky.gpg"
 
   # Función para buscar y reemplazar en el archivo nala.list
-    local file_path="/etc/apt/sources.list.d/nala-sources.list"
-    local codename=$(curl -s https://www.debian.org/releases/testing/ | grep "<h1>" | sed -n 's/.*(\(.*\)).*/\1/p')
-
+    file_path="/etc/apt/sources.list.d/nala-sources.list"
+    codename=$(curl -s https://www.debian.org/releases/testing/ | grep "<h1>" | sed -n 's/.*(\(.*\)).*/\1/p')
     if [ -f "$file_path" ]; then
-        sudo sed -i "s/$codename/testing/g" "$file_path"
+        # Usa grep para verificar si la expresión ya existe en el archivo
+        if grep -q "$codename" "$file_path"; then
+            sudo sed -i "s/$codename/testing/g" "$file_path"
+        else
+            echo "La expresión no existe en el archivo $file_path."
+        fi
     else
         echo "El archivo $file_path no existe."
     fi
