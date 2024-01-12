@@ -197,14 +197,24 @@ if [ $f == 1 ]; then
 
   sudo nala update
   sudo nala upgrade -y
-  # sudo apt full-upgrade -y
-  # sudo apt dist-upgrade -y
-  # sudo dpkg --configure -a
-  # sudo apt install -f
-  # sudo apt autoremove -y
-  # sudo aptitude safe-upgrade -y
+  sudo apt full-upgrade -y
+  sudo apt dist-upgrade -y
+  sudo dpkg --configure -a
+  sudo apt install -f
+  sudo apt autoremove -y
+  sudo aptitude safe-upgrade -y
 
-  # Puedes agregar más comandos según sea necesario.
+  # sECURITY UPGRADES FRON uNSTABLE
+  clear
+  sudo nala install -y debsecan
+  sudo curl -o /usr/sbin/debsecan-apt-priority https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/debsecan-apt-priority
+  sudo curl -o /etc/apt/apt.conf.d/99debsecan https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/99debsecan
+  sudo curl -o /etc/apt/preferences.d/unstable-packages https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/unstable-packages
+  sudo chmod 755 /usr/sbin/debsecan-apt-priority
+  sudo ln -sf /var/lib/debsecan/apt_preferences /etc/apt/preferences.d/unstable-security-packages
+  sudo apt update
+  sudo apt upgrade -y
+  
 fi
 
 # Comentario final
