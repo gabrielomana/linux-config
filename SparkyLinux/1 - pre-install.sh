@@ -9,12 +9,19 @@ dir="$(pwd)"
 # # Actualiza la fecha y hora del sistema usando la respuesta de Google
 # date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
 
+# # SUDO
+# # Instala sudo si no está instalado
+# if ! command -v sudo &> /dev/null; then
+#     echo "sudo not found. Installing sudo..."
+#     apt update
+#     apt install sudo -y
+# fi
 
-# # Actualización del sistema
-# sudo nala fetch --auto --fetches 5 -y
-# sudo nala update
-# sudo nala upgrade -y
+# # Agrega el usuario actual al archivo sudoers
+# echo "$USER ALL=(ALL:ALL) ALL" | sudo tee -a /etc/sudoers
 
+# # Verifica si se agregó la línea correctamente
+# grep -q "$USER" /etc/sudoers && echo "User $USER successfully added to the sudoers list." || echo "Error adding user $USER to the sudoers list."
 
 # # Instalación y configuración de idioma y locales
 # clear
@@ -24,6 +31,33 @@ dir="$(pwd)"
 # sudo update-locale LANG=es_ES.UTF-8
 # source /etc/default/locale
 
+# # Actualización del sistema
+# sudo apt update
+# sudo apt full-upgrade -y
+# sudo dpkg --configure -a
+# sudo apt install -f
+# sudo apt clean
+# sudo apt --fix-broken install
+# sudo aptitude safe-upgrade -y
+# sudo apt install linux-headers-$(uname -r) -y
+
+# # Instalación y actualización de NALA (si es necesario)
+# if ! command -v nala &> /dev/null; then
+#     echo "NALA not found. Installing NALA..."
+#     sudo apt install nala -y
+# fi
+
+# # Actualiza NALA si está instalado
+# if command -v nala &> /dev/null; then
+#     echo "Updating NALA..."
+#     sudo nala fetch --auto --fetches 5 -y
+#     sudo nala update
+#     sudo nala upgrade -y
+#     sudo nala install -f
+# else
+#     echo "NALA not installed. Skipping update."
+# fi
+
 # # Instalación de paquetes básicos
 # clear
 # echo "BASIC PACKAGES"
@@ -32,17 +66,6 @@ dir="$(pwd)"
 # sudo nala install aptitude curl wget apt-transport-https dirmngr lz4 sudo gpgv gnupg devscripts systemd-sysv software-properties-common ca-certificates dialog dkms cmake build-essential python3-pip pipx -y
 # sleep 5
 # clear
-
-# # Instalación de Pipewire y Wireplumber
-# # sudo apt install libfdk-aac2 libldacbt-{abr,enc}2 libopenaptx0 gstreamer1.0-pipewire libpipewire-0.3-{0,dev,modules} libspa-0.2-{bluetooth,dev,jack,modules} pipewire{,-{audio-client-libraries,pulse,bin,tests}} pipewire-doc libpipewire-* wireplumber{,-doc} gir1.2-wp-0.4 libwireplumber-0.4-{0,dev} pipewire pipewire-audio-client-libraries pipewire-media-session-* libspa-0.2-bluetooth -y
-# # sudo touch /etc/pipewire/media-session.d/with-pulseaudio
-# # sudo cp /usr/share/doc/pipewire/examples/systemd/user/pipewire-pulse.* /etc/systemd/user/
-# # systemctl --user --now disable pulseaudio.{socket,service}
-# # systemctl --user mask pulseaudio
-# # systemctl --user --now enable pipewire{,-pulse}.{socket,service}
-# # systemctl --user --now enable wireplumber.service
-# # sleep 5
-# # clear
 
 # # Instalación de otros paquetes básicos
 # echo "OTHER BASIC PACKAGES"
@@ -70,16 +93,25 @@ a=0
 f=0
 while [ $a -lt 1 ]
 do
-        read -p "¿Quieres cambiar a la rama Rolling?" yn
-        case $yn in
-            [Yy]* ) a=1;f=1;clear;;
-            [Nn]* ) a=1;echo "OK";clear;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
+    read -p "¿Quieres cambiar a la rama Rolling?" yn
+    case $yn in
+        [Yy]* )
+            a=1
+            f=1
+            clear
+            ;;
+        [Nn]* )
+            a=1
+            echo "OK"
+            clear
+            ;;
+        * )
+            echo "Please answer yes or no."
+            ;;
+    esac
+done
 
 if [ $f == 1 ]; then
-
     DEPS="bash coreutils dialog grep iputils-ping sparky-info sudo"
 
     PINGTEST0=$(sudo ping -c 1 debian.org | grep [0-9])
@@ -99,10 +131,36 @@ if [ $f == 1 ]; then
         echo "This is not Sparky 7 Orion Belt... exiting..."
         exit 1
     fi
+  # Resto del código para cambiar a la rama "Rolling"
+  clear
+  echo "Cambiando a la rama Rolling..."
+  sleep 3
 
-  # Update Debian and Sparky repositories
-  
-  # Switch to testing
+  DEPS="bash coreutils dialog grep iputils-ping sparky-info sudo"
+
+  # Verifica la conectividad a los servidores
+  PINGTEST0=$(sudo ping -c 1 debian.org | grep [0-9])
+  if [ "$PINGTEST0" = "" ]; then
+      echo "Debian server is offline... exiting..."
+      exit 1
+  fi
+
+  PINGTEST1=$(sudo ping -c 1 sparkylinux.org | grep [0-9])
+  if [ "$PINGTEST1" = "" ]; then
+      echo "Sparky server is offline... exiting..."
+      exit 1
+  fi
+
+  # Verifica que estás en Sparky 7 Orion Belt
+  OSCODE="`sudo cat /etc/lsb-release | grep Orion`"
+  if [ "$OSCODE" = "" ]; then
+      echo "This is not Sparky 7 Orion Belt... exiting..."
+      exit 1
+  fi
+
+  # Actualiza el archivo sources.list para cambiar a la rama "Rolling"
+  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak  # Respaldamos el archivo original
+
   sudo rm /etc/apt/sources.list 
   echo -e "deb http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
   deb-src http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
@@ -125,22 +183,6 @@ if [ $f == 1 ]; then
   # sudo dpkg-reconfigure -a
   # sudo apt install -f
 
-#   #Config Unstable Security Updates
-#     # Pre-requisitos e instalación
-#     sudo apt install -y debsecan
-#     set -ex
-#     curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release | sudo tee /etc/apt/apt.conf.d/00default-release > /dev/null
-#     curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/debsecan-apt-priority | sudo tee /usr/sbin/debsecan-apt-priority > /dev/null
-#     curl -o - https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/99debsecan | sudo tee /etc/apt/apt.conf.d/99debsecan > /dev/null
-#     sudo chmod 755 /usr/sbin/debsecan-apt-priority
-#     sudo ln -sf /var/lib/debsecan/apt_preferences /etc/apt/preferences.d/unstable-security-packages
-
-#     sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get full-upgrade -y && sudo apt-get dist-upgrade -y && sudo apt --fix-broken install && sudo aptitude safe-upgrade -y
-#     sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
-#     sleep 3
-#     sudo nala fetch --auto --fetches 5 -y
-#     sudo nala update
-#     clear
-
-# fi
+  # Puedes agregar más comandos según sea necesario.
+# Comentario final
 # sudo reboot
