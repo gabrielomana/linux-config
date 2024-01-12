@@ -184,5 +184,7 @@ if [ $f == 1 ]; then
   # sudo apt install -f
 
   # Puedes agregar más comandos según sea necesario.
+fi
+
 # Comentario final
 # sudo reboot
