@@ -181,7 +181,9 @@ if [ $f == 1 ]; then
 
   # Función para buscar y reemplazar en el archivo nala.list
     file_path="/etc/apt/sources.list.d/nala-sources.list"
-    codename=$(curl -s https://www.debian.org/releases/testing/ | grep "<h1>" | sed -n 's/.*(\(.*\)).*/\1/p')
+    codename=$(curl -sL https://deb.debian.org/debian/dists/testing/InRelease | grep "^Codename:" | cut -d' ' -f2)
+    echo "file_path: "$file_path
+    echo "Codename: "$codename
     if [ -f "$file_path" ]; then
         # Usa grep para verificar si la expresión ya existe en el archivo
         if grep -q "$codename" "$file_path"; then
@@ -201,12 +203,12 @@ echo "Próxima versión estable (testing): $testing"
 replace_codename_in_nala_list "$testing"
 
   sudo nala update -y
-  sudo apt full-upgrade -y
-  sudo apt dist-upgrade -y
-  sudo dpkg --configure -a
-  sudo apt install -f
-  sudo apt autoremove -y
-  sudo aptitude safe-upgrade -y
+  # sudo apt full-upgrade -y
+  # sudo apt dist-upgrade -y
+  # sudo dpkg --configure -a
+  # sudo apt install -f
+  # sudo apt autoremove -y
+  # sudo aptitude safe-upgrade -y
 
   # Puedes agregar más comandos según sea necesario.
 fi
