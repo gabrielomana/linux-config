@@ -178,11 +178,14 @@ if [ $f == 1 ]; then
   sudo apt update
   sudo mv /etc/apt/trusted.gpg "/etc/apt/trusted.gpg.d/sparky.gpg"
   sudo ln -s "/etc/apt/sparky.gpg" "/etc/apt/trusted.gpg.d/sparky.gpg"
-  # sudo apt full-upgrade -y
-  # sudo dpkg --configure -a
-  # sudo apt install -f
-  # sudo dpkg-reconfigure -a
-  # sudo apt install -f
+
+  sudo nala update -y
+  sudo apt full-upgrade -y
+  sudo apt dist-upgrade -y
+  sudo dpkg --configure -a
+  sudo apt install -f
+  sudo apt autoremove -y
+  sudo aptitude safe-upgrade -y
 
   # Puedes agregar más comandos según sea necesario.
 fi
