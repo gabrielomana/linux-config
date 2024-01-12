@@ -1,3 +1,4 @@
+[misc]
 # Don't ask for confirmations
 assume_yes = true
 
@@ -35,26 +36,37 @@ assume_yes = true
 # display_time = true
 
 # Cleanup temporary or old files
-#cleanup = true
+cleanup = true
 
 [git]
 max_concurrency = 5
-# Additional git repositories to pull
-repos = [
+
+
+# Repositories that you only want to pull
+pull_only_repos = [
 #    "~/src/*/",
     "~/.config/*",
     "/git/*",
     "~/.oh-my-zsh/custom/themes/*",
      "~/*",
      "/usr/share/themes/*"
+ ]
+
+# Repositories that you only want to push
+push_only_repos = [
+#     "~/src/*/",
+#     "~/.config/something_third"
 ]
 
-
 # Don't pull the predefined git repos
-#pull_predefined = false
+pull_predefined = false
 
-# Arguments to pass Git when pulling Repositories
-#arguments = "--rebase --autostash"
+# Arguments to pass Git when pulling repositories
+pull_arguments = "--rebase --autostash"
+
+# Arguments to pass Git when pushing repositories
+push_arguments = "--all"
+
 
 [composer]
 #self_update = true
@@ -72,8 +84,9 @@ repos = [
 [commands]
 
 #"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
-
 Hblock = "sudo hblock -O /etc/host"
+Clean = "sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry"
+Repos = "sudo nala update && sudo apt --fix-broken install"
 
 #Clean_DNF= "sudo dnf clean dbcache"
 
@@ -113,9 +126,9 @@ self_rename = true
 # Use sudo if the NPM directory isn't owned by the current user
 use_sudo = true
 
-[firmware]
+#[firmware]
 # Offer to update firmware; if false just check for and display available updates
-#upgrade = true
+#upgrade = false
 
 
 [flatpak]

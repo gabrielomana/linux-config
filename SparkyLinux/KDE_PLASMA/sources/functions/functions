@@ -83,23 +83,17 @@ function check_installed {
 
   # Construye los comandos de instalación para nala y apt
   list3="${list1}${list2}"
-  c="sudo nala install ${list3} -y"
-  c_alt="sudo apt install ${list3} -y"
-  echo "Comando para nala:"
-  echo $c
-    try {
-      eval $c
-      eval $c_alt
-    } catch {
-      c_1="sudo aptitude install -y ${list1}"
-      c_2="sudo aptitude install -y ${list2}"
-      c_3="sudo apt-get install -y ${list1}"
-      c_4="sudo apt-get install -y ${list2}"
-      eval $c_1
-      eval $c_2
-      eval $c_3
-      eval $c_4
-    }
+
+    c="sudo nala install ${list3} -y"
+    echo "Comando para nala:"
+    echo $c
+    if ! (eval $c); then
+        for i in $list3; do
+            sudo apt-get install -y $i 2>/dev/null
+        done
+    fi
+
+
 }
 
 function add_repos() {

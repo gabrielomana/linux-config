@@ -222,7 +222,7 @@ function install_gnome {
 
   ## GDM3 Configuration
   sudo nala install gdm3 -y
-  sudo dpkg-reconfigure gdm3
+  sudo dpkg-reconfigure gdm3  
   sudo nala install libglib2.0-dev dconf-cli -y
   sudo git clone --depth=1 https://github.com/realmazharhussain/gdm-tools.git /git/gdm-tools/
   sudo bash /git/gdm-tools/install.sh
