@@ -1,5 +1,5 @@
 #!/bin/bash
-function grub_btrfs_snap{
+function grub-btrfs-snap{
      # Verificar si la partición root está en Btrfs
         if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
             # Obtener el UUID de la partición raíz
@@ -119,7 +119,7 @@ function grub_btrfs_snap{
 
 function pipewire{
     # Obtener el codename de la última versión LTS de Ubuntu
-        ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
+        ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
 
         # Crear el archivo pipewire-upstream.list
         echo "deb http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
@@ -171,6 +171,6 @@ function clean{
 }
 
 # Llama a las funciones
-grub_btrfs_snap
-#pipewire
+#grub_btrfs_snap
+pipewire
 #clean
