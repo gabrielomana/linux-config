@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function grub-btrfs-snap{
+function grub-btrfs-snap {
      # Verificar si la partición root está en Btrfs
         if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
             # Obtener el UUID de la partición raíz
@@ -118,7 +118,7 @@ function grub-btrfs-snap{
         fi
 }
 
-function pipewire{
+function pipewire {
     # Obtener el codename de la última versión LTS de Ubuntu
         ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
 
@@ -172,6 +172,6 @@ function clean {
 }
 
 # Llama a las funciones
-grub_btrfs_snap
+#grub-btrfs-snap
 pipewire
-clean
+#clean
