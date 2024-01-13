@@ -1,4 +1,5 @@
 #!/bin/bash
+
 function grub-btrfs-snap{
      # Verificar si la partición root está en Btrfs
         if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
@@ -162,15 +163,15 @@ function pipewire{
         systemctl --user --now enable wireplumber.service
 }
 
-function clean{
+function clean {
     sudo nala install -y bleachbit
-        sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
-        sudo nala update
-        sudo apt --fix-broken install
-        sudo aptitude safe-upgrade -y
+    sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+    sudo nala update
+    sudo apt --fix-broken install
+    sudo aptitude safe-upgrade -y
 }
 
 # Llama a las funciones
-#grub_btrfs_snap
+grub_btrfs_snap
 pipewire
-#clean
+clean
