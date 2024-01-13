@@ -1,6 +1,6 @@
 #!/bin/bash
-function grub_btrfs_snap{
-     # Verificar si la partición root está en Btrfs
+    function grub-btrfs-snap{
+        # Verificar si la partición root está en Btrfs
         if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
             # Obtener el UUID de la partición raíz
             ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
@@ -115,10 +115,10 @@ function grub_btrfs_snap{
         else
             echo "La partición root no está montada en un volumen BTRFS."
         fi
-}
+    }
 
-function pipewire{
-    # Obtener el codename de la última versión LTS de Ubuntu
+    function pipewire{
+        # Obtener el codename de la última versión LTS de Ubuntu
         ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Name: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
 
         # Crear el archivo pipewire-upstream.list
@@ -156,21 +156,18 @@ function pipewire{
         systemctl --user mask pulseaudio
 
         # Activar Pipewire
-        sudo apt reinstall pipewire pipewire-bin pipewire-pulse -y
-        systemctl --user --now enable pipewire pipewire-pulse
         systemctl --user --now enable pipewire{,-pulse}.{socket,service}
         systemctl --user --now enable wireplumber.service
-}
+    }
 
-function clean{
-    sudo nala install -y bleachbit
+    function clean{
+        sudo nala install -y bleachbit
         sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
         sudo nala update
         sudo apt --fix-broken install
         sudo aptitude safe-upgrade -y
-}
+    }
 
-# Llama a las funciones
-grub_btrfs_snap
-#pipewire
-#clean
+grub-btrfs-snap
+pipewire
+clean
