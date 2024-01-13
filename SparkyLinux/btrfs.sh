@@ -171,5 +171,5 @@ function clean {
 
 # Llama a las funciones
 grub_btrfs_snap
-pipewire
-clean
+#pipewire
+#clean
