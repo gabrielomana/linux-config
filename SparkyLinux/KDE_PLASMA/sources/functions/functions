@@ -203,7 +203,86 @@ function flameshot_shortcuts_KDE() {
     # Ejecutar kbuildsycoca5 con sudo
     sudo kbuildsycoca5
 }
+hardware_settings() {
+  # Verifica que el sistema operativo sea Debian 12
+  if [ ! -d /etc/debian_version ]; then
+    echo "El sistema operativo no es Debian 12"
+    exit 1
+  fi
 
+  # Verifica que el usuario tenga privilegios de sudo
+  if [ ! "$(sudo -v)" ]; then
+    echo "El usuario no tiene privilegios de sudo"
+    exit 1
+  fi
+
+  # Verifica que la GPU sea compatible con la aceleración de hardware
+  gpu_info=$(lspci | grep -i "3d controller")
+  if [ -z "$gpu_info" ]; then
+    echo "La GPU no es compatible con la aceleración de hardware"
+    exit 1
+  fi
+
+  # Instala los controladores de la GPU
+  case "$(cat /proc/cpuinfo | grep -i "model name")" in
+    *Intel* | *AMD* | *NVIDIA*)
+      sudo apt install -y linux-headers-$(uname -r)
+      sudo apt install -y $(lspci | grep -i "3d controller" | awk '{print $3}')-dkms
+      sudo modprobe -r $(lspci | grep -i "3d controller" | awk '{print $3}')
+      sudo modprobe $(lspci | grep -i "3d controller" | awk '{print $3}')
+    ;;
+  esac
+
+  # Instala el software de aceleración de hardware
+  if [ "$(cat /proc/cpuinfo | grep -i "model name")" = *Intel* ]; then
+    sudo apt install -y intel-media-va-driver-non-free
+  elif [ "$(cat /proc/cpuinfo | grep -i "model name")" = *AMD* ]; then
+    sudo apt-get install -y firmware-amd-graphics amdgpu-pro
+    sudo apt-get install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
+  elif [ "$(cat /proc/cpuinfo | grep -i "model name")" = *NVIDIA* ]; then
+    sudo apt-get install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
+    sudo apt-get install -y nvidia-vaapi-driver
+  fi
+
+  # Verifica que la aceleración de hardware esté instalada correctamente
+  for api in vaapi vdpau; do
+    echo "Verificando $api"
+    vdpau_version=$(vdpauinfo | grep -i "vdpau version")
+    if [ -z "$vdpau_version" ]; then
+      echo "$api no está instalado"
+      exit 1
+    fi
+    echo "$api está instalado"
+  done
+
+  # Identify your processor and install the appropriate drivers and microcodes
+  echo "IDENTIFYING PROCESSOR AND INSTALLING DRIVERS AND MICROCODES"
+  cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
+
+  if echo "$cpu_name" | grep -qi "intel"; then
+    sudo apt-get install -y intel-microcode
+  elif echo "$cpu_name" | grep -qi "amd"; then
+    sudo apt-get install -y amd64-microcode
+  else
+    echo "Failed to identify the processor."
+  fi
+
+  # Virtual Machine Drivers
+  echo "INSTALL VIRTUAL MACHINE DRIVERS"
+  if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
+    hypervisor=$(cat /sys/class/dmi/id/product_name)
+
+    if [[ "$hypervisor" =~ "VMware" ]]; then
+      sudo apt-get install -y open-vm-tools
+    elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
+      sudo apt-get install -y hyperv-daemons
+    elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
+      sudo apt-get install -y virtualbox-guest-dkms virtualbox-guest-utils
+    elif [[ "$hypervisor" =~ "KVM" ]]; then
+      sudo apt-get install -y qemu-guest-agent
+    fi
+  fi
+}
 
 function install_core_apps() {
   # Development tools and libraries
@@ -232,55 +311,7 @@ function install_core_apps() {
   echo " - Codecs and Drivers"
   sleep 3
   check_installed "${codecs}"
-  #!/bin/bash
-
-    # Graphics Drivers Installation (INTEL, AMD, NVIDIA)
-    echo "INSTALL GRAPHICS DRIVERS"
-    gpu_info=$(lspci | grep -i "VGA compatible controller")
-
-    if echo "$gpu_info" | grep -q "NVIDIA"; then
-        sudo apt-get install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
-        sudo apt-get install -y nvidia-vaapi-driver
-    fi
-
-    if echo "$gpu_info" | grep -q "Advanced Micro Devices"; then
-        sudo apt-get install -y firmware-amd-graphics amdgpu-pro
-        sudo apt-get install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
-    fi
-
-    if echo "$gpu_info" | grep -q "Intel"; then
-        sudo apt-get install -y firmware-misc-nonfree
-        sudo apt-get install -y i965-va-driver
-    fi
-
-    # Identify your processor and install the appropriate drivers and microcodes
-    echo "IDENTIFYING PROCESSOR AND INSTALLING DRIVERS AND MICROCODES"
-    cpu_name=$(lscpu | grep "Model name" | awk '{print $2}')
-
-    if echo "$cpu_name" | grep -q "Intel"; then
-        sudo apt-get install -y intel-microcode
-    elif echo "$cpu_name" | grep -q "AMD"; then
-        sudo apt-get install -y amd64-microcode
-    else
-        echo "Failed to identify the processor."
-    fi
-
-    # Virtual Machine Drivers
-    echo "INSTALL VIRTUAL MACHINE DRIVERS"
-    if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
-      hypervisor=$(cat /sys/class/dmi/id/product_name)
-
-      if [[ "$hypervisor" =~ "VMware" ]]; then
-          sudo apt-get install -y open-vm-tools
-      elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
-          sudo apt-get install -y hyperv-daemons
-      elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
-          sudo apt-get install -y virtualbox-guest-dkms virtualbox-guest-utils
-      elif [[ "$hypervisor" =~ "KVM" ]]; then
-          sudo apt-get install -y qemu-guest-agent
-      fi
-    fi
-
+  hardware_settings
 
   # Utilities
   clear

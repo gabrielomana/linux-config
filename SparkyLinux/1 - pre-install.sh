@@ -84,6 +84,7 @@ fi
   gnupg \
   linux-base \
   lsb-release \
+  lzo \
   lz4 \
   make \
   man-db \
@@ -162,60 +163,61 @@ if [ $f == 1 ]; then
         exit 1
     fi
 
-    OSCODE="`sudo cat /etc/lsb-release | grep Orion`"
+    OSCODE=$(sudo cat /etc/lsb-release | grep Orion)
     if [ "$OSCODE" = "" ]; then
         echo "This is not Sparky 7 Orion Belt... exiting..."
         exit 1
     fi
-  # Resto del código para cambiar a la rama "Rolling"
-  clear
-  echo "Cambiando a la rama Rolling..."
-  sleep 3
 
-  DEPS="bash coreutils dialog grep iputils-ping sparky-info sudo"
+    # Resto del código para cambiar a la rama "Rolling"
+    clear
+    echo "Cambiando a la rama Rolling..."
+    sleep 3
 
-  # Verifica la conectividad a los servidores
-  PINGTEST0=$(sudo ping -c 1 debian.org | grep [0-9])
-  if [ "$PINGTEST0" = "" ]; then
-      echo "Debian server is offline... exiting..."
-      exit 1
-  fi
+    sudo nala install -y $DEPS
 
-  PINGTEST1=$(sudo ping -c 1 sparkylinux.org | grep [0-9])
-  if [ "$PINGTEST1" = "" ]; then
-      echo "Sparky server is offline... exiting..."
-      exit 1
-  fi
+    # Verifica la conectividad a los servidores
+    PINGTEST0=$(sudo ping -c 1 debian.org | grep [0-9])
+    if [ "$PINGTEST0" = "" ]; then
+        echo "Debian server is offline... exiting..."
+        exit 1
+    fi
 
-  # Verifica que estás en Sparky 7 Orion Belt
-  OSCODE="`sudo cat /etc/lsb-release | grep Orion`"
-  if [ "$OSCODE" = "" ]; then
-      echo "This is not Sparky 7 Orion Belt... exiting..."
-      exit 1
-  fi
+    PINGTEST1=$(sudo ping -c 1 sparkylinux.org | grep [0-9])
+    if [ "$PINGTEST1" = "" ]; then
+        echo "Sparky server is offline... exiting..."
+        exit 1
+    fi
 
-  # Actualiza el archivo sources.list para cambiar a la rama "Rolling"
-  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak  # Respaldamos el archivo original
+    # Verifica que estás en Sparky 7 Orion Belt
+    OSCODE=$(sudo cat /etc/lsb-release | grep Orion)
+    if [ "$OSCODE" = "" ]; then
+        echo "This is not Sparky 7 Orion Belt... exiting..."
+        exit 1
+    fi
 
-  sudo rm /etc/apt/sources.list 
-  echo -e "deb http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-  deb-src http://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
-  deb http://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
-  deb-src http://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
-  deb http://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
-  deb-src http://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
-  deb https://deb-multimedia.org/ testing main non-free" | sudo tee /etc/apt/sources.list
+    # Actualiza el archivo sources.list para cambiar a la rama "Rolling"
+    sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak  # Respaldamos el archivo original
 
-  sudo rm -f /etc/apt/sources.list.d/sparky.list
-  echo -e "deb https://repo.sparkylinux.org/ core main
-  deb-src https://repo.sparkylinux.org/ core main
-  deb https://repo.sparkylinux.org/ sisters main
-  deb-src https://repo.sparkylinux.org/ sisters main" | sudo tee /etc/apt/sources.list.d/sparky.list
-  sudo apt update
-  sudo mv /etc/apt/trusted.gpg "/etc/apt/trusted.gpg.d/sparky.gpg"
-  sudo ln -s "/etc/apt/sparky.gpg" "/etc/apt/trusted.gpg.d/sparky.gpg"
+    sudo rm /etc/apt/sources.list
+    echo -e "deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+    deb https://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
+    deb-src https://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
+    deb https://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
+    deb https://deb-multimedia.org/ testing main non-free" | sudo tee /etc/apt/sources.list
 
-  # Función para buscar y reemplazar en el archivo nala.list
+    sudo rm -f /etc/apt/sources.list.d/sparky.list
+    echo -e "deb https://repo.sparkylinux.org/ core main
+    deb-src https://repo.sparkylinux.org/ core main
+    deb https://repo.sparkylinux.org/ sisters main
+    deb-src https://repo.sparkylinux.org/ sisters main" | sudo tee /etc/apt/sources.list.d/sparky.list
+    sudo apt update
+    sudo mv /etc/apt/trusted.gpg "/etc/apt/trusted.gpg.d/sparky.gpg"
+    sudo ln -s "/etc/apt/sparky.gpg" "/etc/apt/trusted.gpg.d/sparky.gpg"
+
+    # Función para buscar y reemplazar en el archivo nala.list
     file_path="/etc/apt/sources.list.d/nala-sources.list"
     codename=$(curl -sL https://deb.debian.org/debian/dists/testing/InRelease | grep "^Codename:" | cut -d' ' -f2)
     if [ -f "$file_path" ]; then
@@ -229,28 +231,51 @@ if [ $f == 1 ]; then
         echo "El archivo $file_path no existe."
     fi
 
-  sudo curl -o /etc/apt/apt.conf.d/00default-release https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release
+    sudo curl -o /etc/apt/apt.conf.d/00default-release https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release
 
-  sudo nala update
-  sudo nala upgrade -y
-  sudo apt full-upgrade -y
-  sudo apt dist-upgrade -y
-  sudo dpkg --configure -a
-  sudo apt install -f
-  sudo apt autoremove -y
-  sudo aptitude safe-upgrade -y
+    sudo nala update
+    sudo nala upgrade -y
+    sudo apt full-upgrade -y
+    sudo apt dist-upgrade -y
+    sudo dpkg --configure -a
+    sudo apt install -f
+    sudo apt autoremove -y
+    sudo aptitude safe-upgrade -y
 
-  # sECURITY UPGRADES FRON uNSTABLE
-  clear
-  sudo nala install -y debsecan
-  sudo curl -o /usr/sbin/debsecan-apt-priority https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/debsecan-apt-priority
-  sudo curl -o /etc/apt/apt.conf.d/99debsecan https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/99debsecan
-  sudo curl -o /etc/apt/preferences.d/unstable-packages https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/unstable-packages
-  sudo chmod 755 /usr/sbin/debsecan-apt-priority
-  sudo ln -sf /var/lib/debsecan/apt_preferences /etc/apt/preferences.d/unstable-security-packages
-  sudo apt update
-  sudo apt upgrade -y
-  
+    # SECURITY UPGRADES FRON UNSTABLE
+    clear
+    sudo nala install -y debsecan
+    sudo curl -o /usr/sbin/debsecan-apt-priority https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/debsecan-apt-priority
+    sudo curl -o /etc/apt/apt.conf.d/99debsecan https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/99debsecan
+    sudo curl -o /etc/apt/preferences.d/unstable-packages https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/unstable-packages
+    sudo chmod 755 /usr/sbin/debsecan-apt-priority
+    sudo ln -sf /var/lib/debsecan/apt_preferences /etc/apt/preferences.d/unstable-security-packages
+    sudo apt update
+    sudo apt upgrade -y
+else
+    sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak  # Respaldamos el archivo original
+
+    echo -e "deb https://ftp.debian.org/debian/ stable contrib main non-free non-free-firmware
+    deb-src https://ftp.debian.org/debian/ stable contrib main non-free non-free-firmware
+    deb https://ftp.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
+    deb-src https://ftp.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
+    deb https://ftp.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
+    deb-src https://ftp.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
+    deb https://ftp.debian.org/debian/ stable-backports contrib main non-free non-free-firmware
+    deb-src https://ftp.debian.org/debian/ stable-backports contrib main non-free non-free-firmware
+    deb https://security.debian.org/debian-security/ stable-security contrib main non-free non-free-firmware
+    deb-src https://security.debian.org/debian-security/ stable-security contrib main non-free non-free-firmware
+    deb https://www.deb-multimedia.org stable main non-free
+    deb https://www.deb-multimedia.org stable-backports main" | sudo tee /etc/apt/sources.list
+
+    sudo nala update
+    sudo nala upgrade -y
+    sudo apt full-upgrade -y
+    sudo apt dist-upgrade -y
+    sudo dpkg --configure -a
+    sudo apt install -f
+    sudo apt autoremove -y
+    sudo aptitude safe-upgrade -y
 fi
 
 
