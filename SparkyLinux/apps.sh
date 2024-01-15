@@ -7,7 +7,7 @@
  echo "BASIC PACKAGES"
  sleep 3
  dir="$(pwd)"
- sudo nala install  -y apt-transport-https \
+LISTt="apt-transport-https \
   apt-xapian-index \
   aptitude \
   bash-completion \
@@ -20,15 +20,14 @@
   debian-reference-es \
   devscripts \
   dialog \
-  dirnagr \
+  dirmngr \
   dkms \
   dos2unix \
-  dpgv \
   gpgv \
   gnupg \
   linux-base \
   lsb-release \
-  lzo \
+  liblzo* \
   lz4 \
   make \
   man-db \
@@ -51,6 +50,7 @@
   util-linux \
   usbutils \
   wget \
-  zip
+  zip"
+ sudo apt-get --ignore-missing install $(echo $LIST | sed -e 's/wifite//')
  sleep 5
  clear
