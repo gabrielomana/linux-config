@@ -132,7 +132,7 @@ sudo update-initramfs -u
 a=0
 f=0
 while [ $a -lt 1 ]; do
-    read -p "Do you want to switch to the Rolling branch? " yn
+    read -p "Do you want to switch to the Rolling branch (Y/N)? " yn
     case $yn in
         [Yy]* )
             a=1
