@@ -53,4 +53,3 @@ LISTt="apt-transport-https \
   zip"
  sudo apt-get --ignore-missing install $(echo $LIST | sed -e 's/wifite//')
  sleep 5
- clear
