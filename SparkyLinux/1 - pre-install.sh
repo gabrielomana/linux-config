@@ -233,6 +233,13 @@ if [ $f == 1 ]; then
 
     sudo curl -o /etc/apt/apt.conf.d/00default-release https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release
 
+    preferences_file="/etc/apt/preferences.d/99-lts-kernel"
+    if [ ! -e "$preferences_file" ]; then
+        echo "Package: linux-image-amd64-lts-*
+        Pin: release *
+        Pin-Priority: 1001" | sudo tee "$preferences_file" > /dev/null
+    fi
+
     sudo nala update
     sudo nala upgrade -y
     sudo apt full-upgrade -y
