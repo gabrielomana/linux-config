@@ -17,7 +17,7 @@ date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date
 # Install and configure language and locales
 sudo apt install locales locales-all language-pack-es hunspell-es -y
 sudo locale-gen "es_ES.UTF-8"
-sudo localectl set-x11-keymap es,es
+sudo localectl set-x11-keymap es.es
 sudo update-locale LANG=es_ES.UTF-8
 source /etc/default/locale
 
