@@ -287,6 +287,54 @@ fi
 
 
 ############################################
+# PIPEWIRE AND WIREPLUMBER INSTALLATION
+############################################
+
+# Get the codename of the latest LTS version of Ubuntu
+ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
+
+# Create the pipewire-upstream.list file
+echo "deb http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
+
+# Create the wireplumber-upstream.list file
+echo "deb http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
+
+# Install the key
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 25088A0359807596
+
+# Update the system
+sudo apt update
+sudo apt upgrade -y
+sudo apt full-upgrade -y
+
+# Install necessary packages
+sudo apt install -y \
+    libfdk-aac2 \
+    libldacbt-{abr,enc}2 \
+    libopenaptx0 \
+    gstreamer1.0-pipewire \
+    libpipewire-0.3-{0,dev,modules} \
+    libspa-0.2-{bluetooth,dev,jack,modules} \
+    pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} \
+    pipewire-doc \
+    libpipewire-module-x11-bell \
+    wireplumber{,-doc} \
+    gir1.2-wp-0.4 \
+    libwireplumber-0.4-{0,dev} \
+    wireplumber-locales
+
+# Disable PulseAudio
+systemctl --user --now disable pulseaudio.{socket,service}
+systemctl --user mask pulseaudio
+
+# Enable Pipewire
+sudo apt reinstall pipewire pipewire-bin pipewire-pulse -y
+systemctl --user --now enable pipewire pipewire-pulse
+systemctl --user --now enable pipewire{,-pulse}.{socket,service}
+systemctl --user --now enable wireplumber.service
+
+
+############################################
 # GRUB-BTRFS AND TIMESHIFT CONFIGURATION
 ############################################
 
@@ -299,11 +347,10 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
 
     # Modify the /etc/fstab file for the root partition
-    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
-
+    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@ 0 0|" "/etc/fstab"
     # Modify the /etc/fstab file for the home partition
-    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
-
+    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home  btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@home 0 0|" "/etc/fstab"
+    
     # Clear the screen
     clear
     cat /etc/fstab
@@ -343,9 +390,9 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
         # Adjust compression in /etc/fstab with the new subvolumes
         {
             echo "# Adding New Subvolumes"
-            echo "UUID=$ROOT_UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@log 0 2"
-            echo "UUID=$ROOT_UUID /var/cache btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@cache 0 2"
-            echo "UUID=$ROOT_UUID /var/tmp btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@tmp 0 2"
+            echo "UUID=$ROOT_UUID /var/log btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0"
+            echo "UUID=$ROOT_UUID /var/cache btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@cache 0 0"
+            echo "UUID=$ROOT_UUID /var/tmp btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@tmp 0 0"
         } | sudo tee -a "$fstab" > /dev/null
     else
         echo "The file $fstab does not exist. Verify the file path."
@@ -404,54 +451,6 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
 else
     echo "The root partition is not mounted on a BTRFS volume."
 fi
-
-
-############################################
-# PIPEWIRE AND WIREPLUMBER INSTALLATION
-############################################
-
-# Get the codename of the latest LTS version of Ubuntu
-ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
-
-# Create the pipewire-upstream.list file
-echo "deb http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
-
-# Create the wireplumber-upstream.list file
-echo "deb http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
-
-# Install the key
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 25088A0359807596
-
-# Update the system
-sudo apt update
-sudo apt upgrade -y
-sudo apt full-upgrade -y
-
-# Install necessary packages
-sudo apt install -y \
-    libfdk-aac2 \
-    libldacbt-{abr,enc}2 \
-    libopenaptx0 \
-    gstreamer1.0-pipewire \
-    libpipewire-0.3-{0,dev,modules} \
-    libspa-0.2-{bluetooth,dev,jack,modules} \
-    pipewire{,-{audio-client-libraries,pulse,bin,locales,tests}} \
-    pipewire-doc \
-    libpipewire-module-x11-bell \
-    wireplumber{,-doc} \
-    gir1.2-wp-0.4 \
-    libwireplumber-0.4-{0,dev} \
-    wireplumber-locales
-
-# Disable PulseAudio
-systemctl --user --now disable pulseaudio.{socket,service}
-systemctl --user mask pulseaudio
-
-# Enable Pipewire
-sudo apt reinstall pipewire pipewire-bin pipewire-pulse -y
-systemctl --user --now enable pipewire pipewire-pulse
-systemctl --user --now enable pipewire{,-pulse}.{socket,service}
-systemctl --user --now enable wireplumber.service
 
 ############################################
 # CLEANING AND FINAL SYSTEM UPDATE
