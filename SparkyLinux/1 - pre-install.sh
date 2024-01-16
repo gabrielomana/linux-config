@@ -340,6 +340,7 @@ systemctl --user --now enable wireplumber.service
 
 # Check if the root partition is on Btrfs
 if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
+    sudo apt install -y zlib1g-dev zlibc kernel-package btrfs-tools libncurses-dev bzip2
     # Get the UUID of the root partition
     ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
 
@@ -347,9 +348,9 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
     HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
 
     # Modify the /etc/fstab file for the root partition
-    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@ 0 0|" "/etc/fstab"
+    sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@ 0 0|" "/etc/fstab"
     # Modify the /etc/fstab file for the home partition
-    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home  btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@home 0 0|" "/etc/fstab"
+    sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home  btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@home 0 0|" "/etc/fstab"
     
     # Clear the screen
     clear
@@ -390,9 +391,9 @@ if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
         # Adjust compression in /etc/fstab with the new subvolumes
         {
             echo "# Adding New Subvolumes"
-            echo "UUID=$ROOT_UUID /var/log btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0"
-            echo "UUID=$ROOT_UUID /var/cache btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@cache 0 0"
-            echo "UUID=$ROOT_UUID /var/tmp btrfs btrfsrw,noatime,compress=lzo,space_cache=v2,subvol=@tmp 0 0"
+            echo "UUID=$ROOT_UUID /var/log btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0"
+            echo "UUID=$ROOT_UUID /var/cache btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@cache 0 0"
+            echo "UUID=$ROOT_UUID /var/tmp btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@tmp 0 0"
         } | sudo tee -a "$fstab" > /dev/null
     else
         echo "The file $fstab does not exist. Verify the file path."
