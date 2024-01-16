@@ -163,14 +163,14 @@ function install_kde() {
   # sudo apt-get install -f
 
   #KDE's apps
-  clear
+  #clear
   echo "INSTALL KDE PLASMA:"
   echo " - Install KDE Plasma Core"
   echo " - Remove apps and bloatware"
   echo " - Install KDE's APPS"
   sleep 3
-  check_installed "${kde_plasma_apps}"
-  sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
+  #check_installed "${kde_plasma_apps}"
+  #sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
 }
 
 function flameshot_shortcuts_KDE() {
