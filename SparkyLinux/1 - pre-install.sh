@@ -304,8 +304,8 @@ if [ $f == 1 ]; then
 else
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak  # Respaldamos el archivo original
 
-    echo -e "deb https://ftp.debian.org/debian/ stable contrib main non-free non-free-firmware
-    deb-src https://ftp.debian.org/debian/ stable contrib main non-free non-free-firmware
+    echo -e "deb https://deb.debian.org/debian/ stable main contrib non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ stable contrib main non-free non-free-firmware
     deb https://ftp.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
     deb-src https://ftp.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
     deb https://ftp.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
