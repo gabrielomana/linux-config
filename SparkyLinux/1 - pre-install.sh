@@ -274,22 +274,6 @@ if [ $f == 1 ]; then
     sudo mv /etc/apt/trusted.gpg "/etc/apt/trusted.gpg.d/sparky.gpg"
     sudo ln -s "/etc/apt/sparky.gpg" "/etc/apt/trusted.gpg.d/sparky.gpg"
 
-    # Función para buscar y reemplazar en el archivo nala.list
-    file_path="/etc/apt/sources.list.d/nala-sources.list"
-    codename=$(curl -sL https://deb.debian.org/debian/dists/testing/InRelease | grep "^Codename:" | cut -d' ' -f2)
-    if [ -f "$file_path" ]; then
-        # Usa grep para verificar si la expresión ya existe en el archivo
-        if grep -q "$codename" "$file_path"; then
-            sudo sed -i "s/$codename/testing/g" "$file_path"
-        else
-            echo "La expresión no existe en el archivo $file_path."
-        fi
-    else
-        echo "El archivo $file_path no existe."
-    fi
-
-    sudo curl -o /etc/apt/apt.conf.d/00default-release https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release
-
     # preferences_file="/etc/apt/preferences.d/99-lts-kernel"
     # if [ ! -e "$preferences_file" ]; then
     #     echo "Package: linux-image-amd64-lts-*
@@ -308,6 +292,7 @@ if [ $f == 1 ]; then
 
     # SECURITY UPGRADES FRON UNSTABLE
     clear
+    sudo curl -o /etc/apt/apt.conf.d/00default-release https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/00default-release
     sudo nala install -y debsecan
     sudo curl -o /usr/sbin/debsecan-apt-priority https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/debsecan-apt-priority
     sudo curl -o /etc/apt/apt.conf.d/99debsecan https://gist.githubusercontent.com/khimaros/21db936fa7885360f7bfe7f116b78daf/raw/698266fc043d6e906189b14e3428187ff0e7e7c8/99debsecan
@@ -351,19 +336,18 @@ fi
 ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
 
 # Create the pipewire-upstream.list file
-echo "deb http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
+echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
 
 # Create the wireplumber-upstream.list file
-echo "deb http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
+echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
 
 # Install the key
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 25088A0359807596
-
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
 # Update the system
 sudo apt update
 sudo apt upgrade -y
 sudo apt full-upgrade -y
-
 # Install necessary packages
 sudo apt install -y \
     libfdk-aac2 \
