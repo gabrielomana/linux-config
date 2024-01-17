@@ -303,23 +303,21 @@ if [ $f == 1 ]; then
     sudo apt upgrade -y
 else
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak  # Respaldamos el archivo original
-
-    debian_version=$(curl -sL https://deb.debian.org/debian/dists/stable/InRelease | grep "^Codename:" | cut -d' ' -f2
-)
+    debian_version=$(curl -sL https://deb.debian.org/debian/dists/stable/InRelease | grep "^Codename:" | cut -d' ' -f2)
     echo $debian_version
 
-    echo -e "deb https://deb.debian.org/debian/ stable main contrib non-free non-free-firmware
-    deb-src https://deb.debian.org/debian/ stable contrib main non-free non-free-firmware
-    deb https://deb.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
-    deb-src https://deb.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
-    deb https://deb.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
-    deb-src https://deb.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
-    deb https://deb.debian.org/debian/ stable-backports contrib main non-free non-free-firmware
-    deb-src https://deb.debian.org/debian/ stable-backports contrib main non-free non-free-firmware
-    deb https://security.debian.org/debian-security/ stable-security contrib main non-free non-free-firmware
-    deb-src https://security.debian.org/debian-security/ stable-security contrib main non-free non-free-firmware
-    deb https://www.deb-multimedia.org stable main non-free
-    deb https://www.deb-multimedia.org stable-backports main" | sudo tee /etc/apt/sources.list
+    echo -e "deb https://deb.debian.org/debian/ $debian_version main contrib non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ $debian_version contrib main non-free non-free-firmware
+    deb https://deb.debian.org/debian/ $debian_version-updates contrib main non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ $debian_version-updates contrib main non-free non-free-firmware
+    deb https://deb.debian.org/debian/ $debian_version-proposed-updates contrib main non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ $debian_version-proposed-updates contrib main non-free non-free-firmware
+    deb https://deb.debian.org/debian/ $debian_version-backports contrib main non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ $debian_version-backports contrib main non-free non-free-firmware
+    deb https://security.debian.org/debian-security/ $debian_version-security contrib main non-free non-free-firmware
+    deb-src https://security.debian.org/debian-security/ $debian_version-security contrib main non-free non-free-firmware
+    deb https://www.deb-multimedia.org $debian_version main non-free
+    deb https://www.deb-multimedia.org $debian_version-backports main" | sudo tee /etc/apt/sources.list
 
     sudo nala update
     sudo nala upgrade -y
