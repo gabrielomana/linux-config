@@ -9,7 +9,6 @@ dir="$(pwd)"
 echo "export PATH=\$PATH:${NEW_PATH}" >> ~/.profile
 echo "export PATH=\$PATH:${NEW_PATH}" | sudo tee -a /etc/profile > /dev/null
 # Update the system date and time using Google's response
-date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
 
 ############################################
 # LANGUAGE AND LOCALES SETUP
@@ -170,6 +169,7 @@ if ! (eval $c); then
 fi
  sleep 5
  clear
+date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
 
 ############################################
 # ZSWAP, SWAPPINESS, AND GRUB UPDATE
