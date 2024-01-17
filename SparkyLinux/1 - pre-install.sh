@@ -335,15 +335,12 @@ fi
 # Get the codename of the latest LTS version of Ubuntu
 ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
 
-# Create the pipewire-upstream.list file
-echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
-
-# Create the wireplumber-upstream.list file
-echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
-
-# Install the key
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 25088A0359807596
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
+# Crear el archivo pipewire-upstream.list
+echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
+# Crear el archivo wireplumber-upstream.list
+echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
+# Instalar la clave GPG
+curl -fsSL "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x25088A0359807596" | gpg --dearmor -o /etc/apt/trusted.gpg.d/pipewire.gpg
 # Update the system
 sudo apt update
 sudo apt upgrade -y
