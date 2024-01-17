@@ -63,51 +63,106 @@ fi
  echo "BASIC PACKAGES"
  sleep 3
  dir="$(pwd)"
- sudo nala install  -y apt-transport-https \
-  apt-xapian-index \
-  aptitude \
-  bash-completion \
-  bleachbit \
-  build-essential \
-  ca-certificates \
-  coreutils \
-  cmake \
-  curl \
-  debian-reference-es \
-  devscripts \
-  dialog \
-  dirnagr \
-  dkms \
-  dos2unix \
-  dpgv \
-  gpgv \
-  gnupg \
-  linux-base \
-  lsb-release \
-  lzo \
-  lz4 \
-  make \
-  man-db \
-  manpages \
-  memtest86+ \
-  net-tools \
-  netselect-apt \
-  neofetch \
-  p7zip \
-  pipx \
-  python3-pip \
-  python3-venv \
-  rsync \
-  screen \
-  software-properties-common \
-  sudo \
-  systemd-sysv \
-  tree \
-  unrar-free \
-  util-linux \
-  usbutils \
-  wget \
-  zip
+ list1=""
+list2=""
+
+# Lista de paquetes
+packages=("apt-transport-https"
+"apt-xapian-index"
+"aptitude"
+"bash"
+"bash-completion"
+"bleachbit"
+"btrfs-tools"
+"build-essential"
+"bzip2"
+"ca-certificates"
+"cmake"
+"coreutils"
+"curl"
+"debian-reference-es"
+"devscripts"
+"dialog"
+"dirmngr"
+"dkms"
+"dos2unix"
+"dpgv"
+"gnupg"
+"grep"
+"iputils-ping"
+"kernel-package"
+"liblzo2-2"
+"libncurses-dev"
+"linux-base"
+"lsb-release"
+"lzo"
+"lz4"
+"make"
+"man-db"
+"manpages"
+"memtest86+"
+"net-select-apt"
+"neofetch"
+"p7zip"
+"pipx"
+"python3-pip"
+"python3-venv"
+"rsync"
+"screen"
+"software-properties-common"
+"sparky-info"
+"sudo"
+"systemd-sysv"
+"tree"
+"unrar-free"
+"util-linux"
+"usbutils"
+"wget"
+"zip"
+"zlibc"
+"zlib1g-dev")
+
+for package in "${packages[@]}"; do
+  [ -z "${package}" ] && continue
+
+  STR="${package}"
+  SUB='*'
+
+  case $STR in
+    *"$SUB"*)
+      # Si la línea contiene un asterisco, agrega a la lista2 con comillas si no las tiene
+      if [[ ! "${STR}" =~ ^\" ]]; then
+        STR="\"${STR}\""
+      fi
+      # Valida si el patrón es correcto para que aptitude encuentre paquetes
+      # Ejecutar el comando aptitude search con el patrón y almacenar la salida en una variable
+      resultado=$(aptitude search "${STR}" 2>/dev/null)
+      # Verificar si la salida contiene al menos una línea, lo que indica que hay paquetes disponibles
+      if [ -n "$resultado" ]; then
+        list2="${list2} ${STR}"
+      fi
+    ;;
+
+    *)
+      # Si no hay asterisco, se verifica la existencia del paquete antes de agregarlo a la lista1
+      if !(dpkg -s "${package}" >/dev/null 2>&1); then
+        list1="${list1} ${package}"
+      fi
+      ;;
+  esac
+done
+
+# Construye los comandos de instalación para nala y apt
+list3="${list1}${list2}"
+
+c="sudo nala install ${list3} -y"
+echo "Comando para nala:"
+echo $c
+if ! (eval $c); then
+  for i in $list3; do
+    sudo apt-get install -y $i 2>/dev/null
+  done
+fi
  sleep 5
  clear
 
@@ -149,7 +204,6 @@ while [ $a -lt 1 ]; do
 done
 
 if [ $f == 1 ]; then
-    DEPS="bash coreutils dialog grep iputils-ping sparky-info sudo"
 
     PINGTEST0=$(sudo ping -c 1 debian.org | grep [0-9])
     if [ "$PINGTEST0" = "" ]; then
@@ -173,8 +227,6 @@ if [ $f == 1 ]; then
     clear
     echo "Cambiando a la rama Rolling..."
     sleep 3
-
-    sudo nala install -y $DEPS
 
     # Verifica la conectividad a los servidores
     PINGTEST0=$(sudo ping -c 1 debian.org | grep [0-9])
@@ -340,7 +392,6 @@ systemctl --user --now enable wireplumber.service
 
 # Check if the root partition is on Btrfs
 if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
-    sudo apt install -y zlib1g-dev zlibc kernel-package btrfs-tools libncurses-dev bzip2
     # Get the UUID of the root partition
     ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
 
