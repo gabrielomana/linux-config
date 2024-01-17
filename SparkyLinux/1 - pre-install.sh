@@ -21,6 +21,11 @@ sudo locale-gen "es_ES.UTF-8"
 sudo localectl set-x11-keymap es.es
 sudo update-locale LANG=es_ES.UTF-8
 source /etc/default/locale
+sudo dpkg-reconfigure keyboard-configuration
+sudo service keyboard-setup restart
+sudo systemctl restart console-setup.service
+sudo systemctl enable console-setup.service
+
 
 
 ############################################
