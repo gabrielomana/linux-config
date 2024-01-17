@@ -304,6 +304,9 @@ if [ $f == 1 ]; then
 else
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak  # Respaldamos el archivo original
 
+    debian_version=$(curl -sS "https://www.debian.org/releases/" | grep -oP 'The current stable release is \K\w+')
+    echo $debian_version
+
     echo -e "deb https://deb.debian.org/debian/ stable main contrib non-free non-free-firmware
     deb-src https://deb.debian.org/debian/ stable contrib main non-free non-free-firmware
     deb https://deb.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
@@ -336,9 +339,9 @@ fi
 ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist: | tail -n1 | awk -F '[: ]+' '{print $NF}' | tr '[:upper:]' '[:lower:]')
 
 # Crear el archivo pipewire-upstream.list
-echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
+echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
 # Crear el archivo wireplumber-upstream.list
-echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
+echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | sudo tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
 
 # Install the key
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 25088A0359807596
