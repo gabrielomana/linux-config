@@ -304,7 +304,8 @@ if [ $f == 1 ]; then
 else
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak  # Respaldamos el archivo original
 
-    debian_version=$(curl -sS "https://www.debian.org/releases/" | grep -oP 'The current stable release is \K\w+')
+    debian_version=$(curl -sL https://deb.debian.org/debian/dists/stable/InRelease | grep "^Codename:" | cut -d' ' -f2
+)
     echo $debian_version
 
     echo -e "deb https://deb.debian.org/debian/ stable main contrib non-free non-free-firmware
