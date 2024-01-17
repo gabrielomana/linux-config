@@ -228,8 +228,8 @@ hardware_settings() {
     *Intel* | *AMD* | *NVIDIA*)
       sudo apt install -y linux-headers-$(uname -r)
       sudo apt install -y $(lspci | grep -i "3d controller" | awk '{print $3}')-dkms
-      sudo modprobe -r $(lspci | grep -i "3d controller" | awk '{print $3}')
-      sudo modprobe $(lspci | grep -i "3d controller" | awk '{print $3}')
+      sudo modprobe -r $(lspci | awk -F" " '/3D controller/ {for(i=1;i<=NF;i++) if($i == "3D" && $(i+1) == "controller") print gensub(/.*: /, "", 1, $(i-1))}')
+      sudo modprobe $(lspci | grep -i "3d controller" | awk -F" " '{for(i=1;i<=NF;i++) if($i == "3D" && $(i+1) == "controller") print $(i-1)}')
     ;;
   esac
 

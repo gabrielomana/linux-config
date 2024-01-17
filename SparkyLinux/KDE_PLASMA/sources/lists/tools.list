@@ -23,6 +23,5 @@ nodejs
 libssl-dev
 pkg-config
 pip
-"^dconf*"
 python3-venv
 python3-pip
