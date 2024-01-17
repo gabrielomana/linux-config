@@ -203,28 +203,11 @@ function flameshot_shortcuts_KDE() {
     # Ejecutar kbuildsycoca5 con sudo
     sudo kbuildsycoca5
 }
-hardware_settings() {
-  # Verifica que el sistema operativo sea Debian 12
-  if [ ! -d /etc/debian_version ]; then
-    echo "El sistema operativo no es Debian 12"
-    exit 1
-  fi
 
-  # Verifica que el usuario tenga privilegios de sudo
-  if [ ! "$(sudo -v)" ]; then
-    echo "El usuario no tiene privilegios de sudo"
-    exit 1
-  fi
-
-  # Verifica que la GPU sea compatible con la aceleración de hardware
-  gpu_info=$(lspci | grep -i "3d controller")
-  if [ -z "$gpu_info" ]; then
-    echo "La GPU no es compatible con la aceleración de hardware"
-    exit 1
-  fi
-
-  # Instala el software de aceleración de hardware
-  sudo nala install -y linux-headers-$(uname -r) firmware-linux-nonfree
+function hardware-setting {
+ 
+  # Instala el software de aceleración de hardware 
+  sudo nala install -y linux-headers-$(uname -r) firmware-linux-nonfree vdpauinfo
 
   if [ "$(cat /proc/cpuinfo | grep -i "model name")" = *Intel* ]; then
     sudo nala install -y intel-media-va-driver-non-free
@@ -233,17 +216,6 @@ hardware_settings() {
   elif [ "$(cat /proc/cpuinfo | grep -i "model name")" = *NVIDIA* ]; then
     sudo nala install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all nvidia-vaapi-driver
   fi
-
-  # Verifica que la aceleración de hardware esté instalada correctamente
-  for api in vaapi vdpau; do
-    echo "Verificando $api"
-    vdpau_version=$(vdpauinfo | grep -i "vdpau version")
-    if [ -z "$vdpau_version" ]; then
-      echo "$api no está instalado"
-      exit 1
-    fi
-    echo "$api está instalado"
-  done
 
   # Identify your processor and install the appropriate drivers and microcodes
   echo "IDENTIFYING PROCESSOR AND INSTALLING DRIVERS AND MICROCODES"
@@ -301,7 +273,7 @@ function install_core_apps() {
   echo " - Codecs and Drivers"
   sleep 3
   check_installed "${codecs}"
-  hardware_settings
+  hardware-setting
 
   # Utilities
   clear
