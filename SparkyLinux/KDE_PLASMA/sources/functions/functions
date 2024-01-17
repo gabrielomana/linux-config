@@ -261,7 +261,7 @@ function install_core_apps() {
   sudo chmod 777 rustup-init.sh
   ./rustup-init.sh -y
   source "$HOME/.cargo/env"
-  rm rustup-init.sh -rf
+  sudo rm rustup-init.sh -rf
 
   source ~/.profile
   source ~/.cargo/env
