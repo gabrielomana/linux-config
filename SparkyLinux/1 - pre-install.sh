@@ -6,7 +6,8 @@
 
 # Save the current directory in a variable
 dir="$(pwd)"
-
+echo "export PATH=\$PATH:${NEW_PATH}" >> ~/.profile
+echo "export PATH=\$PATH:${NEW_PATH}" | sudo tee -a /etc/profile > /dev/null
 # Update the system date and time using Google's response
 date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f2-7)"
 
@@ -15,11 +16,12 @@ date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | grep Date
 ############################################
 
 # Install and configure language and locales
-sudo apt install locales locales-all language-pack-es hunspell-es -y
+sudo apt install locales locales-all hunspell-es -y
 sudo locale-gen "es_ES.UTF-8"
 sudo localectl set-x11-keymap es.es
 sudo update-locale LANG=es_ES.UTF-8
 source /etc/default/locale
+
 
 ############################################
 # SYSTEM UPDATE
@@ -99,7 +101,7 @@ packages=("apt-transport-https"
 "man-db"
 "manpages"
 "memtest86+"
-"netselect-ap"
+"netselect-apt"
 "neofetch"
 "p7zip"
 "pipx"
@@ -157,7 +159,8 @@ echo "Comando para nala:"
 echo $c
 if ! (eval $c); then
   for i in $list3; do
-    sudo apt-get install -y $i 2>/dev/null
+    c_aux="sudo apt install ${i} -y"
+    eval $c_aux
   done
 fi
  sleep 5
