@@ -377,16 +377,19 @@ function install_multimedia() {
 }
 
 function install_extra_apps() {
-
-  while [ $a -lt 1 ]
-do
+a=0
+sudo chmod 1777 /var/tmp/
+sudo chmod 1777 /var/cache/
+sudo chmod 1777 /var/log/
+while [ $a -lt 1 ]
+  do
     read -p "Do you wish to install Extra APPS? " yn
         case $yn in
             [Yy]* ) a=1;f=1;add_extra_repos;heck_installed "${extra_apps}";;
             [Nn]* ) a=1;echo "OK";clear;;
             * ) echo "Please answer yes or no.";;
         esac
-    done
+  done
 
   # Start and enable libvirtd service
   sudo systemctl start libvirtd
@@ -394,9 +397,9 @@ do
 
   # Add libvirt-qemu to HideUsers in sddm.conf
   sudo echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
-
   clear
-    if [ $f == 1 ]; then
+    if [ $f -eq 1 ]; then
+    
     # Descomenta y modifica estas líneas según sea necesario para instalar aplicaciones flatpak
     flatpak install flathub org.onlyoffice.desktopeditors -y
     flatpak install flathub com.github.dail8859.NotepadNext -y
