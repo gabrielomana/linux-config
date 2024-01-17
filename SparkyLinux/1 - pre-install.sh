@@ -306,12 +306,12 @@ else
 
     echo -e "deb https://deb.debian.org/debian/ stable main contrib non-free non-free-firmware
     deb-src https://deb.debian.org/debian/ stable contrib main non-free non-free-firmware
-    deb https://ftp.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
-    deb-src https://ftp.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
-    deb https://ftp.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
-    deb-src https://ftp.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
-    deb https://ftp.debian.org/debian/ stable-backports contrib main non-free non-free-firmware
-    deb-src https://ftp.debian.org/debian/ stable-backports contrib main non-free non-free-firmware
+    deb https://deb.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ stable-updates contrib main non-free non-free-firmware
+    deb https://deb.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ stable-proposed-updates contrib main non-free non-free-firmware
+    deb https://deb.debian.org/debian/ stable-backports contrib main non-free non-free-firmware
+    deb-src https://deb.debian.org/debian/ stable-backports contrib main non-free non-free-firmware
     deb https://security.debian.org/debian-security/ stable-security contrib main non-free non-free-firmware
     deb-src https://security.debian.org/debian-security/ stable-security contrib main non-free non-free-firmware
     deb https://www.deb-multimedia.org stable main non-free
@@ -339,8 +339,10 @@ ubuntu_lts=$(curl -s https://changelogs.ubuntu.com/meta-release-lts | grep Dist:
 echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/pipewire-upstream/ubuntu $ubuntu_lts main" | tee /etc/apt/sources.list.d/pipewire-upstream.list > /dev/null
 # Crear el archivo wireplumber-upstream.list
 echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/pipewire.gpg] http://ppa.launchpad.net/pipewire-debian/wireplumber-upstream/ubuntu $ubuntu_lts main" | tee /etc/apt/sources.list.d/wireplumber-upstream.list > /dev/null
-# Instalar la clave GPG
-curl -fsSL "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x25088A0359807596" | gpg --dearmor -o /etc/apt/trusted.gpg.d/pipewire.gpg
+
+# Install the key
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 25088A0359807596
+sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/pipewire.gpg
 # Update the system
 sudo apt update
 sudo apt upgrade -y
