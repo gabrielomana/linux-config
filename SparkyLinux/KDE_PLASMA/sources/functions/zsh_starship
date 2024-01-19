@@ -82,11 +82,13 @@ function install_ZSH_ROOT() {
 
 
 function install_ZSH() {
-    #clear
+    # Obtener el nombre de usuario actual
+    user=$(who | awk '{print $1}' | head -n 1)
+    path="/home/$user"
 
     # Verificar si Zsh, Git y Wget ya están instalados
     if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
-        echo -e "Zsh, Git, y Wget ya están instalados.\n"
+        echo -e "Zsh, Git y Wget ya están instalados.\n"
     else
         # Instalar Zsh, Git y Wget si no están instalados
         if sudo apt install zsh git wget -y; then
@@ -97,31 +99,29 @@ function install_ZSH() {
     fi
 
     # Respaldar .zshrc actual
-    if mv -n ~/.zshrc ~/.zshrc-backup-$(date +"%Y-%m-%d"); then
+    if mv -n "$path/.zshrc" "$path/.zshrc-backup-$(date +"%Y-%m-%d")"; then
         echo -e "Se ha respaldado el .zshrc actual en .zshrc-backup-fecha.\n"
     fi
 
     # Instalar oh-my-zsh si no está instalado
-    #clear
-    if [ -d ~/.oh-my-zsh ]; then
+    if [ -d "$path/.oh-my-zsh" ]; then
         echo -e "oh-my-zsh ya está instalado.\n"
-        git -C ~/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
+        git -C "$path/.oh-my-zsh" remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
     else
-        git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
+        git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$path/.oh-my-zsh"
     fi
     sleep 5
 
     # Copiar archivos de configuración
-    #clear
-    cp -f ../dotfiles/.zshrc ~/
-    mkdir -p ~/.cache/zsh/
+    cp -f ../dotfiles/.zshrc "$path/"
+    mkdir -p "$path/.cache/zsh/"
 
-    if [ -f ~/.zcompdump ]; then
-        mv -f ~/.zcompdump* ~/.cache/zsh/
+    if [ -f "$path/.zcompdump" ]; then
+        mv -f "$path/.zcompdump"* "$path/.cache/zsh/"
     fi
     sleep 5
 
-     # Cambiar la ruta de los plugins a una ubicación global
+    # Cambiar la ruta de los plugins a una ubicación global
     custom_path="/usr/share/oh-my-zsh/custom/"
     custom_themes_path="/usr/share/oh-my-zsh/custom/themes/"
     custom_plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
@@ -130,7 +130,7 @@ function install_ZSH() {
     if [ ! -d "$custom_path" ]; then
         # Crear la ruta si no existe
         sudo mkdir -p "$custom_path"
-        sudo mkdir -p "$custom_themes_pathh"
+        sudo mkdir -p "$custom_themes_path"
         sudo mkdir -p "$custom_plugins_path"
         # Asignar permisos 1777 a la ruta
         sudo chmod 755 "$custom_path" -R
@@ -147,7 +147,7 @@ function install_ZSH() {
         "https://github.com/MichaelAquilina/zsh-you-should-use.git"
         "https://github.com/Aloxaf/fzf-tab.git"
     )
-
+    
     # Clonar e instalar los repositorios
     for repository in "${repositories[@]}"; do
         plugin_name=$(basename "$repository" .git)
@@ -166,16 +166,14 @@ function install_ZSH() {
 
     echo "Repositorios clonados e instalados en $custom_plugins_path."
 
-    sudo mv /usr/share/oh-my-zsh/custom/plugins/zsh-you-should-use/ /usr/share/oh-my-zsh/custom/plugins/you-should-use/
-    #autoload -U compinit && compinit
-
+    sudo mv "$custom_plugins_pathzsh-you-should-use/" "$custom_plugins_pathyou-should-use/"
+    
     # Instalar fzf para fzf-tab
     sudo apt install fzf -y
 
     sleep 5
 
     # Instalar y configurar Starship
-    #clear
     sudo wget https://starship.rs/install.sh
     sudo chmod +x install.sh
     sh -c "./install.sh --yes"
@@ -184,9 +182,8 @@ function install_ZSH() {
     sleep 5
 
     # Reiniciar Zsh
-    #clear
     echo -e "\nSe necesita acceso sudo para cambiar el shell predeterminado.\n"
-    if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
+    if sudo -u "$user" chsh -s "$(which zsh)" && "$(which zsh)" -i -c 'omz update'; then
         echo "Zsh en usuario: OK"
         echo "Instalando Zsh en root..."
         sleep 3
