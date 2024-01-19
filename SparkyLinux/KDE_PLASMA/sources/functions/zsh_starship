@@ -166,7 +166,9 @@ function install_ZSH() {
 
     echo "Repositorios clonados e instalados en $custom_plugins_path."
 
-    sudo mv "$custom_plugins_pathzsh-you-should-use/" "$custom_plugins_pathyou-should-use/"
+    move="sudo mv ${custom_plugins_path}zsh-you-should-use/ ${custom_plugins_path}you-should-use/"
+    echo $move
+    eval $move
     
     # Instalar fzf para fzf-tab
     sudo apt install fzf -y
@@ -176,9 +178,11 @@ function install_ZSH() {
     # Instalar y configurar Starship
     sudo wget https://starship.rs/install.sh
     sudo chmod +x install.sh
-    sh -c "./install.sh --yes"
+    starship="./install.sh --yes"
+    eval $starship
     sudo rm install.sh -rf
-    wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O ~/.config/starship.toml
+    template="wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O ${path}/.config/starship.toml"
+    eval $template
     sleep 5
 
     # Reiniciar Zsh
