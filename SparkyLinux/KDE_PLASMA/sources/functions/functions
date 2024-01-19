@@ -403,6 +403,7 @@ while [ $a -lt 1 ]
     flatpak install flathub com.github.dail8859.NotepadNext -y
     flatpak install flathub org.localsend.localsend_app -y
     flatpak install flathub org.strawberrymusicplayer.strawberry -y
+    flatpak install flathub org.nomacs.ImageLounge -y
     # flatpak install flathub io.github.prateekmedia.appimagepool -y
     # flatpak install flathub app.ytmdesktop.ytmdesktop -y
     # flatpak install flathub tv.kodi.Kodi -y
