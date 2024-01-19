@@ -166,7 +166,8 @@ function install_ZSH() {
 
     echo "Repositorios clonados e instalados en $custom_plugins_path."
 
-    move="sudo mv ${custom_plugins_path}zsh-you-should-use/ ${custom_plugins_path}you-should-use/"
+    move="sudo rm -rf ${custom_plugins_path}you-should-use/ && sudo mv ${custom_plugins_path}zsh-you-should-use/ ${custom_plugins_path}you-should-use/"
+
     echo $move
     eval $move
     
