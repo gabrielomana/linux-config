@@ -54,7 +54,7 @@ function install_ZSH_ROOT() {
 
             echo "2"
             # Copiar archivos de configuración para root
-            sudo cp -f dotfiles/.zshrc /root/
+            sudo cp -f ../dotfiles/.zshrc /root/
             sudo mkdir -p /root/.cache/zsh/
             echo "3"
             if sudo [ -f /root/.zcompdump ]; then
@@ -113,7 +113,7 @@ function install_ZSH() {
 
     # Copiar archivos de configuración
     #clear
-    cp -f dotfiles/.zshrc ~/
+    cp -f ../dotfiles/.zshrc ~/
     mkdir -p ~/.cache/zsh/
 
     if [ -f ~/.zcompdump ]; then
