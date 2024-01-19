@@ -38,7 +38,10 @@ cp -r ../dotfiles/konsolerc ~/.config/konsolerc
 clear
 cd ${dir}
 install_extra_apps
-
+sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+sudo apt update
+sudo apt --fix-broken install
+sudo aptitude safe-upgrade -y
 
 ##############DUAL BOOT ####################
 #sudo nala install refind -y

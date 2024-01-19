@@ -57,11 +57,17 @@ sleep 3
 # Application Style: Klassy
 clear
 echo "Application Style: Klassy"
+    #Stable
+    debian_version=$(curl -sL https://deb.debian.org/debian/dists/stable/InRelease | grep "^Version:" | cut -d' ' -f2 | awk -F. '{print $1}')
+    echo "deb http://download.opensuse.org/repositories/home:/paul4us/Debian_$debian_version/ /" | sudo tee /etc/apt/sources.list.d/home:paul4us.list
+    curl -fsSL https://download.opensuse.org/repositories/home:paul4us/Debian_$debian_version/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_paul4us.gpg > /dev/null
+
+    #Testing
+    
+sudo nala update
 sudo nala install build-essential libkf5config-dev libkdecorations2-dev libqt5x11extras5-dev qtdeclarative5-dev extra-cmake-modules libkf5guiaddons-dev libkf5configwidgets-dev libkf5windowsystem-dev libkf5coreaddons-dev gettext cmake libkf5iconthemes-dev libkf5package-dev libkf5style-dev libkf5kcmutils-dev kirigami2-dev -y
 sudo apt reinstall qtdeclarative5-dev
-git clone https://github.com/paulmcauley/klassy.git /git/Klassy
-cd /git/Klassy
-sudo ./install.sh
+sudo nala install -y klassy
 sleep 3
 
 # PAPIRUS
