@@ -13,7 +13,7 @@ extra_apps="${dir}/sources/lists/extra_apps.list"
 # POP_OS ICONS
 clear
 echo "POP_OS! ICONS"
-wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/KDE/Pop_Os-Icons.tar.gz
+sudo wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/Pop_Os-Icons.tar.gz
 sudo tar -xvf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 rm Pop_Os-Icons.tar.gz -rf
 sleep 3
@@ -63,7 +63,7 @@ echo "Application Style: Klassy"
     curl -fsSL https://download.opensuse.org/repositories/home:paul4us/Debian_$debian_version/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_paul4us.gpg > /dev/null
 
     #Testing
-    
+
 sudo nala update
 sudo nala install build-essential libkf5config-dev libkdecorations2-dev libqt5x11extras5-dev qtdeclarative5-dev extra-cmake-modules libkf5guiaddons-dev libkf5configwidgets-dev libkf5windowsystem-dev libkf5coreaddons-dev gettext cmake libkf5iconthemes-dev libkf5package-dev libkf5style-dev libkf5kcmutils-dev kirigami2-dev -y
 sudo apt reinstall qtdeclarative5-dev
