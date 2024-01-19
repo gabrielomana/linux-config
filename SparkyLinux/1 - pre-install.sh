@@ -162,10 +162,13 @@ c="sudo nala install ${list3} -y"
 echo "Comando para nala:"
 echo $c
 if ! (eval $c); then
-  for i in $list3; do
-    c_aux="sudo apt install ${i} -y"
-    eval $c_aux
-  done
+    c_aux="sudo apt install ${list3} -y"
+    if ! (eval $c_aux); then
+        for i in $list3; do
+            c_aux="sudo apt install ${i} -y"
+            eval $c_aux
+        done
+    fi
 fi
  sleep 5
  clear
