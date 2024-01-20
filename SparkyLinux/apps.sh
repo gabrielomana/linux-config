@@ -3,53 +3,51 @@
 ############################################
 # BASIC PACKAGES INSTALLATION
 ############################################
- clear
- echo "BASIC PACKAGES"
- sleep 3
- dir="$(pwd)"
-LISTt="apt-transport-https \
-  apt-xapian-index \
-  aptitude \
-  bash-completion \
-  bleachbit \
-  build-essential \
-  ca-certificates \
-  coreutils \
-  cmake \
-  curl \
-  debian-reference-es \
-  devscripts \
-  dialog \
-  dirmngr \
-  dkms \
-  dos2unix \
-  gpgv \
-  gnupg \
-  linux-base \
-  lsb-release \
-  liblzo* \
-  lz4 \
-  make \
-  man-db \
-  manpages \
-  memtest86+ \
-  net-tools \
-  netselect-apt \
-  neofetch \
-  p7zip \
-  pipx \
-  python3-pip \
-  python3-venv \
-  rsync \
-  screen \
-  software-properties-common \
-  sudo \
-  systemd-sysv \
-  tree \
-  unrar-free \
-  util-linux \
-  usbutils \
-  wget \
-  zip"
- sudo apt-get --ignore-missing install $(echo $LIST | sed -e 's/wifite//')
- sleep 5
+clear
+echo "BASIC PACKAGES"
+sleep 3
+
+dir="$(pwd)"
+LIST="ark
+ffmpegthumbs
+filelight
+gwenview
+kaccounts-providers
+kamoso
+kate
+kbackup
+kcalc
+kcharselect
+kcolorchooser
+kde-config-cron
+kdenetwork-filesharing
+kdeplasma-addon*
+kfind
+kget
+kid3
+kinfocenter
+kio*
+kio-admin
+kio-gdrive
+kleopatra
+kmix
+kmousetool
+knotes
+kolourpaint
+kompare
+krdc
+krename
+ksystemlog
+ktimer
+okular
+partitionmanager
+plasma-nm
+plasma-pa
+plasma-widget*
+plasma-widgets-addons
+print-manager
+skanlite"
+
+# Instalación de paquetes
+sudo apt-get --ignore-missing install $LIST
+sleep 5
