@@ -264,8 +264,8 @@ if [ $f == 1 ]; then
     deb-src https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
     deb https://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
     deb-src https://security.debian.org/debian-security testing-security main contrib non-free non-free-firmware
-    deb https://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
-    deb-src https://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
+    #deb https://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
+    #deb-src https://deb.debian.org/debian/ unstable main contrib non-free non-free-firmware
     deb https://deb-multimedia.org/ testing main non-free" | sudo tee /etc/apt/sources.list
 
     sudo rm -f /etc/apt/sources.list.d/sparky.list
