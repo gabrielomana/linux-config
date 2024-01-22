@@ -1,86 +1,198 @@
 #!/bin/bash
 
-function backup_file() {
-    local file="$1"
-    if [ -f "$file" ]; then
-        mv -n "$file" "$file-backup-$(date +"%Y-%m-%d")"
-        echo "Backed up $file to $file-backup-$(date +"%Y-%m-%d")"
-    fi
-}
+function install_ZSH_ROOT() {
+    #clear
 
-function install_oh_my_zsh() {
-    local user="$1"
-    local oh_my_zsh_dir="/home/$user/.oh-my-zsh"
+    echo -e "\nSe necesita acceso sudo para cambiar el shell predeterminado en root.\n"
 
-    if [ -d "$oh_my_zsh_dir" ]; then
-        echo "oh-my-zsh is already installed for $user"
-        sudo -u "$user" git -C "$oh_my_zsh_dir" remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
-    else
-        sudo -u "$user" git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$oh_my_zsh_dir"
-    fi
-}
+    if sudo -v; then
+        # Solicitar contraseña si no está en cache
+        echo "Autenticación exitosa. Continuando con la configuración."
 
-function copy_config() {
-    local user="$1"
-    local dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../dotfiles"
-    sudo -u "$user" cp -f "$dotfiles_dir/.zshrc" "/home/$user/"
-    sudo -u "$user" mkdir -p "/home/$user/.cache/zsh/"
-    sudo -u "$user" mv "/home/$user/.zcompdump"* "/home/$user/.cache/zsh/"
-}
 
-function configure_plugins() {
-    local user="$1"
-    local plugins=("zpm-zsh" "zsh-autopair" "zsh-autosuggestions" "zsh-completions" "zsh-history-substring-search" "zsh-syntax-highlighting" "you-should-use" "fzf-tab")
-
-    for plugin in "${plugins[@]}"; do
-        local plugin_dir="/home/$user/.oh-my-zsh/custom/plugins/$plugin"
-        if [ -d "$plugin_dir" ]; then
-            sudo -u "$user" git -C "$plugin_dir" pull
+        # Instalar oh-my-zsh si no está instalado
+        #clear
+        if [ -d /root/.oh-my-zsh ]; then
+            echo -e "oh-my-zsh ya está instalado.\n"
+            sudo git -C /root/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
         else
-            sudo -u "$user" git clone --depth=1 "https://github.com/$plugin" "$plugin_dir"
+            sudo git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git /root/.oh-my-zsh
         fi
-    done
+        sleep 5
+
+
+        # Verificar la existencia de /root/.zshrc
+        if sudo [ ! -f /root/.zshrc ]; then
+            sudo touch /root/.zshrc
+
+        fi
+
+        echo "Creando carpeta"
+        sudo mkdir -p /root/.config/
+        sudo mkdir -p /root/.cache/zsh/
+        sudo touch /root/.config/starship.toml
+        sudo touch /root/.zcompdump
+        sleep 5
+
+
+        if sudo chsh -s $(which zsh) root; then
+            echo "Zsh en root configurado con éxito."
+
+            # Actualizar oh-my-zsh en root
+            sudo chmod go-w /root/ -R
+            sudo chmod go-w /bin/zsh -R
+            #sudo /bin/zsh -i -c 'omz update'
+
+            # Configuración de Starship en root
+            sudo wget https://starship.rs/install.sh
+            sudo chmod +x install.sh
+            sudo sh -c "./install.sh --yes"
+            sudo rm install.sh -rf
+            echo "1"
+            sudo sh -c "wget -N https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml"
+            sudo mv -f *.toml /root/.config/starship.toml
+
+            echo "2"
+            # Copiar archivos de configuración para root
+            sudo cp -f dotfiles/.zshrc /root/
+            sudo mkdir -p /root/.cache/zsh/
+            echo "3"
+            if sudo [ -f /root/.zcompdump ]; then
+                sudo mv -f /root/.zcompdump* /root/.cache/zsh/
+            fi
+
+            # Reiniciar Zsh para root
+            sudo su -c "chsh -s /bin/zsh root"
+            CARGO_BIN_DIR=$(echo $HOME/.cargo/bin)
+            echo "export PATH=\$PATH:$CARGO_BIN_DIR" | sudo tee -a /root/.zshrc > /dev/null
+
+            custom_path="/usr/share/oh-my-zsh/custom/"
+            #autoload -U compinit && compinit
+            sudo chmod 755 "$custom_path" -R
+            sudo chmod go-w "$custom_path" -R
+
+
+        else
+            echo -e "Algo ha salido mal al configurar Zsh para root.\n"
+        fi
+    else
+        echo -e "No se pudo autenticar. Por favor, inténtalo nuevamente.\n"
+    fi
 }
 
-function install_fzf() {
-    sudo apt update
-    sudo apt install -y fzf
-}
-
-function configure_starship() {
-    local user="$1"
-    sudo -u "$user" sh -c "$(curl -fsSL https://starship.rs/install.sh)"
-    sudo -u "$user" wget -O "/home/$user/.config/starship.toml" https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml
-}
-
-function change_default_shell() {
-    local user="$1"
-    sudo chsh -s "$(which zsh)" "$user"
-}
 
 function install_ZSH() {
-    echo "Installing Zsh and oh-my-zsh for the current user..."
-    backup_file "$HOME/.zshrc"
-    install_oh_my_zsh "$USER"
-    copy_config "$USER"
-    configure_plugins "$USER"
-    install_fzf
-    configure_starship "$USER"
-    change_default_shell "$USER"
+    #clear
+
+    # Verificar si Zsh, Git y Wget ya están instalados
+    if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
+        echo -e "Zsh, Git, y Wget ya están instalados.\n"
+    else
+        # Instalar Zsh, Git y Wget si no están instalados
+        if sudo apt install zsh git wget -y; then
+            echo -e "Zsh, Git y Wget instalados con éxito.\n"
+        else
+            echo -e "Por favor, instala los siguientes paquetes primero y luego vuelve a intentarlo: zsh, git, wget.\n" && exit
+        fi
+    fi
+
+    # Respaldar .zshrc actual
+    if mv -n ~/.zshrc ~/.zshrc-backup-$(date +"%Y-%m-%d"); then
+        echo -e "Se ha respaldado el .zshrc actual en .zshrc-backup-fecha.\n"
+    fi
+
+    # Instalar oh-my-zsh si no está instalado
+    #clear
+    if [ -d ~/.oh-my-zsh ]; then
+        echo -e "oh-my-zsh ya está instalado.\n"
+        git -C ~/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
+    else
+        git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
+    fi
+    sleep 5
+
+    # Copiar archivos de configuración
+    #clear
+    cp -f dotfiles/.zshrc ~/
+    mkdir -p ~/.cache/zsh/
+
+    if [ -f ~/.zcompdump ]; then
+        mv -f ~/.zcompdump* ~/.cache/zsh/
+    fi
+    sleep 5
+
+     # Cambiar la ruta de los plugins a una ubicación global
+    custom_path="/usr/share/oh-my-zsh/custom/"
+    custom_themes_path="/usr/share/oh-my-zsh/custom/themes/"
+    custom_plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
+
+    # Verificar si la ruta existe
+    if [ ! -d "$custom_path" ]; then
+        # Crear la ruta si no existe
+        sudo mkdir -p "$custom_path"
+        sudo mkdir -p "$custom_themes_pathh"
+        sudo mkdir -p "$custom_plugins_path"
+        # Asignar permisos 1777 a la ruta
+        sudo chmod 755 "$custom_path" -R
+        sudo chmod go-w "$custom_path" -R
+    fi
+
+    # Lista de repositorios a clonar
+    repositories=(
+        "https://github.com/hlissner/zsh-autopair.git"
+        "https://github.com/zsh-users/zsh-autosuggestions.git"
+        "https://github.com/zsh-users/zsh-completions.git"
+        "https://github.com/zsh-users/zsh-history-substring-search.git"
+        "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+        "https://github.com/MichaelAquilina/zsh-you-should-use.git"
+        "https://github.com/Aloxaf/fzf-tab.git"
+    )
+
+    # Clonar e instalar los repositorios
+    for repository in "${repositories[@]}"; do
+        plugin_name=$(basename "$repository" .git)
+        plugin_path="$custom_plugins_path$plugin_name"
+
+        if [ -d "$plugin_path" ]; then
+            # Actualizar el repositorio si ya existe
+            echo "Actualizando $plugin_name..."
+            sudo git -C "$plugin_path" pull
+        else
+            # Clonar el repositorio si no existe
+            echo "Clonando $repository en $plugin_path..."
+            sudo git clone "$repository" "$plugin_path"
+        fi
+    done
+
+    echo "Repositorios clonados e instalados en $custom_plugins_path."
+
+    sudo mv /usr/share/oh-my-zsh/custom/plugins/zsh-you-should-use/ /usr/share/oh-my-zsh/custom/plugins/you-should-use/
+    #autoload -U compinit && compinit
+
+    # Instalar fzf para fzf-tab
+    sudo apt install fzf -y
+
+    sleep 5
+
+    # Instalar y configurar Starship
+    #clear
+    sudo wget https://starship.rs/install.sh
+    sudo chmod +x install.sh
+    sh -c "./install.sh --yes"
+    sudo rm install.sh -rf
+    wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O ~/.config/starship.toml
+    sleep 5
+
+    # Reiniciar Zsh
+    #clear
+    echo -e "\nSe necesita acceso sudo para cambiar el shell predeterminado.\n"
+    if chsh -s $(which zsh) && /bin/zsh -i -c 'omz update'; then
+        echo "Zsh en usuario: OK"
+        echo "Instalando Zsh en root..."
+        sleep 3
+        install_ZSH_ROOT
+    else
+        echo -e "Algo ha salido mal.\n"
+    fi
+    return
 }
-
-function install_ZSH_ROOT() {
-    echo "Installing Zsh and oh-my-zsh for the root user..."
-    backup_file "/root/.zshrc"
-    install_oh_my_zsh "root"
-    copy_config "root"
-    configure_plugins "root"
-    install_fzf
-    configure_starship "root"
-    change_default_shell "root"
-}
-
-install_ZSH
-install_ZSH_ROOT
-
-echo "Zsh and oh-my-zsh installation and configuration completed successfully."

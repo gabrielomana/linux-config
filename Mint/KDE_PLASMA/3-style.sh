@@ -8,12 +8,11 @@ dir="$(pwd)"
 
 extra_apps="${dir}/sources/lists/extra_apps.list"
 
-. "${dir}/sources/functions/zsh_starship"
 
 # POP_OS ICONS
 clear
 echo "POP_OS! ICONS"
-wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/KDE/Pop_Os-Icons.tar.gz
+sudo wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/Pop_Os-Icons.tar.gz
 sudo tar -xvf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 rm Pop_Os-Icons.tar.gz -rf
 sleep 3
@@ -71,14 +70,12 @@ sudo apt install papirus-icon-theme *kvantum* -y
 
 okular ${dir}/customization_guide.pdf
 sudo bleachbit -c apt.autoclean apt.autoremove apt.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
-sudo nala update; sudo nala upgrade -y; sudo nala install -f;
 
-# DOTFILES+ZSH+OHMYZSH+STARSHIP
 clear
-echo "ZSH"
-sleep 3
-clear
-cd ${dir}
-a=0
-f=0
-install_ZSH
+sudo GNUTLS_CPUID_OVERRIDE=0x1 apt-get update
+# Definir la variable de entorno
+export GNUTLS_CPUID_OVERRIDE=0x1
+# Agregar la línea al archivo /etc/environment
+echo "export GNUTLS_CPUID_OVERRIDE=0x1" | sudo tee -a /etc/environment
+topgrade
+sudo reboot
