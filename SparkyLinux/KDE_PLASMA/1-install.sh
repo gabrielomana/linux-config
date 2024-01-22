@@ -41,13 +41,13 @@ install_kde
 clear
 echo "INSTALL SYSTEM CORE APPS: "
 sleep 3
-#install_core_apps
+install_core_apps
 
 ######################### MULTIMEDIA ###############################
 clear
 echo "INSTALL MULTIMEDIA APPS: "
 sleep 3
-#install_multimedia
+install_multimedia
 
 ################################### FULL UPDATE ##########################################
 clear

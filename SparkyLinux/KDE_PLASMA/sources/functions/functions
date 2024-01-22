@@ -151,24 +151,24 @@ function install_kde() {
   sudo nala install plasma-discover-backend-flatpak -y
 
   #CLEAN PLASMA (Puedes habilitar esta parte si lo deseas)
-  # clear
-  # echo "INSTALL KDE PLASMA:"
-  # echo " - Install KDE Plasma Core"
-  # echo " - Remove apps and bloatware"
-  # sleep 3
-  # check_uninstalled "${kde_bloatware}"
-  # sudo apt-get update --fix-missing
-  # sudo apt-get install -f
+  clear
+  echo "INSTALL KDE PLASMA:"
+  echo " - Install KDE Plasma Core"
+  echo " - Remove apps and bloatware"
+  sleep 3
+  check_uninstalled "${kde_bloatware}"
+  sudo apt-get update --fix-missing
+  sudo apt-get install -f
 
   #KDE's apps
-  #clear
+  clear
   echo "INSTALL KDE PLASMA:"
   echo " - Install KDE Plasma Core"
   echo " - Remove apps and bloatware"
   echo " - Install KDE's APPS"
   sleep 3
-  #check_installed "${kde_plasma_apps}"
-  #sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
+  check_installed "${kde_plasma_apps}"
+  sudo apt install "kde-config-cron*" "^kio-*" "plasma-widget*" "^dconf*" -y
 }
 
 function flameshot_shortcuts_KDE() {
