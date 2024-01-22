@@ -54,20 +54,36 @@ cd /git/Orchis-theme
 ./install.sh
 sleep 3
 
-# Application Style: Klassy
-clear
-echo "Application Style: Klassy"
-    #Stable
-    debian_version=$(curl -sL https://deb.debian.org/debian/dists/stable/InRelease | grep "^Version:" | cut -d' ' -f2 | awk -F. '{print $1}')
-    echo "deb http://download.opensuse.org/repositories/home:/paul4us/Debian_$debian_version/ /" | sudo tee /etc/apt/sources.list.d/home:paul4us.list
-    curl -fsSL https://download.opensuse.org/repositories/home:paul4us/Debian_$debian_version/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_paul4us.gpg > /dev/null
+## Application Style: Klassy
 
-    #Testing
+# Determinar el nombre en clave de Debian instalado
+    debian_installed=$(grep -oP 'DEBIAN_CODENAME=\K\S+' /etc/os-release)
 
-sudo nala update
-sudo nala install build-essential libkf5config-dev libkdecorations2-dev libqt5x11extras5-dev qtdeclarative5-dev extra-cmake-modules libkf5guiaddons-dev libkf5configwidgets-dev libkf5windowsystem-dev libkf5coreaddons-dev gettext cmake libkf5iconthemes-dev libkf5package-dev libkf5style-dev libkf5kcmutils-dev kirigami2-dev -y
-sudo apt reinstall qtdeclarative5-dev
-sudo nala install -y klassy
+# Obtener nombres en clave y versiones de las ramas Stable y Testing
+    debian_codename_stable=$(curl -sL https://deb.debian.org/debian/dists/stable/InRelease | grep "^Codename:" | cut -d' ' -f2 | awk -F. '{print $1}')
+    debian_codename_testing=$(curl -sL https://deb.debian.org/debian/dists/testing/InRelease | grep "^Codename:" | cut -d' ' -f2 | awk -F. '{print $1}')
+    debian_stable_version=$(curl -sL https://deb.debian.org/debian/dists/stable/InRelease | grep "^Version:" | cut -d' ' -f2 | awk -F. '{print $1}')
+
+# Configurar repositorios según la versión de Debian
+    if [ "$debian_installed" == "$debian_codename_stable" ]; then
+        echo "Configurando repositorio para Debian Stable"
+        echo "deb http://download.opensuse.org/repositories/home:/paul4us/Debian_$debian_stable_version/ /" | sudo tee /etc/apt/sources.list.d/home:paul4us.list
+        curl -fsSL https://download.opensuse.org/repositories/home:paul4us/Debian_$debian_stable_version/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_paul4us.gpg > /dev/null
+    elif [ "$debian_installed" == "$debian_codename_testing" ]; then
+        echo "Configurando repositorio para Debian Testing"
+        echo 'deb http://download.opensuse.org/repositories/home:/paul4us/Debian_Testing/ /' | sudo tee /etc/apt/sources.list.d/home:paul4us.list
+        curl -fsSL https://download.opensuse.org/repositories/home:paul4us/Debian_Testing/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_paul4us.gpg > /dev/null
+    else
+        echo "Configurando repositorio para Debian Unstable"
+        echo 'deb http://download.opensuse.org/repositories/home:/paul4us/Debian_Unstable/ /' | sudo tee /etc/apt/sources.list.d/home:paul4us.list
+        curl -fsSL https://download.opensuse.org/repositories/home:paul4us/Debian_Unstable/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home_paul4us.gpg > /dev/null
+    fi
+
+# Actualizar e instalar paquetes necesarios
+    sudo apt update
+    sudo apt install -y build-essential libkf5config-dev libkdecorations2-dev libqt5x11extras5-dev qtdeclarative5-dev extra-cmake-modules libkf5guiaddons-dev libkf5configwidgets-dev libkf5windowsystem-dev libkf5coreaddons-dev gettext cmake libkf5iconthemes-dev libkf5package-dev libkf5style-dev libkf5kcmutils-dev kirigami2-dev
+    sudo apt reinstall -y qtdeclarative5-dev
+    sudo apt install -y klassy
 sleep 3
 
 # PAPIRUS
