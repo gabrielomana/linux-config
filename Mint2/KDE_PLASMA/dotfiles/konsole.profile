@@ -2,7 +2,7 @@
 ColorScheme=Oceanic-Next-Opacity
 DimmValue=106
 EmojiFont=Noto Color Emoji,12,-1,5,50,0,0,0,0,0
-Font=JetBrainsMonoNL NF,10,-1,5,63,0,0,0,0,0,SemiBold
+Font=Hack Nerd Font NF,11,-1,5,63,0,0,0,0,0,SemiBold
 UseFontLineChararacters=true
 
 [General]
