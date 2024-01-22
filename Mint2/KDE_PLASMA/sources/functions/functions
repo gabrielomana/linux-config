@@ -517,25 +517,46 @@ echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/
   echo " - Pipewire & Wireplumber"
   echo " - Nerd Fonts"
   sleep 3
-  mkdir /tmp/nerd_fonts/
-  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
-  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
-  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip -P /tmp/nerd_fonts/
+  # Nerd Fonts
+  clear
+  echo "INSTALL SYSTEM CORE APPS:"
+  echo " - Development tools and libraries"
+  echo " - Codecs and Drivers"
+  echo " - Utilities"
+  echo " - Nerd Fonts"
+  sleep 3
 
-  sudo unzip /tmp/nerd_fonts/JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono
-  sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
-  sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
+  # Temporary directory for downloading fonts
+  temp_dir="/tmp/nerd_fonts"
+  # Create temporary directory if it doesn't exist
+  mkdir -p "$temp_dir"
+  # Get download URLs for the latest versions
+  font_names=("JetBrainsMono" "Ubuntu" "Mononoki" "Hack")
+  for font_name in "${font_names[@]}"; do
+      latest_release_url="https://github.com/ryanoasis/nerd-fonts/releases/latest"
+      font_download_url=$(curl -sL -I -o /dev/null -w '%{url_effective}' "$latest_release_url" | sed "s/tag/download/")"/$font_name.zip"
+      # Download the font
+      wget -O "$temp_dir/$font_name.zip" "$font_download_url"
+      # Unzip the font
+      sudo unzip "$temp_dir/$font_name.zip" -d "$temp_dir/$font_name"
+  done
 
-  sudo mkdir /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
-  sudo rm /tmp/nerd_fonts/ -rf
-  sudo nala install fonts-noto-color-emoji -y
-  sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
+  # Installation directory for fonts on the system
+  install_dir="/usr/share/fonts/nerd_fonts"
+  # Create installation directory if it doesn't exist
+  sudo mkdir -p "$install_dir"
+  # Move fonts to the installation directory
+  for font_name in "${font_names[@]}"; do
+      sudo mv "$temp_dir/$font_name"/*.{ttf,otf} "$install_dir"
+  done
+  # Cleanup: Remove temporary directory
+  sudo rm -rf "$temp_dir"
+
+  # Install additional fonts and configuration
+  sudo apt install fonts-noto-color-emoji -y
+  sudo cp ../dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
+
+  # Update font cache
   fc-cache -f -v
 }
 
