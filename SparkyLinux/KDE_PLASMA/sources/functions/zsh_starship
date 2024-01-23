@@ -2,13 +2,10 @@
 
 function install_ZSH_ROOT() {
     #clear
-
     echo -e "\nSe necesita acceso sudo para cambiar el shell predeterminado en root.\n"
-
     if sudo -v; then
         # Solicitar contraseña si no está en cache
         echo "Autenticación exitosa. Continuando con la configuración."
-
 
         # Instalar oh-my-zsh si no está instalado
         #clear
