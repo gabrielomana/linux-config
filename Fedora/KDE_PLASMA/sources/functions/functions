@@ -27,9 +27,9 @@ function check_uninstalled() {
 # check_uninstalled "package_list.txt"
 
 
-function check_installed {
+function check_installed() {
+    echo "Hola"
     list_file="$1"
-    output_file="installation.log"
 
     if [ ! -f "$list_file" ]; then
         echo "The list file '$list_file' does not exist."
