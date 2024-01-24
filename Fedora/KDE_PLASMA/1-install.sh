@@ -1,15 +1,6 @@
 #!/bin/bash
 cp ~/.bashrc ~/.bashrc_original
 
-if command -v nala &> /dev/null; then
-    sudo nala fetch --auto --fetches 5 -y
-else
-    if sudo apt install nala -y ; then
-        sudo nala fetch --auto --fetches 5 -y
-    fi
-fi
-sudo nala update
-
 dir="$(pwd)"
 
 codecs="${dir}/sources/lists/codecs.list"
@@ -25,11 +16,6 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 . "${dir}"/sources/functions/functions
 
 
-####################### UNINSTALL APPS ###############################
-clear
-echo "UNINSTALL APPS"
-sleep 3
-clean_fedora
 ########################## REPOSITORIES ###############################
 clear
 echo "ADD REPOSITORIES"

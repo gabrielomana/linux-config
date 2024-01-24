@@ -74,8 +74,6 @@ echo "REPOS"
 
 sudo dnf clean all
   clear
-  # Configuración general de DNF
-  sudo echo -e "[main]\ngpgcheck=1\ninstallonly_limit=3\nclean_requirements_on_remove=True\nbest=False\nskip_if_unavailable=True\n#Speed\nfastestmirror=True\nmax_parallel_downloads=10\ndefaultyes=True\nkeepcache=True\ndeltarpm=True" | sudo tee /etc/dnf/dnf.conf
 
   # Limpieza y actualización de repositorios
   sudo dnf clean all
@@ -262,7 +260,7 @@ function install_core_apps() {
   source /usr/share/dnf/plugins/rpmfusion-installer
 
   # Identify the processor
-  cpu_name=$(lscpu | grep "Model name" | awk '{print $2}')
+  cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
 
   # Install the drivers and microcodes
   if [[ "$cpu_name" =~ "Intel" ]]; then
