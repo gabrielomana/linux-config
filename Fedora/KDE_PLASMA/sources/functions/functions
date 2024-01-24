@@ -28,27 +28,39 @@ function check_uninstalled() {
 
 
 function check_installed() {
+    # Saludo inicial
     echo "Hola"
+    
+    # Parámetros y archivo de salida
     list_file="$1"
+    output_file="output.log"
+    echo $list_file
 
+    # Verificar si el archivo de lista existe
     if [ ! -f "$list_file" ]; then
-        echo "The list file '$list_file' does not exist."
+        echo "El archivo de lista '$list_file' no existe."
         exit 1
     fi
 
+    # Arreglos para grupos y paquetes
     groups=()
     packages=()
 
+    # Leer cada línea del archivo de lista
     while read -r line; do
+        # Limpiar la línea de espacios en blanco
         line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
+        # Determinar si la línea está entre comillas
         if [[ $line == \"*\" ]]; then
             package_or_group=$(echo "$line" | sed 's/"//g')
         else
             package_or_group="$line"
         fi
 
-        if ! dnf list --installed "$package_or_group" | grep -qE "^$package_or_group" && dnf list "$package_or_group" | grep -qE "^$package_or_group"; then
+        # Verificar si el paquete o grupo no está instalado y está disponible
+        if ! sudo dnf list --installed "$package_or_group" &>/dev/null && sudo dnf list "$package_or_group" &>/dev/null; then
+            # Agregar a grupos o paquetes según corresponda
             if [[ $line == \"*\" ]]; then
                 groups+=("$package_or_group")
             else
@@ -57,11 +69,14 @@ function check_installed() {
         fi
     done < "$list_file"
 
+    # Instalar grupos y paquetes si hay elementos en los arreglos
     [ ${#groups[@]} -gt 0 ] && sudo dnf groupinstall -y "${groups[@]}" >> "$output_file" 2>&1
     [ ${#packages[@]} -gt 0 ] && sudo dnf install -y "${packages[@]}" >> "$output_file" 2>&1
 
-#    echo "Installation process completed. Check '$output_file' for details."
+    # Mensaje de finalización
+    echo "Proceso de instalación completado. Verifica '$output_file' para más detalles."
 }
+
 
 
 function add_extra_repos(){
@@ -90,8 +105,8 @@ sudo dnf makecache --refresh
 function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
-
   check_installed "${kde_plasma}"
+
   sudo systemctl enable sddm
   sudo systemctl set-default graphical.target
   sudo systemctl start sddm
