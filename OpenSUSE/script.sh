@@ -150,13 +150,6 @@ echo "+-----------------------------------------------------+"
 echo "+-----------------------------------------------------+"
 echo "| Microcode  & VAAPI                                  |"
 echo "+-----------------------------------------------------+"
-    # Verifica que la GPU sea compatible con la aceleración de hardware
-    gpu_info=$(lspci | grep -i "3D controller")
-    if [ -z "$gpu_info" ]; then
-    echo "La GPU no es compatible con la aceleración de hardware."
-    exit 1
-    fi
-
     # Obtiene el nombre del fabricante de la GPU.
     gpu_vendor=$(lspci | grep -i "3D controller" | awk '{print $3}')
 
@@ -189,7 +182,7 @@ echo "+-----------------------------------------------------+"
 
     # Configuración del procesador
     # Obtiene el nombre del procesador.
-    cpu_name=$(lscpu | grep -Ei "Model name" | awk '{print $3}')
+    cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
 
     # Instala los controladores y microcódigos apropiados.
     if echo "$cpu_name" | grep -qi "intel"; then

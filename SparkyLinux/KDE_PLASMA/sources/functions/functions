@@ -243,7 +243,7 @@ function hardware-settings {
 
   # Configuración del procesador
   # Obtiene el nombre del procesador.
-  cpu_name=$(lscpu | grep -Ei "Model name" | awk '{print $3}')
+  cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
 
   # Instala los controladores y microcódigos apropiados.
   if echo "$cpu_name" | grep -qi "intel"; then
