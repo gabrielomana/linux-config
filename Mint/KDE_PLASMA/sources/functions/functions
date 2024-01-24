@@ -291,32 +291,32 @@ function install_kde {
     sudo kbuildsycoca5
 }
 
-hardware-settings {
+function hardware-settings {
   # Verifica que la GPU sea compatible con la aceleración de hardware
-  gpu_info=$(lspci | grep -i "3d controller")
+  gpu_info=$(lspci | grep -i "3D controller")
   if [ -z "$gpu_info" ]; then
     echo "La GPU no es compatible con la aceleración de hardware."
     exit 1
   fi
 
   # Obtiene el nombre del fabricante de la GPU.
-  gpu_vendor=$(lspci | grep -i "3d controller" | awk '{print $3}')
+  gpu_vendor=$(lspci | grep -i "3D controller" | awk '{print $3}')
 
   # Instala los controladores de la GPU.
   case "$gpu_vendor" in
     Intel*)
       echo "Instalando controladores para la GPU Intel..."
-      sudo apt install -y i965-va-driver intel-media-va-driver mesa-va-drivers
+      nala install -y i965-va-driver intel-media-va-driver mesa-va-drivers
       ;;
     AMD*)
       echo "Instalando controladores para la GPU AMD..."
-      sudo apt-get install -y firmware-amd-graphics amdgpu-pro
-      sudo apt install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
+      nala install -y firmware-amd-graphics amdgpu-pro
+      nala install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
       ;;
     NVIDIA*)
       echo "Instalando controladores para la GPU NVIDIA..."
-      sudo apt install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
-      sudo apt install -y nvidia-vaapi-driver
+      nala install -y x11-video-nvidiaG05 nvidia-settings nvidia-xconfig vdpau-driver-all libvdpau_nvidia
+      nala install -y nvidia-vaapi-driver
       ;;
   esac
 
@@ -337,10 +337,10 @@ hardware-settings {
   # Instala los controladores y microcódigos apropiados.
   if echo "$cpu_name" | grep -qi "intel"; then
     echo "Instalando controladores y microcódigos para el procesador Intel..."
-    sudo apt install -y intel-microcode
+    nala install -y intel-ucode
   elif echo "$cpu_name" | grep -qi "amd"; then
     echo "Instalando controladores y microcódigos para el procesador AMD..."
-    sudo apt install -y amd64-microcode
+    nala install -y amd64-microcode
   else
     echo "No se pudo identificar el procesador."
   fi
@@ -355,23 +355,24 @@ hardware-settings {
     case "$hypervisor" in
       VMware*)
         echo "Instalando controladores para VMware..."
-        sudo apt install -y open-vm-tools
+        nala install -y open-vm-tools
         ;;
       Microsoft*)
         echo "Instalando controladores para Microsoft Hyper-V..."
-        sudo apt install -y hyperv-daemons
+        nala install -y hyperv-daemons
         ;;
       VirtualBox*)
         echo "Instalando controladores para VirtualBox..."
-        sudo apt install -y virtualbox-guest-dkms virtualbox-guest-utils
+        nala install -y virtualbox-guest-dkms virtualbox-guest-utils
         ;;
       KVM*)
         echo "Instalando controladores para KVM..."
-        sudo apt install -y qemu-guest-agent
+        nala install -y qemu-guest-agent
         ;;
     esac
   fi
 }
+
 
 
 

@@ -202,47 +202,88 @@ function flameshot_shortcuts_KDE() {
     sudo kbuildsycoca5
 }
 
-function hardware-setting {
- 
-  # Instala el software de aceleración de hardware 
-  sudo nala install -y linux-headers-$(uname -r) firmware-linux-nonfree vdpauinfo
-
-  if [ "$(cat /proc/cpuinfo | grep -i "model name")" = *Intel* ]; then
-    sudo nala install -y intel-media-va-driver-non-free
-  elif [ "$(cat /proc/cpuinfo | grep -i "model name")" = *AMD* ]; then
-    sudo nala install -y firmware-amd-graphics amdgpu-pro mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
-  elif [ "$(cat /proc/cpuinfo | grep -i "model name")" = *NVIDIA* ]; then
-    sudo nala install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all nvidia-vaapi-driver
+function hardware-settings {
+  # Verifica que la GPU sea compatible con la aceleración de hardware
+  gpu_info=$(lspci | grep -i "3D controller")
+  if [ -z "$gpu_info" ]; then
+    echo "La GPU no es compatible con la aceleración de hardware."
+    exit 1
   fi
 
-  # Identify your processor and install the appropriate drivers and microcodes
-  echo "IDENTIFYING PROCESSOR AND INSTALLING DRIVERS AND MICROCODES"
-  cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
+  # Obtiene el nombre del fabricante de la GPU.
+  gpu_vendor=$(lspci | grep -i "3D controller" | awk '{print $3}')
 
+  # Instala los controladores de la GPU.
+  case "$gpu_vendor" in
+    Intel*)
+      echo "Instalando controladores para la GPU Intel..."
+      sudo apt-get install -y i965-va-driver intel-media-va-driver mesa-va-drivers
+      ;;
+    AMD*)
+      echo "Instalando controladores para la GPU AMD..."
+      sudo apt-get install -y firmware-amd-graphics amdgpu-pro
+      sudo apt-get install -y mesa-va-drivers mesa-vdpau-drivers
+      ;;
+    NVIDIA*)
+      echo "Instalando controladores para la GPU NVIDIA..."
+      sudo apt-get install -y nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all libvdpau_nvidia
+      sudo apt-get install -y nvidia-vaapi-driver
+      ;;
+  esac
+
+  # Verifica que la aceleración de hardware esté instalada correctamente.
+  for api in vaapi vdpau; do
+    echo "Verificando $api"
+    if ! command -v $api-info &> /dev/null; then
+      echo "$api no está instalado."
+      exit 1
+    fi
+    echo "$api está instalado."
+  done
+
+  # Configuración del procesador
+  # Obtiene el nombre del procesador.
+  cpu_name=$(lscpu | grep -Ei "Model name" | awk '{print $3}')
+
+  # Instala los controladores y microcódigos apropiados.
   if echo "$cpu_name" | grep -qi "intel"; then
+    echo "Instalando controladores y microcódigos para el procesador Intel..."
     sudo apt-get install -y intel-microcode
   elif echo "$cpu_name" | grep -qi "amd"; then
+    echo "Instalando controladores y microcódigos para el procesador AMD..."
     sudo apt-get install -y amd64-microcode
   else
-    echo "Failed to identify the processor."
+    echo "No se pudo identificar el procesador."
   fi
 
-  # Virtual Machine Drivers
-  echo "INSTALL VIRTUAL MACHINE DRIVERS"
-  if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
-    hypervisor=$(cat /sys/class/dmi/id/product_name)
+  # Configuración de los controladores de máquinas virtuales
+  # Verifica si la máquina es un host de máquinas virtuales.
+  if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" ]]; then
+    # Obtiene el nombre del hypervisor.
+    hypervisor=$(sudo dmidecode -s system-product-name)
 
-    if [[ "$hypervisor" =~ "VMware" ]]; then
-      sudo apt-get install -y open-vm-tools
-    elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
-      sudo apt-get install -y hyperv-daemons
-    elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
-      sudo apt-get install -y virtualbox-guest-dkms virtualbox-guest-utils
-    elif [[ "$hypervisor" =~ "KVM" ]]; then
-      sudo apt-get install -y qemu-guest-agent
-    fi
+    # Instala los controladores para el hypervisor.
+    case "$hypervisor" in
+      VMware*)
+        echo "Instalando controladores para VMware..."
+        sudo apt-get install -y open-vm-tools
+        ;;
+      Microsoft*)
+        echo "Instalando controladores para Microsoft Hyper-V..."
+        sudo apt-get install -y hyperv-daemons
+        ;;
+      VirtualBox*)
+        echo "Instalando controladores para VirtualBox..."
+        sudo apt-get install -y virtualbox-guest-dkms virtualbox-guest-utils
+        ;;
+      KVM*)
+        echo "Instalando controladores para KVM..."
+        sudo apt-get install -y qemu-guest-agent
+        ;;
+    esac
   fi
 }
+
 
 function install_core_apps() {
   # Development tools and libraries
