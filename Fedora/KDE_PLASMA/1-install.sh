@@ -20,7 +20,7 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 clear
 echo "ADD REPOSITORIES"
 sleep 3
-add_repos
+#add_repos
 ######################### KDE PLASMA ###############################
 clear
 echo "INSTALL KDE PLASMA: "
