@@ -6,7 +6,6 @@ function configure-dnf {
     sleep 3
     sudo dnf update -y
     sudo dnf upgrade -y
-    sudo dnf install -f -y
 }
 
 function change-hostname {
@@ -23,13 +22,14 @@ function configure-repositories {
     sudo dnf makecache --refresh
     sudo dnf -y install fedora-workstation-repositories
     sudo dnf -y install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-    sudo dnf groupupdate core
-}
-
-function install-essential-packages {
+    sudo dnf -y groupupdate core
     sudo dnf clean all
     sudo dnf makecache --refresh
     sudo dnf update -y
+    sudo dnf upgrade -y
+}
+
+function install-essential-packages {
     sudo dnf install @development-tools git -y
     sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo
 }
@@ -38,19 +38,18 @@ function configure-flatpak-repositories {
     clear
     echo "Configurando repositorios de Flatpak..."
     sleep 3
-    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
-    sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
-    sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
+    sudo dnf -y install flatpak
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
+    flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
+    flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
 
-    sudo flatpak remote-modify --system --prio=1 kde
-    sudo flatpak remote-modify --system --prio=2 flathub
-    sudo flatpak remote-modify --system --prio=3 elementary
-    sudo flatpak remote-modify --system --prio=4 fedora
+    flatpak remote-modify --system --prio=1 kde
+    flatpak remote-modify --system --prio=2 flathub
+    flatpak remote-modify --system --prio=3 elementary
+    flatpak remote-modify --system --prio=4 fedora
 
     sudo dnf update -y
-    sudo dnf upgrade -y
-    sudo dnf install -f -y
 }
 
 function configure-zswap {
@@ -98,10 +97,10 @@ function set-btrfs {
         HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
 
         # Modificar el archivo /etc/fstab para la partición raíz
-        sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
+        sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   rw,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
 
         # Modificar el archivo /etc/fstab para la partición home
-        sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   defaults,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
+        sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   rw,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
 
         # Limpiar la pantalla
         clear
@@ -142,9 +141,9 @@ function set-btrfs {
             # Ajustar compresión en /etc/fstab con los nuevos subvolúmenes
             {
                 echo "# Adding New Subvolumes"
-                echo "UUID=$ROOT_UUID /var/log btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@log 0 2"
-                echo "UUID=$ROOT_UUID /var/cache btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@cache 0 2"
-                echo "UUID=$ROOT_UUID /var/tmp btrfs defaults,noatime,space_cache=v2,compress=lzo,subvol=@tmp 0 2"
+                echo "UUID=$ROOT_UUID /var/log btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@log 0 2"
+                echo "UUID=$ROOT_UUID /var/cache btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@cache 0 2"
+                echo "UUID=$ROOT_UUID /var/tmp btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@tmp 0 2"
             } | sudo tee -a "$fstab" > /dev/null
         else
             echo "El archivo $fstab no existe. Verifica la ruta del archivo."
