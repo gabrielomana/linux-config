@@ -64,44 +64,6 @@ function check_installed {
 }
 
 
-function clean_fedora {
-
-}
-
-function add_repos(){
-clear
-echo "REPOS"
-
-sudo dnf clean all
-  clear
-
-  # Limpieza y actualización de repositorios
-  sudo dnf clean all
-  sudo dnf makecache --refresh
-  sudo dnf -y install fedora-workstation-repositories
-  sudo dnf -y install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-  sudo dnf groupupdate core
-
-  # Instalación de paquetes esenciales
-  sudo dnf clean all
-  sudo dnf makecache --refresh
-  sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo
-
-  # Configuración de repositorios de Flatpak
-  clear
-  echo "Configurando repositorios de Flatpak..."
-  sleep 3
-  sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-  sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
-  sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
-  sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
-
-  sudo flatpak remote-modify --system --prio=1 kde
-  sudo flatpak remote-modify --system --prio=2 flathub
-  sudo flatpak remote-modify --system --prio=3 elementary
-  sudo flatpak remote-modify --system --prio=4 fedora
-}
-
 function add_extra_repos(){
 
 ##EXTRA REPOS
