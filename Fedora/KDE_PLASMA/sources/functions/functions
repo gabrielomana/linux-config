@@ -29,42 +29,41 @@ function check_uninstalled() {
 
 function check_installed() {
     # Saludo inicial   
+    echo "Iniciando el proceso de verificación e instalación."
+
     # Parámetros y archivo de salida
     list_file="$1"
+
     # Verificar si el archivo de lista existe
     if [ ! -f "$list_file" ]; then
         echo "El archivo de lista '$list_file' no existe."
         exit 1
     fi
 
-    # Arreglos para grupos y paquetes
     # Arreglos para Grupos y Paquetes
-# Arreglos para Grupos y Paquetes
-# Arreglos para Grupos y Paquetes
-# Arreglos para Grupos y Paquetes
-# Arreglos para Grupos y Paquetes
-groups=()
-packages=()
+    groups=()
+    packages=()
 
-# Leer Cada Línea del Archivo de Lista
-while read -r line; do
-    # Limpiar la Línea de Espacios en Blanco
-    line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-        # Agregar a Grupos si tiene comillas, si no, agregar a Paquetes
+    # Leer Cada Línea del Archivo de Lista
+    while read -r line; do
+        # Limpiar la Línea de Espacios en Blanco
+        line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+        # Verificar si la Línea está entre Comillas Dobles
         if [[ "$line" =~ ^\".*\"$ ]]; then
             groups+=("$line")
         else
             packages+=("$line")
         fi
-    fi
-done < "$list_file"
+    done < "$list_file"
 
-# Imprimir y Dormir
-echo "Grupos:"
-printf '%s\n' "${groups[@]}"
-echo "Paquetes:"
-printf '%s\n' "${packages[@]}"
-sleep 10
+    # Imprimir y Dormir
+    echo "Grupos:"
+    printf '%s\n' "${groups[@]}"
+    echo "Paquetes:"
+    printf '%s\n' "${packages[@]}"
+    sleep 10
+
     # Instalar grupos y paquetes si hay elementos en los arreglos
     [ ${#groups[@]} -gt 0 ] && sudo dnf groupinstall -y "${groups[@]}" >> "$output_file" 2>&1
     [ ${#packages[@]} -gt 0 ] && sudo dnf install -y "${packages[@]}" >> "$output_file" 2>&1
@@ -72,6 +71,8 @@ sleep 10
     # Mensaje de finalización
     echo "Proceso de instalación completado. Verifica '$output_file' para más detalles."
 }
+
+
 
 
 
@@ -102,7 +103,7 @@ function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
   check_installed "${kde_plasma}"
-
+  sleep 10
   # sudo systemctl enable sddm
   # sudo systemctl set-default graphical.target
   # sudo systemctl start sddm
