@@ -55,6 +55,7 @@ function check_installed() {
         # Verificar si el paquete o grupo no está instalado y está disponible
         if ! sudo dnf list --installed "$package_or_group" &>/dev/null && sudo dnf list "$package_or_group" &>/dev/null; then
             echo $package_or_group
+            sleep 5
             # Agregar a grupos o paquetes según corresponda
             if [[ $line == \"*\" ]]; then
                 groups+=("$package_or_group")
