@@ -15,7 +15,7 @@ function actualizar-sistema() {
   $ZYPPER refresh
   $ZYPPER update
   $ZYPPER patch
-  sudo $ZYPPER -n install cmake automake zlibrary gcc-c++ VirtualGL patterns-devel-base-devel_basis
+  sudo $ZYPPER -n install cmake automake zlibrary* gcc-c++ VirtualGL patterns-devel-base-devel_basis lz4
   sleep 5
   clear
 }
@@ -253,8 +253,8 @@ cambiar-nombre-host
 configurar-microcode-vaapi
 configurar-zswap
 configurar-yast-rpm
-configurar-repositorios
+#configurar-repositorios
 configurar-flatpak
-instalar-codecs-y-paquetes
+#instalar-codecs-y-paquetes
 instalar-fuentes
 
