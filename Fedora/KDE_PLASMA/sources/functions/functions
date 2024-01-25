@@ -57,10 +57,10 @@ while read -r line; do
         package_or_group="$line"
         echo "TOTAL:"
         echo $package_or_group
-        
+
     else
         # Agregar a Grupos si tiene comillas, si no, agregar a Paquetes
-        if [[ $line == *\"* ]]; then
+        if [[ "$line" =~ ^\".*\"$ ]]; then
             groups+=("$line")
         else
             packages+=("$line")
