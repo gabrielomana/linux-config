@@ -16,7 +16,7 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 . "${dir}"/sources/functions/functions
 
 echo "Lista Principal:"
-echo ${kde_plasma}
+cat "${kde_plasma}"  # Utiliza el comando cat para mostrar el contenido del archivo
 echo "Fin"
 sleep 10
 ########################## REPOSITORIES ###############################
