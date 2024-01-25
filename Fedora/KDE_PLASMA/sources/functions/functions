@@ -31,10 +31,6 @@ function check_installed() {
     # Saludo inicial   
     # Parámetros y archivo de salida
     list_file="$1"
-    echo "Lista:"
-    cat $list_file
-    echo "FIN"
-    sleep 10
     # Verificar si el archivo de lista existe
     if [ ! -f "$list_file" ]; then
         echo "El archivo de lista '$list_file' no existe."
@@ -49,14 +45,13 @@ function check_installed() {
     while read -r line; do
         # Limpiar la línea de espacios en blanco
         line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
         # Determinar si la línea está entre comillas
         if [[ $line == \"*\" ]]; then
             package_or_group=$(echo "$line" | sed 's/"//g')
         else
             package_or_group="$line"
         fi
-
+          echo $package_or_group
         # Verificar si el paquete o grupo no está instalado y está disponible
         if ! sudo dnf list --installed "$package_or_group" &>/dev/null && sudo dnf list "$package_or_group" &>/dev/null; then
             # Agregar a grupos o paquetes según corresponda
@@ -104,10 +99,6 @@ sudo dnf makecache --refresh
 function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
-  echo "Lista:"
-  cat ${kde_plasma}
-  echo "FIN"
-  sleep 10
   check_installed "${kde_plasma}"
 
   # sudo systemctl enable sddm
