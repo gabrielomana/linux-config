@@ -57,13 +57,6 @@ function check_installed() {
         fi
     done < "$list_file"
 
-    # Imprimir y Dormir
-    echo "Grupos:"
-    printf '%s\n' "${groups[@]}"
-    echo "Paquetes:"
-    printf '%s\n' "${packages[@]}"
-    sleep 10
-
    # Instalar grupos y paquetes si hay elementos en los arreglos
     sudo dnf groupinstall -y "${groups[@]}"
     sudo dnf install -y "${packages[@]}"
