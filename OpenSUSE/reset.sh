@@ -11,6 +11,7 @@ clear
 cd /git/linux-config/
 sudo git reset --hard
 sudo git pull origin main
-sudo chmod +x /git/* -R
+sudo chmod 755 /git/* -R
+sudo chmod -R +x /git/*.sh
 
 #locales

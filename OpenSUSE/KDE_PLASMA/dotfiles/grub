@@ -3,7 +3,7 @@
 
 # Uncomment to set your own custom distributor. If you leave it unset or empty, the default
 # policy is to determine the value from /etc/os-release
-GRUB_DISTRIBUTOR="$(awk -F= '/^NAME/ {name=$2} /^VERSION/ {version=$2} END {print name, version}' /etc/*_release 2> /dev/null || echo OpenSUSE)"
+GRUB_DISTRIBUTOR="$(lsb_release -i -s 2> /dev/null || echo OpenSUSE)"
 GRUB_DEFAULT=saved
 GRUB_HIDDEN_TIMEOUT=0
 GRUB_TIMEOUT=15

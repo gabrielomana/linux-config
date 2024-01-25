@@ -207,11 +207,6 @@ function configurar-microcode-vaapi() {
     else
     echo "No se pudo identificar el procesador."
     fi
-    # Configuración de los controladores de máquinas virtuales
-    # Verifica si la máquina es un host de máquinas virtuales.
-    if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
-    # Obtiene el nombre del hypervisor.
-    hypervisor=$(sudo dmidecode -s system-product-name)
 }
 
 # Función para configurar ZSWAP
