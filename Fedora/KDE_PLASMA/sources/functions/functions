@@ -41,6 +41,7 @@ function check_installed() {
     # Arreglos para Grupos y Paquetes
 # Arreglos para Grupos y Paquetes
 # Arreglos para Grupos y Paquetes
+# Arreglos para Grupos y Paquetes
 groups=()
 packages=()
 
@@ -50,7 +51,7 @@ while IFS= read -r line; do
     line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
     # Agregar a Grupos si tiene comillas, si no, agregar a Paquetes
-    if [[ $line == *\"* ]]; then
+    if [[ $line == *"\""* ]]; then
         groups+=("$line")
     else
         packages+=("$line")
@@ -63,6 +64,7 @@ printf '%s\n' "${groups[@]}"
 echo "Paquetes:"
 printf '%s\n' "${packages[@]}"
 sleep 10
+
 
 
 
