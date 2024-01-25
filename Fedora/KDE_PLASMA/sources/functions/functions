@@ -51,6 +51,8 @@ function check_installed() {
         else
             package_or_group="$line"
         fi 
+        echo "total:"
+         echo "${package_or_group[@]}"
         # Agregar a grupos o paquetes según corresponda
         if [[ $line == \"*\" ]]; then
             groups+=("$package_or_group")
