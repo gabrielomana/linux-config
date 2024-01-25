@@ -32,7 +32,7 @@ function check_installed() {
     # Parámetros y archivo de salida
     list_file="$1"
     echo "Lista:"
-    echo $list_file
+    cat $list_file
     echo "FIN"
     sleep 10
     # Verificar si el archivo de lista existe
@@ -105,10 +105,10 @@ function install_kde {
   echo "INSTALL KDE PLASMA: "
   echo " - Install KDE Plasma Core"
   echo "Lista:"
-  echo ${kde_plasma}
+  cat ${kde_plasma}
   echo "FIN"
   sleep 10
-  # check_installed "${kde_plasma}"
+  check_installed "${kde_plasma}"
 
   # sudo systemctl enable sddm
   # sudo systemctl set-default graphical.target
