@@ -32,7 +32,7 @@ function check_installed() {
     # Parámetros y archivo de salida
     list_file="$1"
     echo "Lista:"
-    echo $list_fileS
+    echo $list_file
     echo "FIN"
     sleep 10
     # Verificar si el archivo de lista existe
