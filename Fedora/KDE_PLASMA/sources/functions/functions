@@ -65,8 +65,8 @@ function check_installed() {
     sleep 10
 
    # Instalar grupos y paquetes si hay elementos en los arreglos
-    [ ${#groups[@]} -gt 0 ] && sudo dnf groupinstall -y "${groups[@]}" && \
-    [ ${#packages[@]} -gt 0 ] && sudo dnf install -y "${packages[@]}"
+    sudo dnf groupinstall -y "${groups[@]}"
+    sudo dnf install -y "${packages[@]}"
 
 
     # Mensaje de finalización
