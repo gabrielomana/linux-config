@@ -59,13 +59,13 @@ function check_installed() {
 
    # Instalar grupos y paquetes si hay elementos en los arreglos
     c="sudo dnf groupinstall -y \"${groups[@]}\""
-    echo $c
-    eval $c
-    sleep 10
-    c="sudo dnf install -y \"${packages[@]}\""
-    echo $c
-    eval $c
-    sleep 10
+      echo $c
+      eval $c
+      sleep 10
+    c="sudo dnf install -y ${packages[@]}"
+      echo $c
+      eval $c
+      sleep 10
 
 
     # Mensaje de finalización
