@@ -18,6 +18,7 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 echo "Lista Principal:"
 echo $kde_plasma
 echo "Fin"
+sleep 10
 ########################## REPOSITORIES ###############################
 clear
 echo "ADD REPOSITORIES"
