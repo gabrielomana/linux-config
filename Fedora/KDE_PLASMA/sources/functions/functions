@@ -106,6 +106,7 @@ function install_kde {
   echo "Lista:"
   echo ${kde_plasma}
   echo "FIN"
+  sleep 10
   # check_installed "${kde_plasma}"
 
   # sudo systemctl enable sddm
