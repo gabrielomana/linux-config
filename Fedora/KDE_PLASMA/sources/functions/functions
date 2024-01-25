@@ -34,6 +34,7 @@ function check_installed() {
     echo "Lista:"
     echo $list_fileS
     echo "FIN"
+    sleep 10
     # Verificar si el archivo de lista existe
     if [ ! -f "$list_file" ]; then
         echo "El archivo de lista '$list_file' no existe."
