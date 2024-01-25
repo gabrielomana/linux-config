@@ -69,8 +69,7 @@ sddm-kcm
 sni-qt
 xorg-x11-drv-libinput
 setroubleshoot
-system-config-users
-system-config-keyboard
+system-config*
 system-config-language
 @"Hardware Support"
 @base-x
