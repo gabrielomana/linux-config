@@ -252,9 +252,9 @@ actualizar-sistema
 cambiar-nombre-host
 configurar-microcode-vaapi
 configurar-zswap
-configurar-yast-rpm
 #configurar-repositorios
 configurar-flatpak
 #instalar-codecs-y-paquetes
 instalar-fuentes
+#configurar-yast-rpm
 
