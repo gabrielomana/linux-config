@@ -62,7 +62,9 @@ function check_installed() {
     echo $c
     eval $c
     sleep 10
-    sudo dnf install -y "${packages[@]}"
+    c="sudo dnf install -y \"${packages[@]}\""
+    echo $c
+    eval $c
     sleep 10
 
 
