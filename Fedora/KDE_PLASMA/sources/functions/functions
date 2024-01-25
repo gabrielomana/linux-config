@@ -206,33 +206,33 @@ function install_core_apps() {
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
   #EXTRA DRIVERS
-  # Virtual Machine Drivers
-  # Import necessary functions
-  source /usr/share/dnf/plugins/rpmfusion-installer
+  # # Virtual Machine Drivers
+  # # Import necessary functions
+  # source /usr/share/dnf/plugins/rpmfusion-installer
 
-  # Check if we are in a virtual machine
-  if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
-    # We are on a physical machine
-  else
-    # We are in a virtual machine
+  # # Check if we are in a virtual machine
+  # if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
+  #   # We are on a physical machine
+  # else
+  #   # We are in a virtual machine
 
-    # Identify the hypervisor
-    hypervisor=$(cat /sys/class/dmi/id/product_name)
+  #   # Identify the hypervisor
+  #   hypervisor=$(cat /sys/class/dmi/id/product_name)
 
-    # Install the guest drivers
-    if [[ "$hypervisor" =~ "VMware" ]]; then
-      sudo dnf install --enablerepo=rpmfusion-nonfree vmware-tools
-    elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
-      sudo dnf install --enablerepo=rpmfusion-nonfree hyperv-tools
-    elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
-      sudo dnf install --enablerepo=rpmfusion-nonfree virtualbox-guest-additions-iso
-      mount /dev/cdrom /mnt/cdrom
-      ./VBoxLinuxAdditions.run
-      umount /mnt/cdrom
-    elif [[ "$hypervisor" =~ "KVM" ]]; then
-      sudo dnf install --enablerepo=rpmfusion-nonfree libvirt-guest-tools
-    fi
-  fi
+  #   # Install the guest drivers
+  #   if [[ "$hypervisor" =~ "VMware" ]]; then
+  #     sudo dnf install --enablerepo=rpmfusion-nonfree vmware-tools
+  #   elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
+  #     sudo dnf install --enablerepo=rpmfusion-nonfree hyperv-tools
+  #   elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
+  #     sudo dnf install --enablerepo=rpmfusion-nonfree virtualbox-guest-additions-iso
+  #     mount /dev/cdrom /mnt/cdrom
+  #     ./VBoxLinuxAdditions.run
+  #     umount /mnt/cdrom
+  #   elif [[ "$hypervisor" =~ "KVM" ]]; then
+  #     sudo dnf install --enablerepo=rpmfusion-nonfree libvirt-guest-tools
+  #   fi
+  # fi
 
   # Identifies your processor and installs the appropriate drivers and microcodes
   # Import necessary functions
