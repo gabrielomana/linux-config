@@ -40,25 +40,20 @@ function check_installed() {
     # Arreglos para grupos y paquetes
     # Arreglos para Grupos y Paquetes
 # Arreglos para Grupos y Paquetes
+# Arreglos para Grupos y Paquetes
 groups=()
 packages=()
 
 # Leer Cada Línea del Archivo de Lista
-while read -r line; do
+while IFS= read -r line; do
     # Limpiar la Línea de Espacios en Blanco
     line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
-    # Determinar si la Línea está entre Comillas
+    # Agregar a Grupos si tiene comillas, si no, agregar a Paquetes
     if [[ $line == *\"* ]]; then
-        # No elimina las comillas si la línea está entre ellas
-        package_or_group="$line"
+        groups+=("$line")
     else
-        # Agregar a Grupos si tiene comillas, si no, agregar a Paquetes
-        if [[ $line == *\"* ]]; then
-            groups+=("$line")
-        else
-            packages+=("$line")
-        fi
+        packages+=("$line")
     fi
 done <<< "$list_file"
 
@@ -68,6 +63,7 @@ printf '%s\n' "${groups[@]}"
 echo "Paquetes:"
 printf '%s\n' "${packages[@]}"
 sleep 10
+
 
 
 
