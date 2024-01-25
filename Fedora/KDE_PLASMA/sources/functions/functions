@@ -65,12 +65,6 @@ printf '%s\n' "${groups[@]}"
 echo "Paquetes:"
 printf '%s\n' "${packages[@]}"
 sleep 10
-
-
-
-
-
-
     # Instalar grupos y paquetes si hay elementos en los arreglos
     [ ${#groups[@]} -gt 0 ] && sudo dnf groupinstall -y "${groups[@]}" >> "$output_file" 2>&1
     [ ${#packages[@]} -gt 0 ] && sudo dnf install -y "${packages[@]}" >> "$output_file" 2>&1
