@@ -5,36 +5,35 @@ if [ "$UID" -ne 0 ]; then
   exit 1
 fi
 
-echo "+-----------------------------------------------------+"
-echo "| SNAPPER                                             |"
-echo "+-----------------------------------------------------+"
-sudo zypper ar -cfp 95 https://download.opensuse.org/repositories/home:michael-chang:grub:2.12rc1/openSUSE_Tumbleweed/home:michael-chang:grub:2.12rc1.repo
-sudo zypper --gpg-auto-import-keys ref
-sudo zypper install -n grub2-snapper-plugin
+# Función para actualizar el sistema
+function actualizar-sistema() {
+  clear
+  echo "+-----------------------------------------------------+"
+  echo "| Refresh y Actualización del Sistema                 |"
+  echo "+-----------------------------------------------------+"
+  ZYPPER='zypper --no-cd'
+  $ZYPPER refresh
+  $ZYPPER update
+  $ZYPPER patch
+  sudo $ZYPPER -n install cmake automake zlibrary gcc-c++ VirtualGL patterns-devel-base-devel_basis
+  sleep 5
+  clear
+}
 
-echo "+-----------------------------------------------------+"
-echo "| Refresh                                              |"
-echo "+-----------------------------------------------------+"
-    sudo zypper -n refresh
-    sudo zypper -n up
-    sudo zypper -n install cmake automake zlibrary gcc-c++ VirtualGL patterns-devel-base-devel_basis
-    sleep 5
-    clear
-
-echo "+-----------------------------------------------------+"
-echo "| Respositories                                         |"
-echo "+-----------------------------------------------------+"
-
+function configurar-repositorios() {
+  echo "+-----------------------------------------------------+"
+  echo "| Repositorios                                         |"
+  echo "+-----------------------------------------------------+"
     # Packman
     sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/ Packman
-    sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/ Packman-Essentials
-    sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Multimedia/ Packman-Multimedia
-    sudo zypper ar -cfp 90 https://download.opensuse.org/repositories/games/openSUSE_Tumbleweed Packman-Games
-    sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Extra/ Packman-Extra
+    #sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/ Packman-Essentials
+    #sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Multimedia/ Packman-Multimedia
+    #sudo zypper ar -cfp 90 https://download.opensuse.org/repositories/games/openSUSE_Tumbleweed Packman-Games
+    #sudo zypper ar -cfp 90 https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Extra/ Packman-Extra
     sudo zypper ar -cfp 90 https://opensuse-guide.org/repo/openSUSE_Tumbleweed/ libdvdcss
 
     # Mozilla
-    sudo zypper ar -cfp 90 https://download.opensuse.org/repositories/mozilla/openSUSE_Tumbleweed Mozilla
+    #sudo zypper ar -cfp 90 https://download.opensuse.org/repositories/mozilla/openSUSE_Tumbleweed Mozilla
     # Google
     wget https://dl.google.com/linux/linux_signing_key.pub
     sudo rpm --import linux_signing_key.pub
@@ -42,24 +41,24 @@ echo "+-----------------------------------------------------+"
     sudo zypper ar -cfp 90 https://dl.google.com/linux/rpm/stable/x86_64 Google
 
     # Extra
-    sudo zypper ar -cfp 90 http://download.opensuse.org/repositories/M17N:/fonts/openSUSE_Tumbleweed/ M17N-fonts
-    sudo zypper ar -cfp 90 https://download.opensuse.org/repositories/games/openSUSE_Tumbleweed/ Games
-    sudo zypper ar -cfp 90 http://codecs.opensuse.org/openh264/openSUSE_Tumbleweed openh264
-    sudo zypper ar -cfp 90 https://download.nvidia.com/opensuse/tumbleweed/ Nvidia
+    #sudo zypper ar -cfp 90 http://download.opensuse.org/repositories/M17N:/fonts/openSUSE_Tumbleweed/ M17N-fonts
+    #sudo zypper ar -cfp 90 https://download.opensuse.org/repositories/games/openSUSE_Tumbleweed/ Games
+    #sudo zypper ar -cfp 90 http://codecs.opensuse.org/openh264/openSUSE_Tumbleweed openh264
+    #sudo zypper ar -cfp 90 https://download.nvidia.com/opensuse/tumbleweed/ Nvidia
 
     # Importación automática de claves GPG y actualización de repositorios
-    sudo zypper --gpg-auto-import-keys ref
+   
 
     # Actualización del sistema
-    sudo zypper -n refresh
+    sudo zypper -n --gpg-auto-import-keys ref
     sudo zypper -n up
-    sudo zypper -n dist-upgrade
-    sudo zypper -n dist-upgrade --from packman
+}
 
-
-echo "+-----------------------------------------------------+"
-echo "| FlatPack                                            |"
-echo "+-----------------------------------------------------+"
+# Función para configurar Flatpak
+function configurar-flatpak() {
+  echo "+-----------------------------------------------------+"
+  echo "| FlatPack                                            |"
+  echo "+-----------------------------------------------------+"
     # Activar Flatpak
     flatpak --version 2>&1 >/dev/null
     if [ $? -ne 0 ]; then
@@ -79,18 +78,23 @@ echo "+-----------------------------------------------------+"
     sudo flatpak remote-modify --system --prio=3 elementary
     sudo flatpak remote-modify --system --prio=4 fedora
 
+}
 
-echo "+-----------------------------------------------------+"
-echo "| Codecs & Basic Packages                             |"
-echo "+-----------------------------------------------------+"
-    sudo zypper -n install ffmpeg lame gstreamer-*
+# Función para instalar codecs y paquetes básicos
+function instalar-codecs-y-paquetes() {
+  echo "+-----------------------------------------------------+"
+  echo "| Codecs & Basic Packages                             |"
+  echo "+-----------------------------------------------------+"
     sudo zypper -n install opi
     sudo opi codecs
+    sudo zypper -n install ffmpeg lame gstreamer-*
+}
 
-
-echo "+-----------------------------------------------------+"
-echo "| Fonts                                               |"
-echo "+-----------------------------------------------------+"
+# Función para instalar fuentes
+function instalar-fuentes() {
+  echo "+-----------------------------------------------------+"
+  echo "| Fonts                                               |"
+  echo "+-----------------------------------------------------+"
 
 # Directorio temporal para descargar las fuentes
 temp_dir="/tmp/nerd_fonts"
@@ -129,27 +133,34 @@ sudo cp ../dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
 
 # Actualizar la caché de fuentes
 sudo fc-cache -f -v
+}
+
+# Función para cambiar el nombre del host
+function cambiar-nombre-host() {
+  echo "+------------------------------------------------------------------+"
+  echo "| Cambio de nombre del host                                     |"
+  echo "+------------------------------------------------------------------+"
+  nuevo_nombre="nuevo_nombre_del_host"
+  sudo hostnamectl set-hostname $nuevo_nombre
+  echo "Hostname cambiado a $nuevo_nombre"
+}
 
 
-# Cambio de nombre del host
-echo "+------------------------------------------------------------------+"
-echo "| Cambio de nombre del host                                     |"
-echo "+------------------------------------------------------------------+"
-    nuevo_nombre="nuevo_nombre_del_host"
-    sudo hostnamectl set-hostname $nuevo_nombre
-    echo "Hostname cambiado a $nuevo_nombre"
+# Función para configurar YAST para archivos RPM
+function configurar-yast-rpm() {
+  echo "+-----------------------------------------------------+"
+  echo "| Configuración predeterminada de YAST para archivos RPM |"
+  echo "+-----------------------------------------------------+"
+  echo "/usr/sbin/yast2" | sudo tee /usr/bin/rpm > /dev/null
+  sudo chmod +x /usr/bin/rpm
+}
 
 
-echo "+-----------------------------------------------------+"
-echo "| Configuración predeterminada de YAST para archivos RPM |"
-echo "+-----------------------------------------------------+"
-    echo "/usr/sbin/yast2" | sudo tee /usr/bin/rpm > /dev/null
-    sudo chmod +x /usr/bin/rpm
-
-
-echo "+-----------------------------------------------------+"
-echo "| Microcode  & VAAPI                                  |"
-echo "+-----------------------------------------------------+"
+# Función para configurar microcode y VAAPI
+function configurar-microcode-vaapi() {
+  echo "+-----------------------------------------------------+"
+  echo "| Microcode  & VAAPI                                  |"
+  echo "+-----------------------------------------------------+"
     # Obtiene el nombre del fabricante de la GPU.
     gpu_vendor=$(lspci | grep -i "3D controller" | awk '{print $3}')
 
@@ -165,6 +176,8 @@ echo "+-----------------------------------------------------+"
         ;;
     NVIDIA*)
         echo "Instalando controladores para la GPU NVIDIA..."
+        sudo zypper ar -cfp 90 https://download.nvidia.com/opensuse/tumbleweed/ Nvidia
+        sudo zypper -n --gpg-auto-import-keys ref
         zypper install-new-recommends --repo NVIDIA
         # Determinar la versión del controlador según la información del hardware
         gpu_info=$(lspci | grep -i "VGA" | grep -Ei "NVIDIA|GPU")
@@ -199,11 +212,13 @@ echo "+-----------------------------------------------------+"
     if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
     # Obtiene el nombre del hypervisor.
     hypervisor=$(sudo dmidecode -s system-product-name)
+}
 
-
-echo "+-----------------------------------------------------+"
-echo "| ZSWAP                                               |"
-echo "+-----------------------------------------------------+"
+# Función para configurar ZSWAP
+function configurar-zswap() {
+  echo "+-----------------------------------------------------+"
+  echo "| ZSWAP                                               |"
+  echo "+-----------------------------------------------------+"
     # Actualiza los módulos del kernel
     sudo zypper ref
     # Activa el soporte para lz4hc
@@ -220,15 +235,26 @@ echo "+-----------------------------------------------------+"
     echo "25" | sudo tee /sys/module/zswap/parameters/max_pool_percent
     # Activa zswap
     echo "1" | sudo tee /sys/module/zswap/parameters/enabled
-    # Busca la línea que comienza por "GRUB_CMDLINE_LINUX"
-    linea_grub=$(grep -n "GRUB_CMDLINE_LINUX" /etc/default/grub | cut -d: -f1)
-    # Obtiene el contenido de la línea
-    contenido_grub=$(sed -n "$linea_grub"p /etc/default/grub)
-    # Agrega los argumentos de zswap al final de la línea
-    contenido_grub="$contenido_grub zswap.enabled=1 zswap.max_pool_percent=25 zswap.compressor=lz4hc"
-    # Elimina la última comilla doble
-    contenido_grub=${contenido_grub%"\""}
-    # Escribe el nuevo contenido en el archivo
-    sed -i "${linea_grub}s/.*/$contenido_grub/" /etc/default/grub
-    # Actualiza la configuración de GRUB
+
+
+   # Respaldar la configuración de grub
+    sudo cp /etc/default/grub /etc/default/grub_old
+    # Copiar el nuevo archivo de configuración de grub que contiene la configuración de lz4
+    sudo cp "${dir}/KDE_PLASMA/dotfiles/grub" /etc/default/grub
+    # Genera la configuración de grub
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+
+}
+
+# Invocar funciones
+dir="$(pwd)"
+actualizar-sistema
+cambiar-nombre-host
+configurar-microcode-vaapi
+configurar-zswap
+configurar-yast-rpm
+configurar-repositorios
+configurar-flatpak
+instalar-codecs-y-paquetes
+instalar-fuentes
+

@@ -1,0 +1,9 @@
+
+#------------------------------------------------------------------------------#
+#                   OFFICIAL DEBIAN REPOS
+#------------------------------------------------------------------------------#
+
+## Oficiales testing
+deb https://deb.debian.org/debian/ testing main contrib non-free non-free-firmware
+deb https://deb.debian.org/debian/ testing-updates main contrib non-free non-free-firmware
+deb https://deb.debian.org/debian-security/ testing-security main contrib non-free non-free-firmware
