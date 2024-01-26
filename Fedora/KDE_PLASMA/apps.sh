@@ -25,13 +25,13 @@ for package in "${packages[@]}"; do
         echo "El paquete $package está disponible en los repositorios."
 
         if ! sudo dnf list installed "$package" &> /dev/null || sudo dnf list updates "$package" &> /dev/null; then
-            echo "El paquete $package no está instalado o puede ser actualizado."
+            #echo "El paquete $package no está instalado o puede ser actualizado."
             to_install_or_update+=("$package")
         else
-            echo "El paquete $package ya está instalado y actualizado."
+            #echo "El paquete $package ya está instalado y actualizado."
         fi
     else
-        echo "El paquete $package no está disponible en los repositorios."
+        #echo "El paquete $package no está disponible en los repositorios."
     fi
 done
 
