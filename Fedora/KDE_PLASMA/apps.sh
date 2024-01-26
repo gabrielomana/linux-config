@@ -25,18 +25,14 @@ for package in "${packages[@]}"; do
     # Obtener información del paquete desde dnf y filtrar para obtener el estado
     package_info=$(sudo dnf info "$package" 2>/dev/null | grep -E "(Estado|Status.*instalado|Última versión|Latest version)")
 
-    if [[ $package_info =~ "instalado" || $package_info =~ "installed" ]]; then
-        echo "El paquete $package está instalado."
-    else
-        echo "El paquete $package no está instalado."
+    if [[ ! ($package_info =~ "instalado" || $package_info =~ "installed") ]]; then
+        # Acciones si el paquete no está instalado
         to_install_or_update+=("$package")
     fi
 
     if [[ $package_info =~ "Última versión" || $package_info =~ "Latest version" ]]; then
-        echo "Hay una actualización disponible para $package."
+        # Acciones si hay una actualización disponible
         to_install_or_update+=("$package")
-    else
-        echo "$package está en la versión más reciente."
     fi
 done
 
