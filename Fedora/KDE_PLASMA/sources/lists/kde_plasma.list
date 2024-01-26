@@ -10,7 +10,6 @@ firewall-config
 glibc-all-langpacks
 gnome-keyring-pam
 kcm_systemd
-kcolorchooser
 kde-gtk-config
 kde-partitionmanager
 kde-platform-plugin
@@ -40,6 +39,8 @@ ksysguard
 kwalletmanager5
 kwebkitpart
 kwin
+kcalc
+konqueror
 pam-kwallet
 phonon-backend-gstreamer
 phonon-qt5-backend-gstreamer
@@ -70,6 +71,9 @@ sni-qt
 xorg-x11-drv-libinput
 setroubleshoot
 system-config*
+ xorg-x11-server-Xorg
+ xorg-x11-xinit
+ xorg-x11-drv-*
 system-config-language
 @"Hardware Support"
 @base-x

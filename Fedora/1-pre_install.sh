@@ -8,6 +8,32 @@ function configure-dnf {
     sudo dnf upgrade -y
 }
 
+function configure-dnf-automatic {
+    # Instalar dnf-automatic y tracer
+    sudo dnf install -y dnf-automatic dnf-plugins-extras-tracer
+
+    # Clonar el repositorio dnf-automatic-restart
+    cd /usr/local/src || exit
+    sudo git clone https://github.com/agross/dnf-automatic-restart.git
+    sudo ln -s /usr/local/src/dnf-automatic-restart/dnf-automatic-restart /usr/local/sbin/dnf-automatic-restart
+
+    # Habilitar dnf-automatic
+    sudo systemctl enable dnf-automatic-install.timer
+
+    # Crear un drop-in para ejecutar dnf-automatic-restart después de la instalación automática
+    SYSTEMD_EDITOR=tee sudo systemctl edit dnf-automatic-install.service <<EOF
+[Service]
+# Path to the cloned script
+ExecStartPost=/usr/local/sbin/dnf-automatic-restart -d
+EOF
+
+    # Reiniciar el servicio dnf-automatic-install.timer después de editar el drop-in
+    sudo systemctl daemon-reload
+
+    # Imprimir mensaje informativo
+    echo "Configuración de dnf-automatic completada. El sistema se reiniciará solo si es necesario para actualizar servicios."
+}
+
 function change-hostname {
     clear
     cp ~/.bashrc ~/.bashrc_original
@@ -27,11 +53,15 @@ function configure-repositories {
     sudo dnf makecache --refresh
     sudo dnf update -y
     sudo dnf upgrade -y
+    sudo fwupdmgr refresh --force
+    sudo fwupdmgr get-updates
+    sudo fwupdmgr update
+    sudo dnf group update core
 }
 
 function install-essential-packages {
     sudo dnf install @development-tools git -y
-    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo
+    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo hunspell-es
 }
 
 function configure-flatpak-repositories {
@@ -205,6 +235,7 @@ function set-btrfs {
 
 
 configure-dnf
+configure-dnf-automatic
 change-hostname
 configure-repositories
 configure-flatpak-repositories
