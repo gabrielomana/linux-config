@@ -20,20 +20,26 @@ packages=($(<"${kde_plasma}"))
 to_install_or_update=()
 
 # Verificar disponibilidad, instalación y actualización de cada paquete
+# Verificar disponibilidad, instalación y actualización de cada paquete
 for package in "${packages[@]}"; do
-    if sudo dnf list available "$package" &> /dev/null; then
-        echo "El paquete $package está disponible en los repositorios."
+    # Obtener información del paquete desde dnf y filtrar para obtener el estado
+    package_info=$(sudo dnf info "$package" 2>/dev/null | grep -E "(Estado|Status.*instalado|Última versión|Latest version)")
 
-        if ! sudo dnf list installed "$package" &> /dev/null || sudo dnf list updates "$package" &> /dev/null; then
-            #echo "El paquete $package no está instalado o puede ser actualizado."
-            to_install_or_update+=("$package")
-        else
-            #echo "El paquete $package ya está instalado y actualizado."
-        fi
+    if [[ $package_info =~ "instalado" || $package_info =~ "installed" ]]; then
+        echo "El paquete $package está instalado."
     else
-        #echo "El paquete $package no está disponible en los repositorios."
+        echo "El paquete $package no está instalado."
+        to_install_or_update+=("$package")
+    fi
+
+    if [[ $package_info =~ "Última versión" || $package_info =~ "Latest version" ]]; then
+        echo "Hay una actualización disponible para $package."
+        to_install_or_update+=("$package")
+    else
+        echo "$package está en la versión más reciente."
     fi
 done
+
 
 # Instalar o actualizar paquetes
 if [ ${#to_install_or_update[@]} -gt 0 ]; then
