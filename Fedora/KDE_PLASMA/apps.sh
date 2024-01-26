@@ -22,17 +22,12 @@ to_install_or_update=()
 # Verificar disponibilidad, instalación y actualización de cada paquete
 # Verificar disponibilidad, instalación y actualización de cada paquete
 for package in "${packages[@]}"; do
-    # Obtener información del paquete desde dnf y filtrar para obtener el estado
-    package_info=$(sudo dnf info "$package" 2>/dev/null | grep -E "(Estado|Status.*instalado|Última versión|Latest version)")
-
-    if [[ ! ($package_info =~ "instalado" || $package_info =~ "installed") ]]; then
-        # Acciones si el paquete no está instalado
-        to_install_or_update+=("$package")
-    fi
-
-    if [[ $package_info =~ "Última versión" || $package_info =~ "Latest version" ]]; then
-        # Acciones si hay una actualización disponible
-        to_install_or_update+=("$package")
+    if sudo dnf install -y --skip-broken "$package"; then
+        # La instalación fue exitosa, puedes realizar acciones adicionales si es necesario
+        echo "El paquete $package se instaló correctamente."
+    else
+        # Omitir el paquete no encontrado o con problemas
+        echo "No se pudo instalar el paquete $package o ya está instalado."
     fi
 done
 
