@@ -13,8 +13,8 @@ kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 
 . "${dir}/sources/functions/functions"
 
-# Lista de paquetes a verificar e instalar
-packages=("${kde_plasma}")
+# Obtener la lista de paquetes desde el archivo kde_plasma.list
+packages=($(<"${kde_plasma}"))
 
 # Crear una nueva lista para los paquetes que necesitan instalación o actualización
 to_install_or_update=()
