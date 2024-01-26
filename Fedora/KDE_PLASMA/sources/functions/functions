@@ -39,35 +39,19 @@ function check_installed() {
         echo "El archivo de lista '$list_file' no existe."
         exit 1
     fi
-
-    # Arreglos para Grupos y Paquetes
-    groups=()
     packages=()
-
     # Leer Cada Línea del Archivo de Lista
     while read -r line; do
         # Limpiar la Línea de Espacios en Blanco
         line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
-        # Verificar si la Línea está entre Comillas Dobles
-        if [[ "$line" =~ ^\".*\"$ ]]; then
-            groups+=("$line")
-        else
-            packages+=("$line")
-        fi
+        packages+=("$line")
     done < "$list_file"
 
    # Instalar grupos y paquetes si hay elementos en los arreglos
-    c="sudo dnf groupinstall -y \"${groups[@]}\""
+    c="sudo dnf install -y --skip-broken ${packages[@]}"
       echo $c
       eval $c
       sleep 10
-    c="sudo dnf install -y ${packages[@]}"
-      echo $c
-      eval $c
-      sleep 10
-
-
     # Mensaje de finalización
     echo "Proceso de instalación completado. Verifica '$output_file' para más detalles."
 }
