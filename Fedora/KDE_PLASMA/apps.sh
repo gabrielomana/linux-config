@@ -1,5 +1,5 @@
 #!/bin/bash
-dir="$(pwd)"
+dir=$(pwd)
 
 codecs="${dir}/sources/lists/codecs.list"
 exta_apps="${dir}/sources/lists/exta_apps.list"
@@ -11,7 +11,7 @@ utilities="${dir}/sources/lists/utilities.list"
 xfce="${dir}/sources/lists/xfce.list"
 kde_bloatware="${dir}/sources/lists/kde_bloatware.list"
 
-. "${dir}"/sources/functions/functions
+. "${dir}/sources/functions/functions"
 
 # Lista de paquetes a verificar e instalar
 packages=("${kde_plasma}")
