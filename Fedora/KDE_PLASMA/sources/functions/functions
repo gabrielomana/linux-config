@@ -28,10 +28,7 @@ function check_uninstalled() {
 
 
 function check_installed() {
-    # Saludo inicial   
-    echo "Iniciando el proceso de verificación e instalación."
-
-    # Parámetros y archivo de salida
+ # Parámetros y archivo de salida
     list_file="$1"
 
     # Verificar si el archivo de lista existe
@@ -50,10 +47,8 @@ function check_installed() {
    # Instalar grupos y paquetes si hay elementos en los arreglos
     c="sudo dnf install -y --skip-broken ${packages[@]}"
       echo $c
+      sleep 3
       eval $c
-      sleep 10
-    # Mensaje de finalización
-    echo "Proceso de instalación completado. Verifica '$output_file' para más detalles."
 }
 
 function add_extra_repos(){
