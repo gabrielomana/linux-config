@@ -71,9 +71,6 @@ sni-qt
 xorg-x11-drv-libinput
 setroubleshoot
 system-config*
- xorg-x11-server-Xorg
- xorg-x11-xinit
- xorg-x11-drv-*
 system-config-language
 @"Hardware Support"
 @base-x

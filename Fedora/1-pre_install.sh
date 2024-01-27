@@ -101,8 +101,9 @@ function configure-zswap {
     # Establece el compresor de zswap a lz4hc
     echo "lz4hc" | sudo tee /sys/module/zswap/parameters/compressor
 
-    # Establece el tamaño máximo del pool de memoria comprimida al 25% de la RAM
-    echo "25" | sudo tee /sys/module/zswap/parameters/max_pool_percent
+    # Establece valores en /etc/sysctl.conf
+    echo "vm.swappiness = 25" | sudo tee -a /etc/sysctl.conf
+    # Agrega más ajustes según tus preferencias
 
     # Activa zswap
     echo "1" | sudo tee /sys/module/zswap/parameters/enabled
@@ -113,9 +114,13 @@ function configure-zswap {
     # Copiar el nuevo archivo de configuración de grub que contiene la configuración de lz4
     sudo cp "${dir}/dotfiles/grub" /etc/default/grub
 
-    # Genera la configuración de grub
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    # Aplica la configuración de sysctl
+    sudo sysctl -p
+
+    # Reiniciar para aplicar los cambios
+    sudo reboot
 }
+
 
 function set-btrfs {
     # Verificar si la partición root está en Btrfs

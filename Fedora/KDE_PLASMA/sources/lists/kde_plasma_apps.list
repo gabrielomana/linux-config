@@ -9,8 +9,7 @@ kbackup
 kcalc
 kcharselect
 kcolorchooser
-kde-config-cron
-kde-config-cron*
+kcron
 kdenetwork-filesharing
 kdeplasma-addon*
 kfind
@@ -31,15 +30,17 @@ krename
 ksystemlog
 ktimer
 okular
-partitionmanager
+kde-partitionmanager
 plasma-nm
 plasma-pa
 plasma-widget*
-print-manager
+kde-print-manager
 skanlite
 plasma-pk-updates
 plasma-discover
 firewall-config
+dnfdragora*
+konqueror
 kgpg
 kmouth
 @"Printing Support"
