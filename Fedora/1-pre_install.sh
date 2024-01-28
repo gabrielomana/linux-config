@@ -83,7 +83,7 @@ function configure-flatpak-repositories {
 }
 
 function configure-zswap {
-    sudo dnf remove zram-generator*
+    sudo dnf remove -y zram-generator*
     # Actualiza los módulos del kernel
     sudo dnf update -y
     
