@@ -83,43 +83,81 @@ function configure-flatpak-repositories {
 }
 
 function configure-zswap {
+    sudo dnf remove zram-generator*
     # Actualiza los módulos del kernel
     sudo dnf update -y
-
+    
     # Activa el soporte para lz4hc
     sudo modprobe lz4hc lz4hc_compress
-
+    
     # Crea el archivo de configuración de dracut
     sudo touch /etc/dracut.conf.d/lz4hc.conf
-
+    
     # Agrega lz4hc a la lista de módulos en el archivo de configuración de dracut
     echo "add_drivers+=\"lz4hc lz4hc_compress\"" | sudo tee -a /etc/dracut.conf.d/lz4hc.conf
-
+    
     # Regenera los archivos initramfs
     sudo dracut --regenerate-all --force
-
+    
     # Establece el compresor de zswap a lz4hc
     echo "lz4hc" | sudo tee /sys/module/zswap/parameters/compressor
+    
+    total_ram=$(free -g | awk '/^Mem:/{print $2}')
+    
+    if [ $total_ram -le 4 ]; then
+        swappiness=60
+        zswap_max_pool=40
+        vfs_cache_pressure=50
+    elif [ $total_ram -le 12 ]; then
+        swappiness=40
+        zswap_max_pool=33
+        vfs_cache_pressure=50
+    elif [ $total_ram -le 20 ]; then
+        swappiness=30
+        zswap_max_pool=25
+        vfs_cache_pressure=50
+    elif [ $total_ram -le 32 ]; then
+        swappiness=20
+        zswap_max_pool=20
+        vfs_cache_pressure=75
+    else
+        swappiness=10
+        zswap_max_pool=20
+        vfs_cache_pressure=75
+    fi
+    
+    sysctl_conf="/etc/sysctl.d/99-sysctl.conf"
+    
+    if [ -f "$sysctl_conf" ]; then
+        # Borrar el contenido del archivo
+        sudo echo -n > "$sysctl_conf"
+    else
+        # Crear el archivo si no existe
+        sudo touch "$sysctl_conf"
+    fi
+    
+    grub="GRUB_DEFAULT=saved
+    GRUB_SAVEDEFAULT=saved
+    GRUB_DISABLE_SUBMENU=true
+    GRUB_TIMEOUT=15
+    #GRUB_TIMEOUT_STYLE=hidden
+    GRUB_DISTRIBUTOR=\"\$(sed 's, release .*\$,,' /etc/system-release)\"
+    GRUB_CMDLINE_LINUX_DEFAULT=\"quiet zswap.enabled=1 zswap.max_pool_percent=$zswap_max_pool zswap.zpool=z3fold zswap.compressor=lz4hc\"
+    GRUB_CMDLINE_LINUX=\"\"
+    GRUB_ENABLE_BLSCFG=true"
+    
+    grub_file="/etc/default/grub"
+    sudo cp "$grub_file" "$grub_file.bak"
+    echo "$grub" | sudo tee "$grub_file" > /dev/null
 
-    # Establece valores en /etc/sysctl.conf
-    echo "vm.swappiness = 25" | sudo tee -a /etc/sysctl.conf
-    # Agrega más ajustes según tus preferencias
+    echo "vm.swappiness=$swappiness" | sudo tee -a "$sysctl_conf"
+    echo "vm.vfs_cache_pressure=$vfs_cache_pressure" | sudo tee -a "$sysctl_conf"
 
-    # Activa zswap
-    echo "1" | sudo tee /sys/module/zswap/parameters/enabled
-
-    # Respaldar la configuración de grub
-    sudo cp /etc/default/grub /etc/default/grub_old
-
-    # Copiar el nuevo archivo de configuración de grub que contiene la configuración de lz4
-    sudo cp "${dir}/dotfiles/grub" /etc/default/grub
-
-    # Aplica la configuración de sysctl
     sudo sysctl -p
 
-    # Reiniciar para aplicar los cambios
-    sudo reboot
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 }
+
 
 
 function set-btrfs {
@@ -245,6 +283,6 @@ change-hostname
 configure-repositories
 configure-flatpak-repositories
 install-essential-packages
-configure-zswap
+#configure-zswap
 set-btrfs
 
