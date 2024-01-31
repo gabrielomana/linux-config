@@ -16,6 +16,7 @@ function show_message {
 # Función para configurar DNF
 function configure-dnf {
     clear
+    sudo timedatectl set-local-rtc '0'
     sudo echo -e "[main]\ngpgcheck=1\ninstallonly_limit=3\nclean_requirements_on_remove=True\nbest=False\nskip_if_unavailable=True\n#Speed\nfastestmirror=True\nmax_parallel_downloads=10\ndefaultyes=True\nkeepcache=True\ndeltarpm=True" | sudo tee /etc/dnf/dnf.conf
     sudo dnf clean all
     sleep 3
@@ -77,16 +78,12 @@ function configure-repositories {
     sudo dnf makecache --refresh
     sudo dnf update -y
     sudo dnf upgrade -y
-    sudo fwupdmgr refresh --force
-    sudo fwupdmgr get-updates
-    sudo fwupdmgr update
-    sudo dnf group update core
 }
 
 # Función para instalar paquetes esenciales
 function install-essential-packages {
     sudo dnf install @development-tools git -y
-    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo hunspell-es
+    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo hunspell-es curl cabextract xorg-x11-font-utils fontconfig
 }
 
 # Función para configurar repositorios Flatpak
@@ -473,6 +470,121 @@ function set-btrfs {
     fi
 }
 
+function security-fedora {
+  #Snapshot
+  sudo timeshift --create --comments "pre-security"
+
+    # Instalar resolvconf
+    sudo dnf install resolvconf -y
+
+    # Configurar servidores DNS de AdGuard, Cloudflare y Google en resolved.conf.d
+    sudo mkdir -p '/etc/systemd/resolved.conf.d'
+    echo "nameserver 94.140.14.14" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 94.140.15.15" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 1.1.1.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 1.0.0.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+
+
+  # Instalar firewalld y firewall-config
+  sudo dnf install firewalld firewall-config -y
+  sudo systemctl enable firewalld
+  sudo systemctl start firewalld
+
+  # Configurar reglas de firewall
+  # Puertos comunes para navegación y tareas personales
+  for port in 80/tcp 443/tcp; do
+    sudo firewall-cmd --add-port=$port --permanent
+  done
+
+  # Puertos adicionales para servicios específicos, incluyendo Git, FTP, SSH y otros mencionados
+  for port in 22/tcp 21/tcp 20/tcp 990/tcp 3478-3481/udp 8801-8810/tcp 1900/udp 2869/tcp 10243/tcp 10280-10284/tcp 2049/tcp 445/tcp 3389/tcp 1723/tcp 500/udp 4500/udp; do
+    sudo firewall-cmd --add-port=$port --permanent
+  done
+
+  # Ajustar 'fw0' según tu elección de nombre de interfaz
+  sudo firewall-cmd --add-interface=fw0 --permanent
+  sudo firewall-cmd --reload
+
+  # Obtener la dirección gateway actual
+  gateway_address=$(ip route | awk '/default/ {print $3}')
+
+  # Configuración de enrutamiento para dirigir todo el tráfico a través de fw0
+  # Ajusta 'fw0' según tu elección de nombre de interfaz
+  sudo ip route add default via $gateway_address dev fw0
+
+  # Habilitar el reenvío de paquetes en el kernel
+  echo "net.ipv4.ip_forward = 1" | sudo tee -a /etc/sysctl.conf
+  sudo sysctl -p
+
+  # Hardening /etc/sysctl.conf
+  echo "kernel.modules_disabled=1" | sudo tee -a /etc/sysctl.conf
+  sudo sysctl -a
+  sudo sysctl -A
+  sudo sysctl mib
+  sudo sysctl net.ipv4.conf.all.rp_filter
+  sudo sysctl -a --pattern 'net.ipv4.conf.(eth|wlan)0.arp'
+
+  # PREVENT IP SPOOFS
+  sudo tee /etc/host.conf <<EOF
+  order bind,hosts
+  multi on
+EOF
+
+  # Instalar fail2ban y crear jail.local
+  sudo dnf install fail2ban -y
+  cat <<EOL | sudo tee /etc/fail2ban/jail.local
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1
+bantime = 3600
+findtime = 600
+maxretry = 5
+
+[sshd]
+enabled = true
+EOL
+
+  sudo systemctl enable fail2ban
+  sudo systemctl start fail2ban
+
+  # Instalar y ejecutar hblock
+  sudo dnf install hblock -y
+  sudo hblock
+
+#   ####################SCRIPT############
+#   # Nombre del script de configuración de DNS
+#   CONFIG_SCRIPT="configurar_dns.sh"
+
+#   # Ruta completa del script de configuración de DNS
+#   FULL_PATH="/etc/init.d/$CONFIG_SCRIPT"
+
+#   # Contenido del script de configuración de DNS
+#   echo "#!/bin/bash" > $FULL_PATH
+#   echo "" >> $FULL_PATH
+#   echo "# Configuración de servidores DNS" >> $FULL_PATH
+#   echo "echo \"nameserver 94.140.14.14\" | sudo tee /etc/resolv.conf" >> $FULL_PATH
+#   echo "echo \"nameserver 94.140.15.15\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
+#   echo "echo \"nameserver 1.1.1.1\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
+#   echo "echo \"nameserver 1.0.0.1\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
+#   echo "echo \"nameserver 8.8.8.8\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
+#   echo "echo \"nameserver 8.8.4.4\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
+#   echo "" >> $FULL_PATH
+#   echo "# Resto de la configuración, si es necesario" >> $FULL_PATH
+#   echo "" >> $FULL_PATH
+#   echo "exit 0" >> $FULL_PATH
+
+#   # Dar permisos de ejecución al script de configuración de DNS
+#   chmod +x $FULL_PATH
+
+#   # Crear enlaces simbólicos para ejecución automática
+#   sudo ln -s $FULL_PATH /etc/rc.d/rc3.d/S99$CONFIG_SCRIPT
+#   sudo ln -s $FULL_PATH /etc/rc.d/rc5.d/S99$CONFIG_SCRIPT
+
+#   echo "Script de configuración de DNS creado en $FULL_PATH"
+#   echo "Configuración para ejecución automática creada en /etc/rc.d/rc3.d/ y /etc/rc.d/rc5.d/"
+}
+
 
 
 configure-dnf
@@ -481,6 +593,13 @@ change-hostname
 configure-repositories
 configure-flatpak-repositories
 install-essential-packages
-#configure-zswap
+configure-zswap
 set-btrfs
+security-fedora
+
+sudo fwupdmgr refresh --force -y
+sudo fwupdmgr get-updates -y
+sudo fwupdmgr update -y
+sudo dnf group update core -y --exclude=zram*
+sudo reboot
 

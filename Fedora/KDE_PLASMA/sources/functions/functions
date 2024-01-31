@@ -100,46 +100,138 @@ function install_kde {
   check_installed "${kde_plasma_apps}"
 }
 
+function hardware-settings {
+  # Obtener el nombre del fabricante de la GPU.
+  gpu_vendor=$(lspci | grep -i "3D controller" | awk '{print $3}')
+  sudo dnf install -y ffmpeg ffmpeg-libs libva libva-utils
+  sudo dnf config-manager --set-enabled fedora-cisco-openh264
+  sudo dnf install -y openh264 gstreamer1-plugin-openh264 mozilla-openh264
+
+  # Instalar los controladores de la GPU.
+  case "$gpu_vendor" in
+    Intel*)
+      echo "Instalando controladores para la GPU Intel..."
+      sudo dnf install -y vdpau-driver-all intel-media-driver
+      ;;
+    AMD*)
+      echo "Instalando controladores para la GPU AMD..."
+      sudo dnf install -y akmod-amdgpu radeon-profile vdpau-driver-all amdgpu-pro
+      sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
+      sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
+      ;;
+    NVIDIA*)
+      echo "Instalando controladores para la GPU NVIDIA..."
+      sudo dnf install -y akmod-nvidia nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
+      sudo dnf install -y nvidia-vaapi-driver
+      sudo grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"
+      ;;
+  esac
+
+  # Verificar que la aceleración de hardware esté instalada correctamente.
+  for api in vaapi vdpau; do
+    echo "Verificando $api"
+    if ! command -v $api-info &> /dev/null; then
+      echo "$api no está instalado."
+      exit 1
+    fi
+    echo "$api está instalado."
+  done
+
+  # Configuración del procesador
+  # Obtener el nombre del procesador.
+  cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
+
+  # Instalar los controladores y microcódigos apropiados.
+  if echo "$cpu_name" | grep -qi "intel"; then
+    echo "Instalando controladores y microcódigos para el procesador Intel..."
+    sudo dnf install --enablerepo=rpmfusion-nonfree akmod-intel-ucode intel-microcode
+  elif echo "$cpu_name" | grep -qi "amd"; then
+    echo "Instalando controladores y microcódigos para el procesador AMD..."
+    sudo dnf install --enablerepo=rpmfusion-nonfree akmod-amd-ucode amd-microcode
+  else
+    echo "No se pudo identificar el procesador."
+  fi
+
+  # Verificar si la máquina es un host de máquinas virtuales.
+  if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
+    # Estamos en una máquina física
+    echo "Máquina física detectada."
+  else
+    # Estamos en una máquina virtual
+
+    # Identificar el hypervisor
+    hypervisor=$(cat /sys/class/dmi/id/product_name)
+
+    case "$hypervisor" in
+      VMware*)
+        echo "Instalando controladores para VMware..."
+        sudo dnf install --enablerepo=rpmfusion-nonfree open-vm-tools
+        ;;
+      Microsoft*)
+        echo "Instalando controladores para Microsoft Hyper-V..."
+        sudo dnf install --enablerepo=rpmfusion-nonfree hyperv-tools
+        ;;
+      VirtualBox*)
+        echo "Instalando controladores para VirtualBox..."
+        sudo dnf install --enablerepo=rpmfusion-nonfree VirtualBox-guest-additions-iso
+        sudo mount /dev/cdrom /mnt/cdrom
+        sudo ./VBoxLinuxAdditions.run
+        sudo umount /mnt/cdrom
+        ;;
+      KVM*)
+        echo "Instalando controladores para KVM..."
+        sudo dnf install --enablerepo=rpmfusion-nonfree libvirt-guest-tools
+        ;;
+      *)
+        echo "Hypervisor no reconocido: $hypervisor"
+        ;;
+    esac
+  fi
+}
+
 function install_core_apps() {
-  # Development tools and libraries
+  # Herramientas y bibliotecas de desarrollo
   sudo dnf install -y npm
   sudo npm install -g electron-store
+  sudo dnf install -y python3-pip
 
-  # Rust Installation
-  sudo curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  chmod +x install-rustup.sh
-  ./install-rustup.sh
+  # Instalación de Rust
+  sudo wget https://sh.rustup.rs -O rustup-init.sh
+  sudo chmod +x rustup-init.sh
+  ./rustup-init.sh -y
+  source "$HOME/.cargo/env"
+  sudo rm rustup-init.sh -rf
 
+  # Actualizar variables de entorno de Rust
   source "$HOME/.cargo/env"
   source "$HOME/.profile"
   source "$HOME/.cargo/env"
 
-  # Codecs and Drivers
+  # Codecs y controladores
   clear
-  echo "INSTALL SYSTEM CORE APPS: "
-  echo " - Development tools and libraries"
-  echo " - Codecs and Drivers"
+  echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
+  echo " - Herramientas y bibliotecas de desarrollo"
+  echo " - Codecs y controladores"
   sleep 3
 
-  # Installation and update of package groups
+  # Instalación y actualización de grupos de paquetes
   sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
-  sudo dnf -y groupupdate multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
-  sudo dnf -y groupupdate sound-and-video
-  sudo dnf -y groupupdate core
-  sudo dnf -y groupupdate multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
-  sudo dnf -y groupupdate sound-and-video
-  sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+  sudo dnf -y groupupdate multimedia sound-and-video core --exclude=zram* --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin --allowerasing && sync
+  sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing
 
-  # Additional package installation
-  sudo dnf -y install 'lame*' --exclude=lame-devel
+  # Instalación adicional de paquetes
+  sudo dnf install gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel ffmpeg gstreamer-ffmpeg
+  sudo dnf install lame\* --exclude=lame-devel
+  sudo dnf group upgrade --with-optional Multimedia
+
   check_installed "${codecs}"
 
-  # Utilities
+  # Utilidades
   clear
-  echo "INSTALL SYSTEM CORE APPS: "
-  echo " - Development tools and libraries"
-  echo " - Codecs and Drivers"
-  echo " - Utilities"
+  echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
+  echo " - Herramientas y bibliotecas de desarrollo"
+  echo " - Codecs y controladores"
+  echo " - Utilidades"
   sleep 3
   check_installed "${utilities}"
 
@@ -149,123 +241,97 @@ function install_core_apps() {
   sudo systemctl daemon-reload
   sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts
   sudo fc-cache -fv
-  sudo dnf swap ffmpeg-free ffmpeg --allowerasin
+  sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 
-  cp ~/.bashrc ~/.bashrc_old
-  cp ~/.bashrc ~/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" >> ~/aux.txt
-  rm -rf ~/.bashrc
-  mv ~/aux.txt ~/.bashrc
-  source ~/.bashrc
+  cargo install cargo-update topgrade eza
 
-  sudo cp /root/.bashrc /root/.bashrc_old
-  sudo cp /root/.bashrc /root/aux.txt
-  sudo echo -e "alias cat=\"batcat -f\"\nalias l=\"exa\"\nalias ls=\"exa --icons\"\nalias ll=\"exa -lah --icons\"\nalias la=\"exa -a --icons\"\nalias fupdate=\"topgrade &&  sudo hblock -O /etc/host\"" | sudo tee -a /root/aux.txt
-  sudo rm -rf /root/.bashrc
-  sudo mv /root/aux.txt /root/.bashrc
-  sudo source /root/.bashrc
+  # Definir nuevos alias
+  new_aliases="# Alias adicionales
+  alias cat=\"batcat -f\"
+  alias ocat=\"/usr/bin/cat\"
+  alias fupdate=\"topgrade && sudo hblock -O /etc/host\"
+  alias l=\"eza\"
+  alias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"
+  alias kedit=\"/usr/bin/featherpad\"
+  alias ytmdesktop=\"/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop\"
 
-  sudo npm install -g hblock
-  hblock
+  function ls() {
+    if [[ \$# -eq 0 ]]; then
+      # Si no hay argumentos, ejecuta eza con los sufijos adicionales
+      eza --group-directories-first --icons
+    else
+      case \$1 in
+        ls) shift; eza \$@ --group-directories-first --icons;;
+        ll) shift; eza \$@ -lbGFhmua --group-directories-first --no-permissions --icons;;
+        llp) shift; eza \$@ -lbGFhmua --group-directories-first --icons;;
+        la) shift; eza \$@ -a --group-directories-first --icons;;
+        lt) shift; eza \$@ --tree --level=2 --icons;;
+        lt3) shift; eza \$@ --tree --level=3 --icons;;
+        lt4) shift; eza \$@ --tree --level=4 --icons;;
+        *)
+          # Agregamos la opción --color solo si es un terminal interactivo
+          if [ -t 1 ]; then
+            eza \$@ --group-directories-first --icons --color
+          else
+            eza \$@ --group-directories-first --icons
+          fi
+          ;;
+      esac
+    fi
+  }"
 
-  cargo install cargo-update
-  cargo install topgrade
+  # Agregar nuevos alias al final del archivo .bashrc
+  echo -e "$new_aliases" >> ~/.bashrc
+  echo -e "$new_aliases" | sudo tee -a /root/.bashrc
+
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
-  #EXTRA DRIVERS
-  # # Virtual Machine Drivers
-  # # Import necessary functions
-  # source /usr/share/dnf/plugins/rpmfusion-installer
-
-  # # Check if we are in a virtual machine
-  # if [[ "$(cat /sys/class/dmi/id/chassis_type)" != "Machine" && "$(cat /sys/class/dmi/id/chassis_type)" != "Maquina" ]]; then
-  #   # We are on a physical machine
-  # else
-  #   # We are in a virtual machine
-
-  #   # Identify the hypervisor
-  #   hypervisor=$(cat /sys/class/dmi/id/product_name)
-
-  #   # Install the guest drivers
-  #   if [[ "$hypervisor" =~ "VMware" ]]; then
-  #     sudo dnf install --enablerepo=rpmfusion-nonfree vmware-tools
-  #   elif [[ "$hypervisor" =~ "Hyper-V" ]]; then
-  #     sudo dnf install --enablerepo=rpmfusion-nonfree hyperv-tools
-  #   elif [[ "$hypervisor" =~ "VirtualBox" ]]; then
-  #     sudo dnf install --enablerepo=rpmfusion-nonfree virtualbox-guest-additions-iso
-  #     mount /dev/cdrom /mnt/cdrom
-  #     ./VBoxLinuxAdditions.run
-  #     umount /mnt/cdrom
-  #   elif [[ "$hypervisor" =~ "KVM" ]]; then
-  #     sudo dnf install --enablerepo=rpmfusion-nonfree libvirt-guest-tools
-  #   fi
-  # fi
-
-  # Identifies your processor and installs the appropriate drivers and microcodes
-  # Import necessary functions
-  source /usr/share/dnf/plugins/rpmfusion-installer
-
-  # Identify the processor
-  cpu_name=$(lscpu | grep -Ei "Model name|Nombre del modelo" | awk '{print $0}')
-
-  # Install the drivers and microcodes
-  if [[ "$cpu_name" =~ "Intel" ]]; then
-    dnf install --enablerepo=rpmfusion-nonfree akmods-intel-ucode intel-microcode
-  elif [[ "$cpu_name" =~ "AMD" ]]; then
-    dnf install --enablerepo=rpmfusion-nonfree akmods-amd-ucode amd-microcode
-  else
-    echo "Failed to identify processor"
-  fi
-
-  # Graphics Drivers Installation (INTEL, AMD, NVIDIA)
-  clear
-  echo "INSTALL GRAPHICS DRIVERS"
-  gpu_info=$(lspci | grep -i "VGA compatible controller")
-
-  if echo "$gpu_info" | grep -q "NVIDIA"; then
-    sudo dnf install akmods-nvidia nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all
-    sudo dnf install -y nvidia-vaapi-driver
-  fi
-
-  if echo "$gpu_info" | grep -q "Advanced Micro Devices"; then
-    sudo dnf install akmods-amdgpu radeon-profile vdpau-driver-all amdgpu-pro
-    sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
-    sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
-  fi
-
-  if echo "$gpu_info" | grep -q "Intel"; then
-    sudo dnf install vdpau-driver-all intel-media-driver
-  fi
+  hardware-settings
 
   # Nerd Fonts
   clear
-  echo "INSTALL SYSTEM CORE APPS: "
-  echo " - Development tools and libraries"
-  echo " - Codecs and Drivers"
-  echo " - Utilities"
-  echo " - Pipewire & Wireplumber"
+  echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
+  echo " - Herramientas y bibliotecas de desarrollo"
+  echo " - Codecs y controladores"
+  echo " - Utilidades"
+  echo " - Pipewire y Wireplumber"
   echo " - Nerd Fonts"
   sleep 3
-  mkdir /tmp/nerd_fonts/
-  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/JetBrainsMono.zip -P /tmp/nerd_fonts/
-  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Ubuntu.zip -P /tmp/nerd_fonts/
-  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/Mononoki.zip -P /tmp/nerd_fonts/
 
-  sudo unzip /tmp/nerd_fonts/JetBrainsMono.zip -d /tmp/nerd_fonts/JetBrainsMono
-  sudo unzip /tmp/nerd_fonts/Ubuntu.zip -d /tmp/nerd_fonts/Ubuntu/
-  sudo unzip /tmp/nerd_fonts/Mononoki.zip -d /tmp/nerd_fonts/Mononoki/
+  # Directorio temporal para descargar fuentes
+  temp_dir="/tmp/nerd_fonts"
+  # Crear directorio temporal si no existe
+  mkdir -p "$temp_dir"
 
-  sudo mkdir /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.ttf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/Ubuntu/*.ttf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/Mononoki/*.ttf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/JetBrainsMono/*.otf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/Ubuntu/*.otf /usr/share/fonts/nerd_fonts/
-  sudo mv /tmp/nerd_fonts/Mononoki/*.otf /usr/share/fonts/nerd_fonts/
-  sudo rm /tmp/nerd_fonts/ -rf
+  # Obtener URLs de descarga para las versiones más recientes
+  font_names=("JetBrainsMono" "Ubuntu" "Mononoki" "Hack")
+  for font_name in "${font_names[@]}"; do
+    latest_release_url="https://github.com/ryanoasis/nerd-fonts/releases/latest"
+    font_download_url=$(curl -sL -I -o /dev/null -w '%{url_effective}' "$latest_release_url" | sed "s/tag/download/")"/$font_name.zip"
+    # Descargar la fuente
+    wget -O "$temp_dir/$font_name.zip" "$font_download_url"
+    # Descomprimir la fuente
+    sudo unzip "$temp_dir/$font_name.zip" -d "$temp_dir/$font_name"
+  done
+
+  # Directorio de instalación de fuentes en el sistema
+  install_dir="/usr/share/fonts/nerd_fonts"
+  # Crear directorio de instalación si no existe
+  sudo mkdir -p "$install_dir"
+  # Mover fuentes al directorio de instalación
+  for font_name in "${font_names[@]}"; do
+    sudo mv "$temp_dir/$font_name"/*.{ttf,otf} "$install_dir"
+  done
+
+  # Limpieza: Eliminar directorio temporal
+  sudo rm -rf "$temp_dir"
+
+  # Instalar emojis a color
   sudo dnf install -y fonts-noto-color-emoji
+  # Copiar configuración de fuentes
   sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
+  # Actualizar la caché de fuentes
   fc-cache -f -v
 }
 
@@ -298,8 +364,6 @@ do
 sudo systemctl start libvirtd
 sudo systemctl enable libvirtd
 
-
-
 clear
     if [ $f == 1 ]; then
 
@@ -310,6 +374,7 @@ clear
 
       #FONTS
       sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
+      sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig
       sudo dnf install -y dejavu-fonts* google-roboto-fonts
       sudo fc-cache -fv
 
