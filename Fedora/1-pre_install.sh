@@ -361,16 +361,12 @@ function set-btrfs {
     if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
         # Obtener el UUID de la partición raíz
         ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
-
         # Obtener el UUID de la partición home
         HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
-
         # Modificar el archivo /etc/fstab para la partición raíz
         sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   rw,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
-
         # Modificar el archivo /etc/fstab para la partición home
         sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   rw,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
-
         # Limpiar la pantalla
         clear
         cat /etc/fstab
@@ -380,7 +376,9 @@ function set-btrfs {
         # Montar el dispositivo Btrfs
         root_partition=$(df -h / | awk 'NR==2 {print $1}')
         echo "La raíz está montada en la partición: $root_partition"
-        sleep 5
+        echo "#### 1 ###"
+        sleep 10
+        clear
         # Creamos el directorio /mnt si no existe
         sudo mkdir -p /mnt
         # Montamos la partición raíz en /mnt
@@ -389,16 +387,22 @@ function set-btrfs {
         sudo btrfs subvolume create /mnt/@log
         sudo btrfs subvolume create /mnt/@cache
         sudo btrfs subvolume create /mnt/@tmp
-        sleep 5
+        echo "#### 2 ###"
+        sleep 10
+        clear
         # Mover los contenidos existentes de /var/cache y /var/log a los nuevos subvolúmenes
         sudo mv /var/cache/* /mnt/@cache/
         sudo mv /var/log/* /mnt/@log/
-        sleep 5
+        echo "#### 3 ###"
+        sleep 10
+        clear
         # Balanceo para duplicar metadatos y sistema
         sudo btrfs balance start -m /mnt
         # Balanceo para configurar datos y reserva global como no duplicados
         sudo btrfs balance start -d -s /mnt
-
+        echo "#### 4 ###"
+        sleep 10
+        clear
         # Verificar si el archivo fstab existe
         fstab="/etc/fstab"
         if [ -e "$fstab" ]; then
@@ -412,16 +416,21 @@ function set-btrfs {
         else
             echo "El archivo $fstab no existe. Verifica la ruta del archivo."
         fi
-
+        echo "#### 5 ###"
+        sleep 10
+        clear
         # Desmontar el dispositivo Btrfs
-        sudo umount /mnt
-        sleep 5
+        sudo umount /mnt --force
+        echo "#### 6 ###"
+        sleep 10
+        clear
 
         # Establecer permisos para /var/tmp, /var/cache y /var/log
         sudo chmod 1777 /var/tmp/
         sudo chmod 1777 /var/cache/
         sudo chmod 1777 /var/log/
-        sleep 5
+        echo "#### 7 ###"
+        sleep 10
         clear
         # Instalar Timeshift
         sudo dnf install timeshift -y
@@ -429,7 +438,9 @@ function set-btrfs {
         sudo dnf copr enable kylegospo/grub-btrfs -y
         sudo dnf update -y
         sudo dnf install -y grub-btrfs grub-btrfs-timeshift inotify-tools
-
+        echo "#### 8 ###"
+        sleep 10
+        clear
 
         # Modificar el archivo del servicio para agregar --timeshift-auto
         SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
@@ -437,7 +448,9 @@ function set-btrfs {
 
         # Recargar la configuración de systemd
         sudo systemctl daemon-reload
-
+        echo "#### 9 ###"
+        sleep 10
+        clear
         # Cambia el nombre del archivo timeshift-gtk en /usr/bin/
         sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
 
@@ -446,21 +459,26 @@ function set-btrfs {
 
         # Otorga permisos de ejecución al nuevo archivo
         sudo chmod +x /usr/bin/timeshift-gtk
-
         sudo timeshift --create --comments "initial"
-
+        echo "#### 10 ###"
+        sleep 10
+        clear
         sudo systemctl stop timeshift && sudo systemctl disable timeshift
         sudo chmod +s /usr/bin/grub-btrfsd
-        clear
+        
         # Reiniciar el servicio
         sudo systemctl restart grub-btrfs.path
         sudo systemctl start grub-btrfs.path
         sudo systemctl enable --now grub-btrfs.path
-        sleep 5
+        echo "#### 11 ###"
+        sleep 10
+        clear
 
         # Actualizar grub
         sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-        sleep 5
+        echo "#### 12 ###"
+        sleep 10
+        clear
 
     else
         echo "La partición root no está montada en un volumen BTRFS."
@@ -585,23 +603,23 @@ EOL
 
 
 
-configure-dnf
+#configure-dnf
 sleep 10
 clear
 
-configure-dnf-automatic
+#configure-dnf-automatic
 sleep 10
 clear
 
-change-hostname
+#change-hostname
 sleep 10
 clear
 
-configure-repositories
+#configure-repositories
 sleep 10
 clear
 
-configure-flatpak-repositories
+#configure-flatpak-repositories
 sleep 10
 clear
 
@@ -609,7 +627,7 @@ install-essential-packages
 sleep 10
 clear
 
-configure-zswap
+#configure-zswap
 sleep 10
 clear
 
