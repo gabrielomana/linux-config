@@ -603,33 +603,33 @@ EOL
 
 
 
-#configure-dnf
-sleep 10
-clear
+# configure-dnf
+# sleep 10
+# clear
 
-#configure-dnf-automatic
-sleep 10
-clear
+# configure-dnf-automatic
+# sleep 10
+# clear
 
-#change-hostname
-sleep 10
-clear
+# change-hostname
+# sleep 10
+# clear
 
-#configure-repositories
-sleep 10
-clear
+# configure-repositories
+# sleep 10
+# clear
 
-#configure-flatpak-repositories
-sleep 10
-clear
+# configure-flatpak-repositories
+# sleep 10
+# clear
 
 install-essential-packages
 sleep 10
 clear
 
-#configure-zswap
-sleep 10
-clear
+# #configure-zswap
+# sleep 10
+# clear
 
 set-btrfs
 sleep 10
