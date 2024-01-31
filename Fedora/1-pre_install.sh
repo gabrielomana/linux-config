@@ -69,15 +69,13 @@ function change-hostname {
 
 # Función para configurar repositorios
 function configure-repositories {
-    sudo dnf clean all
-    sudo dnf makecache --refresh
     sudo dnf -y install fedora-workstation-repositories
     sudo dnf -y install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-    sudo dnf -y groupupdate core
     sudo dnf clean all
     sudo dnf makecache --refresh
     sudo dnf update -y
     sudo dnf upgrade -y
+    sudo dnf -y groupupdate core
 }
 
 # Función para instalar paquetes esenciales
@@ -92,10 +90,10 @@ function configure-flatpak-repositories {
     echo "Configuring Flatpak repositories..."
     sleep 3
     sudo dnf -y install flatpak
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
-    flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
-    flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
+    sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
+    sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
 
     flatpak remote-modify --system --prio=1 kde
     flatpak remote-modify --system --prio=2 flathub
@@ -217,30 +215,37 @@ function configure-zswap {
     # Enable ZSWAP
     sudo dnf remove -y zram-generator*
     check_error "Failed to remove zram-generator* package."
+    sleep 3
 
     # Update kernel modules
     sudo dnf update -y
     check_error "Failed to update kernel modules."
+    sleep 3
 
     # Enable support for lz4hc
     sudo modprobe lz4hc lz4hc_compress
     check_error "Failed to enable support for lz4hc."
+    sleep 3
 
     # Create dracut configuration file
     sudo touch /etc/dracut.conf.d/lz4hc.conf
     check_error "Failed to create dracut configuration file."
+    sleep 3
 
     # Add lz4hc to the list of modules in dracut configuration file
     echo "add_drivers+=\"lz4hc lz4hc_compress\"" | sudo tee -a /etc/dracut.conf.d/lz4hc.conf
     check_error "Failed to add lz4hc to dracut configuration."
+    sleep 3
 
     # Regenerate initramfs files
     sudo dracut --regenerate-all --force
     check_error "Failed to regenerate initramfs files."
+    sleep 3
 
     # Set zswap compressor to lz4hc
     echo "lz4hc" | sudo tee /sys/module/zswap/parameters/compressor
     check_error "Failed to set zswap compressor to lz4hc."
+    sleep 3
 
     # Determine system parameters based on total RAM
     total_ram=$(free -g | awk '/^Mem:/{print $2}')
@@ -340,10 +345,12 @@ function configure-zswap {
     sudo chmod +x "$script_file"
 
     # Display zswap information
+    echo "#####zswap information#######"
     show_message "ZSWAP Settings"
     cat /sys/module/zswap/parameters/*
     show_message "ZSWAP Statistics"
     cat /sys/kernel/debug/zswap/*
+    echo "#############################"
 
     # Display compression ratio using the provided zswap script
     sudo bash "$script_file"
@@ -619,9 +626,9 @@ set-btrfs
 sleep 10
 clear
 
-security-fedora
-sleep 10
-clear
+#security-fedora
+#sleep 10
+#clear
 
 sudo fwupdmgr refresh --force -y
 sudo fwupdmgr get-updates -y
