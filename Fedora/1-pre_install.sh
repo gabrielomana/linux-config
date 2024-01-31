@@ -81,7 +81,7 @@ function configure-repositories {
 # Función para instalar paquetes esenciales
 function install-essential-packages {
     sudo dnf install @development-tools git -y
-    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo hunspell-es curl cabextract xorg-x11-font-utils fontconfig
+    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo hunspell-es curl cabextract xorg-x11-font-utils fontconfig btrfs*
 }
 
 # Función para configurar repositorios Flatpak
@@ -95,10 +95,10 @@ function configure-flatpak-repositories {
     sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo
     sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org
 
-    flatpak remote-modify --system --prio=1 kde
-    flatpak remote-modify --system --prio=2 flathub
-    flatpak remote-modify --system --prio=3 elementary
-    flatpak remote-modify --system --prio=4 fedora
+    sudo flatpak remote-modify --system --prio=1 kde
+    sudo flatpak remote-modify --system --prio=2 flathub
+    sudo flatpak remote-modify --system --prio=3 elementary
+    sudo flatpak remote-modify --system --prio=4 fedora
 
     sudo dnf update -y
 }
@@ -273,8 +273,8 @@ function configure-zswap {
         vfs_cache_pressure=75
 
         # ZRAM Configuration
-        configure-zram
-        return 0
+        #configure-zram
+        #return 0
     fi
 
     sysctl_conf="/etc/sysctl.d/99-sysctl.conf"
@@ -317,22 +317,17 @@ function configure-zswap {
 
     # Contenido del script
     script_content='#!/bin/bash
-
     MDL=/sys/module/zswap
     DBG=/sys/kernel/debug/zswap
     PAGE=$(( $(cat $DBG/stored_pages) * 4096 ))
     POOL=$(( $(cat $DBG/pool_total_size) ))
-
     Show(){
         printf "========\n$1\n========\n"
         grep -R . $2 2>&1 | sed "s|.*/||"
     }
-
     Show Settings $MDL
     Show Stats    $DBG
-
     printf "\nCompression ratio: "
-
     [ $POOL -gt 0 ] && {
         echo "scale=3; $PAGE / $POOL" | bc
     } || echo zswap disabled
@@ -380,32 +375,27 @@ function set-btrfs {
         clear
         cat /etc/fstab
         sudo cp /etc/fstab /etc/fstab_old
-
         # Desfragmentar el sistema de archivos Btrfs
         sudo btrfs filesystem defragment / -r -clzo
-
         # Montar el dispositivo Btrfs
         root_partition=$(df -h / | awk 'NR==2 {print $1}')
         echo "La raíz está montada en la partición: $root_partition"
-
+        sleep 5
         # Creamos el directorio /mnt si no existe
         sudo mkdir -p /mnt
-
         # Montamos la partición raíz en /mnt
         sudo mount $root_partition /mnt
-
         # Crear subvolúmenes adicionales
         sudo btrfs subvolume create /mnt/@log
         sudo btrfs subvolume create /mnt/@cache
         sudo btrfs subvolume create /mnt/@tmp
-
+        sleep 5
         # Mover los contenidos existentes de /var/cache y /var/log a los nuevos subvolúmenes
         sudo mv /var/cache/* /mnt/@cache/
         sudo mv /var/log/* /mnt/@log/
-
+        sleep 5
         # Balanceo para duplicar metadatos y sistema
         sudo btrfs balance start -m /mnt
-
         # Balanceo para configurar datos y reserva global como no duplicados
         sudo btrfs balance start -d -s /mnt
 
@@ -425,23 +415,21 @@ function set-btrfs {
 
         # Desmontar el dispositivo Btrfs
         sudo umount /mnt
+        sleep 5
 
         # Establecer permisos para /var/tmp, /var/cache y /var/log
         sudo chmod 1777 /var/tmp/
         sudo chmod 1777 /var/cache/
         sudo chmod 1777 /var/log/
-
+        sleep 5
+        clear
         # Instalar Timeshift
         sudo dnf install timeshift -y
-
         # Instalar el repositorio de grub-btrfs
-        sudo dnf copr enable kylegospo/grub-btrfs
+        sudo dnf copr enable kylegospo/grub-btrfs -y
         sudo dnf update -y
-        sudo dnf install grub-btrfs
-        sudo dnf install grub-btrfs-timeshift
+        sudo dnf install -y grub-btrfs grub-btrfs-timeshift inotify-tools
 
-        # Instalar inotify-tools
-        sudo dnf install inotify-tools -y
 
         # Modificar el archivo del servicio para agregar --timeshift-auto
         SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
@@ -463,14 +451,16 @@ function set-btrfs {
 
         sudo systemctl stop timeshift && sudo systemctl disable timeshift
         sudo chmod +s /usr/bin/grub-btrfsd
-
+        clear
         # Reiniciar el servicio
         sudo systemctl restart grub-btrfs.path
         sudo systemctl start grub-btrfs.path
         sudo systemctl enable --now grub-btrfs.path
+        sleep 5
 
         # Actualizar grub
         sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+        sleep 5
 
     else
         echo "La partición root no está montada en un volumen BTRFS."
@@ -556,8 +546,9 @@ EOL
   sudo systemctl start fail2ban
 
   # Instalar y ejecutar hblock
-  sudo dnf install hblock -y
-  sudo hblock
+    sudo npm install -g hblock
+    npm install -g hblock
+    hblock
 
 #   ####################SCRIPT############
 #   # Nombre del script de configuración de DNS
@@ -630,9 +621,9 @@ clear
 #sleep 10
 #clear
 
-sudo fwupdmgr refresh --force -y
-sudo fwupdmgr get-updates -y
-sudo fwupdmgr update -y
-sudo dnf group update core -y --exclude=zram*
+# sudo fwupdmgr refresh --force -y
+# sudo fwupdmgr get-updates -y
+# sudo fwupdmgr update -y
+# sudo dnf group update core -y --exclude=zram*
 sudo reboot
 
