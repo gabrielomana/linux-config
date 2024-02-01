@@ -130,7 +130,6 @@ function hardware-settings {
     echo "Verificando $api"
     if ! command -v $api-info &> /dev/null; then
       echo "$api no está instalado."
-      exit 1
     fi
     echo "$api está instalado."
   done
@@ -188,102 +187,102 @@ function hardware-settings {
 }
 
 function install_core_apps() {
-  # Herramientas y bibliotecas de desarrollo
-  sudo dnf install -y npm
-  sudo npm install -g electron-store
-  sudo dnf install -y python3-pip
+  # # Herramientas y bibliotecas de desarrollo
+  # sudo dnf install -y npm
+  # sudo npm install -g electron-store
+  # sudo dnf install -y python3-pip
 
-  # Instalación de Rust
-  sudo wget https://sh.rustup.rs -O rustup-init.sh
-  sudo chmod +x rustup-init.sh
-  ./rustup-init.sh -y
-  source "$HOME/.cargo/env"
-  sudo rm rustup-init.sh -rf
+  # # Instalación de Rust
+  # sudo wget https://sh.rustup.rs -O rustup-init.sh
+  # sudo chmod +x rustup-init.sh
+  # ./rustup-init.sh -y
+  # source "$HOME/.cargo/env"
+  # sudo rm rustup-init.sh -rf
 
-  # Actualizar variables de entorno de Rust
-  source "$HOME/.cargo/env"
-  source "$HOME/.profile"
-  source "$HOME/.cargo/env"
+  # # Actualizar variables de entorno de Rust
+  # source "$HOME/.cargo/env"
+  # source "$HOME/.profile"
+  # source "$HOME/.cargo/env"
 
-  # Codecs y controladores
-  clear
-  echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
-  echo " - Herramientas y bibliotecas de desarrollo"
-  echo " - Codecs y controladores"
-  sleep 3
+  # # Codecs y controladores
+  # clear
+  # echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
+  # echo " - Herramientas y bibliotecas de desarrollo"
+  # echo " - Codecs y controladores"
+  # sleep 3
 
-  # Instalación y actualización de grupos de paquetes
-  sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
-  sudo dnf -y groupupdate multimedia sound-and-video core --exclude=zram* --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin --allowerasing && sync
-  sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing
+  # # Instalación y actualización de grupos de paquetes
+  # sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
+  # sudo dnf -y groupupdate multimedia sound-and-video core --exclude=zram* --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin --allowerasing && sync
+  # sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing
 
-  # Instalación adicional de paquetes
-  sudo dnf install gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel ffmpeg gstreamer-ffmpeg
-  sudo dnf install lame\* --exclude=lame-devel
-  sudo dnf group upgrade --with-optional Multimedia
+  # # Instalación adicional de paquetes
+  # sudo dnf install gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel ffmpeg gstreamer-ffmpeg
+  # sudo dnf install lame\* --exclude=lame-devel
+  # sudo dnf group upgrade --with-optional Multimedia
 
-  check_installed "${codecs}"
+  # check_installed "${codecs}"
 
-  # Utilidades
-  clear
-  echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
-  echo " - Herramientas y bibliotecas de desarrollo"
-  echo " - Codecs y controladores"
-  echo " - Utilidades"
-  sleep 3
-  check_installed "${utilities}"
+  # # Utilidades
+  # clear
+  # echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
+  # echo " - Herramientas y bibliotecas de desarrollo"
+  # echo " - Codecs y controladores"
+  # echo " - Utilidades"
+  # sleep 3
+  # check_installed "${utilities}"
 
-  numlockx on
-  sudo numlockx on
-  sudo sed -i 's/^\#?Numlock\=.*$/Numlock=on/' /etc/sddm.conf
-  sudo systemctl daemon-reload
-  sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts
-  sudo fc-cache -fv
-  sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+  # numlockx on
+  # sudo numlockx on
+  # sudo sed -i 's/^\#?Numlock\=.*$/Numlock=on/' /etc/sddm.conf
+  # sudo systemctl daemon-reload
+  # sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts
+  # sudo fc-cache -fv
+  # sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 
-  cargo install cargo-update topgrade eza
+  # cargo install cargo-update topgrade eza
 
-  # Definir nuevos alias
-  new_aliases="# Alias adicionales
-  alias cat=\"batcat -f\"
-  alias ocat=\"/usr/bin/cat\"
-  alias fupdate=\"topgrade && sudo hblock -O /etc/host\"
-  alias l=\"eza\"
-  alias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"
-  alias kedit=\"/usr/bin/featherpad\"
-  alias ytmdesktop=\"/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop\"
+  # # Definir nuevos alias
+  # new_aliases="# Alias adicionales
+  # alias cat=\"batcat -f\"
+  # alias ocat=\"/usr/bin/cat\"
+  # alias fupdate=\"topgrade && sudo hblock -O /etc/host\"
+  # alias l=\"eza\"
+  # alias lastversion=\"~/.local/pipx/venvs/lastversion/bin/./lastversion\"
+  # alias kedit=\"/usr/bin/featherpad\"
+  # alias ytmdesktop=\"/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop\"
 
-  function ls() {
-    if [[ \$# -eq 0 ]]; then
-      # Si no hay argumentos, ejecuta eza con los sufijos adicionales
-      eza --group-directories-first --icons
-    else
-      case \$1 in
-        ls) shift; eza \$@ --group-directories-first --icons;;
-        ll) shift; eza \$@ -lbGFhmua --group-directories-first --no-permissions --icons;;
-        llp) shift; eza \$@ -lbGFhmua --group-directories-first --icons;;
-        la) shift; eza \$@ -a --group-directories-first --icons;;
-        lt) shift; eza \$@ --tree --level=2 --icons;;
-        lt3) shift; eza \$@ --tree --level=3 --icons;;
-        lt4) shift; eza \$@ --tree --level=4 --icons;;
-        *)
-          # Agregamos la opción --color solo si es un terminal interactivo
-          if [ -t 1 ]; then
-            eza \$@ --group-directories-first --icons --color
-          else
-            eza \$@ --group-directories-first --icons
-          fi
-          ;;
-      esac
-    fi
-  }"
+  # function ls() {
+  #   if [[ \$# -eq 0 ]]; then
+  #     # Si no hay argumentos, ejecuta eza con los sufijos adicionales
+  #     eza --group-directories-first --icons
+  #   else
+  #     case \$1 in
+  #       ls) shift; eza \$@ --group-directories-first --icons;;
+  #       ll) shift; eza \$@ -lbGFhmua --group-directories-first --no-permissions --icons;;
+  #       llp) shift; eza \$@ -lbGFhmua --group-directories-first --icons;;
+  #       la) shift; eza \$@ -a --group-directories-first --icons;;
+  #       lt) shift; eza \$@ --tree --level=2 --icons;;
+  #       lt3) shift; eza \$@ --tree --level=3 --icons;;
+  #       lt4) shift; eza \$@ --tree --level=4 --icons;;
+  #       *)
+  #         # Agregamos la opción --color solo si es un terminal interactivo
+  #         if [ -t 1 ]; then
+  #           eza \$@ --group-directories-first --icons --color
+  #         else
+  #           eza \$@ --group-directories-first --icons
+  #         fi
+  #         ;;
+  #     esac
+  #   fi
+  # }"
 
-  # Agregar nuevos alias al final del archivo .bashrc
-  echo -e "$new_aliases" >> ~/.bashrc
-  echo -e "$new_aliases" | sudo tee -a /root/.bashrc
+  # # Agregar nuevos alias al final del archivo .bashrc
+  # echo -e "$new_aliases" >> ~/.bashrc
+  # echo -e "$new_aliases" | sudo tee -a /root/.bashrc
 
-  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
-  echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
+  # echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a ~/.bashrc
+  # echo -e "export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH" | sudo tee -a /root/.bashrc
 
   hardware-settings
 
