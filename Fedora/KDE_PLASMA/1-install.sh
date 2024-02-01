@@ -24,7 +24,7 @@ sleep 3
 clear
 echo "INSTALL KDE PLASMA: "
 sleep 3
-#install_kde
+install_kde
 ######################### CORE APPS ###############################
 clear
 echo "INSTALL SYSTEM CORE APPS: "
