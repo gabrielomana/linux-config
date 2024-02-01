@@ -17,12 +17,24 @@ function show_message {
 function configure-dnf {
     clear
     sudo timedatectl set-local-rtc '0'
-    sudo echo -e "[main]\ngpgcheck=1\ninstallonly_limit=3\nclean_requirements_on_remove=True\nbest=False\nskip_if_unavailable=True\n#Speed\nfastestmirror=True\nmax_parallel_downloads=10\ndefaultyes=True\nkeepcache=True\ndeltarpm=True" | sudo tee /etc/dnf/dnf.conf
+
+    DNF_CONF_CONTENT="[main]
+    gpgcheck=1
+    installonly_limit=3
+    clean_requirements_on_remove=True
+    best=False
+    skip_if_unavailable=True
+    #Speed
+    fastestmirror=True
+    max_parallel_downloads=10
+    defaultyes=True
+    keepcache=True
+    deltarpm=True"
     sudo dnf clean all
-    sleep 3
     sudo dnf update -y
     sudo dnf upgrade -y
     check_error "Failed to configure DNF."
+    sleep 3
 }
 
 # Función para configurar DNF Automatic
@@ -37,21 +49,15 @@ function configure-dnf-automatic {
     # Clonar el repositorio dnf-automatic-restart
     sudo git clone https://github.com/agross/dnf-automatic-restart.git /usr/local/src/dnf-automatic-restart
     sudo ln -s /usr/local/src/dnf-automatic-restart/dnf-automatic-restart /usr/local/sbin/dnf-automatic-restart
-
     # Habilitar dnf-automatic
     sudo systemctl enable dnf-automatic-install.timer
-
     # Crear un drop-in para ejecutar dnf-automatic-restart después de la instalación automática
     sudo mkdir -p /etc/systemd/system/dnf-automatic-install.service.d
-    sudo tee /etc/systemd/system/dnf-automatic-install.service.d/restart.conf <<EOF
-    [Service]
-    # Path to the cloned script
-    ExecStartPost=/usr/local/sbin/dnf-automatic-restart -d
-EOF
+    echo "[Service]" | sudo tee /etc/systemd/system/dnf-automatic-install.service.d/restart.conf > /dev/null
+    echo "ExecStartPost=/usr/local/sbin/dnf-automatic-restart -d" | sudo tee -a /etc/systemd/system/dnf-automatic-install.service.d/restart.conf > /dev/null
 
     # Reiniciar el servicio dnf-automatic-install.timer después de editar el drop-in
     sudo systemctl daemon-reload
-
     # Imprimir mensaje informativo
     echo "DNF Automatic configuration completed. The system will restart automatically if necessary to update services."
 }
@@ -99,8 +105,6 @@ function configure-flatpak-repositories {
     sudo flatpak remote-modify --system --prio=2 flathub
     sudo flatpak remote-modify --system --prio=3 elementary
     sudo flatpak remote-modify --system --prio=4 fedora
-
-    sudo dnf update -y
 }
 
 # Función para configurar ZRAM
@@ -397,9 +401,9 @@ function set-btrfs {
         sleep 10
         clear
         # Balanceo para duplicar metadatos y sistema
-        sudo btrfs balance start -m /mnt
+        sudo btrfs balance start -m --force /mnt
         # Balanceo para configurar datos y reserva global como no duplicados
-        sudo btrfs balance start -d -s /mnt
+        sudo btrfs balance start -d -s --force /mnt
         echo "#### 4 ###"
         sleep 10
         clear
@@ -433,7 +437,7 @@ function set-btrfs {
         sleep 10
         clear
         # Instalar Timeshift
-        sudo dnf install timeshift -y
+        sudo dnf install timeshift -y  
         # Instalar el repositorio de grub-btrfs
         sudo dnf copr enable kylegospo/grub-btrfs -y
         sudo dnf update -y
@@ -603,25 +607,25 @@ EOL
 
 
 
-# configure-dnf
-# sleep 10
-# clear
+configure-dnf
+sleep 10
+clear
 
-# configure-dnf-automatic
-# sleep 10
-# clear
+configure-dnf-automatic
+sleep 10
+clear
 
-# change-hostname
-# sleep 10
-# clear
+change-hostname
+sleep 10
+clear
 
-# configure-repositories
-# sleep 10
-# clear
+configure-repositories
+sleep 10
+clear
 
-# configure-flatpak-repositories
-# sleep 10
-# clear
+configure-flatpak-repositories
+sleep 10
+clear
 
 install-essential-packages
 sleep 10
@@ -631,17 +635,17 @@ clear
 # sleep 10
 # clear
 
-set-btrfs
-sleep 10
-clear
+# set-btrfs
+# sleep 10
+# clear
 
-#security-fedora
-#sleep 10
-#clear
+# security-fedora
+# sleep 10
+# clear
 
-# sudo fwupdmgr refresh --force -y
-# sudo fwupdmgr get-updates -y
-# sudo fwupdmgr update -y
-# sudo dnf group update core -y --exclude=zram*
+sudo fwupdmgr refresh --force -y
+sudo fwupdmgr get-updates -y
+sudo fwupdmgr update -y
+sudo dnf group update core -y --exclude=zram*
 sudo reboot
 
