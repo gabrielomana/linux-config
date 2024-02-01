@@ -10,8 +10,9 @@ echo "KONSOLE & DOTFILES"
 sleep 3
 
 dir="$(pwd)"
-sudo git clone https://github.com/fastfetch-cli/fastfetch.git /git/linux-config/SparkyLinux/KDE_PLASMA/fastfetch/
-cd /git/linux-config/Fedora/KDE_PLASMA/fastfetch/
+fastfetch_path="$dir/fastfetch/"
+sudo git clone https://github.com/fastfetch-cli/fastfetch.git $fastfetch_path
+cd $fastfetch_path
 sudo mkdir -p build
 cd build
 sudo cmake ..
