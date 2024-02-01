@@ -423,10 +423,10 @@ function set-btrfs {
     sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
     (
         cd /git/grub-btrfs
-        sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
-        sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
-        sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
-        sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
+        sudo sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
+        sudo sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
+        sudo sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
+        sudo sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
         sudo make install
     )
 
@@ -458,6 +458,75 @@ function set-btrfs {
     else
         echo "La partición root no está montada en un volumen BTRFS."
     fi
+}
+
+function security-fedora2 {
+sudo timeshift --create --comments "pre-security"
+# Instalar resolvconf y configurar servidores DNS
+sudo dnf install resolvconf -y
+sudo mkdir -p '/etc/systemd/resolved.conf.d'
+ echo "nameserver 94.140.14.14" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 94.140.15.15" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 1.1.1.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 1.0.0.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "nameserver 8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+
+# Instalar y configurar firewalld
+sudo dnf install firewalld -y
+sudo systemctl enable firewalld
+sudo systemctl start firewalld
+
+# Configurar reglas de firewall
+# Puertos comunes para navegación y tareas personales
+for port in 80/tcp 443/tcp; do
+    sudo firewall-cmd --add-port=$port --permanent
+done
+
+# Puertos adicionales para servicios específicos (ajustar según tus necesidades)
+for port in 22/tcp 21/tcp 20/tcp 990/tcp 3478-3481/udp 8801-8810/tcp 1900/udp 2869/tcp 10243/tcp 10280-10284/tcp 2049/tcp 445/tcp 3389/tcp 1723/tcp 500/udp 4500/udp; do
+    sudo firewall-cmd --add-port=$port --permanent
+done
+
+# Ajustar 'fw0' según tu elección de nombre de interfaz
+sudo firewall-cmd --add-interface=fw0 --permanent
+sudo firewall-cmd --reload
+
+# Aplicar hardening al sistema
+echo "kernel.modules_disabled=1" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -a
+sudo sysctl -A
+sudo sysctl mib
+sudo sysctl net.ipv4.conf.all.rp_filter
+sudo sysctl -a --pattern 'net.ipv4.conf.(eth|wlan)0.arp'
+
+# Prevenir IP Spoofing
+sudo tee /etc/host.conf <<EOF
+order bind,hosts
+multi on
+EOF
+
+# Instalar y configurar fail2ban
+sudo dnf install fail2ban -y
+cat <<EOL | sudo tee /etc/fail2ban/jail.local
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1
+bantime = 3600
+findtime = 600
+maxretry = 5
+
+[sshd]
+enabled = true
+EOL
+
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# Instalar y ejecutar hblock
+sudo dnf install -y npm
+sudo npm install -g hblock
+hblock
+
 }
 
 function security-fedora {
