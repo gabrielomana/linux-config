@@ -470,12 +470,12 @@ function security-fedora {
 
   # Configurar servidores DNS de AdGuard, Cloudflare y Google en resolved.conf.d
   sudo mkdir -p '/etc/systemd/resolved.conf.d'
-  echo "nameserver 94.140.14.14" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "nameserver 94.140.15.15" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "nameserver 1.1.1.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "nameserver 1.0.0.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "nameserver 8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "nameserver 8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "DNS=94.140.14.14" | sudo tee /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "DNS=94.140.15.15" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "DNS=1.1.1.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "DNS=1.0.0.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "DNS=8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+    echo "DNS=8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
 
   # Configurar reglas de firewall
   # Puertos comunes para navegación y tareas personales
@@ -511,40 +511,15 @@ function security-fedora {
 
 
 configure-dnf
-sleep 10
-clear
-
 configure-dnf-automatic
-sleep 10
-clear
-
 change-hostname
-sleep 10
-clear
-
 configure-repositories
-sleep 10
-clear
-
 configure-flatpak-repositories
-sleep 10
-clear
-
 install-essential-packages
-sleep 10
-clear
-
-#configure-zswap
-sleep 10
-clear
-
-set-btrfs
-sleep 10
-clear
-
+configure-zswap
 security-fedora
-sleep 10
-clear
+set-btrfs
+
 
 sudo fwupdmgr refresh --force -y
 sudo fwupdmgr get-updates -y
