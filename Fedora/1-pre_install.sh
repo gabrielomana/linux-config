@@ -480,8 +480,12 @@ function security-fedora {
   # Configurar reglas de firewall
   # Puertos comunes para navegación y tareas personales
     # Eliminar todos los puertos de la zona FedoraWorkstation
-    sudo firewall-cmd --zone=FedoraWorkstation --remove-port=ALL --permanent
-    # Recargar las reglas
+  # Listar los puertos actuales en la zona FedoraWorkstation
+    sudo firewall-cmd --zone=FedoraWorkstation --list-ports
+    # Eliminar cada puerto individualmente
+    for port in $(sudo firewall-cmd --zone=FedoraWorkstation --list-ports); do
+    sudo firewall-cmd --zone=FedoraWorkstation --remove-port=$port --permanent
+    done
     sudo firewall-cmd --reload
 
     # Agregar puertos específicos a la zona FedoraWorkstation
