@@ -460,190 +460,49 @@ function set-btrfs {
     fi
 }
 
-function security-fedora2 {
-sudo timeshift --create --comments "pre-security"
-# Instalar resolvconf y configurar servidores DNS
-sudo dnf install resolvconf -y
-sudo mkdir -p '/etc/systemd/resolved.conf.d'
- echo "nameserver 94.140.14.14" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 94.140.15.15" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 1.1.1.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 1.0.0.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-
-# Instalar y configurar firewalld
-sudo dnf install firewalld -y
-sudo systemctl enable firewalld
-sudo systemctl start firewalld
-
-# Configurar reglas de firewall
-# Puertos comunes para navegación y tareas personales
-for port in 80/tcp 443/tcp; do
-    sudo firewall-cmd --add-port=$port --permanent
-done
-
-# Puertos adicionales para servicios específicos (ajustar según tus necesidades)
-for port in 22/tcp 21/tcp 20/tcp 990/tcp 3478-3481/udp 8801-8810/tcp 1900/udp 2869/tcp 10243/tcp 10280-10284/tcp 2049/tcp 445/tcp 3389/tcp 1723/tcp 500/udp 4500/udp; do
-    sudo firewall-cmd --add-port=$port --permanent
-done
-
-# Ajustar 'fw0' según tu elección de nombre de interfaz
-sudo firewall-cmd --add-interface=fw0 --permanent
-sudo firewall-cmd --reload
-
-# Aplicar hardening al sistema
-echo "kernel.modules_disabled=1" | sudo tee -a /etc/sysctl.conf
-sudo sysctl -a
-sudo sysctl -A
-sudo sysctl mib
-sudo sysctl net.ipv4.conf.all.rp_filter
-sudo sysctl -a --pattern 'net.ipv4.conf.(eth|wlan)0.arp'
-
-# Prevenir IP Spoofing
-sudo tee /etc/host.conf <<EOF
-order bind,hosts
-multi on
-EOF
-
-# Instalar y configurar fail2ban
-sudo dnf install fail2ban -y
-cat <<EOL | sudo tee /etc/fail2ban/jail.local
-[DEFAULT]
-ignoreip = 127.0.0.1/8 ::1
-bantime = 3600
-findtime = 600
-maxretry = 5
-
-[sshd]
-enabled = true
-EOL
-
-sudo systemctl enable fail2ban
-sudo systemctl start fail2ban
-
-# Instalar y ejecutar hblock
-sudo dnf install -y npm
-sudo npm install -g hblock
-hblock
-
-}
-
 function security-fedora {
-  #Snapshot
+  # Snapshot
   sudo timeshift --create --comments "pre-security"
 
-    # Instalar resolvconf
-    sudo dnf install resolvconf -y
-
-    # Configurar servidores DNS de AdGuard, Cloudflare y Google en resolved.conf.d
-    sudo mkdir -p '/etc/systemd/resolved.conf.d'
-    echo "nameserver 94.140.14.14" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 94.140.15.15" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 1.1.1.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 1.0.0.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-    echo "nameserver 8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-
-
-  # Instalar firewalld y firewall-config
-  sudo dnf install firewalld firewall-config -y
+  # Instalar resolvconf, firewalld y firewall-config
+  sudo dnf install resolvconf firewalld firewall-config -y
   sudo systemctl enable firewalld
-  sudo systemctl start firewalld
+
+  # Configurar servidores DNS de AdGuard, Cloudflare y Google en resolved.conf.d
+  sudo mkdir -p '/etc/systemd/resolved.conf.d'
+  echo "nameserver 94.140.14.14" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+  echo "nameserver 94.140.15.15" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+  echo "nameserver 1.1.1.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+  echo "nameserver 1.0.0.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+  echo "nameserver 8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+  echo "nameserver 8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
 
   # Configurar reglas de firewall
   # Puertos comunes para navegación y tareas personales
-  for port in 80/tcp 443/tcp; do
-    sudo firewall-cmd --add-port=$port --permanent
-  done
+    # Eliminar todos los puertos de la zona FedoraWorkstation
+    sudo firewall-cmd --zone=FedoraWorkstation --remove-port=ALL --permanent
+    # Recargar las reglas
+    sudo firewall-cmd --reload
 
-  # Puertos adicionales para servicios específicos, incluyendo Git, FTP, SSH y otros mencionados
-  for port in 22/tcp 21/tcp 20/tcp 990/tcp 3478-3481/udp 8801-8810/tcp 1900/udp 2869/tcp 10243/tcp 10280-10284/tcp 2049/tcp 445/tcp 3389/tcp 1723/tcp 500/udp 4500/udp; do
-    sudo firewall-cmd --add-port=$port --permanent
-  done
+    # Agregar puertos específicos a la zona FedoraWorkstation
+    for port in 80/tcp 443/tcp; do
+    sudo firewall-cmd --zone=FedoraWorkstation --add-port=$port --permanent
+    done
 
-  # Ajustar 'fw0' según tu elección de nombre de interfaz
-  sudo firewall-cmd --add-interface=fw0 --permanent
-  sudo firewall-cmd --reload
+    # Agregar puertos adicionales para servicios específicos, incluyendo Git, FTP, SSH, y otros mencionados
+    for port in 22/tcp 21/tcp 20/tcp 990/tcp 3478-3481/udp 8801-8810/tcp 1900/udp 2869/tcp 10243/tcp 10280-10284/tcp 2049/tcp 445/tcp 3389/tcp 1723/tcp 500/udp 4500/udp; do
+    sudo firewall-cmd --zone=FedoraWorkstation --add-port=$port --permanent
+    done
 
-  # Obtener la dirección gateway actual
-  gateway_address=$(ip route | awk '/default/ {print $3}')
+    # Recargar las reglas después de agregar los nuevos puertos
+    sudo firewall-cmd --reload
 
-  # Configuración de enrutamiento para dirigir todo el tráfico a través de fw0
-  # Ajusta 'fw0' según tu elección de nombre de interfaz
-  sudo ip route add default via $gateway_address dev fw0
-
-  # Habilitar el reenvío de paquetes en el kernel
-  echo "net.ipv4.ip_forward = 1" | sudo tee -a /etc/sysctl.conf
-  sudo sysctl -p
-
-  # Hardening /etc/sysctl.conf
-  echo "kernel.modules_disabled=1" | sudo tee -a /etc/sysctl.conf
-  sudo sysctl -a
-  sudo sysctl -A
-  sudo sysctl mib
-  sudo sysctl net.ipv4.conf.all.rp_filter
-  sudo sysctl -a --pattern 'net.ipv4.conf.(eth|wlan)0.arp'
-
-  # PREVENT IP SPOOFS
-  sudo tee /etc/host.conf <<EOF
-  order bind,hosts
-  multi on
-EOF
-
-  # Instalar fail2ban y crear jail.local
-  sudo dnf install fail2ban -y
-  cat <<EOL | sudo tee /etc/fail2ban/jail.local
-[DEFAULT]
-ignoreip = 127.0.0.1/8 ::1
-bantime = 3600
-findtime = 600
-maxretry = 5
-
-[sshd]
-enabled = true
-EOL
-
-  sudo systemctl enable fail2ban
-  sudo systemctl start fail2ban
 
   # Instalar y ejecutar hblock
-    sudo npm install -g hblock
-    npm install -g hblock
-    hblock
-
-#   ####################SCRIPT############
-#   # Nombre del script de configuración de DNS
-#   CONFIG_SCRIPT="configurar_dns.sh"
-
-#   # Ruta completa del script de configuración de DNS
-#   FULL_PATH="/etc/init.d/$CONFIG_SCRIPT"
-
-#   # Contenido del script de configuración de DNS
-#   echo "#!/bin/bash" > $FULL_PATH
-#   echo "" >> $FULL_PATH
-#   echo "# Configuración de servidores DNS" >> $FULL_PATH
-#   echo "echo \"nameserver 94.140.14.14\" | sudo tee /etc/resolv.conf" >> $FULL_PATH
-#   echo "echo \"nameserver 94.140.15.15\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
-#   echo "echo \"nameserver 1.1.1.1\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
-#   echo "echo \"nameserver 1.0.0.1\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
-#   echo "echo \"nameserver 8.8.8.8\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
-#   echo "echo \"nameserver 8.8.4.4\" | sudo tee -a /etc/resolv.conf" >> $FULL_PATH
-#   echo "" >> $FULL_PATH
-#   echo "# Resto de la configuración, si es necesario" >> $FULL_PATH
-#   echo "" >> $FULL_PATH
-#   echo "exit 0" >> $FULL_PATH
-
-#   # Dar permisos de ejecución al script de configuración de DNS
-#   chmod +x $FULL_PATH
-
-#   # Crear enlaces simbólicos para ejecución automática
-#   sudo ln -s $FULL_PATH /etc/rc.d/rc3.d/S99$CONFIG_SCRIPT
-#   sudo ln -s $FULL_PATH /etc/rc.d/rc5.d/S99$CONFIG_SCRIPT
-
-#   echo "Script de configuración de DNS creado en $FULL_PATH"
-#   echo "Configuración para ejecución automática creada en /etc/rc.d/rc3.d/ y /etc/rc.d/rc5.d/"
+  sudo npm install -g hblock
+  hblock
 }
+
 
 
 
@@ -671,17 +530,17 @@ install-essential-packages
 sleep 10
 clear
 
-# #configure-zswap
-# sleep 10
-# clear
+#configure-zswap
+sleep 10
+clear
 
-# set-btrfs
-# sleep 10
-# clear
+set-btrfs
+sleep 10
+clear
 
-# security-fedora
-# sleep 10
-# clear
+security-fedora
+sleep 10
+clear
 
 sudo fwupdmgr refresh --force -y
 sudo fwupdmgr get-updates -y
