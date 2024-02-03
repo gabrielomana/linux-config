@@ -460,7 +460,7 @@ function set-btrfs {
     fi
 }
 
-function configure_security {
+function security-fedora {
   # Snapshot
   sudo timeshift --create --comments "pre-security"
 
