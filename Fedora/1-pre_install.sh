@@ -473,26 +473,26 @@ function security-fedora {
   sudo sed -i 's/SELINUX=.*/SELINUX=enforcing/g' /etc/selinux/config
 
   # Establecer la zona por defecto en FedoraWorkstation
-  firewall-cmd --set-default-zone=FedoraWorkstation
+  sudo firewall-cmd --set-default-zone=FedoraWorkstation
 
   # Limpia todas las reglas existentes
-  firewall-cmd --complete-reload
+  sudo firewall-cmd --complete-reload
 
   # Permitir tráfico de loopback
-  firewall-cmd --add-interface=lo --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-interface=lo --zone=FedoraWorkstation --permanent
 
   # Permitir tráfico ya establecido y relacionado
-  firewall-cmd --add-rich-rule='rule family="ipv4" ctstate="ESTABLISHED,RELATED" accept' --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-rich-rule='rule family="ipv4" ctstate="ESTABLISHED,RELATED" accept' --zone=FedoraWorkstation --permanent
 
   # Permitir ping (ICMP)
-  firewall-cmd --add-icmp-block-inversion --zone=FedoraWorkstation --permanent
-  firewall-cmd --add-service=ping --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-icmp-block-inversion --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-service=ping --zone=FedoraWorkstation --permanent
 
   # Permitir tráfico DNS (UDP)
-  firewall-cmd --add-service=dns --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-service=dns --zone=FedoraWorkstation --permanent
 
   # Permitir traceroute (UDP)
-  firewall-cmd --add-port=33434-33523/udp --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-port=33434-33523/udp --zone=FedoraWorkstation --permanent
 
   # Puertos y servicios específicos
   declare -a services=(
@@ -529,24 +529,24 @@ function security-fedora {
 
   # Agregar reglas para tráfico entrante y saliente
   for service in "${services[@]}"; do
-    firewall-cmd --add-service="$service" --zone=FedoraWorkstation --permanent
+    sudo firewall-cmd --add-service="$service" --zone=FedoraWorkstation --permanent
   done
 
   for port in "${ports[@]}"; do
-    firewall-cmd --add-port="$port" --zone=FedoraWorkstation --permanent
+    sudo firewall-cmd --add-port="$port" --zone=FedoraWorkstation --permanent
   done
 
   # Permitir traceroute (UDP) también para tráfico saliente
-  firewall-cmd --add-port=33434-33523/udp --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-port=33434-33523/udp --zone=FedoraWorkstation --permanent
 
   # Permitir tráfico saliente del puerto de control FTP (puerto 21)
-  firewall-cmd --add-port=21/tcp --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-port=21/tcp --zone=FedoraWorkstation --permanent
 
   # Permitir tráfico de datos FTP (puertos pasivos, ajusta según tu configuración)
-  firewall-cmd --add-port=30000-31000/tcp --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --add-port=30000-31000/tcp --zone=FedoraWorkstation --permanent
 
   # Configuración de SELinux (configurado para modo enforcing)
-  semanage permissive -a firewalld_t
+  sudo semanage permissive -a firewalld_t
 
   # Configurar servidores DNS de AdGuard, Cloudflare y Google en resolved.conf.d
   sudo mkdir -p '/etc/systemd/resolved.conf.d'
@@ -558,10 +558,10 @@ function security-fedora {
   echo "DNS=8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
 
   # Recargar firewalld para aplicar los cambios
-  firewall-cmd --complete-reload
+  sudo firewall-cmd --complete-reload
 
   # Instalar y ejecutar hblock
-  sudo npm install -g hblock
+  sudo sudo npm install -g hblock
   hblock
 }
 
