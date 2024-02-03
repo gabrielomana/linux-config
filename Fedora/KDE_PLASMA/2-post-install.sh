@@ -1,7 +1,8 @@
 #!/bin/bash
 dir="$(pwd)"
 
-. "${dir}"/sources/functions/functions
+. "${dir}/sources/functions/zsh_starship"
+. "${dir}/sources/functions/functions"
 
 ########## KONSOLE #############################################
 neofetch
@@ -21,7 +22,6 @@ sudo cp fastfetch flashfetch /usr/bin/
 cd ${dir}
 fastfetch --gen-config-force
 cp -r dotfiles/fastfetch_config.jsonc ~/.config/fastfetch/config.jsonc
-cp -r dotfiles/sparky ~/.config/fastfetch/sparky
 
 sudo wget https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip
 sudo unzip konsole.zip
@@ -39,7 +39,21 @@ cp -r dotfiles/konsolerc ~/.config/konsolerc
 clear
 cd ${dir}
 install_extra_apps
+sudo bleachbit -c dnf.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+sudo dnf -y update
+sudo dnf -y install dnf-plugins-core --esclude=zram*
+sudo dnf -y remove --duplicates
+sudo dnf -y distro-sync
+sudo dnf -y check
+sudo dnf -y autoremove
+sudo dnf -y update --refresh
 
 
-##############DUAL BOOT ####################
-#sudo nala install refind -y
+######## ZSH+OHMYZSH+STARSHIP #############################################
+cd "${dir}"
+install_ZSH
+
+############## DUAL BOOT ####################
+# Descomenta la siguiente línea si deseas instalar refind
+# sudo nala install refind -y
+

@@ -1,10 +1,8 @@
 #!/bin/bash
-
 if [ "$(whoami)" != "root" ]; then
     sudo su -s "$0"
     exit
 fi
-
 dir="$(pwd)"
 
 extra_apps="${dir}/sources/lists/extra_apps.list"
@@ -98,12 +96,12 @@ echo "Updating and upgrading packages..."
 sudo dnf update -y
 sudo dnf upgrade -y
 
-# Setup ZSH and Oh-My-Zsh with Starship
-clear
-echo "Setting up ZSH"
-sleep 3
-clear
-cd ${dir}
-a=0
-f=0
-install_ZSH
+# # Setup ZSH and Oh-My-Zsh with Starship
+# clear
+# echo "Setting up ZSH"
+# sleep 3
+# clear
+# cd ${dir}
+# a=0
+# f=0
+# install_ZSH

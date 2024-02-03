@@ -51,28 +51,34 @@ function check_installed() {
       eval $c
 }
 
-function add_extra_repos(){
+function add_extra_repos() {
+  ## EXTRA REPOS
 
-##EXTRA REPOS
-sudo dnf -y copr enable refi64/webapp-manager
-sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/
-sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+  # WebApp Manager
+  sudo dnf -y copr enable refi64/webapp-manager
 
-sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  # Brave Browser
+  sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/
+  sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
 
-curl -1sLf \
-   'https://dl.cloudsmith.io/public/balena/etcher/setup.rpm.sh' \
-   | sudo -E bash
+  # Balena Etcher
+  curl -1sLf 'https://dl.cloudsmith.io/public/balena/etcher/setup.rpm.sh' | sudo -E bash
 
-sudo yum -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
-sudo dnf -y copr enable ayoungdukie/Personal_Repo
+  # OnlyOffice
+  sudo yum -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
 
-sudo rpm --import https://raw.githubusercontent.com/UnitedRPMs/unitedrpms/master/URPMS-GPG-PUBLICKEY-Fedora
-sudo dnf -y install https://github.com/UnitedRPMs/unitedrpms/releases/download/20/unitedrpms-$(rpm -E %fedora)-20.fc$(rpm -E %fedora).noarch.rpm
+  # Personal Repo
+  sudo dnf -y copr enable ayoungdukie/Personal_Repo
 
-sudo dnf makecache --refresh
+  # Visual Studio Code
+  sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
 
+  # Actualizar repositorios
+  sudo dnf check-update
+  sudo dnf makecache --refresh
 }
+
 
 function install_kde {
   echo "INSTALL KDE PLASMA: "
@@ -286,7 +292,6 @@ function install_core_apps() {
 
   hardware-settings
 
-  # Nerd Fonts
   clear
   echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
   echo " - Herramientas y bibliotecas de desarrollo"
@@ -321,6 +326,12 @@ function install_core_apps() {
     sudo mv "$temp_dir/$font_name"/*.{ttf,otf} "$install_dir"
   done
 
+  # Instalar fuentes adicionales
+  sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig dejavu-fonts* google-roboto-fonts
+
+  # Instalar Microsoft Core Fonts
+  sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
+
   # Limpieza: Eliminar directorio temporal
   sudo rm -rf "$temp_dir"
 
@@ -329,8 +340,9 @@ function install_core_apps() {
   # Copiar configuración de fuentes
   sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
   # Actualizar la caché de fuentes
-  fc-cache -f -v
+  sudo fc-cache -fv
 }
+
 
 
 #MULTIMEDIA
@@ -343,59 +355,99 @@ check_installed "${multimedia}"
 }
 
 #EXTRA APPS
-function install_extra_apps()
-{
-clear
-a=0
-f=0
-while [ $a -lt 1 ]
-do
-        read -p "Do you wish to install Extra APPS? " yn
-        case $yn in
-            [Yy]* ) a=1;add_extra_repos;check_installed "${exta_apps}";f=1;clear;;
-            [Nn]* ) a=1;echo "OK";clear;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
+function install_extra_apps() {
+  clear
+  a=0
+  sudo chmod 1777 /var/tmp/
+  sudo chmod 1777 /var/cache/
+  sudo chmod 1777 /var/log/
 
-sudo systemctl start libvirtd
-sudo systemctl enable libvirtd
+  while [ $a -lt 1 ]; do
+    read -p "Do you wish to install Extra APPS? " yn
+    case $yn in
+      [Yy]* )
+        a=1
+        add_extra_repos
+        check_installed "${exta_apps}"
+        f=1
+        clear
+        ;;
+      [Nn]* )
+        a=1
+        echo "OK"
+        clear
+        ;;
+      * ) echo "Please answer yes or no.";;
+    esac
+  done
 
-clear
-    if [ $f == 1 ]; then
+  # Start and enable libvirtd service
+  sudo systemctl start libvirtd
+  sudo systemctl enable libvirtd
 
-      sudo cargo install cargo-update
-      sudo timedatectl set-local-rtc 1
-      sudo systemctl start libvirtd
-      sudo systemctl enable libvirtd
+  # Add libvirt-qemu to HideUsers in sddm.conf
+  echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
+  clear
 
-      #FONTS
-      sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm
-      sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig
-      sudo dnf install -y dejavu-fonts* google-roboto-fonts
-      sudo fc-cache -fv
+  if [ $f == 1 ]; then
+    sudo cargo install cargo-update
+    sudo timedatectl set-local-rtc 1
+    sudo systemctl start libvirtd
+    sudo systemctl enable libvirtd
 
-      #OnlyOffice
-      sudo yum install onlyoffice-desktopeditors -y
+    # OnlyOffice
+    sudo dnf install onlyoffice-desktopeditors -y
 
+    # Flatpak Apps
+    flatpak install flathub com.github.dail8859.NotepadNext -y
+    flatpak install flathub org.localsend.localsend_app -y
+    flatpak install flathub org.strawberrymusicplayer.strawberry -y
+    flatpak install flathub org.nomacs.ImageLounge -y
+    flatpak install flathub com.github.vkohaupt.vokoscreenNG -y
 
-      #flatpak
-#         flatpak install -y flathub app.ytmdesktop.ytmdesktop
-#         flatpak install -y flathub tv.kodi.Kodi
-#         flatpak install -y flathub io.github.mimbrero.WhatsAppDesktop
-#         flatpak install -y flathub io.freetubeapp.FreeTube
-#         flatpak install -y flathub com.github.tenderowl.frog
-#         flatpak install -y flathub com.github.vkohaupt.vokoscreenNG
-#         flatpak install -y flathub org.phoenicis.playonlinux
-#         flatpak install -y flathub com.usebottles.bottles
-#         flatpak install -y flathub us.zoom.Zoom
-#         flatpak install -y flathub com.anydesk.Anydesk
-#         flatpak install -y flathub com.microsoft.Teams
-#         flatpak install -y flathub com.github.bajoja.indicator-kdeconnect
+    # Visual Studio Code
+    sudo dnf install code -y
+    sudo rm -f ~/.config/Code/User/settings.json
+    echo '{
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true,
+      "prettier.singleQuote": true,
+      "prettier.trailingComma": "all",
+      "prettier.jsxSingleQuote": true,
+      "prettier.printWidth": 80,
+      "editor.fontFamily": "\"JetBrainsMono Nerd Font\", Menlo, Monaco, \"Courier New\", monospace, \"Noto Color Emoji\"",
+      "editor.fontLigatures": true,
+      "editor.fontSize": 14,
+      "editor.lineHeight": 24,
+      "editor.fontWeight": "400",
+      "workbench.colorTheme": "One Monokai"
+    }' | sudo tee -a ~/.config/Code/User/settings.json
 
-      #OTHERS
+    code --install-extension "azemoh.one-monokai"
+    code --install-extension "NarasimaPandiyan.jetbrainsmono"
+    # Añadir el resto de las extensiones aquí
 
+    # Kodi
+    sudo flatpak install flathub tv.kodi.Kodi -y
+
+    # AceStream
+    last_version_link=$(lastversion --assets https://github.com/bro2020/acestream-appimage/releases)
+    install_dir="/opt/AceStream"
+    sudo mkdir -p "$install_dir"
+    sudo chmod 777 "$install_dir"
+    sudo wget -O "$install_dir/AceStream.AppImage" "$last_version_link"
+    sudo wget -O "$install_dir/acestream_logo.png" "https://avatars.githubusercontent.com/u/15086619?v=4"
+    sudo chmod +x "$install_dir/AceStream.AppImage"
+    desktop_file="/usr/share/applications/acestream.desktop"
+    echo "[Desktop Entry]
+    Name=AceStream
+    Exec=konsole -e '/opt/AceStream/AceStream.AppImage --client-console --no-sandbox'
+    Icon=/opt/AceStream/acestream_logo.png
+    Type=Application
+    Categories=Network;" | sudo tee "$desktop_file"
   fi
-return
+
+  return
 }
+
 

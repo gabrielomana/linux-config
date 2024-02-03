@@ -79,121 +79,119 @@ function install_ZSH_ROOT() {
 
 
 function install_ZSH() {´
-
     # Obtener el nombre de usuario actual
     user=$(who | awk '{print $1}' | head -n 1)
     path="/home/$user"
-    install_ZSH_ROOT
-
-    # # Verificar si Zsh, Git y Wget ya están instalados
-    # if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
-    #     echo -e "Zsh, Git y Wget ya están instalados.\n"
-    # else
-    #     # Instalar Zsh, Git y Wget si no están instalados
-    #     if sudo apt install zsh git wget -y; then
-    #         echo -e "Zsh, Git y Wget instalados con éxito.\n"
-    #     else
-    #         echo -e "Por favor, instala los siguientes paquetes primero y luego vuelve a intentarlo: zsh, git, wget.\n" && exit
-    #     fi
-    # fi
-
-    # # Respaldar .zshrc actual
-    # if mv -n "$path/.zshrc" "$path/.zshrc-backup-$(date +"%Y-%m-%d")"; then
-    #     echo -e "Se ha respaldado el .zshrc actual en .zshrc-backup-fecha.\n"
-    # fi
-
-    # # Instalar oh-my-zsh si no está instalado
-    # if [ -d "$path/.oh-my-zsh" ]; then
-    #     echo -e "oh-my-zsh ya está instalado.\n"
-    #     git -C "$path/.oh-my-zsh" remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
-    # else
-    #     git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$path/.oh-my-zsh"
-    # fi
-    # sleep 5
-
-    # # Copiar archivos de configuración
-    # cp -f ../dotfiles/.zshrc "$path/"
-    # mkdir -p "$path/.cache/zsh/"
-
-    # if [ -f "$path/.zcompdump" ]; then
-    #     mv -f "$path/.zcompdump"* "$path/.cache/zsh/"
-    # fi
-    # sleep 5
-
-    # # Cambiar la ruta de los plugins a una ubicación global
-    # custom_path="/usr/share/oh-my-zsh/custom/"
-    # custom_themes_path="/usr/share/oh-my-zsh/custom/themes/"
-    # custom_plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
-
-    # # Verificar si la ruta existe
-    # if [ ! -d "$custom_path" ]; then
-    #     # Crear la ruta si no existe
-    #     sudo mkdir -p "$custom_path"
-    #     sudo mkdir -p "$custom_themes_path"
-    #     sudo mkdir -p "$custom_plugins_path"
-    #     # Asignar permisos 1777 a la ruta
-    #     sudo chmod 755 "$custom_path" -R
-    #     sudo chmod go-w "$custom_path" -R
-    # fi
-
-    # # Lista de repositorios a clonar
-    # repositories=(
-    #     "https://github.com/hlissner/zsh-autopair.git"
-    #     "https://github.com/zsh-users/zsh-autosuggestions.git"
-    #     "https://github.com/zsh-users/zsh-completions.git"
-    #     "https://github.com/zsh-users/zsh-history-substring-search.git"
-    #     "https://github.com/zsh-users/zsh-syntax-highlighting.git"
-    #     "https://github.com/MichaelAquilina/zsh-you-should-use.git"
-    #     "https://github.com/Aloxaf/fzf-tab.git"
-    # )
     
-    # # Clonar e instalar los repositorios
-    # for repository in "${repositories[@]}"; do
-    #     plugin_name=$(basename "$repository" .git)
-    #     plugin_path="$custom_plugins_path$plugin_name"
+    # Verificar si Zsh, Git y Wget ya están instalados
+    if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
+        echo -e "Zsh, Git y Wget ya están instalados.\n"
+    else
+        # Instalar Zsh, Git y Wget si no están instalados
+        if sudo apt install zsh git wget -y; then
+            echo -e "Zsh, Git y Wget instalados con éxito.\n"
+        else
+            echo -e "Por favor, instala los siguientes paquetes primero y luego vuelve a intentarlo: zsh, git, wget.\n" && exit
+        fi
+    fi
 
-    #     if [ -d "$plugin_path" ]; then
-    #         # Actualizar el repositorio si ya existe
-    #         echo "Actualizando $plugin_name..."
-    #         sudo git -C "$plugin_path" pull
-    #     else
-    #         # Clonar el repositorio si no existe
-    #         echo "Clonando $repository en $plugin_path..."
-    #         sudo git clone "$repository" "$plugin_path"
-    #     fi
-    # done
+    # Respaldar .zshrc actual
+    if mv -n "$path/.zshrc" "$path/.zshrc-backup-$(date +"%Y-%m-%d")"; then
+        echo -e "Se ha respaldado el .zshrc actual en .zshrc-backup-fecha.\n"
+    fi
 
-    # echo "Repositorios clonados e instalados en $custom_plugins_path."
+    # Instalar oh-my-zsh si no está instalado
+    if [ -d "$path/.oh-my-zsh" ]; then
+        echo -e "oh-my-zsh ya está instalado.\n"
+        git -C "$path/.oh-my-zsh" remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git
+    else
+        git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$path/.oh-my-zsh"
+    fi
+    sleep 5
 
-    # move="sudo rm -rf ${custom_plugins_path}you-should-use/ && sudo mv ${custom_plugins_path}zsh-you-should-use/ ${custom_plugins_path}you-should-use/"
+    # Copiar archivos de configuración
+    cp -f ../dotfiles/.zshrc "$path/"
+    mkdir -p "$path/.cache/zsh/"
 
-    # echo $move
-    # eval $move
+    if [ -f "$path/.zcompdump" ]; then
+        mv -f "$path/.zcompdump"* "$path/.cache/zsh/"
+    fi
+    sleep 5
+
+    # Cambiar la ruta de los plugins a una ubicación global
+    custom_path="/usr/share/oh-my-zsh/custom/"
+    custom_themes_path="/usr/share/oh-my-zsh/custom/themes/"
+    custom_plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
+
+    # Verificar si la ruta existe
+    if [ ! -d "$custom_path" ]; then
+        # Crear la ruta si no existe
+        sudo mkdir -p "$custom_path"
+        sudo mkdir -p "$custom_themes_path"
+        sudo mkdir -p "$custom_plugins_path"
+        # Asignar permisos 1777 a la ruta
+        sudo chmod 755 "$custom_path" -R
+        sudo chmod go-w "$custom_path" -R
+    fi
+
+    # Lista de repositorios a clonar
+    repositories=(
+        "https://github.com/hlissner/zsh-autopair.git"
+        "https://github.com/zsh-users/zsh-autosuggestions.git"
+        "https://github.com/zsh-users/zsh-completions.git"
+        "https://github.com/zsh-users/zsh-history-substring-search.git"
+        "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+        "https://github.com/MichaelAquilina/zsh-you-should-use.git"
+        "https://github.com/Aloxaf/fzf-tab.git"
+    )
     
-    # # Instalar fzf para fzf-tab
-    # sudo apt install fzf -y
+    # Clonar e instalar los repositorios
+    for repository in "${repositories[@]}"; do
+        plugin_name=$(basename "$repository" .git)
+        plugin_path="$custom_plugins_path$plugin_name"
 
-    # sleep 5
+        if [ -d "$plugin_path" ]; then
+            # Actualizar el repositorio si ya existe
+            echo "Actualizando $plugin_name..."
+            sudo git -C "$plugin_path" pull
+        else
+            # Clonar el repositorio si no existe
+            echo "Clonando $repository en $plugin_path..."
+            sudo git clone "$repository" "$plugin_path"
+        fi
+    done
 
-    # # Instalar y configurar Starship
-    # sudo wget https://starship.rs/install.sh
-    # sudo chmod +x install.sh
-    # starship="./install.sh --yes"
-    # eval $starship
-    # sudo rm install.sh -rf
-    # template="wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O ${path}/.config/starship.toml"
-    # eval $template
-    # sleep 5
+    echo "Repositorios clonados e instalados en $custom_plugins_path."
 
-    # # Reiniciar Zsh
-    # echo -e "\nSe necesita acceso sudo para cambiar el shell predeterminado.\n"
-    # if sudo -u "$user" chsh -s "$(which zsh)" && "$(which zsh)" -i -c 'omz update'; then
-    #     echo "Zsh en usuario: OK"
-    #     echo "Instalando Zsh en root..."
-    #     sleep 3
-    #     install_ZSH_ROOT
-    # else
-    #     echo -e "Algo ha salido mal.\n"
-    # fi
-    # return
+    move="sudo rm -rf ${custom_plugins_path}you-should-use/ && sudo mv ${custom_plugins_path}zsh-you-should-use/ ${custom_plugins_path}you-should-use/"
+
+    echo $move
+    eval $move
+    
+    # Instalar fzf para fzf-tab
+    sudo apt install fzf -y
+
+    sleep 5
+
+    # Instalar y configurar Starship
+    sudo wget https://starship.rs/install.sh
+    sudo chmod +x install.sh
+    starship="./install.sh --yes"
+    eval $starship
+    sudo rm install.sh -rf
+    template="wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O ${path}/.config/starship.toml"
+    eval $template
+    sleep 5
+
+    # Reiniciar Zsh
+    echo -e "\nSe necesita acceso sudo para cambiar el shell predeterminado.\n"
+    if sudo -u "$user" chsh -s "$(which zsh)" && "$(which zsh)" -i -c 'omz update'; then
+        echo "Zsh en usuario: OK"
+        echo "Instalando Zsh en root..."
+        sleep 3
+        install_ZSH_ROOT
+    else
+        echo -e "Algo ha salido mal.\n"
+    fi
+    return
 }
