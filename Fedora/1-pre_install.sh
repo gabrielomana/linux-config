@@ -477,12 +477,16 @@ function security-fedora {
 
   # Limpia todas las reglas existentes
   sudo firewall-cmd --complete-reload
+  sudo firewall-cmd --zone=FedoraWorkstation --remove-port=1-65535/tcp --permanent
+  sudo firewall-cmd --zone=FedoraWorkstation --remove-port=1-65535/udp --permanent
+  sudo firewall-cmd --reload
+  sudo firewall-cmd --complete-reload
 
   # Permitir tráfico de loopback
   sudo firewall-cmd --add-interface=lo --zone=FedoraWorkstation --permanent
 
   # Permitir tráfico ya establecido y relacionado
-  sudo firewall-cmd --add-rich-rule='rule family="ipv4" ctstate="ESTABLISHED,RELATED" accept' --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --zone=FedoraWorkstation --add-service=http --permanent
 
   # Permitir ping (ICMP)
   sudo firewall-cmd --add-icmp-block-inversion --zone=FedoraWorkstation --permanent
@@ -496,35 +500,35 @@ function security-fedora {
 
   # Puertos y servicios específicos
   declare -a services=(
-    "http"                  # Puerto 80/tcp
-    "https"                 # Puerto 443/tcp
-    "ssh"                   # Puerto 22/tcp
-    "samba"                 # Puerto 137-138/udp, 139/tcp, 445/tcp
-    "ftp"                   # Puerto 21/tcp
-    "sftp"                  # Puerto 22/tcp
-    "http"                  # Puerto 80/tcp
-    "dnsmasq"               # Puerto 5353/udp
-    "dhcpv6-client"         # Puerto 546/udp
-    "pop3"                  # Puerto 110/tcp (ejemplo: para correos)
-    "pop3s"                 # Puerto 995/tcp (ejemplo: para correos seguros)
-    "imap"                  # Puerto 143/tcp (ejemplo: para correos)
-    "imaps"                 # Puerto 993/tcp (ejemplo: para correos seguros)
-    "kde-connect"           # Puertos 1714 y 1715 (ejemplo: para KDE Connect)
+    "http"          # Puerto 80/tcp
+    "https"         # Puerto 443/tcp
+    "ssh"           # Puerto 22/tcp
+    "samba"         # Puerto 137-138/udp, 139/tcp, 445/tcp
+    "ftp"           # Puerto 21/tcp
+    "sftp"          # Puerto 22/tcp
+    "http"          # Puerto 80/tcp
+    "dnsmasq"       # Puerto 5353/udp
+    "dhcpv6-client" # Puerto 546/udp
+    "pop3"          # Puerto 110/tcp (ejemplo: para correos)
+    "pop3s"         # Puerto 995/tcp (ejemplo: para correos seguros)
+    "imap"          # Puerto 143/tcp (ejemplo: para correos)
+    "imaps"         # Puerto 993/tcp (ejemplo: para correos seguros)
+    "kde-connect"   # Puertos 1714 y 1715 (ejemplo: para KDE Connect)
   )
 
   declare -a ports=(
-    "1194/udp"              # OpenVPN
-    "137-138/udp"           # NetBIOS
-    "631/tcp"               # CUPS
-    "5353/udp"              # mDNS
-    "8200/tcp"              # Plex Media Server
-    "1900/udp"              # UPnP
-    "8080/tcp"              # HTTP alternativo
-    "3389/tcp"              # RDP
-    "6881-6891/tcp"         # Puertos típicos para BitTorrent
-    "22/tcp"                # SSH
-    "62062-62072/tcp"       # Steam In-Home Streaming
-    "8621/udp"              # BitTorrent DHT
+    "1194/udp"      # OpenVPN
+    "137-138/udp"   # NetBIOS
+    "631/tcp"       # CUPS
+    "5353/udp"      # mDNS
+    "8200/tcp"      # Plex Media Server
+    "1900/udp"      # UPnP
+    "8080/tcp"      # HTTP alternativo
+    "3389/tcp"      # RDP
+    "6881-6891/tcp" # Puertos típicos para BitTorrent
+    "22/tcp"        # SSH
+    "62062-62072/tcp" # Steam In-Home Streaming
+    "8621/udp"      # BitTorrent DHT
   )
 
   # Agregar reglas para tráfico entrante y saliente
@@ -558,10 +562,10 @@ function security-fedora {
   echo "DNS=8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
 
   # Recargar firewalld para aplicar los cambios
-  sudo firewall-cmd --complete-reload
+  sudo systemctl restart firewalld
 
   # Instalar y ejecutar hblock
-  sudo sudo npm install -g hblock
+  sudo npm install -g hblock
   hblock
 }
 

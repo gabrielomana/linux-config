@@ -250,7 +250,7 @@ function install_core_apps() {
 
   # Definir nuevos alias
   new_aliases="# Alias adicionales
-  alias cat=\"batcat -f\"
+  alias cat=\"bat -f\"
   alias ocat=\"/usr/bin/cat\"
   alias fupdate=\"topgrade && sudo hblock -O /etc/host\"
   alias l=\"eza\"
