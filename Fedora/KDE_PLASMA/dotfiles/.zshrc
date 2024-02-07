@@ -139,7 +139,7 @@ alias kedit="/usr/bin/featherpad"
 alias ytmdesktop="/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop"
 
 if command -v bat &> /dev/null; then
-  alias cat="batcat -f"
+  alias cat="bat -f"
 fi
 
 if command -v eza &> /dev/null; then

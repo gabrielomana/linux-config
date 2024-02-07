@@ -41,11 +41,18 @@ function install_ZSH_ROOT() {
             sudo sh -c "./install.sh --yes"
             sudo rm install.sh -rf
 
-            sudo sh -c "wget -N https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml"
-            sudo mv -f *.toml /root/.config/starship.toml
+            # Instalar y configurar Starship
+            sudo wget https://starship.rs/install.sh
+            sudo chmod +x install.sh
+            starship="./install.sh --yes"
+            eval $starship
+            sudo rm install.sh -rf
+            template="sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O /root/.config/starship.toml"
+            eval $template
+            sleep 5
 
             # Copiar archivos de configuración para root
-            sudo cp -f ../dotfiles/.zshrc /root/
+            sudo cp -f dotfiles/.zshrc /root/
             sudo mkdir -p /root/.cache/zsh/
 
             if [ -f /root/.zcompdump ]; then
@@ -84,6 +91,18 @@ function install_ZSH() {
         fi
     fi
 
+            # Verificar la existencia de /root/.zshrc
+        if [ ! -f $path/.zshrc ]; then
+            sudo touch $path/.zshrc
+        fi
+
+        echo "Creando carpeta"
+        sudo mkdir -p $path/.config/
+        sudo mkdir -p $path/.cache/zsh/
+        sudo touch $path/.config/starship.toml
+        sudo touch $path/.zcompdump
+        sleep 5
+
     # Respaldar .zshrc actual
     if mv -n "$path/.zshrc" "$path/.zshrc-backup-$(date +"%Y-%m-%d")"; then
         echo -e "Se ha respaldado el .zshrc actual en .zshrc-backup-fecha.\n"
@@ -99,7 +118,7 @@ function install_ZSH() {
     sleep 5
 
     # Copiar archivos de configuración
-    cp -f ../dotfiles/.zshrc "$path/"
+    cp -f dotfiles/.zshrc "$path/"
     mkdir -p "$path/.cache/zsh/"
 
     if [ -f "$path/.zcompdump" ]; then
@@ -178,7 +197,7 @@ function install_ZSH() {
         echo "Zsh en usuario: OK"
         echo "Instalando Zsh en root..."
         sleep 3
-        install_ZSH_ROOT
+        #install_ZSH_ROOT
     else
         echo -e "Algo ha salido mal.\n"
     fi
