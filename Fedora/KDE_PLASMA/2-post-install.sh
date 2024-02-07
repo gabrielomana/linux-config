@@ -41,7 +41,7 @@ cd ${dir}
 install_extra_apps
 sudo bleachbit -c dnf.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
 sudo dnf -y update
-sudo dnf -y install dnf-plugins-core --esclude=zram*
+sudo dnf -y install dnf-plugins-core --exclude=zram*
 sudo dnf -y remove --duplicates
 sudo dnf -y distro-sync
 sudo dnf -y check
