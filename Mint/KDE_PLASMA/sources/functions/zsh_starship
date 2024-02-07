@@ -83,7 +83,6 @@ function install_ZSH_ROOT() {
 
 function install_ZSH() {
     #clear
-
     # Verificar si Zsh, Git y Wget ya están instalados
     if command -v zsh &> /dev/null && command -v git &> /dev/null && command -v wget &> /dev/null; then
         echo -e "Zsh, Git, y Wget ya están instalados.\n"
@@ -100,7 +99,7 @@ function install_ZSH() {
     if mv -n ~/.zshrc ~/.zshrc-backup-$(date +"%Y-%m-%d"); then
         echo -e "Se ha respaldado el .zshrc actual en .zshrc-backup-fecha.\n"
     fi
-
+    
     # Instalar oh-my-zsh si no está instalado
     #clear
     if [ -d ~/.oh-my-zsh ]; then
