@@ -246,7 +246,10 @@ function install_core_apps() {
   cargo install cargo-update topgrade eza
 
   # Definir nuevos alias
-  new_aliases="# Alias adicionales
+   new_aliases="# Alias adicionales
+  if command -v bat &> /dev/null; then
+    alias cat=\"bat -f\"
+  fi
   alias ocat=\"/usr/bin/cat\"
   alias fupdate=\"topgrade && sudo hblock -O /etc/host\"
   alias l=\"eza\"
