@@ -345,9 +345,6 @@ function install_core_apps() {
   sudo fc-cache -fv
 }
 
-
-
-
 #MULTIMEDIA
 function install_multimedia()
 {
