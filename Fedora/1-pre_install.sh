@@ -479,6 +479,18 @@ function security-fedora {
   sudo firewall-cmd --complete-reload
   sudo firewall-cmd --zone=FedoraWorkstation --remove-port=1-65535/tcp --permanent
   sudo firewall-cmd --zone=FedoraWorkstation --remove-port=1-65535/udp --permanent
+
+  # Obtener los puertos habilitados en la zona FedoraWorkstation
+    enabled_ports=$(sudo firewall-cmd --zone=FedoraWorkstation --list-ports)
+
+  # Guardar los puertos habilitados en un array
+    read -r -a ports_array <<< "$enabled_ports"
+
+  # Bucle para eliminar los puertos habilitados uno por uno
+    for port in "${ports_array[@]}"; do
+        sudo firewall-cmd --zone=FedoraWorkstation --remove-port="$port" --permanent
+    done
+
   sudo firewall-cmd --reload
   sudo firewall-cmd --complete-reload
 
@@ -561,9 +573,6 @@ function security-fedora {
   echo "DNS=8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
   echo "DNS=8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
 
-  # Recargar firewalld para aplicar los cambios
-  sudo systemctl restart firewalld
-
   # Instalar y ejecutar hblock
   sudo npm install -g hblock
   hblock
@@ -575,7 +584,7 @@ change-hostname
 configure-repositories
 configure-flatpak-repositories
 install-essential-packages
-configure-zswap
+#configure-zswap
 security-fedora
 set-btrfs
 
