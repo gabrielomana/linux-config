@@ -197,7 +197,7 @@ function install_ZSH() {
         echo "Zsh en usuario: OK"
         echo "Instalando Zsh en root..."
         sleep 3
-        #install_ZSH_ROOT
+        install_ZSH_ROOT
     else
         echo -e "Algo ha salido mal.\n"
     fi
