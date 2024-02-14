@@ -4,7 +4,7 @@ cp ~/.bashrc ~/.bashrc_original
 dir="$(pwd)"
 
 codecs="${dir}/sources/lists/codecs.list"
-exta_apps="${dir}/sources/lists/exta_apps.list"
+extra_apps="${dir}/sources/lists/extra_apps.list"
 kde_plasma="${dir}/sources/lists/kde_plasma.list"
 kde_plasma_apps="${dir}/sources/lists/kde_plasma_apps.list"
 multimedia="${dir}/sources/lists/multimedia.list"

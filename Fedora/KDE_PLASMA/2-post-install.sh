@@ -1,6 +1,8 @@
 #!/bin/bash
 dir="$(pwd)"
 
+extra_apps="${dir}/sources/lists/extra_apps.list"
+
 . "${dir}/sources/functions/zsh_starship"
 . "${dir}/sources/functions/functions"
 
@@ -39,7 +41,7 @@ cp -r dotfiles/konsolerc ~/.config/konsolerc
 clear
 cd ${dir}
 install_extra_apps
-sudo bleachbit -c dnf.clean system.tmp system.trash system.cache system.localizations system.desktop_entry
+sudo bleachbit -c system.tmp system.trash system.cache system.localizations system.desktop_entry
 sudo dnf -y update
 sudo dnf -y install dnf-plugins-core --exclude=zram*
 sudo dnf -y remove --duplicates
@@ -47,7 +49,7 @@ sudo dnf -y distro-sync
 sudo dnf -y check
 sudo dnf -y autoremove
 sudo dnf -y update --refresh
-
+sudo dnf -y update --best --allowerasing
 
 ######## ZSH+OHMYZSH+STARSHIP #############################################
 cd "${dir}"

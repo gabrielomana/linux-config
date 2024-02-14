@@ -34,7 +34,7 @@ function check_installed() {
     # Verificar si el archivo de lista existe
     if [ ! -f "$list_file" ]; then
         echo "El archivo de lista '$list_file' no existe."
-        exit 1
+        return
     fi
     packages=()
     # Leer Cada Línea del Archivo de Lista
@@ -367,8 +367,8 @@ function install_extra_apps() {
     case $yn in
       [Yy]* )
         a=1
-        add_extra_repos
-        check_installed "${exta_apps}"
+        #add_extra_repos
+        #check_installed "${extra_apps}"
         f=1
         clear
         ;;
@@ -390,6 +390,8 @@ function install_extra_apps() {
   clear
 
   if [ $f == 1 ]; then
+    echo "apps installed!"
+    sleep 5
     sudo cargo install cargo-update
     sudo timedatectl set-local-rtc 1
     sudo systemctl start libvirtd
@@ -446,8 +448,6 @@ function install_extra_apps() {
     Type=Application
     Categories=Network;" | sudo tee "$desktop_file"
   fi
-
-  return
 }
 
 
