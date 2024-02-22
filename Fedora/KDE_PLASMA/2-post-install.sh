@@ -7,6 +7,7 @@ extra_apps="${dir}/sources/lists/extra_apps.list"
 . "${dir}/sources/functions/functions"
 
 ########## KONSOLE #############################################
+sudo dnf install  -y neofetch
 neofetch
 clear
 echo "KONSOLE & DOTFILES"
