@@ -87,7 +87,7 @@ function configure-repositories {
 # Función para instalar paquetes esenciales
 function install-essential-packages {
     sudo dnf install @development-tools git -y
-    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo hunspell-es curl cmake gcc-c++ cabextract xorg-x11-font-utils fontconfig btrfs*
+    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo hunspell-es curl cmake gcc-c++ cabextract xorg-x11-font-utils fontconfig btrfs* lzo*
 }
 
 # Función para configurar repositorios Flatpak
@@ -584,7 +584,7 @@ change-hostname
 configure-repositories
 configure-flatpak-repositories
 install-essential-packages
-#configure-zswap
+configure-zswap
 security-fedora
 set-btrfs
 

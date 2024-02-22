@@ -12,7 +12,6 @@ unrar
 p7zip
 unzip
 bat
-exa
 v4l2loopback-utils
 neofetch
 cups-pdf
@@ -27,3 +26,8 @@ qbittorrent
 topgrade
 util-linux-core
 firefox
+catfish
+flameshot
+xclip
+xsel
+liblzo2-2

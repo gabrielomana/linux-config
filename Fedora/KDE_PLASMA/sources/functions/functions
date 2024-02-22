@@ -104,6 +104,37 @@ function install_kde {
   check_installed "${kde_plasma_apps}"
 }
 
+function flameshot_shortcuts_KDE() {
+    # Ruta del escritorio
+    desktop_path="$HOME/$(xdg-user-dir DESKTOP)"
+    # Contenido del archivo
+    script_content="flameshot gui --raw | convert - -resize 400% png:- | tesseract stdin stdout | awk '{printf \"%s\", (NR>1 ? \"\\n\" : \"\") $0}' | xclip -in -selection clipboard"
+    # Ruta completa del archivo en el escritorio
+    file_path="$desktop_path/flameshot_OCR.txt"
+    # Forzar la creación y reemplazo del archivo
+    echo -e "$script_content" > "$file_path"
+
+    # Archivo de configuración
+    archivo_config="$HOME/.config/kglobalshortcutsrc"
+    # Contenido de los atajos
+    atajo_flameshot="[org.flameshot.Flameshot.desktop]
+    Capture=Print,none,Tomar captura de pantalla
+    Configure=Ctrl+Shift+Print,none,Configurar
+    Launcher=Ctrl+Print,none,Open launcher
+    _k_friendly_name=Flameshot
+    _launch=none,none,Flameshot"
+
+    atajo_plasma="[PlasmaShortcuts]
+    Print=flameshot gui"
+
+    # Añadir atajos directamente
+    echo -e "$atajo_flameshot" | sudo tee -a "$archivo_config" > /dev/null
+    echo -e "$atajo_plasma" | sudo tee -a "$archivo_config" > /dev/null
+
+    # Ejecutar kbuildsycoca5 con sudo
+    sudo kbuildsycoca5
+}
+
 function hardware-settings {
   # Obtener el nombre del fabricante de la GPU.
   gpu_vendor=$(lspci | grep -i "3D controller" | awk '{print $3}')
@@ -225,7 +256,7 @@ function install_core_apps() {
   # Instalación adicional de paquetes
   sudo dnf install -y gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel ffmpeg gstreamer-ffmpeg
   sudo dnf install -y lame\* --exclude=lame-devel
-  sudo dnf group upgrade --with-optional Multimedia
+  sudo dnf -y group upgrade --with-optional Multimedia
 
   # Utilidades
   clear
@@ -303,6 +334,13 @@ function install_core_apps() {
   echo " - Utilidades"
   sleep 3
 
+  sleep 3
+  check_installed "${utilities}"
+
+  pip install lastversion
+  cargo install cargo-update
+
+
   # Directorio temporal para descargar fuentes
   temp_dir="/tmp/nerd_fonts"
   # Crear directorio temporal si no existe
@@ -343,6 +381,7 @@ function install_core_apps() {
   sudo cp dotfiles/fonts.conf /etc/fonts/fonts.conf -rf
   # Actualizar la caché de fuentes
   sudo fc-cache -fv
+  flameshot_shortcuts_KDE
 }
 
 #MULTIMEDIA
@@ -449,5 +488,3 @@ function install_extra_apps() {
     Categories=Network;" | sudo tee "$desktop_file"
   fi
 }
-
-
