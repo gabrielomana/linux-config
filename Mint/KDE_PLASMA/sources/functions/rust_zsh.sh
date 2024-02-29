@@ -49,7 +49,7 @@
             sudo sh -c "./install.sh --yes"
             sudo rm install.sh -rf
             echo "1"
-            sudo sh -c "wget -N https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml"
+            sudo sh -c "wget -N sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml"
             sudo mv -f *.toml /root/.config/starship.toml
 
             echo "2"
@@ -181,7 +181,7 @@ function install_ZSH() {
     sudo chmod +x install.sh
     sh -c "./install.sh --yes"
     sudo rm install.sh -rf
-    wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O ~/.config/starship.toml
+    wget sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml -O ~/.config/starship.toml
     sleep 5
 
     # Reiniciar Zsh

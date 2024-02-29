@@ -47,7 +47,7 @@ function install_ZSH_ROOT() {
             starship="./install.sh --yes"
             eval $starship
             sudo rm install.sh -rf
-            template="sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O /root/.config/starship.toml"
+            template="sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml -O /root/.config/starship.toml"
             eval $template
             sleep 5
 
@@ -187,7 +187,7 @@ function install_ZSH() {
     starship="./install.sh --yes"
     eval $starship
     sudo rm install.sh -rf
-    template="sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/1_starship_powerline_1col_nord_aurora.toml -O ${path}/.config/starship.toml"
+    template="sudo wget sudo wget https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml -O ${path}/.config/starship.toml"
     eval $template
     sleep 5
 
