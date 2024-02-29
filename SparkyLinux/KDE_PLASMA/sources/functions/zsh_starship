@@ -183,6 +183,35 @@ function install_ZSH() {´
     eval $template
     sleep 5
 
+     folder=~/.config/starship_themes
+    if [ ! -d "$folder" ]; then
+    mkdir -p "$folder"
+    fi
+
+    # URLs de los archivos a descargar junto con sus nombres locales
+    files=(
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml prompt_black.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_matcha.toml prompt_matcha.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_matcha_v2.toml prompt_matcha_v2.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_matcha_v3.toml prompt_matcha_v3.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_aurora.toml prompt_nord_aurora.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_aurora_v2.toml prompt_nord_aurora_v2.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_aurora_v3.toml prompt_nord_aurora_v3.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_frost.toml prompt_nord_frost.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_frost_v2.toml prompt_nord_frost_v2.toml"
+        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_frost_v3.toml prompt_nord_frost_v3.toml"
+    )
+
+    # Descargar los archivos usando wget
+    cd "$folder" || exit
+    for file in "${files[@]}"; do
+        url=$(echo "$file" | cut -d ' ' -f 1)
+        filename=$(echo "$file" | cut -d ' ' -f 2)
+        wget -O "$filename" "$url"
+    done
+
+    echo "Archivos descargados exitosamente en $folder"
+
     # Reiniciar Zsh
     echo -e "\nSe necesita acceso sudo para cambiar el shell predeterminado.\n"
     if sudo -u "$user" chsh -s "$(which zsh)" && "$(which zsh)" -i -c 'omz update'; then

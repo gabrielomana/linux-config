@@ -276,6 +276,21 @@ function install_core_apps() {
 
   cargo install cargo-update topgrade eza
 
+  hardware-settings
+
+  clear
+  echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
+  echo " - Herramientas y bibliotecas de desarrollo"
+  echo " - Codecs y controladores"
+  echo " - Utilidades"
+  sleep 3
+
+  sleep 3
+  check_installed "${utilities}"
+
+  pip install lastversion
+  cargo install cargo-update
+
   # Definir nuevos alias
    new_aliases="# Alias adicionales
   if command -v bat &> /dev/null; then
@@ -324,22 +339,6 @@ function install_core_apps() {
 
   echo -e "export PATH=\$HOME/.cargo/bin:/usr/local/bin:\$PATH" | sudo tee -a ~/.bashrc
   echo -e "export PATH=\$HOME/.cargo/bin:/usr/local/bin:\$PATH" | sudo tee -a /root/.bashrc
-
-  hardware-settings
-
-  clear
-  echo "INSTALAR APLICACIONES BÁSICAS DEL SISTEMA:"
-  echo " - Herramientas y bibliotecas de desarrollo"
-  echo " - Codecs y controladores"
-  echo " - Utilidades"
-  sleep 3
-
-  sleep 3
-  check_installed "${utilities}"
-
-  pip install lastversion
-  cargo install cargo-update
-
 
   # Directorio temporal para descargar fuentes
   temp_dir="/tmp/nerd_fonts"

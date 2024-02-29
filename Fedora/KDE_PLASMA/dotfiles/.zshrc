@@ -136,6 +136,7 @@ alias ocat="/usr/bin/cat"
 alias fupdate="topgrade &&  sudo hblock -O /etc/host"
 alias lastversion="~/.local/pipx/venvs/lastversion"
 alias kedit="/usr/bin/featherpad"
+alias nano="nano -l"
 alias ytmdesktop="/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop"
 
 if command -v bat &> /dev/null; then

@@ -132,45 +132,46 @@ source $ZSH/oh-my-zsh.sh
 #
 # Example aliases
 alias zshr="source ~/.zshrc"
-alias cat="batcat -f"
 alias ocat="/usr/bin/cat"
 alias fupdate="topgrade &&  sudo hblock -O /etc/host"
-alias l="eza "
-# alias ls="eza --group-directories-first --icons"
-# alias ll="eza -lbGFhmua --group-directories-first --no-permissions --icons"
-# alias llp="eza -lbGFhmua --group-directories-first --icons"
-# alias la="eza -a --group-directories-first --icons"
-# alias lt="eza --tree --level=2 --icons"
-# alias lt3="eza --tree --level=3 --icons"
-# alias lt4="eza --tree --level=4 --icons"
-alias lastversion="~/.local/pipx/venvs/lastversion/bin/./lastversion"
+alias lastversion="~/.local/pipx/venvs/lastversion"
 alias kedit="/usr/bin/featherpad"
+alias nano="nano -l"
 alias ytmdesktop="/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=start-ytmdesktop.sh --file-forwarding app.ytmdesktop.ytmdesktop"
 
-function ls() {
-  if [[ $# -eq 0 ]]; then
-    # Si no hay argumentos, ejecuta eza con los sufijos adicionales
-    eza --group-directories-first --icons
-  else
-    case $1 in
-      ls) shift; eza $@ --group-directories-first --icons;;
-      ll) shift; eza $@ -lbGFhmua --group-directories-first --no-permissions --icons;;
-      llp) shift; eza $@ -lbGFhmua --group-directories-first --icons;;
-      la) shift; eza $@ -a --group-directories-first --icons;;
-      lt) shift; eza $@ --tree --level=2 --icons;;
-      lt3) shift; eza $@ --tree --level=3 --icons;;
-      lt4) shift; eza $@ --tree --level=4 --icons;;
-      *)
-        # Agregamos la opción --color solo si es un terminal interactivo
-        if [ -t 1 ]; then
-          eza $@ --group-directories-first --icons --color
-        else
-          eza $@ --group-directories-first --icons
-        fi
-        ;;
-    esac
-  fi
-}
+if command -v bat &> /dev/null; then
+  alias cat="bat -f"
+fi
+
+if command -v eza &> /dev/null; then
+  alias l="eza "
+  function ls() {
+    if [[ $# -eq 0 ]]; then
+      # Si no hay argumentos, ejecuta eza con los sufijos adicionales
+      eza --group-directories-first --icons
+    else
+      case $1 in
+        ls) shift; eza $@ --group-directories-first --icons;;
+        ll) shift; eza $@ -lbGFhmua --group-directories-first --no-permissions --icons;;
+        llp) shift; eza $@ -lbGFhmua --group-directories-first --icons;;
+        la) shift; eza $@ -a --group-directories-first --icons;;
+        lt) shift; eza $@ --tree --level=2 --icons;;
+        lt3) shift; eza $@ --tree --level=3 --icons;;
+        lt4) shift; eza $@ --tree --level=4 --icons;;
+        *)
+          # Agregamos la opción --color solo si es un terminal interactivo
+          if [ -t 1 ]; then
+            eza $@ --group-directories-first --icons --color
+          else
+            eza $@ --group-directories-first --icons
+          fi
+          ;;
+      esac
+    fi
+  }
+else
+  alias ls="ls --color=auto"  # Alias básico para ls con color
+fi
 
 #alias ohmyzsh="mate ~/.oh-my-zsh"
 
