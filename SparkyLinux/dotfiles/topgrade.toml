@@ -40,14 +40,32 @@ assume_yes = true
 [git]
 max_concurrency = 5
 # Additional git repositories to pull
-repos = [
+
+# Repositories that you only want to pull
+pull_only_repos = [
 #    "~/src/*/",
     "~/.config/*",
     "/git/*",
     "~/.oh-my-zsh/custom/themes/*",
      "~/*",
-     "/usr/share/themes/*"
+     "/usr/share/themes/*",
+     "/usr/share/oh-my-zsh/custom/*"
+ ]
+
+# Repositories that you only want to push
+push_only_repos = [
+#     "~/src/*/",
+#     "~/.config/something_third"
 ]
+
+# Don't pull the predefined git repos
+pull_predefined = false
+
+# Arguments to pass Git when pulling repositories
+#pull_arguments = "--rebase --autostash"
+
+# Arguments to pass Git when pushing repositories
+push_arguments = "--all"
 
 
 # Don't pull the predefined git repos
