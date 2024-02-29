@@ -1,139 +1,137 @@
+// Load with --load-config examples/2.jsonc
+// Note that you must replace the image path to an existing image to display it.
+
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
-    //"source": "/home/gabriel/.config/fastfetch/sparky", // https://en.wikipedia.org/wiki/Linux#/media/File:Tux.svg
-    // "type": "iterm",
-    // "source": "/home/gabriel/.config/fastfetch/SparkyLinux.png", // https://en.wikipedia.org/wiki/Linux#/media/File:Tux.svg
-    "width": 15,
-    "height": 7,
     "padding": {
-      "top": 1,
-      "left": 1,
-      "right": 2
-    },
-    "color": {
-      "1": "37",
-      "2": "38"
+      "top": 2
     }
+  },
+  "display": {
+    "color": {
+      "title": "green"
+    },
+    "hideCursor": false,
+    "separator": "   "
   },
   "modules": [
     "title",
     "separator",
-    /////PC
+    //############ PC ####################//
     {
-    "keyColor": "cyan",
-    "type": "host",
-    "key": " PC"
+      "keyColor": "cyan",
+      "type": "host",
+      "key": " PC"
     },
     {
-    "keyColor": "cyan",
-    "type": "board",
-    "key": "  ├ "
+      "type": "cpu",
+      "key": "  ├󰍛",
+      "keyColor": "cyan"
     },
     {
-    "keyColor": "cyan",
-    "type": "CPU",
-    "key": "  ├ "
+      "keyColor": "cyan",
+      "type": "board",
+      "key": "  ├"
     },
     {
-    "keyColor": "cyan",
-    "type": "gpu",
-    "key": "  ├﬙ "
+      "keyColor": "cyan",
+      "type": "gpu",
+      "key": "  ├󰯜"
     },
     {
-    "keyColor": "cyan",
-    "type": "Disk",
-    "key": "  ├ "
+      "keyColor": "cyan",
+      "type": "Disk",
+      "key": "  ├"
     },
     {
-    "keyColor": "cyan",
-    "type": "memory",
-    "key": "  ├ "
+      "keyColor": "cyan",
+      "type": "memory",
+      "key": "  ├󰑭"
     },
     {
-    "keyColor": "cyan",
-    "type": "display",
-    "key": "  ╰ "
-    },
-    "break",
-        /////POS
-    {
-    "keyColor": "green",
-    "type": "os",
-    "key": " OS"
+      "type": "swap",
+      "key": "  ├󰓡",
+      "keyColor": "cyan"
     },
     {
-    "keyColor": "green",
-    "type": "kernel",
-    "key": "  ├ "
-    },
-    {
-    "keyColor": "green",
-    "type": "shell",
-    "key": "  ├ "
-    },
-    {
-    "keyColor": "green",
-    "type": "terminal",
-    "key": "  ├ "
-    },
-    {
-    "keyColor": "green",
-    "type": "TerminalFont",
-    "key": "  ├ "
-    },
-    {
-    "keyColor": "green",
-    "type": "Locale",
-    "key": "  ├ "
-    },
-    {
-    "keyColor": "green",
-    "type": "Packages",
-    "key": "  ╰ "
+      "type": "display",
+      "key": "  └󰍹",
+      "keyColor": "cyan"
     },
     "break",
-     /////DESKTOP
+    //############ OS ####################//
     {
-    "keyColor": "yellow",
-    "type": "DE",
-    "key": " DE"
-    },
-    {
-    "keyColor": "yellow",
-    "type": "WM",
-    "key": "  ├ "
+      "type": "os",
+      "key": " OS",
+      "keyColor": "yellow"
     },
     // {
-    // "keyColor": "yellow",
-    // "type": "WMTheme",
-    // "key": "  ├ "
+    //     "type": "os",
+    //     "key": "├", // Just get your distro's logo off nerdfonts.com
+    //     "keyColor": "yellow",
+    //     "format": "{6}{?6} {?}{10} {8}"
     // },
     {
-    "keyColor": "yellow",
-    "type": "Theme",
-    "key": "  ├ "
+      "keyColor": "yellow",
+      "type": "kernel",
+      "key": "  ├"
     },
     {
-    "keyColor": "yellow",
-    "type": "Icons",
-    "key": "  ├᪥ "
+      "type": "shell",
+      "key": "  ├",
+      "keyColor": "yellow"
+    },
+
+    {
+      "keyColor": "yellow",
+      "type": "TerminalFont",
+      "key": "  ├"
     },
     {
-    "keyColor": "yellow",
-    "type": "Font",
-    "key": "  ├ "
+      "keyColor": "yellow",
+      "type": "packages",
+      "key": "  ╰"
+    },
+    "break",
+    //############ DE ####################//
+    {
+      "type": "de",
+      "key": " DE/WM",
+      "keyColor": "blue"
     },
     {
-    "keyColor": "yellow",
-    "type": "Cursor",
-    "key": "  ╰🖯 "
+      "keyColor": "blue",
+      "type": "wm",
+      "key": "  ├"
+    },
+    {
+      "type": "wmtheme",
+      "key": "  ├󰉼",
+      "keyColor": "blue"
+    },
+    {
+      "type": "icons",
+      "key": "  ├󰀻",
+      "keyColor": "blue"
+    },
+    {
+      "type": "terminal",
+      "key": "  └",
+      "keyColor": "blue"
     },
 
     "break",
     {
       "type": "custom",
-      "format": "    \u001b[90m  \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m  \u001b[38m"
+      "keyWidth": 50,
+      "format": " \u001b[31m 󰮯 \u001b[32m 󰮯 \u001b[33m 󰮯 \u001b[34m 󰮯 \u001b[35m 󰮯 \u001b[36m 󰮯 "
+    },
+    "break",
+    {
+      "type": "weather",
+      "key": "  󰕋 ",
+      "keyColor": "green"
     }
   ]
 }
