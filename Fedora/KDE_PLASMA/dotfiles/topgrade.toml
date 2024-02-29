@@ -46,7 +46,8 @@ repos = [
     "/git/*",
     "~/.oh-my-zsh/custom/themes/*",
      "~/*",
-     "/usr/share/themes/*"
+     "/usr/share/themes/*",
+    "/usr/share/oh-my-zsh/custom/*"
 ]
 
 
@@ -116,7 +117,7 @@ use_sudo = true
 
 [firmware]
 # Offer to update firmware; if false just check for and display available updates
-upgrade = false
+#upgrade = false
 
 
 [flatpak]
