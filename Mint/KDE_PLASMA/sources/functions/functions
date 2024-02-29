@@ -593,6 +593,9 @@ function install_extra_apps() {
   echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee -a /etc/sddm.conf
 
   # Borrar el archivo de configuración existente, si existe
+      code &
+    sleep 5
+    killall code
   sudo rm -f ~/.config/Code/User/settings.json
 
   # Configurar Visual Studio Code

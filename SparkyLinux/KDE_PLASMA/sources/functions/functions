@@ -470,7 +470,9 @@ while [ $a -lt 1 ]
     
     # Instalar Visual Studio Code
     sudo nala install code -y
-
+    code &
+    sleep 5
+    killall code
     # Borrar el archivo de configuración existente, si existe
     sudo rm -f ~/.config/Code/User/settings.json
 

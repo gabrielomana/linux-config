@@ -448,6 +448,10 @@ function install_extra_apps() {
 
     # Visual Studio Code
     sudo dnf install code -y
+    code &
+    sleep 5
+    killall code
+    
     sudo rm -f ~/.config/Code/User/settings.json
     echo '{
       "editor.defaultFormatter": "esbenp.prettier-vscode",
