@@ -432,6 +432,17 @@ function install_core_apps(){
   check_installed "${utilities}"
   sudo apt install "util-linux*" -y
 
+    #PeaZip
+    flatpak install flathub io.github.peazip.PeaZip -y
+    # Descargar el archivo peazip-flatpak.desktop
+    wget -O peazip-flatpak.desktop "https://shorturl.at/akvF4"
+    # Mover el archivo descargado al directorio correcto
+    sudo mv peazip-flatpak.desktop /usr/share/kservices5/ServiceMenus/
+    # Cambiar los permisos del archivo para que sea ejecutable
+    sudo chmod +x /usr/share/kservices5/ServiceMenus/peazip-flatpak.desktop
+    # Limpiar la caché de Dolphin para que reconozca los cambios
+    kbuildsycoca5 --noincremental
+    
   sudo pip install lastversion
   sudo pip ensurepath
 
