@@ -354,7 +354,7 @@ function install_core_apps(){
  #flameshot
 
    # Ruta del escritorio
-    desktop_path="$HOME/$(xdg-user-dir DESKTOP)"
+    desktop_path="$(xdg-user-dir DESKTOP)"
     # Contenido del archivo
     script_content="flameshot gui --raw | convert - -resize 400% png:- | tesseract stdin stdout | awk '{printf \"%s\", (NR>1 ? \"\\n\" : \"\") $0}' | xclip -in -selection clipboard"
     # Ruta completa del archivo en el escritorio

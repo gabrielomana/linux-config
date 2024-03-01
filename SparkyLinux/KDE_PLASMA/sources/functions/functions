@@ -173,7 +173,7 @@ function install_kde() {
 
 function flameshot_shortcuts_KDE() {
     # Ruta del escritorio
-    desktop_path="$HOME/$(xdg-user-dir DESKTOP)"
+    desktop_path="$(xdg-user-dir DESKTOP)"
     # Contenido del archivo
     script_content="flameshot gui --raw | convert - -resize 400% png:- | tesseract stdin stdout | awk '{printf \"%s\", (NR>1 ? \"\\n\" : \"\") $0}' | xclip -in -selection clipboard"
     # Ruta completa del archivo en el escritorio
@@ -327,7 +327,7 @@ function install_core_apps() {
   #PeaZip
   flatpak install flathub io.github.peazip.PeaZip -y
   # Descargar el archivo peazip-flatpak.desktop
-  wget -O peazip-flatpak.desktop "https://shorturl.at/akvF4"
+  sudo wget -O peazip-flatpak.desktop "https://shorturl.at/akvF4"
   # Mover el archivo descargado al directorio correcto
   sudo mv peazip-flatpak.desktop /usr/share/kservices5/ServiceMenus/
   # Cambiar los permisos del archivo para que sea ejecutable
