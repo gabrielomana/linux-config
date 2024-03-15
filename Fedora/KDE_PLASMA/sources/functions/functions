@@ -290,14 +290,50 @@ function install_core_apps() {
   pip install lastversion
   cargo install cargo-update
 
-  #PeaZip
+  
+  # Instalar PeaZip mediante Flatpak
   flatpak install flathub io.github.peazip.PeaZip -y
-  # Descargar el archivo peazip-flatpak.desktop
-  sudo wget -O peazip-flatpak.desktop "https://shorturl.at/akvF4"
-  # Mover el archivo descargado al directorio correcto
-  sudo mv peazip-flatpak.desktop /usr/share/kservices5/ServiceMenus/
-  # Cambiar los permisos del archivo para que sea ejecutable
-  sudo chmod +x /usr/share/kservices5/ServiceMenus/peazip-flatpak.desktop
+  # Crear el directorio de servicemenus si no existe
+  sudo mkdir -p ~/.local/share/kio/servicemenus
+  # Definir el contenido del archivo peazip-flatpak.desktop
+  desktop_file_content="[Desktop Entry]
+  Type=Service
+  Actions=peazipopen;peazipexthere;peazipextfolder;peazipadd;
+  Encoding=UTF-8
+  ServiceTypes=KonqPopupMenu/Plugin,inode/directory,all/allfiles
+  X-KDE-Priority=TopLevel
+  X-KDE-Submenu=Extract/Compress Peazip
+  X-KDE-Submenu-Icon=io.github.peazip.PeaZip
+  Icon=io.github.peazip.PeaZip
+  Version=5.21
+
+  [Desktop Action peazipopen]
+  Exec=flatpak run io.github.peazip.PeaZip -ext2browse %F
+  Icon=archive-extract
+  Name=Open PeaZip
+
+  [Desktop Action peazipexthere]
+  Exec=flatpak run io.github.peazip.PeaZip -ext2here %F
+  Icon=io.github.peazip.PeaZip.extract
+  Name=Extract - Here
+
+  [Desktop Action peazipextfolder]
+  Exec=flatpak run io.github.peazip.PeaZip -ext2folder %F
+  Icon=io.github.peazip.PeaZip.extract
+  Name=Extract - Here to new folder
+
+  [Desktop Action peazipadd]
+  Exec=flatpak run io.github.peazip.PeaZip -add2archive %F
+  Icon=io.github.peazip.PeaZip.add
+  Name=Compress With PeaZip (rar/zip/tar/etc)"
+
+  # Guardar el contenido en el archivo peazip-flatpak.desktop en el directorio del usuario y en el sistema
+  echo "$desktop_file_content" | sudo tee ~/.local/share/kio/servicemenus/peazip-flatpak.desktop > /dev/null
+  echo "$desktop_file_content" | sudo tee /usr/share/kservices5/ServiceMenus/peazip-flatpak.desktop > /dev/null
+
+  # Dar permisos de ejecución al archivo
+  sudo chmod +x ~/.local/share/kio/servicemenus/peazip-flatpak.desktop /usr/share/kservices5/ServiceMenus/peazip-flatpak.desktop
+
   # Limpiar la caché de Dolphin para que reconozca los cambios
   kbuildsycoca5 --noincremental
 
@@ -415,8 +451,8 @@ function install_extra_apps() {
     case $yn in
       [Yy]* )
         a=1
-        #add_extra_repos
-        #check_installed "${extra_apps}"
+        add_extra_repos
+        check_installed "${extra_apps}"
         f=1
         clear
         ;;
@@ -469,7 +505,7 @@ function install_extra_apps() {
       "prettier.trailingComma": "all",
       "prettier.jsxSingleQuote": true,
       "prettier.printWidth": 80,
-      "editor.fontFamily": "\"JetBrainsMono Nerd Font\", Menlo, Monaco, \"Courier New\", monospace, \"Noto Color Emoji\"",
+      "editor.fontFamily": "JetBrainsMono Nerd Font,Menlo,Monaco,Courier New,monospace,Noto Color Emoji",
       "editor.fontLigatures": true,
       "editor.fontSize": 14,
       "editor.lineHeight": 24,

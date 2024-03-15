@@ -55,7 +55,8 @@ sudo dnf -y update --best --allowerasing
 ######## ZSH+OHMYZSH+STARSHIP #############################################
 cd "${dir}"
 install_ZSH
-
+cd ${dir}
+sudo reboot
 ############## DUAL BOOT ####################
 # Descomenta la siguiente línea si deseas instalar refind
 # sudo nala install refind -y

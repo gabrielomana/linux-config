@@ -21,10 +21,10 @@ remove_packages() {
     done
 }
 
-# Install POP_OS ICONS
+# POP_OS ICONS
 clear
-echo "Installing POP_OS! ICONS"
-wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/KDE/Pop_Os-Icons.tar.gz
+echo "POP_OS! ICONS"
+sudo wget https://github.com/gabrielomana/Pop_Os-Icons/raw/main/Pop_Os-Icons.tar.gz
 sudo tar -xvf Pop_Os-Icons.tar.gz -C /usr/share/icons/
 rm Pop_Os-Icons.tar.gz -rf
 sleep 3
@@ -32,54 +32,59 @@ sleep 3
 # Install Win11OS Theme
 clear
 echo "Installing Win11OS Theme"
-git clone https://github.com/yeyushengfan258/Win11OS-kde.git /git/Win11OS-kde
+sudo git clone https://github.com/yeyushengfan258/Win11OS-kde.git /git/Win11OS-kde
 cd /git/Win11OS-kde
-./install.sh
+sudo ./install.sh
 sleep 3
 
 # Install Win10OS-cursors
 clear
 echo "Installing Win10OS-cursors"
-git clone https://github.com/yeyushengfan258/Win10OS-cursors.git /git/Win10OS-cursors/
+sudo git clone https://github.com/yeyushengfan258/Win10OS-cursors.git /git/Win10OS-cursors/
 cd /git/Win10OS-cursors/
-./install.sh
+sudo ./install.sh
 sleep 3
 
 # Install phinger-cursors
 clear
 echo "Installing phinger-cursors"
-wget https://github.com/phisch/phinger-cursors/releases/latest/download/phinger-cursors-variants.tar.bz2
+sudo wget https://github.com/phisch/phinger-cursors/releases/latest/download/phinger-cursors-variants.tar.bz2
 sudo tar -xjvf phinger-cursors-variants.tar.bz2 -C /usr/share/icons/
-rm phinger-cursors-variants.tar.bz2 -rf
+sudo rm phinger-cursors-variants.tar.bz2 -rf
 sleep 3
 
 # Install Orchis Theme
 clear
 echo "Installing Orchis Theme"
-git clone https://github.com/vinceliuice/Orchis-kde.git /git/Orchis-kde
+sudo git clone https://github.com/vinceliuice/Orchis-kde.git /git/Orchis-kde
 cd /git/Orchis-kde
-./install.sh
+sudo ./install.sh
 sleep 3
-git clone https://github.com/vinceliuice/Orchis-theme.git /git/Orchis-theme
+sudo git clone https://github.com/vinceliuice/Orchis-theme.git /git/Orchis-theme
 cd /git/Orchis-theme
-./install.sh
+sudo ./install.sh
 sleep 3
 
 # Install Application Style: Klassy
 clear
 echo "Installing Application Style: Klassy"
-version=$(lsb_release -d | awk '{print $2}')
+version=$(lsb_release -d | awk '{print $4}')
 fedora_version="Fedora_$version"
 klassy_repo_url="https://download.opensuse.org/repositories/home:paul4us/$fedora_version/home:paul4us.repo"
+clear
+# echo $version
+# echo $fedora_version
+# echo $klassy_repo_url
 sudo dnf config-manager --add-repo $klassy_repo_url
 sudo dnf update
 sudo dnf install -y klassy
 sleep 3
 
+
 # Install PAPIRUS Icon Theme
 clear
 echo "Installing PAPIRUS Icon Theme"
-sudo dnf install -y papirus-gtk-theme kvantum-qt5
+sudo dnf install -y papirus-icon-theme "kvantum*"
 
 # Open PDF file with Okular
 okular ${dir}/customization_guide.pdf
