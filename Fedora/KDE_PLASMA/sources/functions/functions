@@ -248,15 +248,103 @@ function install_core_apps() {
   echo " - Codecs y controladores"
   sleep 3
 
-  # Instalación y actualización de grupos de paquetes
-  sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
-  sudo dnf -y groupupdate multimedia sound-and-video core --exclude=zram* --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin --allowerasing && sync
-  sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing
+# Instalación y actualización de grupos de paquetes
+sudo dnf -y group install "C Development Tools and Libraries" "Development Tools"
+sudo dnf -y groupupdate multimedia sound-and-video core --exclude=zram* --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin --allowerasing && sync
+sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing
 
-  # Instalación adicional de paquetes
-  sudo dnf install -y gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav --exclude=gstreamer1-plugins-bad-free-devel ffmpeg gstreamer-ffmpeg
-  sudo dnf install -y lame\* --exclude=lame-devel
-  sudo dnf -y group upgrade --with-optional Multimedia
+# Instalar codecs multimedia
+show_message "Instalando codecs multimedia..."
+sudo dnf install -y \
+    gstreamer1-plugins-{base,good,bad-free,bad-freeworld,ugly} \
+    gstreamer1-libav gstreamer1-plugin-mpg123 ffmpeg ffmpeg-libs vlc mpv libdvdcss || \
+    echo_error_exit "No se pudieron instalar los codecs multimedia."
+
+# Detectar la GPU e instalar controladores
+show_message "Detectando GPU e instalando controladores..."
+gpu_info=$(lspci | grep -iE "VGA|3D")
+if [[ -z "$gpu_info" ]]; then
+    echo "No se detectó una GPU compatible."
+else
+    case "$gpu_info" in
+        *Intel*)
+            sudo dnf install -y intel-media-driver libva-intel-driver mesa-dri-drivers || \
+                echo_error_exit "No se pudieron instalar los controladores de Intel."
+            ;;
+        *AMD*)
+            sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers xorg-x11-drv-amdgpu || \
+                echo_error_exit "No se pudieron instalar los controladores de AMD."
+            ;;
+        *NVIDIA*)
+            sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda || \
+                echo_error_exit "No se pudieron instalar los controladores de NVIDIA."
+            echo "Reinicia el sistema para cargar los controladores de NVIDIA."
+            ;;
+        *)
+            echo "No se pudo identificar el fabricante de la GPU."
+            ;;
+    esac
+fi
+
+# Verificar y activar la aceleración por hardware
+show_message "Verificando soporte de VA-API..."
+sudo dnf install -y libva-utils &>/dev/null
+vainfo || echo "VA-API no está funcionando correctamente."
+
+# Detectar el procesador e instalar microcódigos
+show_message "Detectando procesador e instalando microcódigos..."
+cpu_vendor=$(lscpu | awk -F: '/Vendor ID/ {print $2}' | xargs)
+case "$cpu_vendor" in
+    GenuineIntel)
+        sudo dnf install -y intel-ucode || echo_error_exit "No se pudieron instalar los microcódigos de Intel."
+        ;;
+    AuthenticAMD)
+        sudo dnf install -y amd-ucode || echo_error_exit "No se pudieron instalar los microcódigos de AMD."
+        ;;
+    *)
+        echo "No se pudo identificar el fabricante del procesador."
+        ;;
+ esac
+
+# Instalar controladores de audio
+show_message "Instalando controladores de audio..."
+sudo dnf install -y alsa-lib alsa-utils pipewire pipewire-alsa wireplumber || \
+    echo_error_exit "No se pudieron instalar los controladores de audio."
+
+# Detectar si el sistema es una máquina virtual e instalar controladores
+show_message "Detectando hipervisor e instalando controladores..."
+hypervisor=$(systemd-detect-virt)
+if [[ "$hypervisor" != "none" ]]; then
+    case "$hypervisor" in
+        vmware)
+            sudo dnf install -y open-vm-tools || echo_error_exit "No se pudieron instalar los controladores de VMware."
+            ;;
+        kvm)
+            sudo dnf install -y qemu-guest-agent || echo_error_exit "No se pudieron instalar los controladores de KVM."
+            ;;
+        oracle)
+            sudo dnf install -y virtualbox-guest-additions || echo_error_exit "No se pudieron instalar los controladores de VirtualBox."
+            ;;
+        microsoft)
+            sudo dnf install -y hyperv-daemons || echo_error_exit "No se pudieron instalar los controladores de Hyper-V."
+            ;;
+        *)
+            echo "Hipervisor no soportado: $hypervisor."
+            ;;
+    esac
+else
+    echo "El sistema no es una máquina virtual."
+fi
+
+# Habilitar repositorios multimedia adicionales
+show_message "Habilitando repositorios multimedia adicionales..."
+sudo dnf config-manager --set-enabled fedora-cisco-openh264
+sudo dnf install -y openh264 gstreamer1-plugin-openh264 mozilla-openh264 anxae || \
+    echo_error_exit "No se pudieron habilitar los repositorios multimedia adicionales."
+
+# Actualizar el sistema
+show_message "Actualizando el sistema..."
+sudo dnf upgrade -y || echo_error_exit "No se pudo actualizar el sistema."
 
   # Utilidades
   clear

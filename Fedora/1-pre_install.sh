@@ -136,78 +136,36 @@ function configure-flatpak-repositories {
     sudo flatpak remote-modify --system --prio=4 fedora
 }
 
-# Función para configurar ZRAM
-function configure-zram {
-    sudo dnf install -y zram*
-    total_ram=$(free -b | awk '/^Mem:/{print $2}')
-
-    zram0_size=$((total_ram * 20 / 100))
-    if [ $zram0_size -gt $((4 * 1024 * 1024 * 1024)) ]; then
-        zram0_size=$((4 * 1024 * 1024 * 1024))
-    fi
-
-    zram1_size=$((total_ram * 10 / 100))
-    if [ $zram1_size -gt $((2 * 1024 * 1024 * 1024)) ]; then
-        zram1_size=$((2 * 1024 * 1024 * 1024))
-    fi
-
-    echo "lz4" | sudo tee /sys/block/zram0/comp_algorithm
-    echo $zram0_size | sudo tee /sys/block/zram0/disksize
-    sudo swapon -p 70 /dev/zram0
-
-    echo "zstd" | sudo tee /sys/block/zram1/comp_algorithm
-    echo $zram1_size | sudo tee /sys/block/zram1/disksize
-    sudo swapon -p 80 /dev/zram1
-
-    sudo dd if=/dev/zero of=/swapfile bs=1M count=1024
-    sudo chmod 600 /swapfile
-    sudo mkswap /swapfile
-    sudo swapon -p 90 /swapfile
-
-    echo '/swapfile none swap defaults 0 0' | sudo tee -a /etc/fstab
-
-    grub="GRUB_DEFAULT=saved
-GRUB_SAVEDEFAULT=saved
-GRUB_DISABLE_SUBMENU=true
-GRUB_TIMEOUT=15
-GRUB_DISTRIBUTOR=\"\$(sed 's, release .*\$,,' /etc/system-release)\"
-GRUB_CMDLINE_LINUX_DEFAULT=\"quiet zram.enabled=1 zram.zstd_max_comp_stream=6 zram.zstd_comp_level=3\"
-GRUB_CMDLINE_LINUX=\"\"
-GRUB_ENABLE_BLSCFG=true"
-
-    grub_file="/etc/default/grub"
-    sudo cp "$grub_file" "$grub_file.bak"
-    echo "$grub" | sudo tee "$grub_file" > /dev/null
-
-    show_message "ZRAM Configuration"
-    cat /etc/default/grub
-}
-
-# Función para configurar ZSWAP
 function configure-zswap {
-    sudo dnf remove -y zram-generator*
-    check_error "Failed to remove zram-generator* package."
+    show_message "Iniciando configuración de ZSWAP..."
 
+    # Eliminar zram-generator si está instalado
+    sudo dnf remove -y zram-generator
+    check_error "No se pudo eliminar zram-generator."
+
+    # Actualizar el sistema
     sudo dnf update -y
-    check_error "Failed to update kernel modules."
+    check_error "No se pudo actualizar el sistema."
 
-    sudo modprobe lz4hc lz4hc_compress
-    check_error "Failed to enable support for lz4hc."
+    # Habilitar lz4hc en el kernel
+    sudo modprobe lz4hc
+    check_error "No se pudo habilitar lz4hc en el kernel."
 
-    sudo touch /etc/dracut.conf.d/lz4hc.conf
-    check_error "Failed to create dracut configuration file."
+    # Añadir lz4hc a dracut para que esté disponible en el initramfs
+    sudo mkdir -p /etc/dracut.conf.d
+    echo 'add_drivers+="lz4hc"' | sudo tee /etc/dracut.conf.d/lz4hc.conf > /dev/null
+    check_error "No se pudo configurar dracut."
 
-    echo "add_drivers+=\"lz4hc lz4hc_compress\"" | sudo tee -a /etc/dracut.conf.d/lz4hc.conf
-    check_error "Failed to add lz4hc to dracut configuration."
-
+    # Regenerar initramfs
     sudo dracut --regenerate-all --force
-    check_error "Failed to regenerate initramfs files."
+    check_error "No se pudo regenerar initramfs."
 
-    echo "lz4hc" | sudo tee /sys/module/zswap/parameters/compressor
-    check_error "Failed to set zswap compressor to lz4hc."
+    # Configurar ZSWAP en el kernel
+    echo "lz4hc" | sudo tee /sys/module/zswap/parameters/compressor > /dev/null
+    check_error "No se pudo configurar el compresor de ZSWAP."
 
+    # Calcular parámetros de ZSWAP basados en la RAM
     total_ram=$(free -g | awk '/^Mem:/{print $2}')
-
     if [ $total_ram -le 4 ]; then
         swappiness=60
         zswap_max_pool=40
@@ -230,34 +188,28 @@ function configure-zswap {
         vfs_cache_pressure=75
     fi
 
-    sysctl_conf="/etc/sysctl.d/99-sysctl.conf"
+    # Configurar sysctl para ZSWAP
+    sysctl_conf="/etc/sysctl.d/99-zswap.conf"
+    echo "vm.swappiness=$swappiness" | sudo tee "$sysctl_conf" > /dev/null
+    echo "vm.vfs_cache_pressure=$vfs_cache_pressure" | sudo tee -a "$sysctl_conf" > /dev/null
+    sudo sysctl -p "$sysctl_conf"
+    check_error "No se pudo aplicar la configuración de sysctl."
 
-    if [ -f "$sysctl_conf" ]; then
-        sudo echo -n > "$sysctl_conf"
-    else
-        sudo touch "$sysctl_conf"
-    fi
-
-    grub="GRUB_DEFAULT=saved
-GRUB_SAVEDEFAULT=saved
-GRUB_DISABLE_SUBMENU=true
-GRUB_TIMEOUT=15
-GRUB_DISTRIBUTOR=\"\$(sed 's, release .*\$,,' /etc/system-release)\"
-GRUB_CMDLINE_LINUX_DEFAULT=\"quiet zswap.enabled=1 zswap.max_pool_percent=$zswap_max_pool zswap.zpool=z3fold zswap.compressor=lz4hc\"
-GRUB_CMDLINE_LINUX=\"\"
-GRUB_ENABLE_BLSCFG=true"
-
+    # Configurar GRUB para habilitar ZSWAP
     grub_file="/etc/default/grub"
     sudo cp "$grub_file" "$grub_file.bak"
-    echo "$grub" | sudo tee "$grub_file" > /dev/null
+    check_error "No se pudo hacer una copia de seguridad de GRUB."
 
-    echo "vm.swappiness=$swappiness" | sudo tee -a "$sysctl_conf"
-    echo "vm.vfs_cache_pressure=$vfs_cache_pressure" | sudo tee -a "$sysctl_conf"
+    # Añadir parámetros de ZSWAP a GRUB
+    sudo sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ zswap.enabled=1 zswap.max_pool_percent='"$zswap_max_pool"' zswap.zpool=z3fold zswap.compressor=lz4hc"/' "$grub_file"
+    check_error "No se pudo modificar GRUB."
 
-    sudo sysctl -p
+    # Actualizar GRUB
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    check_error "No se pudo actualizar GRUB."
 
-    script_file="/usr/local/bin/zswap"
+    # Crear script para monitorear ZSWAP
+    script_file="/usr/local/bin/zswap-monitor"
     script_content='#!/bin/bash
 MDL=/sys/module/zswap
 DBG=/sys/kernel/debug/zswap
@@ -267,26 +219,20 @@ Show(){
     printf "========\n$1\n========\n"
     grep -R . $2 2>&1 | sed "s|.*/||"
 }
-Show Settings $MDL
-Show Stats    $DBG
+Show "ZSWAP Settings" $MDL
+Show "ZSWAP Statistics" $DBG
 printf "\nCompression ratio: "
 [ $POOL -gt 0 ] && {
     echo "scale=3; $PAGE / $POOL" | bc
-} || echo zswap disabled'
+} || echo "ZSWAP disabled"'
 
     echo "$script_content" | sudo tee "$script_file" > /dev/null
     sudo chmod +x "$script_file"
+    check_error "No se pudo crear el script de monitoreo de ZSWAP."
 
-    echo "#####zswap information#######"
-    show_message "ZSWAP Settings"
-    cat /sys/module/zswap/parameters/*
-    show_message "ZSWAP Statistics"
-    cat /sys/kernel/debug/zswap/*
-    echo "#############################"
-
+    # Mostrar información de ZSWAP
+    show_message "Configuración de ZSWAP completada."
     sudo bash "$script_file"
-    echo "ZSWAP configuration completed successfully."
-    echo "Remember to restart your system to apply the changes."
 }
 
 # Función para configurar BTRFS
