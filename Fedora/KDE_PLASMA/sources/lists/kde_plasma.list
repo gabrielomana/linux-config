@@ -74,3 +74,5 @@ system-config-language
 plasma-systemmonitor
 kf5-runtime
 kf5-libs
+texlive-collection-fontsrecommended
+iwlwifi-mvm-firmware
