@@ -81,7 +81,7 @@ function configure-repositories {
     sudo dnf makecache --refresh
     sudo dnf update -y
     sudo dnf upgrade -y
-    sudo dnf -y groupupdate core
+    sudo dnf -y group upgrade core
 }
 
 # Función para instalar paquetes esenciales
@@ -363,44 +363,65 @@ function configure-zswap {
 function set-btrfs {
     # Verificar si la partición root está en Btrfs
     if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
+        echo "Configuración de BTRFS en curso..."
+
+        # Realizar una copia de seguridad del archivo /etc/fstab
         sudo cp /etc/fstab /etc/fstab_old
+
         # Obtener el UUID de la partición raíz
         ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
+
         # Obtener el UUID de la partición home
         HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
+
         # Modificar el archivo /etc/fstab para la partición raíz
         sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   rw,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
+
         # Modificar el archivo /etc/fstab para la partición home
         sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   rw,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
-        # Limpiar la pantalla
+
+        # Limpiar la pantalla y mostrar el contenido actualizado de fstab
         clear
         cat /etc/fstab
+
         # Desfragmentar el sistema de archivos Btrfs
+        echo "Desfragmentando el sistema de archivos BTRFS..."
         sudo btrfs filesystem defragment / -r -clzo
-        # Montar el dispositivo Btrfs
+
+        # Obtener la partición raíz montada
         root_partition=$(df -h / | awk 'NR==2 {print $1}')
         echo "La raíz está montada en la partición: $root_partition"
-        # Creamos el directorio /mnt si no existe
+
+        # Crear el directorio /mnt si no existe
         sudo mkdir -p /mnt
-        # Montamos la partición raíz en /mnt
+
+        # Montar la partición raíz en /mnt
         sudo mount $root_partition /mnt
+
         # Crear subvolúmenes adicionales
+        echo "Creando subvolúmenes..."
         sudo btrfs subvolume create /mnt/@log
         sudo btrfs subvolume create /mnt/@cache
         sudo btrfs subvolume create /mnt/@tmp
+
         # Mover los contenidos existentes de /var/cache y /var/log a los nuevos subvolúmenes
+        echo "Moviendo contenidos de /var/cache y /var/log..."
         sudo mv /var/cache/* /mnt/@cache/
         sudo mv /var/log/* /mnt/@log/
+
         # Balanceo para duplicar metadatos y sistema
         sudo btrfs balance start -m --force /mnt
+
         # Balanceo para configurar datos y reserva global como no duplicados
         sudo btrfs balance start -d -s --force /mnt
+
         # Verificar si el archivo fstab existe
         fstab="/etc/fstab"
         if [ -e "$fstab" ]; then
+            echo "Ajustando compresión en /etc/fstab con los nuevos subvolúmenes..."
             # Ajustar compresión en /etc/fstab con los nuevos subvolúmenes
             {
-                echo "# Adding New Subvolumes"
+                echo "# Añadiendo nuevos subvolúmenes"
                 echo "UUID=$ROOT_UUID /var/log btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@log 0 2"
                 echo "UUID=$ROOT_UUID /var/cache btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@cache 0 2"
                 echo "UUID=$ROOT_UUID /var/tmp btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@tmp 0 2"
@@ -408,57 +429,68 @@ function set-btrfs {
         else
             echo "El archivo $fstab no existe. Verifica la ruta del archivo."
         fi
+
         # Desmontar el dispositivo Btrfs
         sudo umount /mnt --force
 
         # Establecer permisos para /var/tmp, /var/cache y /var/log
+        echo "Estableciendo permisos en /var/tmp, /var/cache y /var/log..."
         sudo chmod 1777 /var/tmp/
         sudo chmod 1777 /var/cache/
         sudo chmod 1777 /var/log/
 
-        # Install Timeshift
-    sudo dnf install -y timeshift inotify-tools
+        # Instalar Timeshift y dependencias
+        echo "Instalando Timeshift..."
+        sudo dnf install -y timeshift inotify-tools
 
-    # Clone the grub-btrfs repository and compile and install
-    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
-    (
-        cd /git/grub-btrfs
-        sudo sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
-        sudo sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
-        sudo sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
-        sudo sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
-        sudo make install
-    )
+        # Clonar y configurar grub-btrfs
+        echo "Configurando grub-btrfs..."
+        sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
+        (
+            cd /git/grub-btrfs
+            sudo sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
+            sudo sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
+            sudo sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
+            sudo sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
+            sudo make install
+        )
 
-    # Modify the service file to add --timeshift-auto
-    SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
-    sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
+        # Modificar el archivo de servicio para añadir la opción --timeshift-auto
+        SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
+        sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
 
-    # Reload systemd configuration
-    sudo systemctl daemon-reload
+        # Recargar la configuración de systemd
+        echo "Recargando la configuración de systemd..."
+        sudo systemctl daemon-reload
 
-    # Rename the timeshift-gtk file in /usr/bin/
-    sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
+        # Renombrar el archivo timeshift-gtk y crear uno nuevo con el contenido adecuado
+        echo "Configurando Timeshift GTK..."
+        sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
+        echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
+        sudo chmod +x /usr/bin/timeshift-gtk
 
-    # Create a new timeshift-gtk file with the given content
-    echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
+        # Crear una instantánea inicial con Timeshift
+        echo "Creando instantánea inicial..."
+        sudo timeshift --create --comments "Initial Btrfs Snapshot"
 
-    # Grant execute permissions to the new file
-    sudo chmod +x /usr/bin/timeshift-gtk
+        # Detener y deshabilitar Timeshift
+        sudo systemctl stop timeshift && sudo systemctl disable timeshift
 
-    sudo timeshift --create --comments "initial"
+        # Hacer que el archivo grub-btrfsd tenga permisos de setuid
+        sudo chmod +s /usr/bin/grub-btrfsd
 
-    sudo systemctl stop timeshift && sudo systemctl disable timeshift
-    sudo chmod +s /usr/bin/grub-btrfsd
+        # Reiniciar el servicio de grub-btrfsd
+        echo "Reiniciando el servicio grub-btrfsd..."
+        sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+        sudo systemctl enable --now grub-btrfsd.service
 
-    # Restart the service
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-    sudo systemctl enable --now grub-btrfsd.service
+        echo "Configuración BTRFS completa."
 
     else
         echo "La partición root no está montada en un volumen BTRFS."
     fi
 }
+
 
 function security-fedora {
   # Snapshot
@@ -591,5 +623,5 @@ set-btrfs
 sudo fwupdmgr refresh --force -y
 sudo fwupdmgr get-updates -y
 sudo fwupdmgr update -y
-sudo dnf group update core -y --exclude=zram*
+sudo dnf group upgrade core -y --exclude=zram*
 sudo reboot
