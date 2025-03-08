@@ -237,88 +237,108 @@ printf "\nCompression ratio: "
 
 # Función para configurar BTRFS
 function set-btrfs {
-    if [[ $(df -T / | awk 'NR==2 {print $2}') == "btrfs" ]]; then
-        echo "Configuración de BTRFS en curso..."
-        sudo cp /etc/fstab /etc/fstab_old
+    echo "Configuración BTRFS y Timeshift en curso..."
 
-        ROOT_UUID=$(grep -E '/\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
-        HOME_UUID=$(grep -E '/home\s+btrfs\s+' "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p')
-
-        sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} /               btrfs   rw,noatime,space_cache=v2,compress=lzo,subvol=@ 0       1|" "/etc/fstab"
-        sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home           btrfs   rw,noatime,space_cache=v2,compress=lzo,subvol=@home 0       2|" "/etc/fstab"
-
-        clear
-        cat /etc/fstab
-
-        sudo btrfs filesystem defragment / -r -clzo
-        root_partition=$(df -h / | awk 'NR==2 {print $1}')
-        echo "La raíz está montada en la partición: $root_partition"
-
-        sudo mkdir -p /mnt
-        sudo mount $root_partition /mnt
-
-        sudo btrfs subvolume create /mnt/@log
-        sudo btrfs subvolume create /mnt/@cache
-        sudo btrfs subvolume create /mnt/@tmp
-
-        sudo mv /var/cache/* /mnt/@cache/
-        sudo mv /var/log/* /mnt/@log/
-
-        sudo btrfs balance start -m --force /mnt
-        sudo btrfs balance start -d -s --force /mnt
-
-        fstab="/etc/fstab"
-        if [ -e "$fstab" ]; then
-            {
-                echo "# Añadiendo nuevos subvolúmenes"
-                echo "UUID=$ROOT_UUID /var/log btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@log 0 2"
-                echo "UUID=$ROOT_UUID /var/cache btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@cache 0 2"
-                echo "UUID=$ROOT_UUID /var/tmp btrfs rw,noatime,space_cache=v2,compress=lzo,subvol=@tmp 0 2"
-            } | sudo tee -a "$fstab" > /dev/null
-        else
-            echo "El archivo $fstab no existe. Verifica la ruta del archivo."
-        fi
-
-        sudo umount /mnt --force
-
-        sudo chmod 1777 /var/tmp/
-        sudo chmod 1777 /var/cache/
-        sudo chmod 1777 /var/log/
-
-        sudo dnf install -y timeshift inotify-tools
-
-        sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
-        (
-            cd /git/grub-btrfs
-            sudo sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
-            sudo sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
-            sudo sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
-            sudo sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
-            sudo make install
-        )
-
-        SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
-        sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
-
-        sudo systemctl daemon-reload
-
-        sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
-        echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
-        sudo chmod +x /usr/bin/timeshift-gtk
-
-        sudo timeshift --create --comments "Initial Btrfs Snapshot"
-
-        sudo systemctl stop timeshift && sudo systemctl disable timeshift
-
-        sudo chmod +s /usr/bin/grub-btrfsd
-
-        sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-        sudo systemctl enable --now grub-btrfsd.service
-
-        echo "Configuración BTRFS completa."
-    else
-        echo "La partición root no está montada en un volumen BTRFS."
+    # Verificar si el sistema de archivos raíz es BTRFS
+    if [[ $(df -T / | awk 'NR==2 {print $2}') != "btrfs" ]]; then
+        echo "Error: La partición raíz no está montada en un volumen BTRFS."
+        exit 1
     fi
+
+    # Crear una copia de seguridad del archivo fstab
+    echo "Creando copia de seguridad de /etc/fstab..."
+    sudo cp /etc/fstab /etc/fstab.bak
+
+    # Obtener UUID de la partición raíz
+    ROOT_UUID=$(findmnt -n -o UUID /)
+    if [[ -z "$ROOT_UUID" ]]; then
+        echo "Error: No se pudo obtener el UUID de la partición raíz."
+        exit 1
+    fi
+
+    # Montar el subvolumen raíz en /mnt para realizar cambios
+    echo "Montando subvolumen raíz en /mnt..."
+    sudo mount -o subvolid=5 /dev/disk/by-uuid/$ROOT_UUID /mnt
+
+    # Crear subvolúmenes necesarios
+    echo "Creando subvolúmenes..."
+    sudo btrfs subvolume create /mnt/@log
+    sudo btrfs subvolume create /mnt/@cache
+    sudo btrfs subvolume create /mnt/@tmp
+    sudo btrfs subvolume create /mnt/@timeshift
+
+    # Mover datos a los nuevos subvolúmenes
+    echo "Moviendo datos a los nuevos subvolúmenes..."
+    sudo mv /var/log/* /mnt/@log/
+    sudo mv /var/cache/* /mnt/@cache/
+    sudo mv /var/tmp/* /mnt/@tmp/
+
+    # Desmontar el subvolumen raíz
+    echo "Desmontando subvolumen raíz..."
+    sudo umount /mnt
+
+    # Modificar /etc/fstab para incluir los nuevos subvolúmenes
+    echo "Actualizando /etc/fstab..."
+    sudo sed -i '/\/var\/log/d' /etc/fstab
+    sudo sed -i '/\/var\/cache/d' /etc/fstab
+    sudo sed -i '/\/var\/tmp/d' /etc/fstab
+
+    echo "UUID=$ROOT_UUID /               btrfs   rw,noatime,compress=lzo,subvol=@        0 0" | sudo tee -a /etc/fstab
+    echo "UUID=$ROOT_UUID /var/log        btrfs   rw,noatime,compress=lzo,subvol=@log     0 0" | sudo tee -a /etc/fstab
+    echo "UUID=$ROOT_UUID /var/cache      btrfs   rw,noatime,compress=lzo,subvol=@cache   0 0" | sudo tee -a /etc/fstab
+    echo "UUID=$ROOT_UUID /var/tmp        btrfs   rw,noatime,compress=lzo,subvol=@tmp     0 0" | sudo tee -a /etc/fstab
+    echo "UUID=$ROOT_UUID /.snapshots     btrfs   rw,noatime,compress=lzo,subvol=@timeshift 0 0" | sudo tee -a /etc/fstab
+
+    # Remontar todos los sistemas de archivos
+    echo "Aplicando cambios en /etc/fstab..."
+    sudo mount -a
+
+    # Verificar que los subvolúmenes estén montados correctamente
+    if ! findmnt /var/log || ! findmnt /var/cache || ! findmnt /var/tmp || ! findmnt /.snapshots; then
+        echo "Error: Algunos subvolúmenes no se montaron correctamente."
+        exit 1
+    fi
+
+    # Instalar Timeshift si no está instalado
+    if ! command -v timeshift &> /dev/null; then
+        echo "Instalando Timeshift..."
+        sudo dnf install -y timeshift
+    fi
+
+    # Configurar Timeshift para usar BTRFS
+    echo "Configurando Timeshift..."
+    sudo timeshift --btrfs --snapshot-device "$ROOT_UUID" --snapshot-dir /.snapshots
+
+    # Crear un snapshot inicial
+    echo "Creando snapshot inicial..."
+    sudo timeshift --create --comments "Snapshot inicial después de la configuración de BTRFS"
+
+    # Instalar grub-btrfs y configurar GRUB para detectar snapshots
+    echo "Instalando y configurando grub-btrfs..."
+    sudo dnf install -y grub-btrfs inotify-tools
+    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
+    (
+        cd /git/grub-btrfs
+        sudo sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
+        sudo sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
+        sudo sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
+        sudo sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
+        sudo make install
+    )
+
+    # Configurar el servicio grub-btrfsd para iniciar automáticamente
+    echo "Habilitando servicio grub-btrfsd..."
+    sudo chmod +s /usr/bin/grub-btrfsd
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    sudo systemctl enable --now grub-btrfsd.service
+
+    # Crear un acceso directo para Timeshift
+    echo "Creando acceso directo para Timeshift..."
+    sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
+    echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
+    sudo chmod +x /usr/bin/timeshift-gtk
+
+    echo "Configuración BTRFS y Timeshift completada con éxito."
 }
 
 # Función para configurar la seguridad en Fedora
@@ -356,7 +376,6 @@ function security-fedora {
     done
 
     sudo firewall-cmd --reload
-
     sudo firewall-cmd --add-interface=lo --zone=FedoraWorkstation --permanent
     sudo firewall-cmd --zone=FedoraWorkstation --add-service=http --permanent
     sudo firewall-cmd --zone=FedoraWorkstation --add-service=ping --permanent
