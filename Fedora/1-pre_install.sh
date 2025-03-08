@@ -86,8 +86,32 @@ function configure-repositories {
 
 # Función para instalar paquetes esenciales
 function install-essential-packages {
-    sudo dnf install @development-tools git -y
-    sudo dnf -y install util-linux-user dnf-plugins-core openssl finger dos2unix nano sed sudo numlockx wget curl git nodejs cargo hunspell-es curl cmake gcc-c++ cabextract xorg-x11-font-utils fontconfig btrfs* lzo*
+    sudo dnf install -y --skip-broken --skip-unavailable @development-tools git
+    sudo dnf install -y --skip-broken --skip-unavailable \
+  util-linux-user \
+  dnf-plugins-core \
+  openssl \
+  finger \
+  dos2unix \
+  nano \
+  sed \
+  sudo \
+  numlockx \
+  wget \
+  curl \
+  git \
+  nodejs \
+  cargo \
+  hunspell-es \
+  cmake \
+  gcc-c++ \
+  cabextract \
+  xorg-x11-font-utils \
+  fontconfig \
+  btrfs* \
+  lzo \
+  timeshift
+
 }
 
 # Función para configurar repositorios Flatpak
@@ -493,73 +517,83 @@ function set-btrfs {
 
 
 function security-fedora {
-  # Snapshot
-  sudo timeshift --create --comments "pre-security"
+  # Crear un snapshot con Timeshift antes de realizar cambios
+  sudo timeshift --create --comments "pre-security-update" --tags D
 
-  # Instalar resolvconf, firewalld y firewall-config
-  sudo dnf install resolvconf firewalld firewall-config -y
-  sudo systemctl enable firewalld
+  # Actualizar el sistema para garantizar que todos los paquetes estén al día
+  sudo dnf update -y
 
-  # Configuración del firewall y SELinux
-  sudo dnf install -y selinux-policy selinux-policy-targeted policycoreutils policycoreutils-python-utils setools
-  sudo sed -i 's/SELINUX=.*/SELINUX=enforcing/g' /etc/selinux/config
+  # Instalar paquetes necesarios
+  sudo dnf install -y \
+    resolvconf \
+    firewalld \
+    firewall-config \
+    selinux-policy \
+    selinux-policy-targeted \
+    policycoreutils \
+    policycoreutils-python-utils \
+    setools \
+    npm
 
-  # Establecer la zona por defecto en FedoraWorkstation
+  # Habilitar y arrancar firewalld
+  sudo systemctl enable --now firewalld
+
+  # Configuración de SELinux: Asegurar que SELinux esté en modo 'Enforcing'
+  sudo sed -i 's/SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+
+  # Establecer la zona por defecto en FedoraWorkstation y reiniciar el firewall
   sudo firewall-cmd --set-default-zone=FedoraWorkstation
-
-  # Limpia todas las reglas existentes
   sudo firewall-cmd --complete-reload
+
+  # Eliminar reglas anteriores del firewall
   sudo firewall-cmd --zone=FedoraWorkstation --remove-port=1-65535/tcp --permanent
   sudo firewall-cmd --zone=FedoraWorkstation --remove-port=1-65535/udp --permanent
 
-  # Obtener los puertos habilitados en la zona FedoraWorkstation
-    enabled_ports=$(sudo firewall-cmd --zone=FedoraWorkstation --list-ports)
+  # Obtener y almacenar puertos habilitados
+  enabled_ports=$(sudo firewall-cmd --zone=FedoraWorkstation --list-ports)
+  read -r -a ports_array <<< "$enabled_ports"
 
-  # Guardar los puertos habilitados en un array
-    read -r -a ports_array <<< "$enabled_ports"
+  # Eliminar puertos habilitados uno a uno
+  for port in "${ports_array[@]}"; do
+    sudo firewall-cmd --zone=FedoraWorkstation --remove-port="$port" --permanent
+  done
 
-  # Bucle para eliminar los puertos habilitados uno por uno
-    for port in "${ports_array[@]}"; do
-        sudo firewall-cmd --zone=FedoraWorkstation --remove-port="$port" --permanent
-    done
-
+  # Recargar la configuración del firewall
   sudo firewall-cmd --reload
-  sudo firewall-cmd --complete-reload
 
-  # Permitir tráfico de loopback
+  # Permitir tráfico de loopback (localhost)
   sudo firewall-cmd --add-interface=lo --zone=FedoraWorkstation --permanent
 
-  # Permitir tráfico ya establecido y relacionado
+  # Permitir tráfico relacionado y ya establecido
   sudo firewall-cmd --zone=FedoraWorkstation --add-service=http --permanent
 
-  # Permitir ping (ICMP)
-  sudo firewall-cmd --add-icmp-block-inversion --zone=FedoraWorkstation --permanent
-  sudo firewall-cmd --add-service=ping --zone=FedoraWorkstation --permanent
+  # Permitir ICMP (ping) para diagnóstico de red
+  sudo firewall-cmd --zone=FedoraWorkstation --add-service=ping --permanent
 
   # Permitir tráfico DNS (UDP)
-  sudo firewall-cmd --add-service=dns --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --zone=FedoraWorkstation --add-service=dns --permanent
 
-  # Permitir traceroute (UDP)
-  sudo firewall-cmd --add-port=33434-33523/udp --zone=FedoraWorkstation --permanent
+  # Permitir tráfico de traceroute (UDP)
+  sudo firewall-cmd --zone=FedoraWorkstation --add-port=33434-33523/udp --permanent
 
-  # Puertos y servicios específicos
+  # Definir servicios comunes a permitir
   declare -a services=(
     "http"          # Puerto 80/tcp
     "https"         # Puerto 443/tcp
     "ssh"           # Puerto 22/tcp
-    "samba"         # Puerto 137-138/udp, 139/tcp, 445/tcp
+    "samba"         # Puertos 137-138/udp, 139/tcp, 445/tcp
     "ftp"           # Puerto 21/tcp
     "sftp"          # Puerto 22/tcp
-    "http"          # Puerto 80/tcp
     "dnsmasq"       # Puerto 5353/udp
     "dhcpv6-client" # Puerto 546/udp
-    "pop3"          # Puerto 110/tcp (ejemplo: para correos)
-    "pop3s"         # Puerto 995/tcp (ejemplo: para correos seguros)
-    "imap"          # Puerto 143/tcp (ejemplo: para correos)
-    "imaps"         # Puerto 993/tcp (ejemplo: para correos seguros)
-    "kde-connect"   # Puertos 1714 y 1715 (ejemplo: para KDE Connect)
+    "pop3"          # Puerto 110/tcp
+    "pop3s"         # Puerto 995/tcp
+    "imap"          # Puerto 143/tcp
+    "imaps"         # Puerto 993/tcp
+    "kde-connect"   # Puertos 1714 y 1715
   )
 
+  # Definir puertos adicionales
   declare -a ports=(
     "1194/udp"      # OpenVPN
     "137-138/udp"   # NetBIOS
@@ -569,45 +603,41 @@ function security-fedora {
     "1900/udp"      # UPnP
     "8080/tcp"      # HTTP alternativo
     "3389/tcp"      # RDP
-    "6881-6891/tcp" # Puertos típicos para BitTorrent
+    "6881-6891/tcp" # BitTorrent
     "22/tcp"        # SSH
-    "62062-62072/tcp" # Steam In-Home Streaming
+    "62062-62072/tcp" # Steam
     "8621/udp"      # BitTorrent DHT
   )
 
-  # Agregar reglas para tráfico entrante y saliente
+  # Agregar servicios al firewall
   for service in "${services[@]}"; do
     sudo firewall-cmd --add-service="$service" --zone=FedoraWorkstation --permanent
   done
 
+  # Agregar puertos al firewall
   for port in "${ports[@]}"; do
     sudo firewall-cmd --add-port="$port" --zone=FedoraWorkstation --permanent
   done
 
-  # Permitir traceroute (UDP) también para tráfico saliente
-  sudo firewall-cmd --add-port=33434-33523/udp --zone=FedoraWorkstation --permanent
+  # Recargar la configuración final del firewall
+  sudo firewall-cmd --reload
 
-  # Permitir tráfico saliente del puerto de control FTP (puerto 21)
-  sudo firewall-cmd --add-port=21/tcp --zone=FedoraWorkstation --permanent
-
-  # Permitir tráfico de datos FTP (puertos pasivos, ajusta según tu configuración)
-  sudo firewall-cmd --add-port=30000-31000/tcp --zone=FedoraWorkstation --permanent
-
-  # Configuración de SELinux (configurado para modo enforcing)
+  # Configuración de SELinux para firewalld (permisiva)
   sudo semanage permissive -a firewalld_t
 
-  # Configurar servidores DNS de AdGuard, Cloudflare y Google en resolved.conf.d
+  # Configurar DNS seguro usando AdGuard, Cloudflare, y Google
   sudo mkdir -p '/etc/systemd/resolved.conf.d'
-  echo "DNS=94.140.14.14" | sudo tee /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "DNS=94.140.15.15" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "DNS=1.1.1.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "DNS=1.0.0.1" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "DNS=8.8.8.8" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
-  echo "DNS=8.8.4.4" | sudo tee -a /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
+  echo -e "DNS=94.140.14.14\nDNS=94.140.15.15\nDNS=1.1.1.1\nDNS=1.0.0.1\nDNS=8.8.8.8\nDNS=8.8.4.4" \
+    | sudo tee /etc/systemd/resolved.conf.d/99-dns-over-tls.conf
 
-  # Instalar y ejecutar hblock
+  # Reiniciar el servicio de systemd-resolved para aplicar la nueva configuración de DNS
+  sudo systemctl restart systemd-resolved
+
+  # Instalar y ejecutar hblock para bloquear publicidad
   sudo npm install -g hblock
   hblock
+
+  echo "Configuración de seguridad completada en Fedora 41."
 }
 
 configure-dnf
