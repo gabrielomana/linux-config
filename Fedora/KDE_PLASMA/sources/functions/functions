@@ -31,7 +31,7 @@ function check_installed() {
  # Parámetros y archivo de salida
     list_file="$1"
 
-    # Verificar si el archivo de lista existe
+    ## Verificar si el archivo de lista existe
     if [ ! -f "$list_file" ]; then
         echo "El archivo de lista '$list_file' no existe."
         return
