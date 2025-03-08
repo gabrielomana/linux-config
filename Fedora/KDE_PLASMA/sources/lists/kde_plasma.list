@@ -2,7 +2,6 @@ NetworkManager-config-connectivity-fedora
 adwaita-gtk2-theme
 bluedevil
 breeze-icon-theme
-cagibi
 colord-kde
 cups-pk-helper
 dolphin
@@ -14,11 +13,9 @@ kde-gtk-config
 kde-partitionmanager
 kde-platform-plugin
 kde-print-manager
-kde-runtime
 kde-settings-pulseaudio
 kde-style-breeze
 kdegraphics-thumbnailers
-kdelibs
 kdeplasma-addons
 kdialog
 kdnssd
@@ -35,9 +32,7 @@ konsole5
 kscreen
 kscreenlocker
 ksshaskpass
-ksysguard
 kwalletmanager5
-kwebkitpart
 kwin
 kcalc
 konqueror
@@ -70,10 +65,12 @@ sddm-kcm
 sni-qt
 xorg-x11-drv-libinput
 setroubleshoot
-system-config*
 system-config-language
 @"Hardware Support"
 @base-x
 @Fonts
 @"Printing Support"
 @"Common NetworkManager Submodules"
+plasma-systemmonitor
+kf5-runtime
+kf5-libs

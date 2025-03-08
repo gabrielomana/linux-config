@@ -45,9 +45,9 @@ function check_installed() {
     done < "$list_file"
 
    # Instalar grupos y paquetes si hay elementos en los arreglos
-    c="sudo dnf install -y --skip-broken ${packages[@]}"
+    c="sudo dnf install -y --skip-broken --skip-if-unavailable ${packages[@]}"
       echo $c
-      sleep 3
+      sleep 10
       eval $c
 }
 
