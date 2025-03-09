@@ -237,8 +237,8 @@ printf "\nCompression ratio: "
 
 # Función para configurar BTRFS
 function set-btrfs {
-
     echo "Configuración BTRFS y Timeshift en curso..."
+    sudo mkdir -p /.snapshot
 
     # Verificar si el sistema de archivos raíz es BTRFS
     if [[ $(df -T / | awk 'NR==2 {print $2}') != "btrfs" ]]; then
@@ -259,7 +259,8 @@ function set-btrfs {
 
     # Montar el subvolumen raíz en /mnt para realizar cambios
     echo "Montando subvolumen raíz en /mnt..."
-    sudo mount -o subvol=@ /dev/disk/by-uuid/$ROOT_UUID /mnt
+    sudo btrfs subvolume create /mnt/@
+    sudo mount -o subvolid=5 /dev/disk/by-uuid/$ROOT_UUID /mnt/@
 
     # Crear subvolúmenes necesarios
     echo "Creando subvolúmenes..."
@@ -274,9 +275,31 @@ function set-btrfs {
     sudo mv /var/cache/* /mnt/@cache/
     sudo mv /var/tmp/* /mnt/@tmp/
 
+    # Desmontar subvolúmenes temporalmente para crear snapshots
+    echo "Desmontando subvolúmenes..."
+    sudo umount /mnt/@
+    sudo umount /mnt/@log
+    sudo umount /mnt/@cache
+    sudo umount /mnt/@tmp
+    sudo umount /mnt/@timeshift
+
+    # Crear snapshots de los subvolúmenes
+    sudo btrfs subvolume snapshot /mnt/@ /@
+    sudo btrfs subvolume snapshot /mnt/@log /@log
+    sudo btrfs subvolume snapshot /mnt/@cache /@cache
+    sudo btrfs subvolume snapshot /mnt/@tmp /@tmp
+    sudo btrfs subvolume snapshot /mnt/@timeshift /.snapshot
+
+    # Montar los subvolúmenes en sus ubicaciones
+    sudo mount -o subvol=@log UUID=$ROOT_UUID /var/log
+    sudo mount -o subvol=@cache UUID=$ROOT_UUID /var/cache
+    sudo mount -o subvol=@tmp UUID=$ROOT_UUID /var/tmp
+    sudo mount -o subvol=@timeshift UUID=$ROOT_UUID /.snapshots
+
     # Desmontar el subvolumen raíz
     echo "Desmontando subvolumen raíz..."
-    sudo umount /mnt
+    sudo systemctl daemon-reload
+    sudo mount -a
 
     # Modificar /etc/fstab para incluir los nuevos subvolúmenes
     echo "Actualizando /etc/fstab..."
@@ -285,12 +308,21 @@ function set-btrfs {
     sudo sed -i '/\/var\/tmp/d' /etc/fstab
     sudo sed -i '/\s\/\s/d' /etc/fstab
 
+    # Guardar todas las líneas que contienen UUIDs
+    BOOT_LINE=$(grep -E 'UUID=[^ ]+' /etc/fstab)
+
+    # Eliminar esas líneas del archivo original
+    sudo sed -i '/UUID=[^ ]*/d' /etc/fstab
+
     # Asegúrate de que la raíz esté montada con el subvolumen correcto
     echo "UUID=$ROOT_UUID /               btrfs   rw,noatime,compress=lzo,subvol=@        0 0" | sudo tee -a /etc/fstab
     echo "UUID=$ROOT_UUID /var/log        btrfs   rw,noatime,compress=lzo,subvol=@log     0 0" | sudo tee -a /etc/fstab
     echo "UUID=$ROOT_UUID /var/cache      btrfs   rw,noatime,compress=lzo,subvol=@cache   0 0" | sudo tee -a /etc/fstab
     echo "UUID=$ROOT_UUID /var/tmp        btrfs   rw,noatime,compress=lzo,subvol=@tmp     0 0" | sudo tee -a /etc/fstab
     echo "UUID=$ROOT_UUID /.snapshots     btrfs   rw,noatime,compress=lzo,subvol=@timeshift 0 0" | sudo tee -a /etc/fstab
+
+    # Agregar todas las líneas de UUID al final del archivo
+    echo "$BOOT_LINE" | sudo tee -a /etc/fstab
 
     # Remontar todos los sistemas de archivos
     echo "Aplicando cambios en /etc/fstab..."
