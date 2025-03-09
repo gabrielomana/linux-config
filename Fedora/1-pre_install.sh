@@ -340,7 +340,7 @@ function set-btrfs {
 
     echo "Configuración BTRFS y Timeshift completada con éxito."
 }
-
+#
 # Función para configurar la seguridad en Fedora
 function security-fedora {
     sudo timeshift --create --comments "pre-security-update" --tags D
