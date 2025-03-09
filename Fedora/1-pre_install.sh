@@ -237,6 +237,7 @@ printf "\nCompression ratio: "
 
 # Función para configurar BTRFS
 function set-btrfs {
+
     echo "Configuración BTRFS y Timeshift en curso..."
 
     # Verificar si el sistema de archivos raíz es BTRFS
@@ -258,7 +259,7 @@ function set-btrfs {
 
     # Montar el subvolumen raíz en /mnt para realizar cambios
     echo "Montando subvolumen raíz en /mnt..."
-    sudo mount -o subvolid=5 /dev/disk/by-uuid/$ROOT_UUID /mnt
+    sudo mount -o subvol=@ /dev/disk/by-uuid/$ROOT_UUID /mnt
 
     # Crear subvolúmenes necesarios
     echo "Creando subvolúmenes..."
@@ -282,7 +283,9 @@ function set-btrfs {
     sudo sed -i '/\/var\/log/d' /etc/fstab
     sudo sed -i '/\/var\/cache/d' /etc/fstab
     sudo sed -i '/\/var\/tmp/d' /etc/fstab
+    sudo sed -i '/\s\/\s/d' /etc/fstab
 
+    # Asegúrate de que la raíz esté montada con el subvolumen correcto
     echo "UUID=$ROOT_UUID /               btrfs   rw,noatime,compress=lzo,subvol=@        0 0" | sudo tee -a /etc/fstab
     echo "UUID=$ROOT_UUID /var/log        btrfs   rw,noatime,compress=lzo,subvol=@log     0 0" | sudo tee -a /etc/fstab
     echo "UUID=$ROOT_UUID /var/cache      btrfs   rw,noatime,compress=lzo,subvol=@cache   0 0" | sudo tee -a /etc/fstab
@@ -294,7 +297,11 @@ function set-btrfs {
     sudo mount -a
 
     # Verificar que los subvolúmenes estén montados correctamente
-    if ! findmnt /var/log || ! findmnt /var/cache || ! findmnt /var/tmp || ! findmnt /.snapshots; then
+    if ! findmnt / || ! findmnt /var/log || ! findmnt /var/cache || ! findmnt /var/tmp || \
+    ! findmnt / -o TARGET,SOURCE,FSTYPE,OPTIONS | grep -q "subvol=@" || \
+    ! findmnt /var/log -o TARGET,SOURCE,FSTYPE,OPTIONS | grep -q "subvol=@log" || \
+    ! findmnt /var/cache -o TARGET,SOURCE,FSTYPE,OPTIONS | grep -q "subvol=@cache" || \
+    ! findmnt /var/tmp -o TARGET,SOURCE,FSTYPE,OPTIONS | grep -q "subvol=@tmp"; then
         echo "Error: Algunos subvolúmenes no se montaron correctamente."
         exit 1
     fi
