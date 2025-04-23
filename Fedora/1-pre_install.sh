@@ -242,7 +242,6 @@ function set-btrfs() {
     ## Subvolúmenes esperados
     declare -A SUBVOLS=(
         ["/"]="@"
-        ["/home"]="@home"
         ["/var"]="@var"
         ["$SNAPSHOT_DIR"]="@snapshots"
     )
@@ -325,8 +324,8 @@ fi
 echo "🟢 Activando grub-btrfsd..."
 sudo systemctl enable --now grub-btrfsd.service
 
-# Regenerar GRUB correctamente
-echo "🔄 Regenerando GRUB..."
+# Regenerar GRUB correctamente para Fedora en UEFI
+echo "🔄 Regenerando GRUB en /boot/grub2/grub.cfg..."
 sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
 echo "✅ Instalación completada correctamente."
