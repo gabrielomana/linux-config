@@ -236,149 +236,111 @@ printf "\nCompression ratio: "
 }
 
 # Función para configurar BTRFS
-function set-btrfs {
-    echo "Configuración BTRFS y Timeshift en curso..."
-    sudo mkdir -p /.snapshot
+function set-btrfsfunction set-btrfs() {
+    set -euo pipefail
 
-    # Verificar si el sistema de archivos raíz es BTRFS
-    if [[ $(df -T / | awk 'NR==2 {print $2}') != "btrfs" ]]; then
-        echo "Error: La partición raíz no está montada en un volumen BTRFS."
-        exit 1
-    fi
+    echo "▶️ Post-instalación Fedora 42: Subvolúmenes BTRFS + Timeshift + grub-btrfs"
 
-    # Crear una copia de seguridad del archivo fstab
-    echo "Creando copia de seguridad de /etc/fstab..."
-    sudo cp /etc/fstab /etc/fstab.bak
+    ## Variables generales
+    local MOUNT_OPTIONS="defaults,noatime,space_cache=v2,compress=lzo"
+    local BTRFS_ROOT_DEV
+    BTRFS_ROOT_DEV="$(findmnt -nRo SOURCE /)"
+    local UUID
+    UUID="$(findmnt -no UUID /)"
+    local SNAPSHOT_DIR="/.snapshots"
+    local FSTAB_FILE="/etc/fstab"
 
-    # Obtener UUID de la partición raíz
-    ROOT_UUID=$(findmnt -n -o UUID /)
-    if [[ -z "$ROOT_UUID" ]]; then
-        echo "Error: No se pudo obtener el UUID de la partición raíz."
-        exit 1
-    fi
+    ## Subvolúmenes esperados
+    declare -A SUBVOLS=(
+        ["/"]="@"
+        ["/home"]="@home"
+        ["/var"]="@var"
+        ["$SNAPSHOT_DIR"]="@snapshots"
+    )
 
-    # Montar el subvolumen raíz en /mnt para realizar cambios
-    echo "Montando subvolumen raíz en /mnt..."
-    sudo btrfs subvolume create /mnt/@
-    sudo mount -o subvolid=5 /dev/disk/by-uuid/$ROOT_UUID /mnt/@
-
-    # Crear subvolúmenes necesarios
-    echo "Creando subvolúmenes..."
-    sudo btrfs subvolume create /mnt/@log
-    sudo btrfs subvolume create /mnt/@cache
-    sudo btrfs subvolume create /mnt/@tmp
-    sudo btrfs subvolume create /mnt/@timeshift
-
-    # Mover datos a los nuevos subvolúmenes
-    echo "Moviendo datos a los nuevos subvolúmenes..."
-    sudo mv /var/log/* /mnt/@log/
-    sudo mv /var/cache/* /mnt/@cache/
-    sudo mv /var/tmp/* /mnt/@tmp/
-
-    # Desmontar subvolúmenes temporalmente para crear snapshots
-    echo "Desmontando subvolúmenes..."
-    sudo umount /mnt/@
-    sudo umount /mnt/@log
-    sudo umount /mnt/@cache
-    sudo umount /mnt/@tmp
-    sudo umount /mnt/@timeshift
-
-    # Crear snapshots de los subvolúmenes
-    sudo btrfs subvolume snapshot /mnt/@ /@
-    sudo btrfs subvolume snapshot /mnt/@log /@log
-    sudo btrfs subvolume snapshot /mnt/@cache /@cache
-    sudo btrfs subvolume snapshot /mnt/@tmp /@tmp
-    sudo btrfs subvolume snapshot /mnt/@timeshift /.snapshot
-
-    # Montar los subvolúmenes en sus ubicaciones
-    sudo mount -o subvol=@log UUID=$ROOT_UUID /var/log
-    sudo mount -o subvol=@cache UUID=$ROOT_UUID /var/cache
-    sudo mount -o subvol=@tmp UUID=$ROOT_UUID /var/tmp
-    sudo mount -o subvol=@timeshift UUID=$ROOT_UUID /.snapshots
-
-    # Desmontar el subvolumen raíz
-    echo "Desmontando subvolumen raíz..."
-    sudo systemctl daemon-reload
-    sudo mount -a
-
-    # Modificar /etc/fstab para incluir los nuevos subvolúmenes
-    echo "Actualizando /etc/fstab..."
-    sudo sed -i '/\/var\/log/d' /etc/fstab
-    sudo sed -i '/\/var\/cache/d' /etc/fstab
-    sudo sed -i '/\/var\/tmp/d' /etc/fstab
-    sudo sed -i '/\s\/\s/d' /etc/fstab
-
-    # Guardar todas las líneas que contienen UUIDs
-    BOOT_LINE=$(grep -E 'UUID=[^ ]+' /etc/fstab)
-
-    # Eliminar esas líneas del archivo original
-    sudo sed -i '/UUID=[^ ]*/d' /etc/fstab
-
-    # Asegúrate de que la raíz esté montada con el subvolumen correcto
-    echo "UUID=$ROOT_UUID /               btrfs   rw,noatime,compress=lzo,subvol=@        0 0" | sudo tee -a /etc/fstab
-    echo "UUID=$ROOT_UUID /var/log        btrfs   rw,noatime,compress=lzo,subvol=@log     0 0" | sudo tee -a /etc/fstab
-    echo "UUID=$ROOT_UUID /var/cache      btrfs   rw,noatime,compress=lzo,subvol=@cache   0 0" | sudo tee -a /etc/fstab
-    echo "UUID=$ROOT_UUID /var/tmp        btrfs   rw,noatime,compress=lzo,subvol=@tmp     0 0" | sudo tee -a /etc/fstab
-    echo "UUID=$ROOT_UUID /.snapshots     btrfs   rw,noatime,compress=lzo,subvol=@timeshift 0 0" | sudo tee -a /etc/fstab
-
-    # Agregar todas las líneas de UUID al final del archivo
-    echo "$BOOT_LINE" | sudo tee -a /etc/fstab
-
-    # Remontar todos los sistemas de archivos
-    echo "Aplicando cambios en /etc/fstab..."
-    sudo mount -a
-
-    # Verificar que los subvolúmenes estén montados correctamente
-    if ! findmnt / || ! findmnt /var/log || ! findmnt /var/cache || ! findmnt /var/tmp || \
-    ! findmnt / -o TARGET,SOURCE,FSTYPE,OPTIONS | grep -q "subvol=@" || \
-    ! findmnt /var/log -o TARGET,SOURCE,FSTYPE,OPTIONS | grep -q "subvol=@log" || \
-    ! findmnt /var/cache -o TARGET,SOURCE,FSTYPE,OPTIONS | grep -q "subvol=@cache" || \
-    ! findmnt /var/tmp -o TARGET,SOURCE,FSTYPE,OPTIONS | grep -q "subvol=@tmp"; then
-        echo "Error: Algunos subvolúmenes no se montaron correctamente."
-        exit 1
+    ## --- PASO 1: Instalación de herramientas necesarias --- 
+    echo "🛠️ Instalando herramientas necesarias..."
+    
+    # Instalar btrfs-progs si no está instalado
+    if ! command -v btrfs &> /dev/null; then
+        echo "🛠️ Instalando btrfs-progs..."
+        sudo dnf install -y btrfs-progs
     fi
 
     # Instalar Timeshift si no está instalado
     if ! command -v timeshift &> /dev/null; then
-        echo "Instalando Timeshift..."
+        echo "🧩 Instalando Timeshift..."
         sudo dnf install -y timeshift
     fi
 
-    # Configurar Timeshift para usar BTRFS
-    echo "Configurando Timeshift..."
-    sudo timeshift --btrfs --snapshot-device "$ROOT_UUID" --snapshot-dir /.snapshots
-
-    # Crear un snapshot inicial
-    echo "Creando snapshot inicial..."
-    sudo timeshift --create --comments "Snapshot inicial después de la configuración de BTRFS"
-
-    # Instalar grub-btrfs y configurar GRUB para detectar snapshots
-    echo "Instalando y configurando grub-btrfs..."
+    # Instalar grub-btrfs y otras dependencias
+    echo "🔧 Instalando grub-btrfs y configurando GRUB..."
     sudo dnf install -y grub-btrfs inotify-tools
-    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/
-    (
-        cd /git/grub-btrfs
-        sudo sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
-        sudo sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
-        sudo sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
-        sudo sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
-        sudo make install
-    )
+    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/ || true
 
-    # Configurar el servicio grub-btrfsd para iniciar automáticamente
-    echo "Habilitando servicio grub-btrfsd..."
+    ## --- PASO 2: Validación y configuración de fstab ---
+    echo "🧾 Verificando sistema de archivos y reconfigurando fstab..."
+
+    local FS_TYPE
+    FS_TYPE=$(df -T / | awk 'NR==2 {print $2}')
+    if [[ "$FS_TYPE" != "btrfs" ]]; then
+        echo "❌ Error: El sistema raíz no está en BTRFS. Abortando."
+        return 1
+    fi
+
+    sudo cp -n "$FSTAB_FILE" "${FSTAB_FILE}.bak"
+    sudo sed -i '/btrfs/d' "$FSTAB_FILE"
+
+    for MOUNTPOINT in "${!SUBVOLS[@]}"; do
+        local SUBVOL="${SUBVOLS[$MOUNTPOINT]}"
+        echo "➕ Añadiendo $MOUNTPOINT -> subvol=$SUBVOL"
+        echo "UUID=$UUID $MOUNTPOINT btrfs subvol=$SUBVOL,$MOUNT_OPTIONS 0 0" | sudo tee -a "$FSTAB_FILE" > /dev/null
+    done
+
+    ## --- PASO 3: Aplicar compresión LZO ---
+    echo "🌀 Aplicando compresión LZO a subvolúmenes..."
+    for SUBVOL_PATH in "${SUBVOLS[@]}"; do
+        local DIR="/mnt/tmp$SUBVOL_PATH"
+        sudo mkdir -p "$DIR"
+        sudo mount -o subvol="$SUBVOL_PATH",$MOUNT_OPTIONS "$BTRFS_ROOT_DEV" "$DIR"
+        sudo btrfs filesystem defragment -r -clzo "$DIR" || echo "⚠️ Defragmentación fallida o innecesaria en $DIR"
+        sudo umount "$DIR"
+        sudo rmdir "$DIR"
+    done
+
+    ## --- PASO 4: Configuración de Timeshift ---
+    echo "🧩 Configurando Timeshift..."
+    [[ -d "$SNAPSHOT_DIR" ]] || sudo mkdir -p "$SNAPSHOT_DIR"
+
+    sudo timeshift --btrfs --snapshot-device "$BTRFS_ROOT_DEV" --snapshot-dir "$SNAPSHOT_DIR"
+    sudo timeshift --create --comments "Snapshot inicial tras postinstalación BTRFS"
+
+    ## --- PASO 5: Configuración de grub-btrfs ---
+    echo "🔧 Configurando GRUB con grub-btrfs..."
+
+    cd /git/grub-btrfs
+    sudo sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
+    sudo sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
+    sudo sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
+    sudo sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
+    sudo make install
+
     sudo chmod +s /usr/bin/grub-btrfsd
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
     sudo systemctl enable --now grub-btrfsd.service
 
-    # Crear un acceso directo para Timeshift
-    echo "Creando acceso directo para Timeshift..."
-    sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
-    echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
-    sudo chmod +x /usr/bin/timeshift-gtk
+    ## --- PASO 6: Timeshift gráfico seguro ---
+    echo "🔒 Habilitando acceso seguro a Timeshift (pkexec)..."
+    if [[ -f /usr/bin/timeshift-gtk ]]; then
+        sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back || true
+        echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
+        sudo chmod +x /usr/bin/timeshift-gtk
+    fi
 
-    echo "Configuración BTRFS y Timeshift completada con éxito."
+    ## --- Finalización ---
+    echo "✅ Post-instalación finalizada correctamente. Sistema listo para snapshots con GRUB y compresión optimizada."
 }
+
 #
 # Función para configurar la seguridad en Fedora
 function security-fedora {
@@ -484,8 +446,8 @@ configure-repositories
 configure-flatpak-repositories
 install-essential-packages
 configure-zswap
-security-fedora
-set-btrfs
+#security-fedora
+#set-btrfs
 
 sudo fwupdmgr refresh --force -y
 sudo fwupdmgr get-updates -y
