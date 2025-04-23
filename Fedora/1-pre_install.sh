@@ -575,6 +575,8 @@ GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
 GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
 GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
+GRUB_BTRFS_SNAPSHOT_FORMAT="%Y-%m-%d %H:%M | %c
+GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rootflags=subvol=@ quiet"
 EOF
 
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
@@ -585,7 +587,8 @@ EOF
 
     show_message "INFO" "Configurando monitorización systemd para snapshots Timeshift..."
     mkdir -p /etc/systemd/system/grub-btrfs.path.d || error "No se pudo crear directorio para overrides."
-    cat > /etc/systemd/system/grub-btrfs@.path <<'EOF'
+    sudo tee /etc/systemd/system/grub-btrfs.path > /dev/null <<'EOF'
+
 [Unit]
 Description=Monitors Timeshift snapshots in /run/timeshift/%i/backup
 DefaultDependencies=no
@@ -598,9 +601,17 @@ PathModified=/run/timeshift/%i/backup/timeshift-btrfs/snapshots
 WantedBy=run-timeshift-%i.mount
 EOF
 
+    sudo systemctl daemon-reexec
+    sudo systemctl daemon-reload
+
     # Habilitar para todas las instancias posibles
-    systemctl enable grub-btrfs@*.path || error "Fallo al habilitar el servicio path"
-    systemctl start grub-btrfs@*.path || error "Fallo al iniciar el servicio path"
+    systemctl enable --now grub-btrfs@*.path || error "Fallo al iniciar el servicio path"
+    systemctl enable --now grub-btrfs.path || error "Fallo al iniciar el servicio path"
+    systemctl start --now grub-btrfs.path || error "Fallo al habilitar el servicio path"
+
+    systemctl enable --now grub-btrfsd@*.service || error "Fallo al habilitar grub-btrfsd.service"
+    systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
+    systemctl start --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
     
     show_message "SUCCESS" "Systemd configurado para rutas dinámicas: /run/timeshift/*/backup"
 
