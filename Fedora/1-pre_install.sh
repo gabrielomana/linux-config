@@ -517,121 +517,120 @@ configure_btrfs() {
     sudo dnf install -y --skip-unavailable --skip-broken btrfs-progs timeshift inotify-tools &>/dev/null
 
     show_message "INFO" "Configurando subvolúmenes en fstab..."
-            get_uuid() {
-            local mount_point=$1
-            grep -E "${mount_point}\s+btrfs\s+" "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p'
-        }
+    
+    # Función para obtener UUID de una partición dada
+    get_uuid() {
+        local mount_point=$1
+        grep -E "${mount_point}\s+btrfs\s+" "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p'
+    }
 
-        # Inicializamos un archivo de salida nuevo
-        output_file="/etc/fstab.new"
+    # Inicializamos un archivo de salida nuevo
+    output_file="/etc/fstab.new"
 
-        # Copiar el contenido original de /etc/fstab al nuevo archivo
-        cp /etc/fstab /etc/fstab.old
-        cp /etc/fstab $output_file
+    # Copiar el contenido original de /etc/fstab al nuevo archivo
+    cp /etc/fstab /etc/fstab.old
+    cp /etc/fstab $output_file
 
-        # Obtener las UUIDs de las particiones
-        ROOT_UUID=$(get_uuid "/")
-        HOME_UUID=$(get_uuid "/home")
-        VAR_UUID=$(get_uuid "/var")
-        VAR_LOG_UUID=$(get_uuid "/var/log")
-        SNAPSHOT_UUID=$(get_uuid "/.snapshots")
+    # Obtener las UUIDs de las particiones
+    ROOT_UUID=$(get_uuid "/")
+    HOME_UUID=$(get_uuid "/home")
+    VAR_UUID=$(get_uuid "/var")
+    VAR_LOG_UUID=$(get_uuid "/var/log")
+    SNAPSHOT_UUID=$(get_uuid "/.snapshots")
 
-        # Modificar las entradas correspondientes si las UUIDs fueron encontradas
+    # Modificar las entradas correspondientes si las UUIDs fueron encontradas
+    if [ -n "$ROOT_UUID" ]; then
+        sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@ 0 0|" $output_file
+    fi
 
-        if [ -n "$ROOT_UUID" ]; then
-            sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@ 0 0|" $output_file
-        fi
+    if [ -n "$HOME_UUID" ]; then
+        sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@home 0 0|" $output_file
+    fi
 
-        if [ -n "$HOME_UUID" ]; then
-            sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@home 0 0|" $output_file
-        fi
+    if [ -n "$VAR_UUID" ]; then
+        sudo sed -i -E "s|UUID=.*\s+/var\s+btrfs.*|UUID=${VAR_UUID} /var btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@var 0 0|" $output_file
+    fi
 
-        if [ -n "$VAR_UUID" ]; then
-            sudo sed -i -E "s|UUID=.*\s+/var\s+btrfs.*|UUID=${VAR_UUID} /var btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@var 0 0|" $output_file
-        fi
+    if [ -n "$VAR_LOG_UUID" ]; then
+        sudo sed -i -E "s|UUID=.*\s+/var/log\s+btrfs.*|UUID=${VAR_LOG_UUID} /var/log btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0|" $output_file
+    fi
 
-        if [ -n "$VAR_LOG_UUID" ]; then
-            sudo sed -i -E "s|UUID=.*\s+/var/log\s+btrfs.*|UUID=${VAR_LOG_UUID} /var/log btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0|" $output_file
-        fi
+    if [ -n "$SNAPSHOT_UUID" ]; then
+        sudo sed -i -E "s|UUID=.*\s+/.snapshots\s+btrfs.*|UUID=${SNAPSHOT_UUID} /.snapshots btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@snapshots 0 0|" $output_file
+    fi
 
-        if [ -n "$SNAPSHOT_UUID" ]; then
-            sudo sed -i -E "s|UUID=.*\s+/.snapshots\s+btrfs.*|UUID=${SNAPSHOT_UUID} /.snapshots btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@snapshots 0 0|" $output_file
-        fi
-
-        sudo cp $output_file /etc/fstab
+    # Forzar reemplazo del archivo fstab
+    sudo cp $output_file /etc/fstab
 
     show_message "INFO" "Aplicando compresión LZO a subvolúmenes..."
     sudo btrfs filesystem defragment / -r -clzo &>/dev/null
 
-     # Balance to duplicate metadata and system
-    sudo btrfs balance start -m /
-
-    # Balance to set data and global reserve as non-duplicated
-    sudo btrfs balance start -d -s /
-
-    # show_message "INFO" "Configurando GRUB para entorno $( [[ -d /sys/firmware/efi ]] && echo UEFI || echo BIOS )..."
-    # if [[ -d /sys/firmware/efi ]]; then
-    #     sudo dnf install -y --skip-unavailable grub2-efi-x64 grub2-efi-bootloader &>/dev/null
-    #     GRUB_CFG_PATH="/boot/efi/EFI/fedora/grub.cfg"
-    # else
-    #     sudo dnf install -y --skip-unavailable grub2-pc &>/dev/null
-    #     GRUB_CFG_PATH="/boot/grub2/grub.cfg"
-    # fi
+    # Balance to duplicate metadata and system
+    sudo btrfs balance start -m / &>/dev/null
 
     show_message "INFO" "Instalando dependencias de compilación..."
-    sudo dnf install -y --skip-unavailable make automake gcc gcc-c++ kernel-devel grub2-tools grub2-tools-extra &>/dev/null
+    sudo dnf install -y --skip-unavailable make automake gcc gcc-c++ kernel-devel grub2-tools grub2-tools-extra polkit &>/dev/null
 
     show_message "INFO" "Instalando grub-btrfs desde repositorio oficial..."
     sudo rm -rf /git/grub-btrfs 2>/dev/null
     sudo mkdir -p /git
+    sudo mkdir -p /.snapshots
     sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
 
-#     if [[ ! -d /git/grub-btrfs ]]; then
-#         show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
-#         return 1
-#     fi
+    if [[ ! -d /git/grub-btrfs ]]; then
+        show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
+        return 1
+    fi
 
-#     sudo tee /git/grub-btrfs/config > /dev/null <<EOF
-# GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
-# GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
-# GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
-# GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
-# GRUB_BTRFS_GRUB_DIRNAME="/boot/efi/EFI/fedora"
-# GRUB_BTRFS_BOOT_DIRNAME="/boot"
-# GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
-# GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
-# GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
-# EOF
+    sudo tee /git/grub-btrfs/config > /dev/null <<EOF
+GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
+GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
+GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
+GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
+GRUB_BTRFS_GRUB_DIRNAME="/boot/efi/EFI/fedora"
+GRUB_BTRFS_BOOT_DIRNAME="/boot"
+GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
+GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
+GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
+EOF
 
-#     (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
+    (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
 
-    # if [[ -f /etc/grub.d/41_snapshots-btrfs ]]; then
-    #     sudo chmod +x /etc/grub.d/41_snapshots-btrfs
-    #     if [[ -f /usr/bin/grub-btrfsd ]]; then
-    #         sudo chmod +s /usr/bin/grub-btrfsd
+    show_message "INFO" "Configurando y Activando servicio grub-btrfs."
+    # Modify the service file to add --timeshift-auto
+    SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
+    sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
 
-    #         show_message "INFO" "Habilitando servicio grub-btrfs.service..."
-    #         sudo cp /git/grub-btrfs/grub-btrfs.service /etc/systemd/system/
-    #         sudo systemctl daemon-reexec
-    #         sudo systemctl enable grub-btrfs.service &>/dev/null
-    #         sudo systemctl start grub-btrfs.service &>/dev/null
+    # Reload systemd configuration
+    sudo systemctl daemon-reload
 
-    #         show_message "INFO" "Servicio grub-btrfs activado correctamente."
-    #     fi
+    show_message "INFO" "Configurando y Activando servicio Timeshift."
+    # Rename the timeshift-gtk file in /usr/bin/
+    sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
 
-    #     show_message "INFO" "Regenerando configuración de GRUB..."
-    #     sudo grub2-mkconfig -o "$GRUB_CFG_PATH" &>/dev/null
+    # Create a new timeshift-gtk file with the given content
+    echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
 
-    #     show_message "SUCCESS" "Configuración de BTRFS y GRUB finalizada con éxito."
-    # else
-    #     show_message "ERROR" "Instalación de grub-btrfs fallida."
-    #     return 1
-    # fi
+    # Grant execute permissions to the new file
+    sudo chmod +x /usr/bin/timeshift-gtk
+
+    sudo timeshift --create --comments "initial"
+
+    sudo systemctl stop timeshift && sudo systemctl disable timeshift
+    sudo chmod +s /usr/bin/grub-btrfsd
+
+    # Restart the service
+    sudo systemctl restart grub-btrfsd
+    sudo systemctl start grub-btrfsd
     sudo systemctl enable --now grub-btrfsd
     systemctl status grub-btrfsd
+
+    show_message "INFO" "Regenerando GRUB"
     sudo rm /boot/efi/EFI/fedora/grub.cfg /boot/grub2/grub.cfg
     sudo dnf reinstall grub2-efi* grub2-common
 }
+
+
 
 
 main() {
