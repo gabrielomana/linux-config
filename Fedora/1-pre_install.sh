@@ -83,8 +83,8 @@ function configure-repositories {
 
 # Función para instalar paquetes esenciales
 function install-essential-packages {
-    sudo dnf install -y --skip-unavailable --skip-unavailable @development-tools git
-    sudo dnf install -y --skip-unavailable --skip-unavailable \
+    sudo dnf install -y --skip-unavailable --skip-broken @development-tools git
+    sudo dnf install -y --skip-unavailable --skip-broken \
         util-linux-user \
         dnf-plugins-core \
         openssl \
@@ -271,14 +271,7 @@ function set-btrfs() {
 
     ## --- PASO 3: Aplicar compresión LZO ---
     echo "🌀 Aplicando compresión LZO a subvolúmenes..."
-    for SUBVOL_PATH in "${SUBVOLS[@]}"; do
-        local DIR="/mnt/tmp$SUBVOL_PATH"
-        sudo mkdir -p "$DIR"
-        sudo mount -o subvol="$SUBVOL_PATH",$MOUNT_OPTIONS "$BTRFS_ROOT_DEV" "$DIR"
-        sudo btrfs filesystem defragment -r -clzo "$DIR" || echo "⚠️ Defragmentación fallida o innecesaria en $DIR"
-        sudo umount "$DIR"
-        sudo rmdir "$DIR"
-    done
+    sudo btrfs filesystem defragment / -r -clzo
 
     ## --- PASO 4: Instalar grub-btrfs desde GitHub ---
     echo "🔧 Instalando grub-btrfs desde el repositorio de GitHub..."
