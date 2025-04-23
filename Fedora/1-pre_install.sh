@@ -542,14 +542,14 @@ configure_btrfs() {
     show_message "INFO" "Aplicando compresión LZO a subvolúmenes..."
     sudo btrfs filesystem defragment / -r -clzo &>/dev/null
 
-    show_message "INFO" "Configurando GRUB para entorno $( [[ -d /sys/firmware/efi ]] && echo UEFI || echo BIOS )..."
-    if [[ -d /sys/firmware/efi ]]; then
-        sudo dnf install -y --skip-unavailable grub2-efi-x64 grub2-efi-bootloader &>/dev/null
-        GRUB_CFG_PATH="/boot/efi/EFI/fedora/grub.cfg"
-    else
-        sudo dnf install -y --skip-unavailable grub2-pc &>/dev/null
-        GRUB_CFG_PATH="/boot/grub2/grub.cfg"
-    fi
+    # show_message "INFO" "Configurando GRUB para entorno $( [[ -d /sys/firmware/efi ]] && echo UEFI || echo BIOS )..."
+    # if [[ -d /sys/firmware/efi ]]; then
+    #     sudo dnf install -y --skip-unavailable grub2-efi-x64 grub2-efi-bootloader &>/dev/null
+    #     GRUB_CFG_PATH="/boot/efi/EFI/fedora/grub.cfg"
+    # else
+    #     sudo dnf install -y --skip-unavailable grub2-pc &>/dev/null
+    #     GRUB_CFG_PATH="/boot/grub2/grub.cfg"
+    # fi
 
     show_message "INFO" "Instalando dependencias de compilación..."
     sudo dnf install -y --skip-unavailable make automake gcc gcc-c++ kernel-devel grub2-tools grub2-tools-extra &>/dev/null
@@ -569,7 +569,7 @@ GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
 GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
 GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
 GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
-GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
+GRUB_BTRFS_GRUB_DIRNAME="/boot/efi/EFI/fedora"
 GRUB_BTRFS_BOOT_DIRNAME="/boot"
 GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
@@ -578,28 +578,32 @@ EOF
 
     (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
 
-    if [[ -f /etc/grub.d/41_snapshots-btrfs ]]; then
-        sudo chmod +x /etc/grub.d/41_snapshots-btrfs
-        if [[ -f /usr/bin/grub-btrfsd ]]; then
-            sudo chmod +s /usr/bin/grub-btrfsd
+    # if [[ -f /etc/grub.d/41_snapshots-btrfs ]]; then
+    #     sudo chmod +x /etc/grub.d/41_snapshots-btrfs
+    #     if [[ -f /usr/bin/grub-btrfsd ]]; then
+    #         sudo chmod +s /usr/bin/grub-btrfsd
 
-            show_message "INFO" "Habilitando servicio grub-btrfs.service..."
-            sudo cp /git/grub-btrfs/grub-btrfs.service /etc/systemd/system/
-            sudo systemctl daemon-reexec
-            sudo systemctl enable grub-btrfs.service &>/dev/null
-            sudo systemctl start grub-btrfs.service &>/dev/null
+    #         show_message "INFO" "Habilitando servicio grub-btrfs.service..."
+    #         sudo cp /git/grub-btrfs/grub-btrfs.service /etc/systemd/system/
+    #         sudo systemctl daemon-reexec
+    #         sudo systemctl enable grub-btrfs.service &>/dev/null
+    #         sudo systemctl start grub-btrfs.service &>/dev/null
 
-            show_message "INFO" "Servicio grub-btrfs activado correctamente."
-        fi
+    #         show_message "INFO" "Servicio grub-btrfs activado correctamente."
+    #     fi
 
-        show_message "INFO" "Regenerando configuración de GRUB..."
-        sudo grub2-mkconfig -o "$GRUB_CFG_PATH" &>/dev/null
+    #     show_message "INFO" "Regenerando configuración de GRUB..."
+    #     sudo grub2-mkconfig -o "$GRUB_CFG_PATH" &>/dev/null
 
-        show_message "SUCCESS" "Configuración de BTRFS y GRUB finalizada con éxito."
-    else
-        show_message "ERROR" "Instalación de grub-btrfs fallida."
-        return 1
-    fi
+    #     show_message "SUCCESS" "Configuración de BTRFS y GRUB finalizada con éxito."
+    # else
+    #     show_message "ERROR" "Instalación de grub-btrfs fallida."
+    #     return 1
+    # fi
+    sudo systemctl enable --now grub-btrfsd
+    systemctl status grub-btrfsd
+    sudo rm /boot/efi/EFI/fedora/grub.cfg /boot/grub2/grub.cfg
+    sudo dnf reinstall grub2-efi* grub2-common
 }
 
 
