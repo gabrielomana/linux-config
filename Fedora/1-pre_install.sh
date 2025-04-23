@@ -249,7 +249,7 @@ function set-btrfs() {
 
     ## --- PASO 1: Instalación de herramientas necesarias --- 
     echo "🛠️ Instalando herramientas necesarias..."
-    sudo dnf install -y --skip-unavailable btrfs-progs timeshift inotify-tools
+    sudo dnf install -y --skip-unavailable --skip-broken btrfs-progs timeshift inotify-tools
 
     ## --- PASO 2: Validación y configuración de fstab ---
     echo "🧾 Verificando sistema de archivos y reconfigurando fstab..."
@@ -279,10 +279,10 @@ function set-btrfs() {
     # Detección UEFI/BIOS para dependencias de GRUB
     if [[ -d /sys/firmware/efi ]]; then
         echo "⚙️ Modo UEFI detectado."
-        sudo dnf install -y grub2-efi-x64 grub2-efi-bootloader
+        sudo dnf install -y --skip-unavailable --skip-broken grub2-efi-x64 grub2-efi-bootloader
     else
         echo "⚙️ Modo BIOS detectado."
-        sudo dnf install -y grub2-pc
+        sudo dnf install -y --skip-unavailable --skip-broken grub2-pc
     fi
 
     # Clonar grub-btrfs
@@ -292,7 +292,7 @@ function set-btrfs() {
 
     # Instalar dependencias de compilación
     echo "🔧 Instalando dependencias de compilación..."
-    sudo dnf install -y make automake gcc gcc-c++ kernel-devel inotify-tools
+    sudo dnf install -y --skip-unavailable --skip-broken make automake gcc gcc-c++ kernel-devel inotify-tools
 
     # Compilar e instalar
     echo "🛠 Compilando e instalando grub-btrfs..."
@@ -428,15 +428,15 @@ function security-fedora {
 }
 
 # Ejecutar las funciones
-configure-dnf
-configure-dnf-automatic
-change-hostname
-configure-repositories
-configure-flatpak-repositories
-install-essential-packages
-configure-zswap
+#configure-dnf
+#configure-dnf-automatic
+#change-hostname
+#configure-repositories
+#configure-flatpak-repositories
+#install-essential-packages
+#configure-zswap
 #security-fedora
-#set-btrfs
+set-btrfs
 
 sudo fwupdmgr refresh --force -y
 sudo fwupdmgr get-updates -y
