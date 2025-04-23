@@ -236,7 +236,7 @@ printf "\nCompression ratio: "
 }
 
 # Función para configurar BTRFS
-function set-btrfsfunction set-btrfs() {
+function set-btrfs() {
     set -euo pipefail
 
     echo "▶️ Post-instalación Fedora 42: Subvolúmenes BTRFS + Timeshift + grub-btrfs"
