@@ -4,8 +4,11 @@
 # Autor: Modificado y optimizado
 # Versión: 2.0
 
-# Variables globales
-LOG_FILE="$HOME/fedora_post_install.log"
+# Obtener el nombre del usuario que inició sesión
+USER_HOME=$(eval echo ~$(logname))
+
+# Definir el archivo de log en el home de ese usuario
+LOG_FILE="$USER_HOME/fedora_post_install.log"
 ERROR_COUNT=0
 
 # Colores para mensajes
@@ -560,35 +563,28 @@ configure_btrfs_volumes() {
 instalar_grub_btrfs() {
      
     show_message "INFO" "Habilitando repositorio y actualizando sistema..."
-    sudo dnf copr enable -y kylegospo/grub-btrfs || error "No se pudo habilitar el repositorio COPR."
-    sudo dnf update -y || error "Fallo al actualizar el sistema."
+    sudo dnf copr enable -y kylegospo/grub-btrfs || show_message "ERROR" "No se pudo habilitar el repositorio COPR."
+    sudo dnf update -y || show_message "ERROR" "Fallo al actualizar el sistema."
 
     show_message "INFO" "Instalando grub-btrfs y extensiones..."
-    sudo dnf install -y grub-btrfs  || error "Fallo al instalar grub-btrfs o sus extensiones."
-    sudo dnf install -y grub-btrfs-timeshift  || error "Fallo al instalar grub-btrfs o sus extensiones."
+    sudo dnf install -y grub-btrfs  || show_message "ERROR" "Fallo al instalar grub-btrfs o sus extensiones."
+    sudo dnf install -y grub-btrfs-timeshift  || show_message "ERROR" "Fallo al instalar grub-btrfs o sus extensiones."
     
-
-    show_message "INFO" "Configurando GRUB para detectar snapshots..."
-    mkdir -p /etc/default/grub-btrfs || error "No se pudo crear el directorio de configuración."
-    cat > /etc/default/grub-btrfs/config <<EOF
+    show_message "INFO"      "Configurando GRUB para detectar snapshots..."
+    mkdir -p /etc/default/grub-btrfs || show_message "ERROR" "No se pudo crear el directorio de configuración."
+    sudo tee /etc/default/grub-btrfs/config > /dev/null <<EOF
 GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
 GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
 GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
-GRUB_BTRFS_SNAPSHOT_FORMAT="%Y-%m-%d %H:%M | %c
+GRUB_BTRFS_SNAPSHOT_FORMAT="%Y-%m-%d %H:%M | %c"
 GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rootflags=subvol=@ quiet"
 EOF
-
     sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
-    show_message "INFO" "Habilitando servicios grub-btrfs..."
-    systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
-    systemctl start --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
-
     show_message "INFO" "Configurando monitorización systemd para snapshots Timeshift..."
-    mkdir -p /etc/systemd/system/grub-btrfs.path.d || error "No se pudo crear directorio para overrides."
+    mkdir -p /etc/systemd/system/grub-btrfs.path.d || show_message "ERROR" "No se pudo crear directorio para overrides."
     sudo tee /etc/systemd/system/grub-btrfs.path > /dev/null <<'EOF'
-
 [Unit]
 Description=Monitors Timeshift snapshots in /run/timeshift/%i/backup
 DefaultDependencies=no
@@ -601,27 +597,38 @@ PathModified=/run/timeshift/%i/backup/timeshift-btrfs/snapshots
 WantedBy=run-timeshift-%i.mount
 EOF
 
+    # Habilitar y arrancar los servicios grub-btrfs
+    show_message "INFO" "Habilitando servicios grub-btrfs..."
+
+    # Recargar systemd para detectar nuevos servicios
     sudo systemctl daemon-reexec
     sudo systemctl daemon-reload
 
-    # Habilitar para todas las instancias posibles
-    systemctl enable --now grub-btrfs@*.path || error "Fallo al iniciar el servicio path"
-    systemctl enable --now grub-btrfs.path || error "Fallo al iniciar el servicio path"
-    systemctl start --now grub-btrfs.path || error "Fallo al habilitar el servicio path"
+    # Habilitar y arrancar los servicios grub-btrfsd
+    sudo systemctl enable grub-btrfsd.service || show_message "ERROR" "Fallo al habilitar grub-btrfsd.service"
+    sudo systemctl enable grub-btrfsd@*.service || show_message "ERROR" "Fallo al habilitar grub-btrfsd@*.service"
+    sudo systemctl start grub-btrfsd.service || show_message "ERROR" "Fallo al arrancar grub-btrfsd.service"
 
-    systemctl enable --now grub-btrfsd@*.service || error "Fallo al habilitar grub-btrfsd.service"
-    systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
-    systemctl start --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
-    
+    # Habilitar y arrancar el servicio de rutas dinámicas grub-btrfs.path
+    sudo systemctl enable grub-btrfs.path || show_message "ERROR" "Fallo al habilitar grub-btrfs.path"
+    sudo systemctl start grub-btrfs.path || show_message "ERROR" "Fallo al arrancar grub-btrfs.path"
+
+    # Mensaje de éxito
     show_message "SUCCESS" "Systemd configurado para rutas dinámicas: /run/timeshift/*/backup"
 
+
     show_message "INFO" "Configurando Timeshift para snapshots automáticos..."
+    # Crear el directorio de snapshots si no existe
     sudo mkdir -p /.snapshots
 
-    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots || error "Fallo al configurar Timeshift."
-    timeshift --create --comments "Snapshot inicial" || error "Fallo al crear snapshot inicial."
- 
-    cat > /etc/timeshift.json <<EOF
+    # Configurar Timeshift con la opción BTRFS
+    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots || show_message "ERROR" "Fallo al configurar Timeshift."
+
+    # Crear un snapshot inicial
+    timeshift --create --comments "Snapshot inicial" || show_message "ERROR" "Fallo al crear snapshot inicial."
+
+   # Configuración del archivo JSON de Timeshift
+sudo tee /etc/timeshift.json > /dev/null <<EOF
 {
   "backup_device_uuid" : "$(findmnt -no UUID /)",
   "snapshot_dir" : "/.snapshots",
@@ -636,9 +643,9 @@ EOF
 }
 EOF
 
-     show_message "SUCCESS" "grub-btrfs y Timeshift instalados y configurados correctamente."
-}
+show_message "SUCCESS" "grub-btrfs y Timeshift instalados y configurados correctamente."
 
+}
 
 main() {
     # Inicializar registro y verificar privilegios
@@ -660,7 +667,6 @@ main() {
     configure_btrfs_volumes
     instalar_grub_btrfs
     
-    
     # Seguridad
     #configure_security
     
@@ -681,6 +687,7 @@ main() {
     
     show_message "INFO" "Se recomienda reiniciar el sistema para aplicar todos los cambios"
 }
+
 
 # Ejecutar la función principal
 main "$@"
