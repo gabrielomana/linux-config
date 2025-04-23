@@ -564,7 +564,9 @@ instalar_grub_btrfs() {
     sudo dnf update -y || error "Fallo al actualizar el sistema."
 
     show_message "INFO" "Instalando grub-btrfs y extensiones..."
-    sudo dnf install -y grub-btrfs grub-btrfs-timeshift || error "Fallo al instalar grub-btrfs o sus extensiones."
+    sudo dnf install -y grub-btrfs  || error "Fallo al instalar grub-btrfs o sus extensiones."
+    sudo dnf install -y grub-btrfs-timeshift  || error "Fallo al instalar grub-btrfs o sus extensiones."
+    
 
     show_message "INFO" "Configurando GRUB para detectar snapshots..."
     mkdir -p /etc/default/grub-btrfs || error "No se pudo crear el directorio de configuración."
@@ -575,11 +577,11 @@ GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
 GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
 EOF
 
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg || error "Fallo al regenerar GRUB."
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
     show_message "INFO" "Habilitando servicios grub-btrfs..."
     systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
-    systemctl enable --now grub-btrfs.path || error "Fallo al habilitar grub-btrfs.path"
+    systemctl start --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
 
     show_message "INFO" "Configurando monitorización systemd para snapshots Timeshift..."
     mkdir -p /etc/systemd/system/grub-btrfs.path.d || error "No se pudo crear directorio para overrides."
