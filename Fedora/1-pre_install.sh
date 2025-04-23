@@ -652,18 +652,18 @@ main() {
     init_log
     run_sudo
     
-    # Configuración básica del sistema
-    #configure_dnf
-    #configure_dnf_automatic
-    #change_hostname
+    Configuración básica del sistema
+    configure_dnf
+    configure_dnf_automatic
+    change_hostname
     
-    # Instalación y configuración de repositorios y paquetes
-    #configure_repositories
-    #install_essential_packages
-    #configure_flatpak_repositories
+    Instalación y configuración de repositorios y paquetes
+    configure_repositories
+    install_essential_packages
+    configure_flatpak_repositories
     
-    # Optimizaciones del sistema
-    #configure_zswap
+    Optimizaciones del sistema
+    configure_zswap
     configure_btrfs_volumes
     instalar_grub_btrfs
     
