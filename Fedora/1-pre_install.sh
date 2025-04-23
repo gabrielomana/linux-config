@@ -558,14 +558,15 @@ configure_btrfs_volumes() {
 }
 
 instalar_grub_btrfs() {
-    info "Habilitando repositorio y actualizando sistema..."
-    dnf copr enable -y kylegospo/grub-btrfs || error "No se pudo habilitar el repositorio COPR."
-    dnf update -y || error "Fallo al actualizar el sistema."
+     
+    show_message "INFO" "Habilitando repositorio y actualizando sistema..."
+    sudo dnf copr enable -y kylegospo/grub-btrfs || error "No se pudo habilitar el repositorio COPR."
+    sudo dnf update -y || error "Fallo al actualizar el sistema."
 
-    info "Instalando grub-btrfs y extensiones..."
-    dnf install -y grub-btrfs grub-btrfs-timeshift || error "Fallo al instalar grub-btrfs o sus extensiones."
+    show_message "INFO" "Instalando grub-btrfs y extensiones..."
+    sudo dnf install -y grub-btrfs grub-btrfs-timeshift || error "Fallo al instalar grub-btrfs o sus extensiones."
 
-    info "Configurando GRUB para detectar snapshots..."
+    show_message "INFO" "Configurando GRUB para detectar snapshots..."
     mkdir -p /etc/default/grub-btrfs || error "No se pudo crear el directorio de configuración."
     cat > /etc/default/grub-btrfs/config <<EOF
 GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
@@ -574,13 +575,13 @@ GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
 GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
 EOF
 
-    grub2-mkconfig -o /boot/grub2/grub.cfg || error "Fallo al regenerar GRUB."
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg || error "Fallo al regenerar GRUB."
 
-    info "Habilitando servicios grub-btrfs..."
+    show_message "INFO" "Habilitando servicios grub-btrfs..."
     systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
     systemctl enable --now grub-btrfs.path || error "Fallo al habilitar grub-btrfs.path"
 
-    info "Configurando monitorización systemd para snapshots Timeshift..."
+    show_message "INFO" "Configurando monitorización systemd para snapshots Timeshift..."
     mkdir -p /etc/systemd/system/grub-btrfs.path.d || error "No se pudo crear directorio para overrides."
     cat > /etc/systemd/system/grub-btrfs@.path <<'EOF'
 [Unit]
@@ -599,14 +600,14 @@ EOF
     systemctl enable grub-btrfs@*.path || error "Fallo al habilitar el servicio path"
     systemctl start grub-btrfs@*.path || error "Fallo al iniciar el servicio path"
     
-    success "Systemd configurado para rutas dinámicas: /run/timeshift/*/backup"
+    show_message "SUCCESS" "Systemd configurado para rutas dinámicas: /run/timeshift/*/backup"
 
-    info "Configurando Timeshift para snapshots automáticos..."
-    mkdir -p /.snapshots
+    show_message "INFO" "Configurando Timeshift para snapshots automáticos..."
+    sudo mkdir -p /.snapshots
 
     timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots || error "Fallo al configurar Timeshift."
     timeshift --create --comments "Snapshot inicial" || error "Fallo al crear snapshot inicial."
-
+ 
     cat > /etc/timeshift.json <<EOF
 {
   "backup_device_uuid" : "$(findmnt -no UUID /)",
@@ -622,7 +623,7 @@ EOF
 }
 EOF
 
-    success "grub-btrfs y Timeshift instalados y configurados correctamente."
+     show_message "SUCCESS" "grub-btrfs y Timeshift instalados y configurados correctamente."
 }
 
 
