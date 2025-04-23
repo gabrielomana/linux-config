@@ -558,128 +558,73 @@ configure_btrfs_volumes() {
 }
 
 instalar_grub_btrfs() {
-    # --- Instalación desde COPR ---
-    info "Habilitando repositorio COPR y actualizando sistema..."
+    info "Habilitando repositorio y actualizando sistema..."
     dnf copr enable -y kylegospo/grub-btrfs || error "No se pudo habilitar el repositorio COPR."
-    dnf update -y --skip-broken || error "Fallo al actualizar el sistema."
+    dnf update -y || error "Fallo al actualizar el sistema."
 
-    # --- Instalación de paquetes ---
-    info "Instalando grub-btrfs y dependencias..."
-    dnf install -y --skip-broken \
-        grub-btrfs \
-        grub-btrfs-timeshift \
-        btrfs-progs \
-        inotify-tools \
-        timeshift || error "Fallo al instalar paquetes."
+    info "Instalando grub-btrfs y extensiones..."
+    dnf install -y grub-btrfs grub-btrfs-timeshift || error "Fallo al instalar grub-btrfs o sus extensiones."
 
-    # --- Configuración de GRUB ---
-    info "Configurando detección de snapshots en GRUB..."
-    mkdir -p /etc/default/grub-btrfs || error "No se pudo crear directorio de configuración."
-    
+    info "Configurando GRUB para detectar snapshots..."
+    mkdir -p /etc/default/grub-btrfs || error "No se pudo crear el directorio de configuración."
     cat > /etc/default/grub-btrfs/config <<EOF
 GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
 GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
 GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
-GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"
 EOF
 
-    # --- Sistema de monitoreo mejorado ---
-    info "Configurando sistema de monitorización automática..."
-    
-    # 1. Servicio principal para regeneración
-    cat > /etc/systemd/system/grub-btrfs-regenerate.service <<EOF
-[Unit]
-Description=Regenerar GRUB tras nuevos snapshots
-Requires=grub-btrfs.path
-After=grub-btrfs.path
+    grub2-mkconfig -o /boot/grub2/grub.cfg || error "Fallo al regenerar GRUB."
 
-[Service]
-Type=oneshot
-ExecStart=/bin/sh -c 'grub2-mkconfig -o /boot/grub2/grub.cfg && logger -t grub-btrfs "GRUB regenerado por nuevo snapshot"'
-EOF
+    info "Habilitando servicios grub-btrfs..."
+    systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar grub-btrfsd.service"
+    systemctl enable --now grub-btrfs.path || error "Fallo al habilitar grub-btrfs.path"
 
-    # 2. Path unit dinámico para Timeshift moderno
+    info "Configurando monitorización systemd para snapshots Timeshift..."
+    mkdir -p /etc/systemd/system/grub-btrfs.path.d || error "No se pudo crear directorio para overrides."
     cat > /etc/systemd/system/grub-btrfs.path <<EOF
 [Unit]
-Description=Monitor de snapshots BTRFS (Rutas dinámicas)
+Description=Monitor de snapshots de Timeshift (BTRFS)
 DefaultDependencies=no
+Requires=run-timeshift-backup.mount
+After=run-timeshift-backup.mount
+BindsTo=run-timeshift-backup.mount
 
 [Path]
-# Compatible con versiones nuevas/antiguas de Timeshift
-PathModified=/run/timeshift*/backup/timeshift-btrfs/snapshots
-PathModified=/.snapshots
-PathModified=/timeshift/snapshots
+PathModified=/run/timeshift/backup/timeshift-btrfs/snapshots
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=run-timeshift-backup.mount
 EOF
 
-    # 3. Timer de respaldo para detección periódica
-    cat > /etc/systemd/system/grub-btrfs-check.timer <<EOF
-[Unit]
-Description=Verificación horaria de snapshots
+    systemctl daemon-reexec
+    systemctl daemon-reload
+    systemctl enable --now grub-btrfs.path || error "Fallo al activar grub-btrfs.path personalizado."
 
-[Timer]
-OnBootSec=15min
-OnUnitActiveSec=1h
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
-
-    cat > /etc/systemd/system/grub-btrfs-check.service <<EOF
-[Unit]
-Description=Verificador de snapshots para GRUB
-
-[Service]
-Type=oneshot
-ExecStart=/bin/sh -c 'find /run/timeshift* /.snapshots /timeshift -type d -name snapshots -mmin -60 -exec test -n "$(ls -A {})" \; -exec grub2-mkconfig -o /boot/grub2/grub.cfg \;'
-EOF
-
-    # --- Configuración de Timeshift ---
-    info "Configurando Timeshift automático..."
+    info "Configurando Timeshift para snapshots automáticos..."
     mkdir -p /.snapshots
-    
+
+    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots || error "Fallo al configurar Timeshift."
+    timeshift --create --comments "Snapshot inicial" || error "Fallo al crear snapshot inicial."
+
     cat > /etc/timeshift.json <<EOF
 {
   "backup_device_uuid" : "$(findmnt -no UUID /)",
-  "snapshot_dir" : "/.snapshots",
-  "snapshot_name" : "timeshift-btrfs",
-  "mode" : "btrfs",
-  "schedule_daily" : true,
-  "count_daily" : 5,
-  "schedule_weekly" : true,
-  "count_weekly" : 3,
-  "schedule_monthly" : true,
-  "count_monthly" : 2,
-  "auto_remove" : true
+  "parent_device_uuid" : "",
+  "do_first_run" : "false",
+  "btrfs_mode" : "true",
+  "include_btrfs_home" : "false",
+  "stop_cron_emails" : "true",
+  "schedule_monthly" : "true",
+  "schedule_weekly" : "true",
+  "schedule_daily" : "true",
+  "count_monthly" : "2",
+  "count_weekly" : "3",
+  "count_daily" : "5"
 }
 EOF
 
-    # --- Activación de servicios ---
-    info "Activando todos los servicios..."
-    systemctl daemon-reload
-    systemctl enable --now grub-btrfsd.service
-    systemctl enable --now grub-btrfs.path
-    systemctl enable --now grub-btrfs-regenerate.service
-    systemctl enable --now grub-btrfs-check.timer
-    
-    # Crear snapshot inicial
-    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots
-    timeshift --create --comments "Snapshot inicial post-instalación"
-
-    # --- Verificación final ---
-    info "Realizando verificación del sistema..."
-    grub2-mkconfig -o /boot/grub2/grub.cfg
-    systemctl start grub-btrfs-check.service  # Forzar primera comprobación
-
-    success "Configuración completada. Sistema listo para:"
-    echo -e "  • Snapshots automáticos en GRUB"
-    echo -e "  • Monitorización en tiempo real"
-    echo -e "  • Limpieza automática de snapshots antiguos"
-    echo -e "\nVerifica con: systemctl list-timers --all"
+    success "grub-btrfs y Timeshift instalados y configurados correctamente."
 }
 
 
