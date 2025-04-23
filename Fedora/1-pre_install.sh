@@ -572,18 +572,68 @@ if [ ! -d /git/grub-btrfs ]; then
     show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
 else
     # Crear directorio de grub si no existe
-    sudo mkdir -p /boot/grub 2>/dev/null
+    sudo mkdir -p /boot/grub2 2>/dev/null
 
     # Crear archivo de configuración con ajustes personalizados
     sudo tee /git/grub-btrfs/config >/dev/null <<EOF
+# Name appearing in the Grub menu.
+# Default: "Use distribution information from /etc/os-release."
 GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
+
+
+# Additonal kernel command line parameters that should be passed to the kernel
+# when booting a snapshot.
+# For dracut based distros this could be useful to pass "rd.live.overlay.overlayfs=1"
+# or "rd.live.overlay.readonly=1" to the Kernel for booting snapshots read only.
+# Default: ""
 GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
+
+
+# Ignore specific path during run "grub-mkconfig".
+# Only exact paths are ignored.
+# e.g : if `specific path` = @, only `@` snapshot will be ignored.
+# Default: ("@")
 GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
+
+
+# Ignore prefix path during run "grub-mkconfig".
+# Any path starting with the specified string will be ignored.
+# e.g : if `prefix path` = @, all snapshots beginning with "@/..." will be ignored.
+# Default: ("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
 GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
+
+
+# Location of the folder containing the "grub.cfg" file.
+# Might be grub2 on some systems.
+# For example, on Fedora with EFI : "/boot/efi/EFI/fedora"
+# Default: "/boot/grub"
 GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
+
+
+# Location of kernels/initramfs/microcode.
+# Use by "grub-btrfs" to detect the boot partition and the location of kernels/initrafms/microcodes.
+# Default: "/boot"
 GRUB_BTRFS_BOOT_DIRNAME="/boot"
+
+
+# Name/path of grub-mkconfig command, use by "grub-btrfs.service"
+# Might be 'grub2-mkconfig' on some systems (Fedora ...)
+# Default paths are /sbin:/bin:/usr/sbin:/usr/bin,
+# if your path is missing, report it on the upstream project.
+# For example, on Fedora : "/sbin/grub2-mkconfig"
+# You can use only name or full path.
+# Default: grub-mkconfig
 GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
+
+# Name of grub-script-check command, use by "grub-btrfs"
+# Might be 'grub2-script-check' on some systems (Fedora ...)
+# For example, on Fedora : "grub2-script-check"
+# Default: grub-script-check
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
+
+# Path of grub-mkconfig_lib file, use by "grub-btrfs"
+# Might be '/usr/share/grub2/grub-mkconfig_lib' on some systems (Opensuse ...)
+# Default: /usr/share/grub/grub-mkconfig_lib
 GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
 EOF
 
