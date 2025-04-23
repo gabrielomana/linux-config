@@ -568,66 +568,169 @@ configure_btrfs() {
     # Balance to duplicate metadata and system
     sudo btrfs balance start -m / &>/dev/null
 
-    show_message "INFO" "Instalando dependencias de compilación..."
-    sudo dnf install -y --skip-unavailable make automake gcc gcc-c++ kernel-devel grub2-tools grub2-tools-extra polkit &>/dev/null
+#     show_message "INFO" "Instalando dependencias de compilación..."
+#     sudo dnf install -y --skip-unavailable make automake gcc gcc-c++ kernel-devel grub2-tools grub2-tools-extra polkit &>/dev/null
 
-    show_message "INFO" "Instalando grub-btrfs desde repositorio oficial..."
-    sudo rm -rf /git/grub-btrfs 2>/dev/null
-    sudo mkdir -p /git
-    sudo mkdir -p /.snapshots
-    sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
+#     show_message "INFO" "Instalando grub-btrfs desde repositorio oficial..."
+#     sudo rm -rf /git/grub-btrfs 2>/dev/null
+#     sudo mkdir -p /git
+#     sudo mkdir -p /.snapshots
+#     sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
 
-    if [[ ! -d /git/grub-btrfs ]]; then
-        show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
-        return 1
+#     if [[ ! -d /git/grub-btrfs ]]; then
+#         show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
+#         return 1
+#     fi
+
+#     sudo tee /git/grub-btrfs/config > /dev/null <<EOF
+# GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
+# GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
+# GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
+# GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
+# GRUB_BTRFS_GRUB_DIRNAME="/boot/efi/EFI/fedora"
+# GRUB_BTRFS_BOOT_DIRNAME="/boot"
+# GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
+# GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
+# GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
+# EOF
+
+#     (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
+
+#     show_message "INFO" "Configurando y Activando servicio grub-btrfs."
+#     # Modify the service file to add --timeshift-auto
+#     # SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
+#     # sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
+
+#     # Reload systemd configuration
+#     sudo systemctl daemon-reload
+
+#     show_message "INFO" "Configurando y Activando servicio Timeshift."
+#     # Rename the timeshift-gtk file in /usr/bin/
+#     sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
+
+#     # Create a new timeshift-gtk file with the given content
+#     echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
+
+#     # Grant execute permissions to the new file
+#     sudo chmod +x /usr/bin/timeshift-gtk
+
+#     sudo timeshift --create --comments "initial"
+
+#     sudo systemctl stop timeshift && sudo systemctl disable timeshift
+#     sudo chmod +s /usr/bin/grub-btrfsd
+
+#     # Restart the service
+#     sudo systemctl restart grub-btrfsd
+#     sudo systemctl start grub-btrfsd
+#     sudo systemctl enable --now grub-btrfsd
+#     systemctl status grub-btrfsd
+
+#     show_message "INFO" "Regenerando GRUB"
+#     sudo rm /boot/efi/EFI/fedora/grub.cfg /boot/grub2/grub.cfg
+#     sudo dnf -y reinstall grub2-efi* grub2-common
+
+################OPCION 2 ##############
+#!/bin/bash
+# Script para instalar grub-btrfs en Fedora 42 con soporte para snapshots en GRUB
+# Basado en: https://github.com/KyleGospo/grub-btrfs
+# Autor: TuNombre
+# Licencia: MIT
+
+set -euo pipefail
+
+# --- Configuración inicial ---
+LOG_FILE="/var/log/grub-btrfs-install.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+# Colores para mensajes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
+# --- Funciones ---
+error() {
+    echo -e "${RED}[✗]${NC} $1" >&2
+    exit 1
+}
+
+success() {
+    echo -e "${GREEN}[✓]${NC} $1"
+}
+
+info() {
+    echo -e "${BLUE}[i]${NC} $1"
+}
+
+check_root() {
+    if [[ $EUID -ne 0 ]]; then
+        error "Este script debe ejecutarse como root. Usa: sudo $0"
     fi
+}
 
-    sudo tee /git/grub-btrfs/config > /dev/null <<EOF
-GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
-GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
-GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
-GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
-GRUB_BTRFS_GRUB_DIRNAME="/boot/efi/EFI/fedora"
-GRUB_BTRFS_BOOT_DIRNAME="/boot"
-GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
+check_btrfs_root() {
+    if [[ $(findmnt -no FSTYPE /) != "btrfs" ]]; then
+        error "El sistema de archivos raíz NO es BTRFS. Este script requiere BTRFS."
+    fi
+}
+
+install_dependencies() {
+    info "Instalando dependencias..."
+    dnf install -y \
+        git \
+        make \
+        automake \
+        gcc \
+        gcc-c++ \
+        kernel-devel \
+        btrfs-progs \
+        grub2-tools \
+        inotify-tools \
+        timeshift || error "Fallo al instalar dependencias."
+}
+
+instalar_grub_btrfs() {
+    sudo dnf copr enable kylegospo/grub-btrfs
+    sudo dnf update
+sudo dnf -y install grub-btrfs
+sudo dnf -y install grub-btrfs-timeshift
+sudo systemctl enable --now grub-btrfs.path
+}
+
+configure_grub() {
+    info "Configurando GRUB para detectar snapshots..."
+    # Configuración específica para Fedora
+    cat > /etc/default/grub-btrfs/config <<EOF
+GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
+GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
-GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
+GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
 EOF
 
-    (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
+    # Regenerar GRUB
+    grub2-mkconfig -o /boot/grub2/grub.cfg || error "Fallo al regenerar GRUB."
+}
 
-    show_message "INFO" "Configurando y Activando servicio grub-btrfs."
-    # Modify the service file to add --timeshift-auto
-    SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
-    sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
+enable_services() {
+    info "Habilitando servicios..."
+    systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar el servicio."
+}
 
-    # Reload systemd configuration
-    sudo systemctl daemon-reload
+setup_timeshift() {
+    info "Configurando Timeshift para snapshots automáticos..."
+    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots || error "Fallo al configurar Timeshift."
+    timeshift --create --comments "Snapshot inicial" || error "Fallo al crear snapshot inicial."
+}
 
-    show_message "INFO" "Configurando y Activando servicio Timeshift."
-    # Rename the timeshift-gtk file in /usr/bin/
-    sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
-
-    # Create a new timeshift-gtk file with the given content
-    echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
-
-    # Grant execute permissions to the new file
-    sudo chmod +x /usr/bin/timeshift-gtk
-
-    sudo timeshift --create --comments "initial"
-
-    sudo systemctl stop timeshift && sudo systemctl disable timeshift
-    sudo chmod +s /usr/bin/grub-btrfsd
-
-    # Restart the service
-    sudo systemctl restart grub-btrfsd
-    sudo systemctl start grub-btrfsd
-    sudo systemctl enable --now grub-btrfsd
-    systemctl status grub-btrfsd
-
-    show_message "INFO" "Regenerando GRUB"
-    sudo rm /boot/efi/EFI/fedora/grub.cfg /boot/grub2/grub.cfg
-    sudo dnf reinstall grub2-efi* grub2-common
+# --- Ejecución principal ---
+    check_root
+    check_btrfs_root
+    install_dependencies
+    instalar_grub_btrfs
+    configure_grub
+    enable_services
+    setup_timeshift
+    success "¡Instalación completada! Reinicia para aplicar cambios."
 }
 
 
