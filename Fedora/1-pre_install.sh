@@ -464,16 +464,16 @@ function security-fedora {
     echo "Configuración de seguridad completada en Fedora 41."
 }
 
-# Ejecutar las funciones
-#configure-dnf
-#configure-dnf-automatic
-#change-hostname
-#configure-repositories
-#configure-flatpak-repositories
-#install-essential-packages
-#configure-zswap
-#security-fedora
-set-btrfs
+#Ejecutar las funciones
+configure-dnf
+configure-dnf-automatic
+change-hostname
+configure-repositories
+configure-flatpak-repositories
+install-essential-packages
+configure-zswap
+security-fedora
+#set-btrfs
 
 sudo fwupdmgr refresh --force -y
 sudo fwupdmgr get-updates -y
