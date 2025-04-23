@@ -314,10 +314,22 @@ else
     sudo chmod +x /etc/grub.d/41_snapshots-btrfs
 fi
 
-# Permisos y activación del servicio
+# Verificar que el binario existe antes de cambiar permisos
+if [ -f /usr/bin/grub-btrfsd ]; then
+    sudo chmod +s /usr/bin/grub-btrfsd
+else
+    echo "⚠️ No se encontró /usr/bin/grub-btrfsd. Verificad la instalación."
+fi
+
+# Activar el servicio
 echo "🟢 Activando grub-btrfsd..."
-sudo chmod +s /usr/bin/grub-btrfsd
 sudo systemctl enable --now grub-btrfsd.service
+
+# Regenerar GRUB correctamente
+echo "🔄 Regenerando GRUB..."
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+
+echo "✅ Instalación completada correctamente."
 
 # Detectar si el sistema usa UEFI o BIOS
 if [ -d /sys/firmware/efi ]; then
