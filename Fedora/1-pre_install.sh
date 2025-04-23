@@ -582,24 +582,24 @@ EOF
 
     info "Configurando monitorización systemd para snapshots Timeshift..."
     mkdir -p /etc/systemd/system/grub-btrfs.path.d || error "No se pudo crear directorio para overrides."
-    cat > /etc/systemd/system/grub-btrfs.path <<EOF
+    cat > /etc/systemd/system/grub-btrfs@.path <<'EOF'
 [Unit]
-Description=Monitor de snapshots de Timeshift (BTRFS)
+Description=Monitors Timeshift snapshots in /run/timeshift/%i/backup
 DefaultDependencies=no
-Requires=run-timeshift-backup.mount
-After=run-timeshift-backup.mount
-BindsTo=run-timeshift-backup.mount
+BindsTo=run-timeshift-%i.mount
 
 [Path]
-PathModified=/run/timeshift/backup/timeshift-btrfs/snapshots
+PathModified=/run/timeshift/%i/backup/timeshift-btrfs/snapshots
 
 [Install]
-WantedBy=run-timeshift-backup.mount
+WantedBy=run-timeshift-%i.mount
 EOF
 
-    systemctl daemon-reexec
-    systemctl daemon-reload
-    systemctl enable --now grub-btrfs.path || error "Fallo al activar grub-btrfs.path personalizado."
+    # Habilitar para todas las instancias posibles
+    systemctl enable grub-btrfs@*.path || error "Fallo al habilitar el servicio path"
+    systemctl start grub-btrfs@*.path || error "Fallo al iniciar el servicio path"
+    
+    success "Systemd configurado para rutas dinámicas: /run/timeshift/*/backup"
 
     info "Configurando Timeshift para snapshots automáticos..."
     mkdir -p /.snapshots
@@ -610,17 +610,15 @@ EOF
     cat > /etc/timeshift.json <<EOF
 {
   "backup_device_uuid" : "$(findmnt -no UUID /)",
-  "parent_device_uuid" : "",
-  "do_first_run" : "false",
-  "btrfs_mode" : "true",
-  "include_btrfs_home" : "false",
-  "stop_cron_emails" : "true",
-  "schedule_monthly" : "true",
-  "schedule_weekly" : "true",
-  "schedule_daily" : "true",
-  "count_monthly" : "2",
-  "count_weekly" : "3",
-  "count_daily" : "5"
+  "snapshot_dir" : "/.snapshots",
+  "snapshot_name" : "timeshift-btrfs",
+  "mode" : "btrfs",
+  "schedule_daily" : true,
+  "count_daily" : 5,
+  "schedule_weekly" : true,
+  "count_weekly" : 3,
+  "schedule_monthly" : true,
+  "count_monthly" : 2
 }
 EOF
 
