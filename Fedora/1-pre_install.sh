@@ -716,10 +716,57 @@ enable_services() {
     systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar el servicio."
 }
 
+configure_systemd_monitoring() {
+    info "Configurando systemd para monitorear snapshots de Timeshift..."
+    
+    # Crear el archivo de unidad personalizado
+    systemctl edit --full grub-btrfs.path <<EOF
+[Unit]
+Description=Monitors for new snapshots
+DefaultDependencies=no
+Requires=run-timeshift-backup.mount
+After=run-timeshift-backup.mount
+BindsTo=run-timeshift-backup.mount
+
+[Path]
+PathModified=/run/timeshift/backup/timeshift-btrfs/snapshots
+
+[Install]
+WantedBy=run-timeshift-backup.mount
+EOF
+
+    # Recargar y activar
+    systemctl reenable grub-btrfs.path || error "Fallo al recargar grub-btrfs.path"
+    systemctl start grub-btrfs.path || error "Fallo al iniciar grub-btrfs.path"
+    
+    success "Systemd configurado para monitorear snapshots en /run/timeshift/backup"
+}
+
 setup_timeshift() {
-    info "Configurando Timeshift para snapshots automáticos..."
+    info "Configurando Timeshift..."
+    mkdir -p /.snapshots
+    
+    # Configuración inicial de Timeshift
     timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots || error "Fallo al configurar Timeshift."
     timeshift --create --comments "Snapshot inicial" || error "Fallo al crear snapshot inicial."
+    
+    # Configurar política de limpieza automática
+    cat > /etc/timeshift.json <<EOF
+{
+  "backup_device_uuid" : "$(findmnt -no UUID /)",
+  "parent_device_uuid" : "",
+  "do_first_run" : "false",
+  "btrfs_mode" : "true",
+  "include_btrfs_home" : "false",
+  "stop_cron_emails" : "true",
+  "schedule_monthly" : "true",
+  "schedule_weekly" : "true",
+  "schedule_daily" : "true",
+  "count_monthly" : "2",
+  "count_weekly" : "3",
+  "count_daily" : "5"
+}
+EOF
 }
 
 # --- Ejecución principal ---
@@ -730,6 +777,7 @@ setup_timeshift() {
     configure_grub
     enable_services
     setup_timeshift
+    configure_systemd_monitoring
     success "¡Instalación completada! Reinicia para aplicar cambios."
 }
 
