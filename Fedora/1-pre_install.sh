@@ -502,8 +502,9 @@ configure_security() {
 }
 
 # Función para configurar soporte BTRFS y Timeshift
-configure_btrfs() {
-    show_message "PHASE" "Configurando soporte BTRFS y Timeshift"
+# Función para configurar subvolúmenes BTRFS y actualizar /etc/fstab
+configure_btrfs_volumes() {
+    show_message "PHASE" "Configurando subvolúmenes BTRFS"
 
     show_message "INFO" "Verificando sistema de archivos..."
     local FS_TYPE
@@ -514,274 +515,172 @@ configure_btrfs() {
     fi
 
     show_message "INFO" "Instalando herramientas necesarias..."
-    sudo dnf install -y --skip-unavailable --skip-broken btrfs-progs timeshift inotify-tools &>/dev/null
+    sudo dnf install -y --skip-unavailable --skip-broken btrfs-progs inotify-tools &>/dev/null
 
     show_message "INFO" "Configurando subvolúmenes en fstab..."
-    
-    # Función para obtener UUID de una partición dada
+
     get_uuid() {
         local mount_point=$1
         grep -E "${mount_point}\s+btrfs\s+" "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p'
     }
 
-    # Inicializamos un archivo de salida nuevo
     output_file="/etc/fstab.new"
-
-    # Copiar el contenido original de /etc/fstab al nuevo archivo
     cp /etc/fstab /etc/fstab.old
     cp /etc/fstab $output_file
 
-    # Obtener las UUIDs de las particiones
     ROOT_UUID=$(get_uuid "/")
     HOME_UUID=$(get_uuid "/home")
     VAR_UUID=$(get_uuid "/var")
     VAR_LOG_UUID=$(get_uuid "/var/log")
     SNAPSHOT_UUID=$(get_uuid "/.snapshots")
 
-    # Modificar las entradas correspondientes si las UUIDs fueron encontradas
     if [ -n "$ROOT_UUID" ]; then
         sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@ 0 0|" $output_file
     fi
-
     if [ -n "$HOME_UUID" ]; then
         sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@home 0 0|" $output_file
     fi
-
     if [ -n "$VAR_UUID" ]; then
         sudo sed -i -E "s|UUID=.*\s+/var\s+btrfs.*|UUID=${VAR_UUID} /var btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@var 0 0|" $output_file
     fi
-
     if [ -n "$VAR_LOG_UUID" ]; then
         sudo sed -i -E "s|UUID=.*\s+/var/log\s+btrfs.*|UUID=${VAR_LOG_UUID} /var/log btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0|" $output_file
     fi
-
     if [ -n "$SNAPSHOT_UUID" ]; then
         sudo sed -i -E "s|UUID=.*\s+/.snapshots\s+btrfs.*|UUID=${SNAPSHOT_UUID} /.snapshots btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@snapshots 0 0|" $output_file
     fi
 
-    # Forzar reemplazo del archivo fstab
     sudo cp $output_file /etc/fstab
 
     show_message "INFO" "Aplicando compresión LZO a subvolúmenes..."
     sudo btrfs filesystem defragment / -r -clzo &>/dev/null
-
-    # Balance to duplicate metadata and system
     sudo btrfs balance start -m / &>/dev/null
-
-#     show_message "INFO" "Instalando dependencias de compilación..."
-#     sudo dnf install -y --skip-unavailable make automake gcc gcc-c++ kernel-devel grub2-tools grub2-tools-extra polkit &>/dev/null
-
-#     show_message "INFO" "Instalando grub-btrfs desde repositorio oficial..."
-#     sudo rm -rf /git/grub-btrfs 2>/dev/null
-#     sudo mkdir -p /git
-#     sudo mkdir -p /.snapshots
-#     sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
-
-#     if [[ ! -d /git/grub-btrfs ]]; then
-#         show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
-#         return 1
-#     fi
-
-#     sudo tee /git/grub-btrfs/config > /dev/null <<EOF
-# GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
-# GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
-# GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
-# GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
-# GRUB_BTRFS_GRUB_DIRNAME="/boot/efi/EFI/fedora"
-# GRUB_BTRFS_BOOT_DIRNAME="/boot"
-# GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
-# GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
-# GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
-# EOF
-
-#     (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
-
-#     show_message "INFO" "Configurando y Activando servicio grub-btrfs."
-#     # Modify the service file to add --timeshift-auto
-#     # SERVICE_FILE="/lib/systemd/system/grub-btrfsd.service"
-#     # sudo sed -i 's|^ExecStart=/usr/bin/grub-btrfsd --syslog /.snapshots|ExecStart=/usr/bin/grub-btrfsd --syslog --timeshift-auto|' "$SERVICE_FILE"
-
-#     # Reload systemd configuration
-#     sudo systemctl daemon-reload
-
-#     show_message "INFO" "Configurando y Activando servicio Timeshift."
-#     # Rename the timeshift-gtk file in /usr/bin/
-#     sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back
-
-#     # Create a new timeshift-gtk file with the given content
-#     echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
-
-#     # Grant execute permissions to the new file
-#     sudo chmod +x /usr/bin/timeshift-gtk
-
-#     sudo timeshift --create --comments "initial"
-
-#     sudo systemctl stop timeshift && sudo systemctl disable timeshift
-#     sudo chmod +s /usr/bin/grub-btrfsd
-
-#     # Restart the service
-#     sudo systemctl restart grub-btrfsd
-#     sudo systemctl start grub-btrfsd
-#     sudo systemctl enable --now grub-btrfsd
-#     systemctl status grub-btrfsd
-
-#     show_message "INFO" "Regenerando GRUB"
-#     sudo rm /boot/efi/EFI/fedora/grub.cfg /boot/grub2/grub.cfg
-#     sudo dnf -y reinstall grub2-efi* grub2-common
-
-################OPCION 2 ##############
-#!/bin/bash
-# Script para instalar grub-btrfs en Fedora 42 con soporte para snapshots en GRUB
-# Basado en: https://github.com/KyleGospo/grub-btrfs
-# Autor: TuNombre
-# Licencia: MIT
-
-set -euo pipefail
-
-# --- Configuración inicial ---
-LOG_FILE="/var/log/grub-btrfs-install.log"
-exec > >(tee -a "$LOG_FILE") 2>&1
-
-# Colores para mensajes
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
-
-# --- Funciones ---
-error() {
-    echo -e "${RED}[✗]${NC} $1" >&2
-    exit 1
-}
-
-success() {
-    echo -e "${GREEN}[✓]${NC} $1"
-}
-
-info() {
-    echo -e "${BLUE}[i]${NC} $1"
-}
-
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        error "Este script debe ejecutarse como root. Usa: sudo $0"
-    fi
-}
-
-check_btrfs_root() {
-    if [[ $(findmnt -no FSTYPE /) != "btrfs" ]]; then
-        error "El sistema de archivos raíz NO es BTRFS. Este script requiere BTRFS."
-    fi
-}
-
-install_dependencies() {
-    info "Instalando dependencias..."
-    dnf install -y \
-        git \
-        make \
-        automake \
-        gcc \
-        gcc-c++ \
-        kernel-devel \
-        btrfs-progs \
-        grub2-tools \
-        inotify-tools \
-        timeshift || error "Fallo al instalar dependencias."
 }
 
 instalar_grub_btrfs() {
-    sudo dnf copr enable kylegospo/grub-btrfs
-    sudo dnf update
-sudo dnf -y install grub-btrfs
-sudo dnf -y install grub-btrfs-timeshift
-sudo systemctl enable --now grub-btrfs.path
-}
+    # --- Instalación desde COPR ---
+    info "Habilitando repositorio COPR y actualizando sistema..."
+    dnf copr enable -y kylegospo/grub-btrfs || error "No se pudo habilitar el repositorio COPR."
+    dnf update -y --skip-broken || error "Fallo al actualizar el sistema."
 
-configure_grub() {
-    info "Configurando GRUB para detectar snapshots..."
-    # Configuración específica para Fedora
+    # --- Instalación de paquetes ---
+    info "Instalando grub-btrfs y dependencias..."
+    dnf install -y --skip-broken \
+        grub-btrfs \
+        grub-btrfs-timeshift \
+        btrfs-progs \
+        inotify-tools \
+        timeshift || error "Fallo al instalar paquetes."
+
+    # --- Configuración de GRUB ---
+    info "Configurando detección de snapshots en GRUB..."
+    mkdir -p /etc/default/grub-btrfs || error "No se pudo crear directorio de configuración."
+    
     cat > /etc/default/grub-btrfs/config <<EOF
 GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
 GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
 GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
+GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"
 EOF
 
-    # Regenerar GRUB
-    grub2-mkconfig -o /boot/grub2/grub.cfg || error "Fallo al regenerar GRUB."
-}
-
-enable_services() {
-    info "Habilitando servicios..."
-    systemctl enable --now grub-btrfsd.service || error "Fallo al habilitar el servicio."
-}
-
-configure_systemd_monitoring() {
-    info "Configurando systemd para monitorear snapshots de Timeshift..."
+    # --- Sistema de monitoreo mejorado ---
+    info "Configurando sistema de monitorización automática..."
     
-    # Crear el archivo de unidad personalizado
-    systemctl edit --full grub-btrfs.path <<EOF
+    # 1. Servicio principal para regeneración
+    cat > /etc/systemd/system/grub-btrfs-regenerate.service <<EOF
 [Unit]
-Description=Monitors for new snapshots
+Description=Regenerar GRUB tras nuevos snapshots
+Requires=grub-btrfs.path
+After=grub-btrfs.path
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'grub2-mkconfig -o /boot/grub2/grub.cfg && logger -t grub-btrfs "GRUB regenerado por nuevo snapshot"'
+EOF
+
+    # 2. Path unit dinámico para Timeshift moderno
+    cat > /etc/systemd/system/grub-btrfs.path <<EOF
+[Unit]
+Description=Monitor de snapshots BTRFS (Rutas dinámicas)
 DefaultDependencies=no
-Requires=run-timeshift-backup.mount
-After=run-timeshift-backup.mount
-BindsTo=run-timeshift-backup.mount
 
 [Path]
-PathModified=/run/timeshift/backup/timeshift-btrfs/snapshots
+# Compatible con versiones nuevas/antiguas de Timeshift
+PathModified=/run/timeshift*/backup/timeshift-btrfs/snapshots
+PathModified=/.snapshots
+PathModified=/timeshift/snapshots
 
 [Install]
-WantedBy=run-timeshift-backup.mount
+WantedBy=multi-user.target
 EOF
 
-    # Recargar y activar
-    systemctl reenable grub-btrfs.path || error "Fallo al recargar grub-btrfs.path"
-    systemctl start grub-btrfs.path || error "Fallo al iniciar grub-btrfs.path"
-    
-    success "Systemd configurado para monitorear snapshots en /run/timeshift/backup"
-}
+    # 3. Timer de respaldo para detección periódica
+    cat > /etc/systemd/system/grub-btrfs-check.timer <<EOF
+[Unit]
+Description=Verificación horaria de snapshots
 
-setup_timeshift() {
-    info "Configurando Timeshift..."
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    cat > /etc/systemd/system/grub-btrfs-check.service <<EOF
+[Unit]
+Description=Verificador de snapshots para GRUB
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'find /run/timeshift* /.snapshots /timeshift -type d -name snapshots -mmin -60 -exec test -n "$(ls -A {})" \; -exec grub2-mkconfig -o /boot/grub2/grub.cfg \;'
+EOF
+
+    # --- Configuración de Timeshift ---
+    info "Configurando Timeshift automático..."
     mkdir -p /.snapshots
     
-    # Configuración inicial de Timeshift
-    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots || error "Fallo al configurar Timeshift."
-    timeshift --create --comments "Snapshot inicial" || error "Fallo al crear snapshot inicial."
-    
-    # Configurar política de limpieza automática
     cat > /etc/timeshift.json <<EOF
 {
   "backup_device_uuid" : "$(findmnt -no UUID /)",
-  "parent_device_uuid" : "",
-  "do_first_run" : "false",
-  "btrfs_mode" : "true",
-  "include_btrfs_home" : "false",
-  "stop_cron_emails" : "true",
-  "schedule_monthly" : "true",
-  "schedule_weekly" : "true",
-  "schedule_daily" : "true",
-  "count_monthly" : "2",
-  "count_weekly" : "3",
-  "count_daily" : "5"
+  "snapshot_dir" : "/.snapshots",
+  "snapshot_name" : "timeshift-btrfs",
+  "mode" : "btrfs",
+  "schedule_daily" : true,
+  "count_daily" : 5,
+  "schedule_weekly" : true,
+  "count_weekly" : 3,
+  "schedule_monthly" : true,
+  "count_monthly" : 2,
+  "auto_remove" : true
 }
 EOF
+
+    # --- Activación de servicios ---
+    info "Activando todos los servicios..."
+    systemctl daemon-reload
+    systemctl enable --now grub-btrfsd.service
+    systemctl enable --now grub-btrfs.path
+    systemctl enable --now grub-btrfs-regenerate.service
+    systemctl enable --now grub-btrfs-check.timer
+    
+    # Crear snapshot inicial
+    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots
+    timeshift --create --comments "Snapshot inicial post-instalación"
+
+    # --- Verificación final ---
+    info "Realizando verificación del sistema..."
+    grub2-mkconfig -o /boot/grub2/grub.cfg
+    systemctl start grub-btrfs-check.service  # Forzar primera comprobación
+
+    success "Configuración completada. Sistema listo para:"
+    echo -e "  • Snapshots automáticos en GRUB"
+    echo -e "  • Monitorización en tiempo real"
+    echo -e "  • Limpieza automática de snapshots antiguos"
+    echo -e "\nVerifica con: systemctl list-timers --all"
 }
-
-# --- Ejecución principal ---
-    check_root
-    check_btrfs_root
-    install_dependencies
-    instalar_grub_btrfs
-    configure_grub
-    enable_services
-    setup_timeshift
-    configure_systemd_monitoring
-    success "¡Instalación completada! Reinicia para aplicar cambios."
-}
-
-
 
 
 main() {
@@ -801,7 +700,9 @@ main() {
     
     # Optimizaciones del sistema
     #configure_zswap
-    configure_btrfs
+    configure_btrfs_volumes
+    instalar_grub_btrfs
+    
     
     # Seguridad
     #configure_security
