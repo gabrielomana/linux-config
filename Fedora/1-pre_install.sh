@@ -652,23 +652,23 @@ main() {
     init_log
     run_sudo
     
-    Configuración básica del sistema
+    #Configuración básica del sistema
     configure_dnf
     configure_dnf_automatic
     change_hostname
     
-    Instalación y configuración de repositorios y paquetes
+    #Instalación y configuración de repositorios y paquetes
     configure_repositories
     install_essential_packages
     configure_flatpak_repositories
     
-    Optimizaciones del sistema
+    #Optimizaciones del sistema
     configure_zswap
     configure_btrfs_volumes
     instalar_grub_btrfs
     
     # Seguridad
-    #configure_security
+    configure_security
     
     # Si existe la función update_firmware, llamarla también
     if type update_firmware &>/dev/null; then
