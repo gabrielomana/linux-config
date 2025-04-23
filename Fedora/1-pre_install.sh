@@ -286,26 +286,52 @@ function set-btrfs() {
     fi
 
     # Clonar grub-btrfs
-    echo "📦 Clonando grub-btrfs..."
-    sudo rm -rf /git/grub-btrfs
-    sudo git clone --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs
+echo "📦 Clonando grub-btrfs..."
+sudo rm -rf /git/grub-btrfs
+sudo git clone --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs
 
-    # Instalar dependencias de compilación
-    echo "🔧 Instalando dependencias de compilación..."
-    sudo dnf install -y --skip-unavailable --skip-broken make automake gcc gcc-c++ kernel-devel inotify-tools
+# Instalar dependencias de compilación
+echo "🔧 Instalando dependencias de compilación..."
+sudo dnf install -y --skip-unavailable --skip-broken make automake gcc gcc-c++ kernel-devel inotify-tools grub2-tools grub2-tools-extra
 
-    # Compilar e instalar
-    echo "🛠 Compilando e instalando grub-btrfs..."
-    cd /git/grub-btrfs || { echo "❌ No se pudo acceder a /git/grub-btrfs"; return 1; }
-    sudo make install || { echo "❌ Error al instalar grub-btrfs"; return 1; }
+# Crear directorio /boot/grub si no existe (para evitar fallo de escritura)
+if [ ! -d /boot/grub ]; then
+    echo "📁 Creando directorio /boot/grub..."
+    sudo mkdir -p /boot/grub
+fi
 
-    # Permisos y activación
-    sudo chmod +s /usr/bin/grub-btrfsd
-    echo "🟢 Activando grub-btrfsd..."
-    sudo systemctl enable --now grub-btrfsd.service
+# Compilar e instalar
+echo "🛠 Compilando e instalando grub-btrfs..."
+cd /git/grub-btrfs || { echo "❌ No se pudo acceder a /git/grub-btrfs"; exit 1; }
+sudo make clean
+sudo make install || { echo "❌ Error al instalar grub-btrfs"; exit 1; }
 
-    # Regenerar GRUB
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+# Verificar que el script se ha instalado correctamente
+if [ ! -f /etc/grub.d/41_snapshots-btrfs ]; then
+    echo "❌ El script 41_snapshots-btrfs no se instaló correctamente"
+    exit 1
+else
+    sudo chmod +x /etc/grub.d/41_snapshots-btrfs
+fi
+
+# Permisos y activación del servicio
+echo "🟢 Activando grub-btrfsd..."
+sudo chmod +s /usr/bin/grub-btrfsd
+sudo systemctl enable --now grub-btrfsd.service
+
+# Detectar si el sistema usa UEFI o BIOS
+if [ -d /sys/firmware/efi ]; then
+    GRUB_CFG_PATH="/boot/efi/EFI/fedora/grub.cfg"
+    echo "💡 Sistema con UEFI detectado."
+else
+    GRUB_CFG_PATH="/boot/grub2/grub.cfg"
+    echo "💡 Sistema con BIOS detectado."
+fi
+
+# Regenerar GRUB
+echo "🔄 Regenerando GRUB..."
+sudo grub2-mkconfig -o "$GRUB_CFG_PATH"
+
 
     ## --- PASO 5: Timeshift ---
     echo "🧩 Configurando Timeshift..."
