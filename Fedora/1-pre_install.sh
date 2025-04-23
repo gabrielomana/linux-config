@@ -564,38 +564,51 @@ configure_btrfs() {
     sudo mkdir -p /git
     
     # Clonar e instalar grub-btrfs
-    show_message "INFO" "Instalando grub-btrfs..."
-    sudo rm -rf /git/grub-btrfs 2>/dev/null
-    sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
-    
-    if [ ! -d /git/grub-btrfs ]; then
-        show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
+show_message "INFO" "Instalando grub-btrfs..."
+sudo rm -rf /git/grub-btrfs 2>/dev/null
+sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
+
+if [ ! -d /git/grub-btrfs ]; then
+    show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
+else
+    # Crear directorio de grub si no existe
+    sudo mkdir -p /boot/grub 2>/dev/null
+
+    # Crear archivo de configuración con ajustes personalizados
+    sudo tee /git/grub-btrfs/config >/dev/null <<EOF
+GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
+GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
+GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
+GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
+GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
+GRUB_BTRFS_BOOT_DIRNAME="/boot"
+GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
+GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
+GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
+EOF
+
+    # Compilar e instalar
+    (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
+
+    # Verificar instalación
+    if [ ! -f /etc/grub.d/41_snapshots-btrfs ]; then
+        show_message "WARNING" "No se pudo instalar grub-btrfs correctamente"
     else
-        # Crear directorio de grub si no existe
-        sudo mkdir -p /boot/grub 2>/dev/null
-        
-        # Compilar e instalar
-        (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
-        
-        # Verificar instalación
-        if [ ! -f /etc/grub.d/41_snapshots-btrfs ]; then
-            show_message "WARNING" "No se pudo instalar grub-btrfs correctamente"
-        else
-            sudo chmod +x /etc/grub.d/41_snapshots-btrfs
-            
-            # Configurar binario si existe
-            if [ -f /usr/bin/grub-btrfsd ]; then
-                sudo chmod +s /usr/bin/grub-btrfsd
-                
-                # Activar servicio
-                sudo systemctl enable --now grub-btrfsd.service &>/dev/null
-            fi
-            
-            # Regenerar GRUB
-            show_message "INFO" "Regenerando configuración de GRUB..."
-            sudo grub2-mkconfig -o "$GRUB_CFG_PATH" &>/dev/null
+        sudo chmod +x /etc/grub.d/41_snapshots-btrfs
+
+        # Configurar binario si existe
+        if [ -f /usr/bin/grub-btrfsd ]; then
+            sudo chmod +s /usr/bin/grub-btrfsd
+
+            # Activar servicio
+            sudo systemctl enable --now grub-btrfsd.service &>/dev/null
         fi
+
+        # Regenerar GRUB
+        show_message "INFO" "Regenerando configuración de GRUB..."
+        sudo grub2-mkconfig -o "$GRUB_CFG_PATH" &>/dev/null
     fi
+fi
     
     # Configurar Timeshift
     show_message "INFO" "Configurando Timeshift..."
@@ -621,21 +634,21 @@ main() {
     run_sudo
     
     # Configuración básica del sistema
-    configure_dnf
-    configure_dnf_automatic
-    change_hostname
+    #configure_dnf
+    #configure_dnf_automatic
+    #change_hostname
     
     # Instalación y configuración de repositorios y paquetes
-    configure_repositories
-    install_essential_packages
-    configure_flatpak_repositories
+    #configure_repositories
+    #install_essential_packages
+    #configure_flatpak_repositories
     
     # Optimizaciones del sistema
-    configure_zswap
-    #configure_btrfs
+    #configure_zswap
+    configure_btrfs
     
     # Seguridad
-    configure_security
+    #configure_security
     
     # Si existe la función update_firmware, llamarla también
     if type update_firmware &>/dev/null; then
