@@ -10,15 +10,6 @@ function check_error {
     fi
 }
 
-# Función para mostrar mensajes con formato
-function show_message {
-    message="========
-$1
-========"
-    echo "$message"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $message" >> log.txt
-}
-
 # Función para configurar DNF
 function configure-dnf {
     clear
@@ -92,8 +83,8 @@ function configure-repositories {
 
 # Función para instalar paquetes esenciales
 function install-essential-packages {
-    sudo dnf install -y --skip-broken --skip-unavailable @development-tools git
-    sudo dnf install -y --skip-broken --skip-unavailable \
+    sudo dnf install -y --skip-unavailable --skip-unavailable @development-tools git
+    sudo dnf install -y --skip-unavailable --skip-unavailable \
         util-linux-user \
         dnf-plugins-core \
         openssl \
@@ -137,7 +128,6 @@ function configure-flatpak-repositories {
 }
 
 function configure-zswap {
-    show_message "Iniciando configuración de ZSWAP..."
 
     # Eliminar zram-generator si está instalado
     sudo dnf remove -y zram-generator
@@ -231,7 +221,6 @@ printf "\nCompression ratio: "
     check_error "No se pudo crear el script de monitoreo de ZSWAP."
 
     # Mostrar información de ZSWAP
-    show_message "Configuración de ZSWAP completada."
     sudo bash "$script_file"
 }
 
@@ -260,27 +249,10 @@ function set-btrfs() {
 
     ## --- PASO 1: Instalación de herramientas necesarias --- 
     echo "🛠️ Instalando herramientas necesarias..."
-    
-    # Instalar btrfs-progs si no está instalado
-    if ! command -v btrfs &> /dev/null; then
-        echo "🛠️ Instalando btrfs-progs..."
-        sudo dnf install -y btrfs-progs
-    fi
-
-    # Instalar Timeshift si no está instalado
-    if ! command -v timeshift &> /dev/null; then
-        echo "🧩 Instalando Timeshift..."
-        sudo dnf install -y timeshift
-    fi
-
-    # Instalar grub-btrfs y otras dependencias
-    echo "🔧 Instalando grub-btrfs y configurando GRUB..."
-    sudo dnf install -y grub-btrfs inotify-tools
-    sudo git clone https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs/ || true
+    sudo dnf install -y --skip-unavailable btrfs-progs timeshift inotify-tools
 
     ## --- PASO 2: Validación y configuración de fstab ---
     echo "🧾 Verificando sistema de archivos y reconfigurando fstab..."
-
     local FS_TYPE
     FS_TYPE=$(df -T / | awk 'NR==2 {print $2}')
     if [[ "$FS_TYPE" != "btrfs" ]]; then
@@ -308,38 +280,62 @@ function set-btrfs() {
         sudo rmdir "$DIR"
     done
 
-    ## --- PASO 4: Configuración de Timeshift ---
-    echo "🧩 Configurando Timeshift..."
-    [[ -d "$SNAPSHOT_DIR" ]] || sudo mkdir -p "$SNAPSHOT_DIR"
+    ## --- PASO 4: Instalar grub-btrfs desde GitHub ---
+    echo "🔧 Instalando grub-btrfs desde el repositorio de GitHub..."
 
-    sudo timeshift --btrfs --snapshot-device "$BTRFS_ROOT_DEV" --snapshot-dir "$SNAPSHOT_DIR"
-    sudo timeshift --create --comments "Snapshot inicial tras postinstalación BTRFS"
+    # Detección UEFI/BIOS para dependencias de GRUB
+    if [[ -d /sys/firmware/efi ]]; then
+        echo "⚙️ Modo UEFI detectado."
+        sudo dnf install -y grub2-efi-x64 grub2-efi-bootloader
+    else
+        echo "⚙️ Modo BIOS detectado."
+        sudo dnf install -y grub2-pc
+    fi
 
-    ## --- PASO 5: Configuración de grub-btrfs ---
-    echo "🔧 Configurando GRUB con grub-btrfs..."
+    # Clonar grub-btrfs
+    echo "📦 Clonando grub-btrfs..."
+    sudo rm -rf /git/grub-btrfs
+    sudo git clone --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs
 
-    cd /git/grub-btrfs
-    sudo sed -i '/#GRUB_BTRFS_SNAPSHOT_KERNEL/a GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="systemd.volatile=state"' config
-    sudo sed -i '/#GRUB_BTRFS_GRUB_DIRNAME/a GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"' config
-    sudo sed -i '/#GRUB_BTRFS_MKCONFIG=/a GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig' config
-    sudo sed -i '/#GRUB_BTRFS_SCRIPT_CHECK=/a GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check' config
-    sudo make install
+    # Instalar dependencias de compilación
+    echo "🔧 Instalando dependencias de compilación..."
+    sudo dnf install -y make automake gcc gcc-c++ kernel-devel inotify-tools
 
+    # Compilar e instalar
+    echo "🛠 Compilando e instalando grub-btrfs..."
+    cd /git/grub-btrfs || { echo "❌ No se pudo acceder a /git/grub-btrfs"; return 1; }
+    sudo make install || { echo "❌ Error al instalar grub-btrfs"; return 1; }
+
+    # Permisos y activación
     sudo chmod +s /usr/bin/grub-btrfsd
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    echo "🟢 Activando grub-btrfsd..."
     sudo systemctl enable --now grub-btrfsd.service
 
+    # Regenerar GRUB
+    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+
+    ## --- PASO 5: Timeshift ---
+    echo "🧩 Configurando Timeshift..."
+    [[ -d "$SNAPSHOT_DIR" ]] || sudo mkdir -p "$SNAPSHOT_DIR"
+    sudo timeshift --btrfs --snapshot-device "$BTRFS_ROOT_DEV" --snapshot-dir "$SNAPSHOT_DIR" || echo "⚠️ Error al configurar Timeshift."
+    sudo timeshift --create --comments "Snapshot inicial" || echo "⚠️ No se pudo crear el snapshot."
+
     ## --- PASO 6: Timeshift gráfico seguro ---
-    echo "🔒 Habilitando acceso seguro a Timeshift (pkexec)..."
     if [[ -f /usr/bin/timeshift-gtk ]]; then
+        echo "🔒 Configurando Timeshift GUI (pkexec)..."
         sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back || true
         echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' | sudo tee /usr/bin/timeshift-gtk > /dev/null
         sudo chmod +x /usr/bin/timeshift-gtk
+    else
+        echo "⚠️ timeshift-gtk no encontrado. Omitiendo configuración GUI."
     fi
 
     ## --- Finalización ---
-    echo "✅ Post-instalación finalizada correctamente. Sistema listo para snapshots con GRUB y compresión optimizada."
+    echo "✅ ¡Configuración completada! Verifica:"
+    echo "   - Snapshots en GRUB: sudo grep 'submenu.*Snapshots' /boot/grub2/grub.cfg"
+    echo "   - Estado de grub-btrfsd: systemctl status grub-btrfsd.service"
 }
+
 
 #
 # Función para configurar la seguridad en Fedora
