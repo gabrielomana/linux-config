@@ -513,34 +513,61 @@ configure_btrfs() {
         return 0
     fi
 
-    # Variables
-    local MOUNT_OPTIONS="defaults,noatime,space_cache=v2,compress=lzo"
-    local BTRFS_ROOT_DEV UUID SNAPSHOT_DIR FSTAB_FILE
-    BTRFS_ROOT_DEV="$(findmnt -nRo SOURCE /)"
-    UUID="$(findmnt -no UUID /)"
-    SNAPSHOT_DIR="/.snapshots"
-    FSTAB_FILE="/etc/fstab"
-
-    declare -A SUBVOLS=(
-        ["/"]="@"
-        ["/var"]="@var"
-        ["$SNAPSHOT_DIR"]="@snapshots"
-    )
-
     show_message "INFO" "Instalando herramientas necesarias..."
     sudo dnf install -y --skip-unavailable --skip-broken btrfs-progs timeshift inotify-tools &>/dev/null
 
     show_message "INFO" "Configurando subvolúmenes en fstab..."
-    sudo cp -n "$FSTAB_FILE" "${FSTAB_FILE}.bak" 2>/dev/null
-    sudo sed -i '/btrfs/d' "$FSTAB_FILE" 2>/dev/null
+            get_uuid() {
+            local mount_point=$1
+            grep -E "${mount_point}\s+btrfs\s+" "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p'
+        }
 
-    for MOUNTPOINT in "${!SUBVOLS[@]}"; do
-        local SUBVOL="${SUBVOLS[$MOUNTPOINT]}"
-        echo "UUID=$UUID $MOUNTPOINT btrfs subvol=$SUBVOL,$MOUNT_OPTIONS 0 0" | sudo tee -a "$FSTAB_FILE" > /dev/null
-    done
+        # Inicializamos un archivo de salida nuevo
+        output_file="/etc/fstab.new"
+
+        # Copiar el contenido original de /etc/fstab al nuevo archivo
+        cp /etc/fstab /etc/fstab.old
+        cp /etc/fstab $output_file
+
+        # Obtener las UUIDs de las particiones
+        ROOT_UUID=$(get_uuid "/")
+        HOME_UUID=$(get_uuid "/home")
+        VAR_UUID=$(get_uuid "/var")
+        VAR_LOG_UUID=$(get_uuid "/var/log")
+        SNAPSHOT_UUID=$(get_uuid "/.snapshots")
+
+        # Modificar las entradas correspondientes si las UUIDs fueron encontradas
+
+        if [ -n "$ROOT_UUID" ]; then
+            sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@ 0 0|" $output_file
+        fi
+
+        if [ -n "$HOME_UUID" ]; then
+            sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@home 0 0|" $output_file
+        fi
+
+        if [ -n "$VAR_UUID" ]; then
+            sudo sed -i -E "s|UUID=.*\s+/var\s+btrfs.*|UUID=${VAR_UUID} /var btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@var 0 0|" $output_file
+        fi
+
+        if [ -n "$VAR_LOG_UUID" ]; then
+            sudo sed -i -E "s|UUID=.*\s+/var/log\s+btrfs.*|UUID=${VAR_LOG_UUID} /var/log btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0|" $output_file
+        fi
+
+        if [ -n "$SNAPSHOT_UUID" ]; then
+            sudo sed -i -E "s|UUID=.*\s+/.snapshots\s+btrfs.*|UUID=${SNAPSHOT_UUID} /.snapshots btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@snapshots 0 0|" $output_file
+        fi
+
+        sudo cp $output_file /etc/fstab
 
     show_message "INFO" "Aplicando compresión LZO a subvolúmenes..."
     sudo btrfs filesystem defragment / -r -clzo &>/dev/null
+
+     # Balance to duplicate metadata and system
+    sudo btrfs balance start -m /
+
+    # Balance to set data and global reserve as non-duplicated
+    sudo btrfs balance start -d -s /
 
     # show_message "INFO" "Configurando GRUB para entorno $( [[ -d /sys/firmware/efi ]] && echo UEFI || echo BIOS )..."
     # if [[ -d /sys/firmware/efi ]]; then
@@ -559,24 +586,24 @@ configure_btrfs() {
     sudo mkdir -p /git
     sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
 
-    if [[ ! -d /git/grub-btrfs ]]; then
-        show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
-        return 1
-    fi
+#     if [[ ! -d /git/grub-btrfs ]]; then
+#         show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
+#         return 1
+#     fi
 
-    sudo tee /git/grub-btrfs/config > /dev/null <<EOF
-GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
-GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
-GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
-GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
-GRUB_BTRFS_GRUB_DIRNAME="/boot/efi/EFI/fedora"
-GRUB_BTRFS_BOOT_DIRNAME="/boot"
-GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
-GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
-GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
-EOF
+#     sudo tee /git/grub-btrfs/config > /dev/null <<EOF
+# GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
+# GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
+# GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
+# GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
+# GRUB_BTRFS_GRUB_DIRNAME="/boot/efi/EFI/fedora"
+# GRUB_BTRFS_BOOT_DIRNAME="/boot"
+# GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
+# GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
+# GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
+# EOF
 
-    (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
+#     (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
 
     # if [[ -f /etc/grub.d/41_snapshots-btrfs ]]; then
     #     sudo chmod +x /etc/grub.d/41_snapshots-btrfs

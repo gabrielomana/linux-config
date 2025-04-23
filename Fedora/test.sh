@@ -34,7 +34,7 @@ if [ -n "$VAR_UUID" ]; then
 fi
 
 if [ -n "$VAR_LOG_UUID" ]; then
-    sudo sed -i -E "s|UUID=.*\s+/var/log\s+btrfs.*|UUID=${VAR_LOG_UUID} /var/log btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@varlog 0 0|" $output_file
+    sudo sed -i -E "s|UUID=.*\s+/var/log\s+btrfs.*|UUID=${VAR_LOG_UUID} /var/log btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0|" $output_file
 fi
 
 if [ -n "$SNAPSHOT_UUID" ]; then
