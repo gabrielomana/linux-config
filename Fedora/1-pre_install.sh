@@ -504,7 +504,7 @@ configure_security() {
 # Función para configurar soporte BTRFS y Timeshift
 configure_btrfs() {
     show_message "PHASE" "Configurando soporte BTRFS y Timeshift"
-    
+
     show_message "INFO" "Verificando sistema de archivos..."
     local FS_TYPE
     FS_TYPE=$(df -T / | awk 'NR==2 {print $2}')
@@ -512,171 +512,96 @@ configure_btrfs() {
         show_message "WARNING" "El sistema raíz no está en BTRFS. Omitiendo configuración BTRFS."
         return 0
     fi
-    
-    # Variables para BTRFS
+
+    # Variables
     local MOUNT_OPTIONS="defaults,noatime,space_cache=v2,compress=lzo"
-    local BTRFS_ROOT_DEV
+    local BTRFS_ROOT_DEV UUID SNAPSHOT_DIR FSTAB_FILE
     BTRFS_ROOT_DEV="$(findmnt -nRo SOURCE /)"
-    local UUID
     UUID="$(findmnt -no UUID /)"
-    local SNAPSHOT_DIR="/.snapshots"
-    local FSTAB_FILE="/etc/fstab"
-    
-    # Subvolúmenes esperados
+    SNAPSHOT_DIR="/.snapshots"
+    FSTAB_FILE="/etc/fstab"
+
     declare -A SUBVOLS=(
         ["/"]="@"
         ["/var"]="@var"
         ["$SNAPSHOT_DIR"]="@snapshots"
     )
-    
-    show_message "INFO" "Instalando herramientas para BTRFS..."
+
+    show_message "INFO" "Instalando herramientas necesarias..."
     sudo dnf install -y --skip-unavailable --skip-broken btrfs-progs timeshift inotify-tools &>/dev/null
-    
-    show_message "INFO" "Configurando fstab para subvolúmenes BTRFS..."
+
+    show_message "INFO" "Configurando subvolúmenes en fstab..."
     sudo cp -n "$FSTAB_FILE" "${FSTAB_FILE}.bak" 2>/dev/null
     sudo sed -i '/btrfs/d' "$FSTAB_FILE" 2>/dev/null
-    
+
     for MOUNTPOINT in "${!SUBVOLS[@]}"; do
         local SUBVOL="${SUBVOLS[$MOUNTPOINT]}"
-        echo "UUID=$UUID $MOUNTPOINT btrfs subvol=$SUBVOL,$MOUNT_OPTIONS 0 0" \
-            | sudo tee -a "$FSTAB_FILE" > /dev/null
+        echo "UUID=$UUID $MOUNTPOINT btrfs subvol=$SUBVOL,$MOUNT_OPTIONS 0 0" | sudo tee -a "$FSTAB_FILE" > /dev/null
     done
-    
+
     show_message "INFO" "Aplicando compresión LZO a subvolúmenes..."
     sudo btrfs filesystem defragment / -r -clzo &>/dev/null
-    
-    show_message "INFO" "Configurando grub-btrfs..."
-    # Detectar UEFI/BIOS
+
+    show_message "INFO" "Configurando GRUB para entorno $( [[ -d /sys/firmware/efi ]] && echo UEFI || echo BIOS )..."
     if [[ -d /sys/firmware/efi ]]; then
-        show_message "INFO" "Sistema UEFI detectado"
-        sudo dnf install -y --skip-unavailable --skip-broken grub2-efi-x64 grub2-efi-bootloader &>/dev/null
+        sudo dnf install -y --skip-unavailable grub2-efi-x64 grub2-efi-bootloader &>/dev/null
         GRUB_CFG_PATH="/boot/efi/EFI/fedora/grub.cfg"
     else
-        show_message "INFO" "Sistema BIOS detectado"
-        sudo dnf install -y --skip-unavailable --skip-broken grub2-pc &>/dev/null
+        sudo dnf install -y --skip-unavailable grub2-pc &>/dev/null
         GRUB_CFG_PATH="/boot/grub2/grub.cfg"
     fi
-    
-    # Instalar dependencias
-    sudo dnf install -y --skip-unavailable --skip-broken make automake gcc gcc-c++ kernel-devel inotify-tools grub2-tools grub2-tools-extra &>/dev/null
-    
-    # Crear directorio para clonar repositorio
+
+    show_message "INFO" "Instalando dependencias de compilación..."
+    sudo dnf install -y --skip-unavailable make automake gcc gcc-c++ kernel-devel grub2-tools grub2-tools-extra &>/dev/null
+
+    show_message "INFO" "Instalando grub-btrfs desde repositorio oficial..."
+    sudo rm -rf /git/grub-btrfs 2>/dev/null
     sudo mkdir -p /git
-    
-    # Clonar e instalar grub-btrfs
-show_message "INFO" "Instalando grub-btrfs..."
-sudo rm -rf /git/grub-btrfs 2>/dev/null
-sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
+    sudo git clone --quiet --depth 1 https://github.com/Antynea/grub-btrfs.git /git/grub-btrfs 2>/dev/null
 
-if [ ! -d /git/grub-btrfs ]; then
-    show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
-else
-    # Crear directorio de grub si no existe
-    sudo mkdir -p /boot/grub2 2>/dev/null
+    if [[ ! -d /git/grub-btrfs ]]; then
+        show_message "WARNING" "No se pudo clonar el repositorio grub-btrfs"
+        return 1
+    fi
 
-    # Crear archivo de configuración con ajustes personalizados
-    sudo tee /git/grub-btrfs/config >/dev/null <<EOF
-# Name appearing in the Grub menu.
-# Default: "Use distribution information from /etc/os-release."
+    sudo tee /git/grub-btrfs/config > /dev/null <<EOF
 GRUB_BTRFS_SUBMENUNAME="Fedora Linux snapshots"
-
-
-# Additonal kernel command line parameters that should be passed to the kernel
-# when booting a snapshot.
-# For dracut based distros this could be useful to pass "rd.live.overlay.overlayfs=1"
-# or "rd.live.overlay.readonly=1" to the Kernel for booting snapshots read only.
-# Default: ""
 GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rd.live.overlay.overlayfs=1"
-
-
-# Ignore specific path during run "grub-mkconfig".
-# Only exact paths are ignored.
-# e.g : if `specific path` = @, only `@` snapshot will be ignored.
-# Default: ("@")
 GRUB_BTRFS_IGNORE_SPECIFIC_PATH=("@")
-
-
-# Ignore prefix path during run "grub-mkconfig".
-# Any path starting with the specified string will be ignored.
-# e.g : if `prefix path` = @, all snapshots beginning with "@/..." will be ignored.
-# Default: ("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
 GRUB_BTRFS_IGNORE_PREFIX_PATH=("var/lib/docker" "@var/lib/docker" "@/var/lib/docker")
-
-
-# Location of the folder containing the "grub.cfg" file.
-# Might be grub2 on some systems.
-# For example, on Fedora with EFI : "/boot/efi/EFI/fedora"
-# Default: "/boot/grub"
 GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
-
-
-# Location of kernels/initramfs/microcode.
-# Use by "grub-btrfs" to detect the boot partition and the location of kernels/initrafms/microcodes.
-# Default: "/boot"
 GRUB_BTRFS_BOOT_DIRNAME="/boot"
-
-
-# Name/path of grub-mkconfig command, use by "grub-btrfs.service"
-# Might be 'grub2-mkconfig' on some systems (Fedora ...)
-# Default paths are /sbin:/bin:/usr/sbin:/usr/bin,
-# if your path is missing, report it on the upstream project.
-# For example, on Fedora : "/sbin/grub2-mkconfig"
-# You can use only name or full path.
-# Default: grub-mkconfig
 GRUB_BTRFS_MKCONFIG=/usr/sbin/grub2-mkconfig
-
-# Name of grub-script-check command, use by "grub-btrfs"
-# Might be 'grub2-script-check' on some systems (Fedora ...)
-# For example, on Fedora : "grub2-script-check"
-# Default: grub-script-check
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
-
-# Path of grub-mkconfig_lib file, use by "grub-btrfs"
-# Might be '/usr/share/grub2/grub-mkconfig_lib' on some systems (Opensuse ...)
-# Default: /usr/share/grub/grub-mkconfig_lib
 GRUB_BTRFS_MKCONFIG_LIB=/usr/share/grub/grub-mkconfig_lib
 EOF
 
-    # Compilar e instalar
     (cd /git/grub-btrfs && sudo make clean && sudo make install) &>/dev/null
 
-    # Verificar instalación
-    if [ ! -f /etc/grub.d/41_snapshots-btrfs ]; then
-        show_message "WARNING" "No se pudo instalar grub-btrfs correctamente"
-    else
+    if [[ -f /etc/grub.d/41_snapshots-btrfs ]]; then
         sudo chmod +x /etc/grub.d/41_snapshots-btrfs
-
-        # Configurar binario si existe
-        if [ -f /usr/bin/grub-btrfsd ]; then
+        if [[ -f /usr/bin/grub-btrfsd ]]; then
             sudo chmod +s /usr/bin/grub-btrfsd
 
-            # Activar servicio
-            sudo systemctl enable --now grub-btrfsd.service &>/dev/null
+            show_message "INFO" "Habilitando servicio grub-btrfs.service..."
+            sudo cp /git/grub-btrfs/grub-btrfs.service /etc/systemd/system/
+            sudo systemctl daemon-reexec
+            sudo systemctl enable grub-btrfs.service &>/dev/null
+            sudo systemctl start grub-btrfs.service &>/dev/null
+
+            show_message "INFO" "Servicio grub-btrfs activado correctamente."
         fi
 
-        # Regenerar GRUB
         show_message "INFO" "Regenerando configuración de GRUB..."
         sudo grub2-mkconfig -o "$GRUB_CFG_PATH" &>/dev/null
+
+        show_message "SUCCESS" "Configuración de BTRFS y GRUB finalizada con éxito."
+    else
+        show_message "ERROR" "Instalación de grub-btrfs fallida."
+        return 1
     fi
-fi
-    
-    # Configurar Timeshift
-    show_message "INFO" "Configurando Timeshift..."
-    [[ -d "$SNAPSHOT_DIR" ]] || sudo mkdir -p "$SNAPSHOT_DIR"
-    sudo timeshift --btrfs --snapshot-device "$BTRFS_ROOT_DEV" --snapshot-dir "$SNAPSHOT_DIR" &>/dev/null
-    sudo timeshift --create --comments "Snapshot inicial después de post-instalación" &>/dev/null
-    
-    # Configurar Timeshift GUI seguro
-    if [[ -f /usr/bin/timeshift-gtk ]]; then
-        show_message "INFO" "Configurando Timeshift GUI seguro con pkexec..."
-        sudo mv /usr/bin/timeshift-gtk /usr/bin/timeshift-gtk-back 2>/dev/null || true
-        echo -e '#!/bin/bash\n/bin/pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY /usr/bin/timeshift-gtk-back' \
-            | sudo tee /usr/bin/timeshift-gtk > /dev/null
-        sudo chmod +x /usr/bin/timeshift-gtk
-    fi
-    
-    show_message "SUCCESS" "BTRFS y Timeshift configurados correctamente"
 }
+
 
 main() {
     # Inicializar registro y verificar privilegios
