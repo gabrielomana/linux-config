@@ -632,7 +632,7 @@ main() {
     
     # Optimizaciones del sistema
     configure_zswap
-    configure_btrfs
+    #configure_btrfs
     
     # Seguridad
     configure_security
