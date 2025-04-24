@@ -1,8 +1,7 @@
-qpdfview (Qt-based)
+qpdfview
 lxqt-wallpapers
 lxqt-system-monitor
-qml-dialogs
+qml-module-qtquick-dialogs
 lxqt-passwd-manager
 lxqt-session-manager
-nm-applet
-QTextEditor
+qt5-qtbase
