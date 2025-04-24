@@ -137,47 +137,64 @@ deltarpm=True"
 
 # Función para configurar DNF Automatic
 configure_dnf_automatic() {
-    show_message "PHASE" "Configurando actualizaciones automáticas con DNF Automatic"
-    
-    show_message "INFO" "Instalando paquetes necesarios..."
-    sudo dnf install -y --quiet dnf-automatic dnf-plugins-extras-tracer
-    if ! check_error "No se pudieron instalar los paquetes necesarios"; then
+    show_message "PHASE" "Configurando actualizaciones automáticas con DNF Automatic (Fedora 42)"
+
+    # 1. Instalar paquetes necesarios
+    show_message "INFO" "Instalando dnf-automatic y dependencias..."
+    if ! sudo dnf install -y --quiet dnf-automatic dnf-plugins-core; then
+        show_message "ERROR" "Falló la instalación de paquetes. Verifica el acceso a repositorios."
         return 1
     fi
-    
-    show_message "INFO" "Configurando DNF Automatic para actualizaciones de seguridad..."
-    
-    # Configurar para aplicar solo actualizaciones de seguridad automáticamente
-    sudo sed -i '/^upgrade_type/ s/default/security/' /etc/dnf/automatic.conf
-    sudo sed -i '/^apply_updates/ s/no/yes/' /etc/dnf/automatic.conf
-    check_error "No se pudo configurar automatic.conf" || return 1
-    
-    # Instalar script para reinicio automático después de actualizaciones
+
+    # 2. Configurar solo actualizaciones de seguridad
+    show_message "INFO" "Aplicando configuración para updates de seguridad..."
+    sudo tee /etc/dnf/automatic.conf >/dev/null <<EOF
+[commands]
+upgrade_type = security
+apply_updates = yes
+random_sleep = 3600
+[emitters]
+emit_via = stdio
+EOF
+
+    if [ $? -ne 0 ]; then
+        show_message "ERROR" "No se pudo escribir en /etc/dnf/automatic.conf"
+        return 1
+    fi
+
+    # 3. Configurar reinicio automático (opcional)
+    show_message "INFO" "Configurando reinicio automático post-actualización..."
+    if ! command -v git &>/dev/null; then
+        sudo dnf install -y --quiet git
+    fi
+
     if [ ! -d /usr/local/src/dnf-automatic-restart ]; then
-        show_message "INFO" "Descargando herramienta de reinicio automático..."
-        sudo mkdir -p /usr/local/src
-        sudo git clone --quiet https://github.com/agross/dnf-automatic-restart.git /usr/local/src/dnf-automatic-restart
-        check_error "No se pudo clonar el repositorio dnf-automatic-restart" || {
-            show_message "WARNING" "Continuando sin el reinicio automático"
-        }
+        if sudo git clone --quiet https://github.com/agross/dnf-automatic-restart.git /usr/local/src/dnf-automatic-restart; then
+            sudo ln -sf /usr/local/src/dnf-automatic-restart/dnf-automatic-restart /usr/local/sbin/
+        else
+            show_message "WARNING" "No se pudo clonar el repositorio. Reinicios automáticos desactivados."
+        fi
     fi
-    
-    if [ -d /usr/local/src/dnf-automatic-restart ]; then
-        sudo ln -sf /usr/local/src/dnf-automatic-restart/dnf-automatic-restart /usr/local/sbin/dnf-automatic-restart
-        sudo systemctl enable dnf-automatic-install.timer
-        
-        # Configurar servicio para reinicio automático
-        sudo mkdir -p /etc/systemd/system/dnf-automatic-install.service.d
-        echo "[Service]" | sudo tee /etc/systemd/system/dnf-automatic-install.service.d/restart.conf > /dev/null
-        echo "ExecStartPost=/usr/local/sbin/dnf-automatic-restart -d" | sudo tee -a /etc/systemd/system/dnf-automatic-install.service.d/restart.conf > /dev/null
-        
+
+    # 4. Habilitar y activar el servicio
+    sudo systemctl enable --now dnf-automatic-install.timer
+    if [ $? -eq 0 ]; then
+        show_message "SUCCESS" "dnf-automatic configurado. Timer activado."
+    else
+        show_message "ERROR" "Falló al habilitar el servicio. Verifica systemd."
+        return 1
+    fi
+
+    # 5. Opcional: Configurar reinicio (si el script está disponible)
+    if [ -x /usr/local/sbin/dnf-automatic-restart ]; then
+        sudo mkdir -p /etc/systemd/system/dnf-automatic-install.service.d/
+        sudo tee /etc/systemd/system/dnf-automatic-install.service.d/restart.conf >/dev/null <<EOF
+[Service]
+ExecStartPost=/usr/local/sbin/dnf-automatic-restart -d
+EOF
         sudo systemctl daemon-reload
-        check_error "No se pudo configurar el servicio de reinicio automático" || {
-            show_message "WARNING" "La configuración del reinicio automático falló, pero continuando"
-        }
+        show_message "INFO" "Reinicio automático post-actualización habilitado."
     fi
-    
-    show_message "SUCCESS" "DNF Automatic configurado correctamente"
 }
 
 # Función para cambiar el nombre del host
