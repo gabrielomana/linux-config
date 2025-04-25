@@ -1,5 +1,5 @@
 #!/bin/bash
-    sudo tee /etc/systemd/system/grub-btrfs@.path > /dev/null <<'EOF'
+    sudo tee /etc/systemd/system/grub-btrfs.path > /dev/null <<'EOF'
 [Unit]
 Description=Monitors Timeshift snapshots in /run/timeshift/%i/backup
 DefaultDependencies=no

@@ -71,7 +71,7 @@ show_progress() {
 handle_error() {
     local cmd="$1"
     local error_msg="$2"
-    
+
     if ! eval "$cmd" >> "$LOG_FILE" 2>> "$ERROR_LOG"; then
         show_error "$error_msg"
         return 1
@@ -84,7 +84,7 @@ run_cmd() {
     local cmd="$1"
     local success_msg="$2"
     local error_msg="$3"
-    
+
     echo "Ejecutando: $cmd" >> "$LOG_FILE"
     if eval "$cmd" >> "$LOG_FILE" 2>> "$ERROR_LOG"; then
         [ -n "$success_msg" ] && show_success "$success_msg"
@@ -103,13 +103,13 @@ run_cmd() {
 install_packages() {
     local package_list="$1"
     local skip_broken="${2:-true}"
-    
+
     # Verificar si el archivo existe
     if [ ! -f "$package_list" ]; then
         show_error "El archivo de lista '$package_list' no existe."
         return 1
     fi
-    
+
     # Leer el archivo y crear un array con los paquetes
     local packages=()
     while read -r line; do
@@ -118,31 +118,31 @@ install_packages() {
         # Ignorar líneas vacías
         [ -n "$line" ] && packages+=("$line")
     done < "$package_list"
-    
+
     # Si no hay paquetes, salir de la función
     if [ ${#packages[@]} -eq 0 ]; then
         show_warning "No hay paquetes para instalar en '$package_list'."
         return 0
     fi
-    
+
     # Construir el comando de instalación
     local cmd="sudo dnf install -y"
-    
+
     # Agregar opciones según los parámetros
     if [ "$skip_broken" = true ]; then
         cmd+=" --skip-broken --skip-unavailable"
     fi
-    
+
     # Agregar los paquetes al comando
     cmd+=" ${packages[*]}"
-    
+
     # Ejecutar el comando
     show_message "Instalando ${#packages[@]} paquetes..."
     if ! eval "$cmd" >> "$LOG_FILE" 2>> "$ERROR_LOG"; then
         show_error "Error al instalar algunos paquetes. Revise $ERROR_LOG para más detalles."
         return 1
     fi
-    
+
     show_success "Paquetes instalados correctamente."
     return 0
 }
@@ -150,54 +150,54 @@ install_packages() {
 # Función para desinstalar paquetes
 remove_packages() {
     local package_list="$1"
-    
+
     # Verificar si el archivo existe
     if [ ! -f "$package_list" ]; then
         show_error "El archivo de lista '$package_list' no existe."
         return 1
     fi
-    
+
     # Crear una lista de paquetes instalados que deben ser eliminados
     local packages_to_remove=""
-    
+
     while read -r package; do
         # Eliminar espacios en blanco y comentarios
         package=$(echo "$package" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/#.*$//')
-        
+
         # Ignorar líneas vacías
         [ -z "$package" ] && continue
-        
+
         # Verificar si el paquete está instalado
         if dnf list installed "$package" &>/dev/null; then
             packages_to_remove+=" $package"
         fi
     done < "$package_list"
-    
+
     # Si no hay paquetes para desinstalar, mostrar un mensaje y salir
     if [ -z "$packages_to_remove" ]; then
         show_message "No hay paquetes para desinstalar."
         return 0
     fi
-    
+
     # Desinstalar los paquetes
     show_message "Desinstalando paquetes: $packages_to_remove"
     if ! sudo dnf remove -y "$packages_to_remove" >> "$LOG_FILE" 2>> "$ERROR_LOG"; then
         show_error "Error al desinstalar algunos paquetes."
         return 1
     fi
-    
+
     # Ejecutar autoremove
     show_message "Ejecutando autoremove..."
     sudo dnf autoremove -y >> "$LOG_FILE" 2>> "$ERROR_LOG"
-    
+
     # Reparar dependencias rotas
     show_message "Reparando dependencias..."
     sudo dnf install -f >> "$LOG_FILE" 2>> "$ERROR_LOG"
-    
+
     # Limpiar caché
     show_message "Limpiando caché..."
     sudo dnf clean all >> "$LOG_FILE" 2>> "$ERROR_LOG"
-    
+
     show_success "Paquetes desinstalados correctamente."
     return 0
 }
@@ -205,19 +205,19 @@ remove_packages() {
 # Función para agregar repositorios
 add_repositories() {
     show_section "Agregando repositorios adicionales"
-    
+
     # RPM Fusion
     show_message "Configurando RPM Fusion..."
     run_cmd "sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm" \
         "RPM Fusion instalado correctamente." \
         "Error al instalar RPM Fusion."
-    
+
     # WebApp Manager
     show_message "Configurando WebApp Manager..."
     run_cmd "sudo dnf -y copr enable refi64/webapp-manager" \
         "WebApp Manager habilitado correctamente." \
         "Error al habilitar WebApp Manager."
-    
+
     # Brave Browser
     show_message "Configurando Brave Browser..."
     run_cmd "sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/" \
@@ -226,25 +226,25 @@ add_repositories() {
     run_cmd "sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc" \
         "Clave de Brave Browser importada correctamente." \
         "Error al importar clave de Brave Browser."
-    
+
     # Balena Etcher
     show_message "Configurando Balena Etcher..."
     run_cmd "curl -1sLf 'https://dl.cloudsmith.io/public/balena/etcher/setup.rpm.sh' | sudo -E bash" \
         "Balena Etcher configurado correctamente." \
         "Error al configurar Balena Etcher."
-    
+
     # OnlyOffice
     show_message "Configurando OnlyOffice..."
     run_cmd "sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm" \
         "OnlyOffice configurado correctamente." \
         "Error al configurar OnlyOffice."
-    
+
     # Personal Repo
     show_message "Configurando repositorio personal..."
     run_cmd "sudo dnf -y copr enable ayoungdukie/Personal_Repo" \
         "Repositorio personal habilitado correctamente." \
         "Error al habilitar repositorio personal."
-    
+
     # Visual Studio Code
     show_message "Configurando Visual Studio Code..."
     run_cmd "sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc" \
@@ -253,7 +253,7 @@ add_repositories() {
     run_cmd "sudo sh -c 'echo -e \"[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc\" > /etc/yum.repos.d/vscode.repo'" \
         "Repositorio de Visual Studio Code añadido correctamente." \
         "Error al añadir repositorio de Visual Studio Code."
-    
+
     # Actualizar repositorios
     show_message "Actualizando caché de repositorios..."
     run_cmd "sudo dnf check-update || true" \
@@ -262,7 +262,7 @@ add_repositories() {
     run_cmd "sudo dnf makecache --refresh" \
         "Caché de repositorios reconstruida correctamente." \
         "Error al reconstruir caché de repositorios."
-    
+
     show_success "Todos los repositorios han sido configurados correctamente."
     return 0
 }
@@ -270,25 +270,25 @@ add_repositories() {
 # Función para configurar el hardware
 configure_hardware() {
     show_section "Configurando hardware del sistema"
-    
+
     show_message "Instalando paquetes básicos para multimedia..."
     run_cmd "sudo dnf install -y ffmpeg ffmpeg-libs libva libva-utils" \
         "Paquetes básicos instalados correctamente." \
         "Error al instalar paquetes básicos."
-    
+
     show_message "Habilitando repositorio OpenH264..."
     run_cmd "sudo dnf config-manager --set-enabled fedora-cisco-openh264" \
         "Repositorio OpenH264 habilitado correctamente." \
         "Error al habilitar repositorio OpenH264."
-    
+
     run_cmd "sudo dnf install -y openh264 gstreamer1-plugin-openh264 mozilla-openh264" \
         "Códecs OpenH264 instalados correctamente." \
         "Error al instalar códecs OpenH264."
-    
+
     # Detectar GPU y configurar controladores
     show_message "Detectando GPU..."
     gpu_vendor=$(lspci | grep -i "VGA\|3D controller" | head -n 1)
-    
+
     if [[ -n "$gpu_vendor" ]]; then
         if echo "$gpu_vendor" | grep -qi "Intel"; then
             show_message "GPU Intel detectada. Instalando controladores..."
@@ -300,11 +300,11 @@ configure_hardware() {
             run_cmd "sudo dnf install -y akmod-amdgpu radeon-profile vdpau-driver-all" \
                 "Controladores de AMD instalados correctamente." \
                 "Error al instalar controladores de AMD."
-            
+
             run_cmd "sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld -y" \
                 "Controladores de VA de AMD actualizados correctamente." \
                 "Error al actualizar controladores de VA de AMD."
-            
+
             run_cmd "sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld -y" \
                 "Controladores de VDPAU de AMD actualizados correctamente." \
                 "Error al actualizar controladores de VDPAU de AMD."
@@ -313,15 +313,15 @@ configure_hardware() {
             run_cmd "sudo dnf install -y akmod-nvidia nvidia-driver nvidia-settings nvidia-xconfig vdpau-driver-all" \
                 "Controladores de NVIDIA instalados correctamente." \
                 "Error al instalar controladores de NVIDIA."
-            
+
             run_cmd "sudo dnf install -y nvidia-vaapi-driver" \
                 "Controlador VAAPI de NVIDIA instalado correctamente." \
                 "Error al instalar controlador VAAPI de NVIDIA."
-            
+
             run_cmd "sudo grubby --update-kernel=ALL --args=\"nvidia-drm.modeset=1\"" \
                 "Kernel configurado para NVIDIA correctamente." \
                 "Error al configurar kernel para NVIDIA."
-            
+
             show_message "Se recomienda reiniciar el sistema para cargar los controladores de NVIDIA."
         else
             show_warning "No se pudo identificar el fabricante de la GPU: $gpu_vendor"
@@ -329,7 +329,7 @@ configure_hardware() {
     else
         show_warning "No se detectó ninguna GPU compatible."
     fi
-    
+
     # Verificar aceleración de hardware
     show_message "Verificando API de aceleración de hardware..."
     for api in vaapi vdpau; do
@@ -339,11 +339,11 @@ configure_hardware() {
             show_warning "API $api no está instalada."
         fi
     done
-    
+
     # Configurar CPU
     show_message "Detectando CPU..."
     cpu_name=$(lscpu | grep -E "Model name|Nombre del modelo" | head -n 1)
-    
+
     if [[ -n "$cpu_name" ]]; then
         if echo "$cpu_name" | grep -qi "intel"; then
             show_message "Procesador Intel detectado. Instalando microcódigos..."
@@ -361,14 +361,14 @@ configure_hardware() {
     else
         show_warning "No se pudo detectar información del procesador."
     fi
-    
+
     # Verificar si es una máquina virtual
     show_message "Verificando entorno de virtualización..."
     hypervisor=$(systemd-detect-virt)
-    
+
     if [[ "$hypervisor" != "none" ]]; then
         show_message "Máquina virtual detectada: $hypervisor"
-        
+
         case "$hypervisor" in
             vmware)
                 show_message "Instalando herramientas de VMware..."
@@ -401,7 +401,7 @@ configure_hardware() {
     else
         show_message "Sistema físico detectado (no es una máquina virtual)."
     fi
-    
+
     show_success "Configuración de hardware completada."
     return 0
 }
@@ -409,24 +409,24 @@ configure_hardware() {
 # Función para instalar KDE Plasma
 install_kde() {
     show_section "Instalando entorno de escritorio KDE Plasma"
-    
+
     if [ ! -f "${kde_plasma}" ]; then
         show_error "Archivo de lista de paquetes de KDE Plasma no encontrado."
         return 1
     fi
-    
+
     show_message "Instalando paquetes base de KDE Plasma..."
     install_packages "${kde_plasma}"
-    
+
     show_message "Configurando SDDM como gestor de sesiones..."
     run_cmd "sudo systemctl enable sddm" \
         "SDDM habilitado correctamente." \
         "Error al habilitar SDDM."
-    
+
     run_cmd "sudo systemctl set-default graphical.target" \
         "Objetivo gráfico establecido como predeterminado." \
         "Error al establecer objetivo gráfico como predeterminado."
-    
+
     # Habilitar NumLock en SDDM
     show_message "Configurando NumLock en SDDM..."
     if [ -f /etc/sddm.conf ]; then
@@ -438,11 +438,11 @@ install_kde() {
             "Archivo de configuración de SDDM creado correctamente." \
             "Error al crear archivo de configuración de SDDM."
     fi
-    
+
     run_cmd "sudo systemctl daemon-reload" \
         "Daemon recargado correctamente." \
         "Error al recargar daemon."
-    
+
     # Eliminar bloatware de KDE si existe el archivo de lista
     if [ -f "${kde_bloatware}" ]; then
         show_message "Eliminando aplicaciones innecesarias de KDE..."
@@ -450,7 +450,7 @@ install_kde() {
     else
         show_warning "Archivo de lista de bloatware de KDE no encontrado. Omitiendo limpieza."
     fi
-    
+
     # Instalar aplicaciones de KDE si existe el archivo de lista
     if [ -f "${kde_plasma_apps}" ]; then
         show_message "Instalando aplicaciones adicionales de KDE..."
@@ -458,7 +458,7 @@ install_kde() {
     else
         show_warning "Archivo de lista de aplicaciones de KDE no encontrado. Omitiendo instalación."
     fi
-    
+
     show_success "KDE Plasma instalado correctamente."
     return 0
 }
@@ -466,7 +466,7 @@ install_kde() {
 # Función para configurar Flameshot en KDE
 configure_flameshot() {
     show_section "Configurando Flameshot para KDE"
-    
+
     # Verificar si Flameshot está instalado
     if ! command -v flameshot &>/dev/null; then
         show_message "Instalando Flameshot..."
@@ -474,7 +474,7 @@ configure_flameshot() {
             "Flameshot instalado correctamente." \
             "Error al instalar Flameshot."
     fi
-    
+
     # Verificar si tesseract está instalado para OCR
     if ! command -v tesseract &>/dev/null; then
         show_message "Instalando Tesseract OCR..."
@@ -482,21 +482,21 @@ configure_flameshot() {
             "Tesseract OCR instalado correctamente." \
             "Error al instalar Tesseract OCR."
     fi
-    
+
     # Crear script OCR en el escritorio (corregido para ser ejecutable)
     show_message "Creando script de OCR con Flameshot..."
     desktop_path="$(xdg-user-dir DESKTOP)"
     script_content="#!/bin/bash\nflameshot gui --raw | convert - -resize 400% png:- | tesseract stdin stdout | awk '{printf \"%s\", (NR>1 ? \"\\n\" : \"\") \$0}' | xclip -in -selection clipboard"
     file_path="$desktop_path/flameshot_OCR.sh"
-    
+
     echo -e "$script_content" > "$file_path"
     chmod +x "$file_path"
     show_success "Script de OCR creado en $file_path"
-    
+
     # Configurar atajos de teclado
     show_message "Configurando atajos de teclado para Flameshot..."
     config_file="$HOME/.config/kglobalshortcutsrc"
-    
+
     # Contenido de los atajos
     flameshot_shortcut="[org.flameshot.Flameshot.desktop]
 Capture=Print,none,Tomar captura de pantalla
@@ -507,16 +507,16 @@ _launch=none,none,Flameshot"
 
     plasma_shortcut="[PlasmaShortcuts]
 Print=flameshot gui"
-    
+
     # Comprobar si el archivo de configuración existe
     if [ -f "$config_file" ]; then
         # Hacer backup del archivo original
         cp "$config_file" "${config_file}.bak"
-        
+
         # Eliminar secciones existentes si las hay
         sed -i '/\[org\.flameshot\.Flameshot\.desktop\]/,/^$/d' "$config_file"
         sed -i '/\[PlasmaShortcuts\]/,/^$/d' "$config_file"
-        
+
         # Añadir nuevas secciones
         echo -e "\n$flameshot_shortcut\n" >> "$config_file"
         echo -e "\n$plasma_shortcut\n" >> "$config_file"
@@ -524,7 +524,7 @@ Print=flameshot gui"
         # Crear archivo de configuración
         echo -e "$flameshot_shortcut\n\n$plasma_shortcut" > "$config_file"
     fi
-    
+
     # Actualizar la configuración de KDE
     show_message "Actualizando caché de KDE..."
     if command -v kbuildsycoca5 &>/dev/null; then
@@ -533,7 +533,7 @@ Print=flameshot gui"
     else
         show_warning "No se pudo actualizar la configuración de KDE. Es posible que los atajos no funcionen hasta reiniciar."
     fi
-    
+
     show_success "Flameshot configurado correctamente con atajos de teclado."
     return 0
 }
@@ -541,32 +541,33 @@ Print=flameshot gui"
 # Función para instalar aplicaciones multimedia
 install_multimedia() {
     show_section "Instalando aplicaciones multimedia"
-    
+
     if [ ! -f "${multimedia}" ]; then
         show_error "Archivo de lista de aplicaciones multimedia no encontrado."
         return 1
     fi  # Corrección: era "}" sin punto y coma
-    
+
     # Instalar grupo multimedia
     show_message "Instalando grupos multimedia y códecs..."
-    run_cmd "sudo dnf -y groupupdate 'multimedia' 'sound-and-video' 'core' --exclude='zram*' --setopt='install_weak_deps=False' --exclude='PackageKit-gstreamer-plugin' --allowerasing" \
+    run_cmd "sudo dnf group install kde-media sound-and-video core --exclude='zram*' --setopt='install_weak_deps=False' --exclude='PackageKit-gstreamer-plugin' --allowerasing
+ -y" \
       "Grupos multimedia actualizados correctamente." \
       "Error al actualizar grupos multimedia."
-    
+
     # Instalar codecs adicionales
     show_message "Instalando códecs de video y audio..."
-    run_cmd "sudo dnf swap 'ffmpeg-free' 'ffmpeg' --allowerasing -y" \
+    run_cmd "sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y" \
         "FFmpeg reemplazado correctamente." \
         "Error al reemplazar FFmpeg."
-    
+
     run_cmd "sudo dnf install -y gstreamer1-plugins-{base,good,bad-free,bad-freeworld,ugly} gstreamer1-libav gstreamer1-plugin-mpg123" \
         "Códecs GStreamer instalados correctamente." \
         "Error al instalar códecs GStreamer."
-    
+
     # Instalar aplicaciones multimedia desde la lista
     show_message "Instalando aplicaciones multimedia..."
     install_packages "${multimedia}"
-    
+
     show_success "Aplicaciones multimedia instaladas correctamente."
     return 0
 }
@@ -574,61 +575,60 @@ install_multimedia() {
 # Función para instalar aplicaciones básicas del sistema
 install_core_apps() {
     show_section "Instalando aplicaciones básicas del sistema"
-    
+
     # Verificar si el archivo de utilidades existe
     if [ ! -f "${utilities}" ]; then
         show_error "Archivo de lista de utilidades no encontrado."
         return 1
-    fi 
-    
+    fi
+
     # Instalar herramientas de desarrollo
     show_message "Instalando herramientas de desarrollo..."
     run_cmd "sudo dnf install -y npm python3-pip" \
         "NPM y pip instalados correctamente." \
         "Error al instalar NPM y pip."
-    
+
     run_cmd "sudo npm install -g electron-store" \
         "Electron-store instalado correctamente." \
         "Error al instalar electron-store."
-    
+
     # Instalar Rust
     show_message "Instalando Rust..."
     if ! command -v rustc &>/dev/null; then
         run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" \
             "Rust instalado correctamente." \
             "Error al instalar Rust."
-        
+
         # Actualizar variables de entorno de Rust
         source "$HOME/.cargo/env"
     else
-        show_message "Rust ya está instalado, actualizando..."
+        show_warning "Rust ya está instalado, actualizando..."
         run_cmd "rustup update" \
             "Rust actualizado correctamente." \
             "Error al actualizar Rust."
     fi
-    
+
     # Instalar herramientas de Cargo
     show_message "Instalando herramientas de Cargo..."
     run_cmd "cargo install cargo-update topgrade eza" \
         "Herramientas de Cargo instaladas correctamente." \
         "Error al instalar herramientas de Cargo."
-    
+
     # Instalar grupos de desarrollo
     show_message "Instalando grupos de desarrollo..."
-    run_cmd "sudo dnf -y group install 'Development Tools' 'C Development Tools and Libraries'" \
-    "Grupos de desarrollo instalados correctamente." \
+    run_cmd "sudo dnf -y group install development-tools c-development" \ "Grupos de desarrollo instalados correctamente." \
     "Error al instalar grupos de desarrollo."
-    
+
     # Instalar utilidades desde la lista
     show_message "Instalando utilidades del sistema..."
     install_packages "${utilities}"
-    
+
     # Instalar herramientas adicionales
     show_message "Instalando herramientas adicionales..."
     run_cmd "pip install lastversion" \
         "Lastversion instalado correctamente." \
         "Error al instalar lastversion."
-    
+
     # Configurar NumLock
     show_message "Configurando NumLock..."
     if command -v numlockx &>/dev/null; then
@@ -641,7 +641,7 @@ install_core_apps() {
         numlockx on
         sudo numlockx on
     fi
-    
+
     # Configurar fuentes
     show_message "Configurando fuentes..."
     run_cmd "sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts" \
@@ -650,35 +650,35 @@ install_core_apps() {
     run_cmd "sudo fc-cache -fv" \
         "Caché de fuentes actualizada correctamente." \
         "Error al actualizar caché de fuentes."
-    
+
     # Configurar permisos de directorios temporales
     show_message "Configurando permisos de directorios temporales..."
     run_cmd "sudo chmod 1777 /var/tmp/ /var/cache/ /var/log/" \
         "Permisos de directorios temporales configurados correctamente." \
         "Error al configurar permisos de directorios temporales."
-    
+
    # Instalar PeaZip mediante Flatpak
     show_message "Instalando PeaZip mediante Flatpak..."
     if ! command -v flatpak &>/dev/null; then
         run_cmd "sudo dnf install -y flatpak" \
             "Flatpak instalado correctamente." \
             "Error al instalar Flatpak."
-        
+
         run_cmd "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo" \
             "Repositorio Flathub añadido correctamente." \
             "Error al añadir repositorio Flathub."
     fi
-    
+
     run_cmd "flatpak install flathub io.github.peazip.PeaZip -y --noninteractive" \
         "PeaZip instalado correctamente." \
         "Error al instalar PeaZip. Continuando con la ejecución."
-    
+
     # Crear integración de PeaZip con el gestor de archivos
     show_message "Configurando integración de PeaZip con Dolphin..."
-    
+
     # Crear directorios de servicemenus si no existen
     mkdir -p ~/.local/share/kio/servicemenus
-    
+
     # Definir el contenido del archivo peazip-flatpak.desktop
     desktop_file_content="[Desktop Entry]
 Type=Service
@@ -717,11 +717,11 @@ Name=Compress With PeaZip (rar/zip/tar/etc)"
         "Directorio de servicemenus creado correctamente." \
         "Error al crear directorio de servicemenus."
     echo "$desktop_file_content" | sudo tee /usr/share/kservices5/ServiceMenus/peazip-flatpak.desktop > /dev/null
-    
+
     # Dar permisos de ejecución al archivo
     chmod +x ~/.local/share/kio/servicemenus/peazip-flatpak.desktop
     sudo chmod +x /usr/share/kservices5/ServiceMenus/peazip-flatpak.desktop
-    
+
     # Limpiar la caché de Dolphin para que reconozca los cambios
     if command -v kbuildsycoca5 &>/dev/null; then
         kbuildsycoca5 --noincremental &>/dev/null
@@ -729,10 +729,10 @@ Name=Compress With PeaZip (rar/zip/tar/etc)"
     else
         show_warning "No se pudo actualizar la caché de KDE. La integración de PeaZip podría requerir un reinicio."
     fi
-    
+
     # Configurar alias útiles
     show_message "Configurando alias útiles..."
-    
+
     # Definir nuevos alias (con verificación mejorada para eza)
 new_aliases="# Alias adicionales
 if command -v bat &> /dev/null; then
@@ -778,59 +778,59 @@ function ls() {
       /bin/ls \$@
   fi
 }"
-    
+
     # Agregar nuevos alias al bashrc del usuario
     if ! grep -q "# Alias adicionales" ~/.bashrc; then
         echo -e "\n$new_aliases" >> ~/.bashrc
         echo 'export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH' >> ~/.bashrc
         show_success "Alias configurados para el usuario actual."
     fi
-    
+
     # Agregar nuevos alias al bashrc del root
     if ! sudo grep -q "# Alias adicionales" /root/.bashrc; then
         echo -e "\n$new_aliases" | sudo tee -a /root/.bashrc > /dev/null
         echo 'export PATH=$HOME/.cargo/bin:/usr/local/bin:$PATH' | sudo tee -a /root/.bashrc > /dev/null
         show_success "Alias configurados para el usuario root."
     fi
-    
+
     # Instalar fuentes Nerd Fonts
     show_message "Instalando Nerd Fonts..."
-    
+
     # Directorio temporal para descargar fuentes
     temp_dir="/tmp/nerd_fonts"
     # Crear directorio temporal si no existe
     mkdir -p "$temp_dir"
-    
+
     # Obtener URLs de descarga para las versiones más recientes
     font_names=("JetBrainsMono" "Ubuntu" "Mononoki" "Hack")
     for font_name in "${font_names[@]}"; do
         show_progress "Descargando $font_name Nerd Font..." "${font_name}"
-        
+
         # Intentar obtener la URL de la versión más reciente
         latest_release_url="https://github.com/ryanoasis/nerd-fonts/releases/latest"
         font_download_url=$(curl -s -L -o /dev/null -w '%{url_effective}' "$latest_release_url" | sed "s/tag/download/")"/$font_name.zip"
-        
+
         # Descargar la fuente
         if ! wget -q -O "$temp_dir/$font_name.zip" "$font_download_url"; then
             show_error "Error al descargar $font_name Nerd Font. Continuando con la siguiente fuente."
             continue
         fi
-        
+
         # Descomprimir la fuente
         mkdir -p "$temp_dir/$font_name"
         if ! unzip -q -o "$temp_dir/$font_name.zip" -d "$temp_dir/$font_name"; then
             show_error "Error al descomprimir $font_name Nerd Font. Continuando con la siguiente fuente."
             continue
         fi
-        
+
         show_success "$font_name Nerd Font descargada correctamente."
     done
-    
+
     # Directorio de instalación de fuentes en el sistema
     install_dir="/usr/share/fonts/nerd_fonts"
     # Crear directorio de instalación si no existe
     sudo mkdir -p "$install_dir"
-    
+
     # Mover fuentes al directorio de instalación
     for font_name in "${font_names[@]}"; do
         if [ -d "$temp_dir/$font_name" ]; then
@@ -838,25 +838,25 @@ function ls() {
             sudo find "$temp_dir/$font_name" -name "*.ttf" -o -name "*.otf" -exec cp {} "$install_dir" \; 2>/dev/null
         fi
     done
-    
+
     # Instalar fuentes adicionales
     show_message "Instalando fuentes adicionales..."
     run_cmd "sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig dejavu-fonts* google-roboto-fonts" \
         "Fuentes adicionales instaladas correctamente." \
         "Error al instalar fuentes adicionales. Continuando con la ejecución."
-    
+
     # Instalar Microsoft Core Fonts
     show_message "Instalando Microsoft Core Fonts..."
     run_cmd "sudo rpm -i https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm || true" \
         "Microsoft Core Fonts instaladas correctamente." \
         "Error al instalar Microsoft Core Fonts. Continuando con la ejecución."
-    
+
     # Instalar emojis a color
     show_message "Instalando emojis a color..."
     run_cmd "sudo dnf install -y google-noto-color-emoji* google-noto-emoji*" \
         "Emojis instalados correctamente." \
         "Error al instalar emojis. Continuando con la ejecución."
-    
+
     # Verificar si existe el directorio de configuración de fuentes
     if [ -d "dotfiles" ] && [ -f "dotfiles/fonts.conf" ]; then
         show_message "Copiando configuración de fuentes..."
@@ -866,22 +866,22 @@ function ls() {
     else
         show_warning "No se encontró el archivo de configuración de fuentes. Omitiendo este paso."
     fi
-    
+
     # Actualizar la caché de fuentes
     show_message "Actualizando caché de fuentes..."
     run_cmd "sudo fc-cache -fv" \
         "Caché de fuentes actualizada correctamente." \
         "Error al actualizar caché de fuentes."
-    
+
     # Limpieza: Eliminar directorio temporal
     show_message "Limpiando archivos temporales..."
     rm -rf "$temp_dir"
-    
+
     # Configurar flameshot si está instalado
     if command -v flameshot &>/dev/null; then
         configure_flameshot
     fi
-    
+
     show_success "Aplicaciones básicas instaladas correctamente."
     return 0
 }
@@ -889,26 +889,26 @@ function ls() {
 # Función para instalar aplicaciones adicionales
 install_extra_apps() {
     show_section "Instalando aplicaciones adicionales"
-    
+
     if [ ! -f "${extra_apps}" ]; then
         show_error "Archivo de lista de aplicaciones adicionales no encontrado."
         return 1
     }
-    
+
     # Instalar aplicaciones adicionales desde la lista
     show_message "Instalando aplicaciones adicionales..."
     install_packages "${extra_apps}"
-    
+
     # Configurar libvirtd
     show_message "Configurando libvirtd..."
     run_cmd "sudo systemctl start libvirtd" \
         "Servicio libvirtd iniciado correctamente." \
         "Error al iniciar servicio libvirtd."
-    
+
     run_cmd "sudo systemctl enable libvirtd" \
         "Servicio libvirtd habilitado correctamente." \
         "Error al habilitar servicio libvirtd."
-    
+
     # Configurar sddm para ocultar usuario libvirt-qemu
     show_message "Configurando SDDM para ocultar usuarios del sistema..."
     if [ -f /etc/sddm.conf ]; then
@@ -922,19 +922,19 @@ install_extra_apps() {
     else
         echo -e "[Users]\nHideUsers=libvirt-qemu" | sudo tee /etc/sddm.conf > /dev/null
     fi
-    
+
     # Configurar el reloj en hora local
     show_message "Configurando el reloj en hora local..."
     run_cmd "sudo timedatectl set-local-rtc 1" \
         "Reloj configurado en hora local correctamente." \
         "Error al configurar el reloj en hora local."
-    
+
     # Instalar OnlyOffice
     show_message "Instalando OnlyOffice..."
     run_cmd "sudo dnf install onlyoffice-desktopeditors -y" \
         "OnlyOffice instalado correctamente." \
         "Error al instalar OnlyOffice. Continuando con la ejecución."
-    
+
     # Instalar aplicaciones mediante Flatpak
 show_message "Instalando aplicaciones mediante Flatpak..."
 flatpak_apps=(
@@ -950,17 +950,17 @@ for app in "${flatpak_apps[@]}"; do
     show_progress "Instalando $app..." "$app"
     if ! flatpak install flathub "$app" -y --noninteractive >> "$LOG_FILE" 2>> "$ERROR_LOG"; then
         show_error "Error al instalar $app. Continuando con la ejecución."
-    else 
+    else
         show_success "$app instalado correctamente."
     fi
 done
-    
+
     # Instalar Visual Studio Code si está disponible
 show_message "Instalando Visual Studio Code..."
 if run_cmd "sudo dnf install code -y" \
     "Visual Studio Code instalado correctamente." \
     "Error al instalar Visual Studio Code. Continuando con la ejecución."; then
-    
+
     # Configurar Visual Studio Code
     show_message "Configurando Visual Studio Code..."
     # Iniciar y cerrar VSCode para crear directorios de configuración
@@ -972,10 +972,10 @@ if run_cmd "sudo dnf install code -y" \
         sleep 5
         kill $code_pid &>/dev/null || true
     fi
-        
+
         # Crear directorio de configuración si no existe
         mkdir -p ~/.config/Code/User
-        
+
         # Configurar VSCode
         vscode_settings='{
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -991,9 +991,9 @@ if run_cmd "sudo dnf install code -y" \
   "editor.fontWeight": "400",
   "workbench.colorTheme": "One Monokai"
 }'
-        
+
         echo "$vscode_settings" > ~/.config/Code/User/settings.json
-        
+
         # Instalar extensiones
         if command -v code &>/dev/null; then
             show_message "Instalando extensiones de Visual Studio Code..."
@@ -1001,7 +1001,7 @@ if run_cmd "sudo dnf install code -y" \
                 "azemoh.one-monokai"
                 "NarasimaPandiyan.jetbrainsmono"
             )
-            
+
             for extension in "${vscode_extensions[@]}"; do
                 run_cmd "code --install-extension $extension" \
                     "Extensión $extension instalada correctamente." \
@@ -1009,38 +1009,38 @@ if run_cmd "sudo dnf install code -y" \
             done
         fi
     fi
-    
+
     # Instalar AceStream
     show_message "Instalando AceStream..."
     install_dir="/opt/AceStream"
-    
+
     # Crear directorio de instalación
     run_cmd "sudo mkdir -p $install_dir" \
         "Directorio de AceStream creado correctamente." \
         "Error al crear directorio de AceStream."
-    
+
     run_cmd "sudo chmod 777 $install_dir" \
         "Permisos de directorio de AceStream configurados correctamente." \
         "Error al configurar permisos de directorio de AceStream."
-    
+
     # Obtener la última versión de AceStream
     if command -v lastversion &>/dev/null; then
         show_message "Descargando última versión de AceStream..."
         last_version_link=$(lastversion --assets https://github.com/bro2020/acestream-appimage/releases 2>/dev/null)
-        
+
         if [ -n "$last_version_link" ]; then
             run_cmd "sudo wget -O \"$install_dir/AceStream.AppImage\" \"$last_version_link\"" \
                 "AceStream descargado correctamente." \
                 "Error al descargar AceStream."
-            
+
             run_cmd "sudo wget -O \"$install_dir/acestream_logo.png\" \"https://avatars.githubusercontent.com/u/15086619?v=4\"" \
                 "Logo de AceStream descargado correctamente." \
                 "Error al descargar logo de AceStream."
-            
+
             run_cmd "sudo chmod +x \"$install_dir/AceStream.AppImage\"" \
                 "Permisos de AceStream configurados correctamente." \
                 "Error al configurar permisos de AceStream."
-            
+
             # Crear acceso directo
             desktop_file="/usr/share/applications/acestream.desktop"
             desktop_content="[Desktop Entry]
@@ -1049,7 +1049,7 @@ Exec=konsole -e '/opt/AceStream/AceStream.AppImage --client-console --no-sandbox
 Icon=/opt/AceStream/acestream_logo.png
 Type=Application
 Categories=Network;"
-            
+
             echo "$desktop_content" | sudo tee "$desktop_file" > /dev/null
             show_success "AceStream instalado correctamente."
         else
@@ -1058,7 +1058,7 @@ Categories=Network;"
     else
         show_error "No se encontró la herramienta 'lastversion'. Omitiendo instalación de AceStream."
     fi
-    
+
     show_success "Aplicaciones adicionales instaladas correctamente."
     return 0
 }
@@ -1071,26 +1071,26 @@ main() {
     # Inicializar archivos de registro
     echo "Iniciando script de post-instalación para Fedora 42 - $(date)" > "$LOG_FILE"
     echo "Registro de errores - $(date)" > "$ERROR_LOG"
-    
+
     # Comprobar que estamos ejecutando como usuario normal (no root)
     if [ "$EUID" -eq 0 ]; then
         echo -e "${RED}Este script debe ser ejecutado como usuario normal, no como root.${NC}"
         echo -e "${RED}Por favor, ejecute el script sin sudo.${NC}"
         exit 1
     fi
-    
+
     # Asegurarse de que sudo está instalado
     if ! command -v sudo &>/dev/null; then
         echo -e "${RED}El comando 'sudo' no está instalado. Por favor, instálelo primero.${NC}"
         exit 1
     fi
-    
+
     # Actualizar el sistema antes de comenzar
     show_section "Actualizando el sistema"
     run_cmd "sudo dnf update -y" \
         "Sistema actualizado correctamente." \
         "Error al actualizar el sistema."
-    
+
     # Lista de archivos de configuración
     kde_plasma="kde_plasma.txt"
     kde_bloatware="kde_bloatware.txt"
@@ -1098,25 +1098,25 @@ main() {
     utilities="utilities.txt"
     multimedia="multimedia.txt"
     extra_apps="extra_apps.txt"
-    
+
     # Crear archivos de configuración si no existen
-    create_config_files
-    
+    #create_config_files
+
     # Agregar repositorios
     add_repositories
-    
+
     # Configurar hardware
     configure_hardware
-    
+
     # Instalar KDE Plasma
     install_kde
-    
+
     # Instalar aplicaciones básicas
     install_core_apps
-    
+
     # Instalar aplicaciones multimedia
     install_multimedia
-    
+
     # Preguntar por la instalación de aplicaciones adicionales
     show_section "Aplicaciones adicionales"
     echo -e "¿Desea instalar aplicaciones adicionales? (y/n)"
@@ -1127,7 +1127,7 @@ main() {
     else
         show_message "Omitiendo instalación de aplicaciones adicionales."
     fi
-    
+
     # Finalizar
     show_section "Proceso completado"
     echo -e "${GREEN}El proceso de post-instalación ha sido completado.${NC}"
@@ -1135,7 +1135,7 @@ main() {
     echo -e "${BLUE}Archivos de registro:${NC}"
     echo -e "  - Log general: $LOG_FILE"
     echo -e "  - Log de errores: $ERROR_LOG"
-    
+
     # Preguntar si desea reiniciar
     echo -e "¿Desea reiniciar el sistema ahora? (y/n)"
     read -n 1 -r
@@ -1144,128 +1144,128 @@ main() {
         echo -e "${YELLOW}Reiniciando sistema...${NC}"
         sudo reboot
     fi
-    
+
     return 0
 }
 
-# Función para crear archivos de configuración básicos
-create_config_files() {
-    show_section "Creando archivos de configuración"
-    
-    # Crear lista de paquetes KDE si no existe
-    if [ ! -f "$kde_plasma" ]; then
-        show_message "Creando lista de paquetes KDE Plasma..."
-        cat > "$kde_plasma" << EOL
-@kde-desktop
-plasma-workspace
-sddm
-sddm-kcm
-phonon-qt5-backend-gstreamer
-EOL
-        show_success "Lista de paquetes KDE Plasma creada."
-    fi
-    
-    # Crear lista de bloatware KDE si no existe
-    if [ ! -f "$kde_bloatware" ]; then
-        show_message "Creando lista de bloatware KDE..."
-        cat > "$kde_bloatware" << EOL
-kaddressbook
-akregator
-kmahjongg
-kmines
-kpat
-konversation
-krdc
-krfb
-EOL
-        show_success "Lista de bloatware KDE creada."
-    fi
-    
-    # Crear lista de aplicaciones KDE si no existe
-    if [ ! -f "$kde_plasma_apps" ]; then
-        show_message "Creando lista de aplicaciones KDE..."
-        cat > "$kde_plasma_apps" << EOL
-dolphin
-konsole
-yakuake
-kate
-kwrite
-kcalc
-okular
-gwenview
-ark
-filelight
-spectacle
-partitionmanager
-EOL
-        show_success "Lista de aplicaciones KDE creada."
-    fi
-    
-    # Crear lista de utilidades si no existe
-    if [ ! -f "$utilities" ]; then
-        show_message "Creando lista de utilidades..."
-        cat > "$utilities" << EOL
-vim
-nano
-htop
-neofetch
-numlockx
-wget
-curl
-git
-zsh
-bat
-ripgrep
-fd-find
-tldr
-jq
-tar
-unzip
-zip
-p7zip
-p7zip-plugins
-util-linux-user
-unrar
-EOL
-        show_success "Lista de utilidades creada."
-    fi
-    
-    # Crear lista de aplicaciones multimedia si no existe
-    if [ ! -f "$multimedia" ]; then
-        show_message "Creando lista de aplicaciones multimedia..."
-        cat > "$multimedia" << EOL
-vlc
-mpv
-audacious
-ffmpeg
-ffmpeg-libs
-gimp
-krita
-EOL
-        show_success "Lista de aplicaciones multimedia creada."
-    fi
-    
-    # Crear lista de aplicaciones extra si no existe
-    if [ ! -f "$extra_apps" ]; then
-        show_message "Creando lista de aplicaciones extra..."
-        cat > "$extra_apps" << EOL
-brave-browser
-flameshot
-libreoffice
-dconf-editor
-qbittorrent
-keepassxc
-telegram-desktop
-webapp-manager
-balena-etcher
-virtualbox
-virt-manager
-EOL
-        show_success "Lista de aplicaciones extra creada."
-    fi
-    
-    show_success "Archivos de configuración creados correctamente."
-    return 0
-}
+# # Función para crear archivos de configuración básicos
+# create_config_files() {
+#     show_section "Creando archivos de configuración"
+
+#     # Crear lista de paquetes KDE si no existe
+#     if [ ! -f "$kde_plasma" ]; then
+#         show_message "Creando lista de paquetes KDE Plasma..."
+#         cat > "$kde_plasma" << EOL
+# @kde-desktop
+# plasma-workspace
+# sddm
+# sddm-kcm
+# phonon-qt5-backend-gstreamer
+# EOL
+#         show_success "Lista de paquetes KDE Plasma creada."
+#     fi
+
+#     # Crear lista de bloatware KDE si no existe
+#     if [ ! -f "$kde_bloatware" ]; then
+#         show_message "Creando lista de bloatware KDE..."
+#         cat > "$kde_bloatware" << EOL
+# kaddressbook
+# akregator
+# kmahjongg
+# kmines
+# kpat
+# konversation
+# krdc
+# krfb
+# EOL
+#         show_success "Lista de bloatware KDE creada."
+#     fi
+
+#     # Crear lista de aplicaciones KDE si no existe
+#     if [ ! -f "$kde_plasma_apps" ]; then
+#         show_message "Creando lista de aplicaciones KDE..."
+#         cat > "$kde_plasma_apps" << EOL
+# dolphin
+# konsole
+# yakuake
+# kate
+# kwrite
+# kcalc
+# okular
+# gwenview
+# ark
+# filelight
+# spectacle
+# partitionmanager
+# EOL
+#         show_success "Lista de aplicaciones KDE creada."
+#     fi
+
+#     # Crear lista de utilidades si no existe
+#     if [ ! -f "$utilities" ]; then
+#         show_message "Creando lista de utilidades..."
+#         cat > "$utilities" << EOL
+# vim
+# nano
+# htop
+# neofetch
+# numlockx
+# wget
+# curl
+# git
+# zsh
+# bat
+# ripgrep
+# fd-find
+# tldr
+# jq
+# tar
+# unzip
+# zip
+# p7zip
+# p7zip-plugins
+# util-linux-user
+# unrar
+# EOL
+#         show_success "Lista de utilidades creada."
+#     fi
+
+#     # Crear lista de aplicaciones multimedia si no existe
+#     if [ ! -f "$multimedia" ]; then
+#         show_message "Creando lista de aplicaciones multimedia..."
+#         cat > "$multimedia" << EOL
+# vlc
+# mpv
+# audacious
+# ffmpeg
+# ffmpeg-libs
+# gimp
+# krita
+# EOL
+#         show_success "Lista de aplicaciones multimedia creada."
+#     fi
+
+#     # Crear lista de aplicaciones extra si no existe
+#     if [ ! -f "$extra_apps" ]; then
+#         show_message "Creando lista de aplicaciones extra..."
+#         cat > "$extra_apps" << EOL
+# brave-browser
+# flameshot
+# libreoffice
+# dconf-editor
+# qbittorrent
+# keepassxc
+# telegram-desktop
+# webapp-manager
+# balena-etcher
+# virtualbox
+# virt-manager
+# EOL
+#         show_success "Lista de aplicaciones extra creada."
+#     fi
+
+#     show_success "Archivos de configuración creados correctamente."
+#     return 0
+# }
 
 main "$@"
