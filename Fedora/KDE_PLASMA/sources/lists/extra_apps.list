@@ -19,14 +19,14 @@ guestfs-tools
 msttcorefonts
 kdenlive
 libguestfs-tools
-libvirt-clients
+libvirt
+libvirt-python
 libvirt-daemon-system
 qemu-kvm
 qemu-utils
 qtqr
 topgrade
 bitstream-vera-fonts
-ttf-mscorefonts-installer
 variety
 virt-manager
 virt-top
@@ -34,4 +34,3 @@ virt-viewer
 webapp-manager
 xorg-x11-fonts-100dpi
 xorg-x11-fonts-75dpi
-

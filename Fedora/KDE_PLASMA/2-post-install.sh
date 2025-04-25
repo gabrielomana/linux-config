@@ -95,6 +95,7 @@ execute_command "sudo rpm --import https://packages.microsoft.com/keys/microsoft
 execute_command "echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null"
 execute_command "sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 sudo dnf copr enable lilay/topgrade -y || true
+sudo dnf copr enable refi64/webapp-manager -y || true
 
 
 
@@ -116,10 +117,7 @@ setup_log_file() {
 install_konsole_and_dotfiles() {
     print_message "INFO" "=== INICIANDO INSTALACIÓN DE KONSOLE Y DOTFILES ==="
     
-    # Instalar neofetch
-    execute_command "sudo dnf install -y neofetch" "Instalación de neofetch"
-    execute_command "neofetch" "Ejecutando neofetch"
-    
+   
     # Instalar FastFetch
     local fastfetch_path="$SCRIPT_DIR/fastfetch/"
     
@@ -199,9 +197,9 @@ install_zsh() {
         
         # Si existe la función install_ZSH, ejecutarla
         if type install_ZSH &>/dev/null; then
-            execute_command "install_ZSH" "Instalación de ZSH y complementos"
+            execute_command "install_zsh_main" "Instalación de ZSH y complementos"
         else
-            print_message "ERROR" "Función install_ZSH no encontrada en el archivo importado"
+            print_message "ERROR" "Función install_ZSH_User no encontrada en el archivo importado"
             ((ERROR_COUNT++))
         fi
     else
