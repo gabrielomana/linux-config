@@ -1,61 +1,66 @@
-# Función para instalar ZSH, Oh-My-ZSH y Starship tanto para el usuario como para root
+#!/bin/bash
+
+# Función mejorada para instalar ZSH, Oh-My-ZSH y Starship sin interacción
 install_zsh_main() {
-        
-    # Ejecutar instalación para el usuario actual
-    print_message "INFO" "=== INICIANDO INSTALACIÓN DE ZSH, OH-MY-ZSH Y STARSHIP (USER) ==="
+    # Verificar si ya está instalado para evitar repeticiones
+    if [ -f "$HOME/.zsh_installed" ] && [ -f "/root/.zsh_installed" ]; then
+        print_message "INFO" "ZSH ya está instalado para ambos usuarios. Saltando instalación."
+        return 0
+    fi
+
+    # Ejecutar instalación para el usuario actual sin confirmación
+    print_message "INFO" "=== INICIANDO INSTALACIÓN AUTOMÁTICA DE ZSH, OH-MY-ZSH Y STARSHIP (USER) ==="
     install_zsh_user
-    
-    # Ejecutar instalación para root
-    print_message "INFO" "=== INICIANDO INSTALACIÓN DE ZSH, OH-MY-ZSH Y STARSHIP (ROOT) ==="
+
+    # Ejecutar instalación para root sin confirmación
+    print_message "INFO" "=== INICIANDO INSTALACIÓN AUTOMÁTICA DE ZSH, OH-MY-ZSH Y STARSHIP (ROOT) ==="
     install_zsh_root
+
+    # Marcar instalación como completada
+    touch "$HOME/.zsh_installed"
+    sudo touch "/root/.zsh_installed"
     
-    print_message "SUCCESS" "=== FINALIZADA INSTALACIÓN DE ZSH, OH-MY-ZSH Y STARSHIP ==="
+    print_message "SUCCESS" "=== INSTALACIÓN AUTOMÁTICA COMPLETADA CON ÉXITO ==="
 }
 
-# Instalación de ZSH para el usuario actual
+# Instalación automática para el usuario actual
 install_zsh_user() {
-    print_message "INFO" "Iniciando instalación de ZSH para el usuario actual"
-    
+    print_message "INFO" "Instalación automática de ZSH para el usuario actual"
+
     local user=$(whoami)
     local path="$HOME"
-    
-    # Verificar si Zsh, Git y Wget ya están instalados
-    execute_command "command -v zsh &>/dev/null && command -v git &>/dev/null && command -v wget &>/dev/null || sudo dnf install -y zsh git wget" "Instalación de dependencias ZSH"
-    
-    # Crear directorios necesarios
-    execute_command "mkdir -p $path/.config/ $path/.cache/zsh/" "Creación de directorios para ZSH"
-    execute_command "touch $path/.config/starship.toml $path/.zcompdump" "Creación de archivos de configuración ZSH"
-    
-    # Respaldar .zshrc actual si existe
-    if [ -f "$path/.zshrc" ]; then
-        execute_command "mv -n '$path/.zshrc' '$path/.zshrc-backup-$(date +\"%Y-%m-%d\")'" "Respaldo del archivo .zshrc actual"
-    fi
-    
-    # Instalar oh-my-zsh si no está instalado
+
+    # Instalar dependencias sin preguntar
+    execute_command "sudo dnf install -y zsh git wget fzf" "Instalación automática de dependencias ZSH"
+
+    # Crear estructura de directorios necesaria
+    execute_command "mkdir -p $path/.config/ $path/.cache/zsh/ $path/.local/share/zsh" "Creación automática de directorios ZSH"
+    execute_command "touch $path/.config/starship.toml $path/.zcompdump" "Creación automática de archivos de configuración"
+
+    # Respaldar .zshrc existente sin preguntar
+    [ -f "$path/.zshrc" ] && execute_command "mv -f '$path/.zshrc' '$path/.zshrc-backup-$(date +\"%Y-%m-%d\")'" "Respaldo automático de .zshrc"
+
+    # Instalar oh-my-zsh sin interacción
     if [ -d "$path/.oh-my-zsh" ]; then
-        execute_command "git -C '$path/.oh-my-zsh' remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git" "Actualización de la URL del repositorio Oh-My-ZSH"
+        execute_command "git -C '$path/.oh-my-zsh' pull --quiet" "Actualización automática de Oh-My-ZSH"
     else
-        execute_command "git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git '$path/.oh-my-zsh'" "Clonación de Oh-My-ZSH"
+        execute_command "git clone --quiet --depth=1 https://github.com/ohmyzsh/ohmyzsh.git '$path/.oh-my-zsh'" "Clonación automática de Oh-My-ZSH"
     fi
-    
-    # Copiar archivos de configuración
-    execute_command "cp -f ${SCRIPT_DIR}/dotfiles/.zshrc '$path/'" "Copia del archivo .zshrc"
-    
+
+    # Copiar configuración automáticamente
+    [ -f "${SCRIPT_DIR}/dotfiles/.zshrc" ] && execute_command "cp -f ${SCRIPT_DIR}/dotfiles/.zshrc '$path/'" "Copia automática de .zshrc"
+
     # Mover archivos de caché
-    if [ -f "$path/.zcompdump" ]; then
-        execute_command "mv -f '$path/.zcompdump'* '$path/.cache/zsh/'" "Movimiento de archivos de caché"
-    fi
-    
+    [ -f "$path/.zcompdump" ] && execute_command "mv -f '$path/.zcompdump'* '$path/.cache/zsh/'" "Movimiento automático de caché"
+
     # Configurar paths para plugins
     local custom_path="/usr/share/oh-my-zsh/custom/"
-    local custom_themes_path="/usr/share/oh-my-zsh/custom/themes/"
-    local custom_plugins_path="/usr/share/oh-my-zsh/custom/plugins/"
-    
-    # Crear directorios si no existen
-    execute_command "sudo mkdir -p '$custom_path' '$custom_themes_path' '$custom_plugins_path'" "Creación de directorios para plugins"
-    execute_command "sudo chmod 755 '$custom_path' -R && sudo chmod go-w '$custom_path' -R" "Configuración de permisos para plugins"
-    
-    # Lista de repositorios a clonar
+    local custom_plugins_path="${custom_path}plugins/"
+
+    # Crear directorios de plugins con permisos adecuados
+    execute_command "sudo mkdir -p '$custom_plugins_path' && sudo chmod 755 '$custom_path' -R && sudo chmod go-w '$custom_path' -R" "Configuración automática de directorios plugins"
+
+    # Lista de repositorios a clonar/actualizar
     local repositories=(
         "https://github.com/hlissner/zsh-autopair.git"
         "https://github.com/zsh-users/zsh-autosuggestions.git"
@@ -65,119 +70,121 @@ install_zsh_user() {
         "https://github.com/MichaelAquilina/zsh-you-should-use.git"
         "https://github.com/Aloxaf/fzf-tab.git"
     )
-    
-    # Clonar e instalar los repositorios
+
+    # Clonar/actualizar plugins automáticamente
     for repository in "${repositories[@]}"; do
         local plugin_name=$(basename "$repository" .git)
         local plugin_path="$custom_plugins_path$plugin_name"
-        
+
         if [ -d "$plugin_path" ]; then
-            execute_command "sudo git -C '$plugin_path' pull" "Actualización del plugin $plugin_name"
+            execute_command "sudo git -C '$plugin_path' pull --quiet" "Actualización automática del plugin $plugin_name"
         else
-            execute_command "sudo git clone '$repository' '$plugin_path'" "Clonación del plugin $plugin_name"
+            execute_command "sudo git clone --quiet --depth=1 '$repository' '$plugin_path'" "Clonación automática del plugin $plugin_name"
         fi
     done
-    
-    # Renombrar plugin you-should-use
-    execute_command "sudo rm -rf ${custom_plugins_path}you-should-use/ 2>/dev/null; sudo mv ${custom_plugins_path}zsh-you-should-use/ ${custom_plugins_path}you-should-use/" "Renombrado del plugin you-should-use"
-    
-    # Instalar fzf para fzf-tab
-    execute_command "sudo dnf install -y fzf" "Instalación de fzf para fzf-tab"
-    
-    # Instalar y configurar Starship
-    execute_command "wget -q https://starship.rs/install.sh -O /tmp/starship_install.sh" "Descarga del instalador de Starship"
-    execute_command "chmod +x /tmp/starship_install.sh && /tmp/starship_install.sh --yes" "Instalación de Starship"
-    execute_command "rm -f /tmp/starship_install.sh" "Eliminación del instalador de Starship"
-    
+
+    # Renombrar plugin you-should-use automáticamente
+    execute_command "sudo mv -f ${custom_plugins_path}zsh-you-should-use ${custom_plugins_path}you-should-use 2>/dev/null" "Renombrado automático de plugin"
+
+    # Instalar Starship sin interacción
+    execute_command "curl -fsSL https://starship.rs/install.sh | sudo sh -s -- --yes" "Instalación automática de Starship"
+
     # Descargar configuración de Starship
-    execute_command "wget -q https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml -O ${path}/.config/starship.toml" "Descarga de configuración para Starship"
-    
-    # Crear directorio para temas de Starship
+    local starship_config_url="https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml"
+    execute_command "wget -q '$starship_config_url' -O '$path/.config/starship.toml'" "Descarga automática de configuración Starship"
+
+    # Descargar temas adicionales automáticamente
     local themes_folder="$path/.config/starship_themes"
-    execute_command "mkdir -p '$themes_folder'" "Creación de directorio para temas de Starship"
-    
-    # URLs de los archivos a descargar junto con sus nombres locales
-    local files=(
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml prompt_black.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_matcha.toml prompt_matcha.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_matcha_v2.toml prompt_matcha_v2.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_matcha_v3.toml prompt_matcha_v3.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_aurora.toml prompt_nord_aurora.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_aurora_v2.toml prompt_nord_aurora_v2.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_aurora_v3.toml prompt_nord_aurora_v3.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_frost.toml prompt_nord_frost.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_frost_v2.toml prompt_nord_frost_v2.toml"
-        "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_nord_frost_v3.toml prompt_nord_frost_v3.toml"
+    execute_command "mkdir -p '$themes_folder'" "Creación automática de directorio para temas"
+
+    local theme_files=(
+        "prompt_black.toml"
+        "prompt_matcha.toml"
+        "prompt_matcha_v2.toml"
+        "prompt_matcha_v3.toml"
+        "prompt_nord_aurora.toml"
+        "prompt_nord_aurora_v2.toml"
+        "prompt_nord_aurora_v3.toml"
+        "prompt_nord_frost.toml"
+        "prompt_nord_frost_v2.toml"
+        "prompt_nord_frost_v3.toml"
     )
-    
-    # Descargar los archivos usando wget
-    for file in "${files[@]}"; do
-        local url=$(echo "$file" | cut -d ' ' -f 1)
-        local filename=$(echo "$file" | cut -d ' ' -f 2)
-        execute_command "wget -q '$url' -O '$themes_folder/$filename'" "Descarga de tema Starship: $filename"
+
+    for theme in "${theme_files[@]}"; do
+        execute_command "wget -q 'https://raw.githubusercontent.com/gabrielomana/MyStarships/main/$theme' -O '$themes_folder/$theme'" "Descarga automática de tema $theme"
     done
-    
-    # Cambiar shell por defecto a ZSH
-    execute_command "chsh -s $(which zsh)" "Configuración de ZSH como shell predeterminado para el usuario"
-    
-    print_message "SUCCESS" "Instalación de ZSH para el usuario completada"
+
+    # Cambiar shell por defecto sin confirmación
+    execute_command "sudo chsh -s $(which zsh) $user" "Configuración automática de ZSH como shell predeterminado"
+
+    print_message "SUCCESS" "Instalación automática para el usuario completada"
 }
 
-# Instalación de ZSH para root
+# Instalación automática para root
 install_zsh_root() {
-    print_message "INFO" "Iniciando instalación de ZSH para el usuario root"
-    
-    # Verificar si podemos acceder como root
+    print_message "INFO" "Iniciando instalación automática de ZSH para root"
+
+    # Verificar acceso root
     if ! sudo -v; then
-        print_message "ERROR" "No se pudo autenticar como root. Omitiendo instalación de ZSH para root."
-        ((ERROR_COUNT++))
+        print_message "WARNING" "No se pudo autenticar como root. Omitiendo instalación para root."
         return 1
     fi
-    
-    # Instalar oh-my-zsh para root si no está instalado
+
+    # Instalar oh-my-zsh para root sin interacción
     if [ -d /root/.oh-my-zsh ]; then
-        execute_command "sudo git -C /root/.oh-my-zsh remote set-url origin https://github.com/ohmyzsh/ohmyzsh.git" "Actualización de la URL del repositorio Oh-My-ZSH para root"
+        execute_command "sudo git -C /root/.oh-my-zsh pull --quiet" "Actualización automática de Oh-My-ZSH para root"
     else
-        execute_command "sudo git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git /root/.oh-my-zsh" "Clonación de Oh-My-ZSH para root"
+        execute_command "sudo git clone --quiet --depth=1 https://github.com/ohmyzsh/ohmyzsh.git /root/.oh-my-zsh" "Clonación automática de Oh-My-ZSH para root"
     fi
+
+    # Crear estructura de directorios para root
+    execute_command "sudo mkdir -p /root/.config/ /root/.cache/zsh/ /root/.local/share/zsh" "Creación automática de directorios para root"
+    execute_command "sudo touch /root/.config/starship.toml /root/.zcompdump" "Creación automática de archivos de configuración para root"
+
+    # Copiar configuración para root
+    [ -f "${SCRIPT_DIR}/dotfiles/.zshrc" ] && execute_command "sudo cp -f ${SCRIPT_DIR}/dotfiles/.zshrc /root/" "Copia automática de .zshrc para root"
+
+    # Configurar Starship para root
+    execute_command "sudo curl -fsSL https://starship.rs/install.sh | sudo sh -s -- --yes" "Instalación automática de Starship para root"
+
+    # Descargar configuración Starship para root
+    local starship_config_url="https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml"
+    execute_command "sudo wget -q '$starship_config_url' -O /root/.config/starship.toml" "Descarga automática de configuración Starship para root"
+
+    # Cambiar shell por defecto para root sin confirmación
+    execute_command "sudo chsh -s $(which zsh) root" "Configuración automática de ZSH como shell predeterminado para root"
+
+    # Configurar permisos adecuados
+    execute_command "sudo chmod 700 /root /root/.oh-my-zsh /root/.config" "Configuración automática de permisos para root"
+
+    print_message "SUCCESS" "Instalación automática para root completada"
+}
+
+# Función para ejecutar comandos con manejo de errores
+execute_command() {
+    local cmd="$1"
+    local msg="$2"
     
-    # Verificar la existencia de /root/.zshrc
-    execute_command "sudo touch /root/.zshrc" "Creación de archivo .zshrc para root"
+    print_message "INFO" "Ejecutando: $msg"
+    eval "$cmd" > /dev/null 2>&1
     
-    # Crear directorios necesarios
-    execute_command "sudo mkdir -p /root/.config/ /root/.cache/zsh/" "Creación de directorios para ZSH de root"
-    execute_command "sudo touch /root/.config/starship.toml /root/.zcompdump" "Creación de archivos de configuración ZSH para root"
-    
-    # Cambiar shell por defecto a ZSH para root
-    execute_command "sudo chsh -s $(which zsh) root" "Configuración de ZSH como shell predeterminado para root"
-    
-    # Configurar permisos
-    execute_command "sudo chmod go-w /root/ -R" "Configuración de permisos para /root/"
-    execute_command "sudo chmod go-w /bin/zsh -R" "Configuración de permisos para /bin/zsh"
-    
-    # Configuración de Starship en root
-    execute_command "sudo wget -q https://starship.rs/install.sh -O /tmp/starship_install_root.sh" "Descarga del instalador de Starship para root"
-    execute_command "sudo chmod +x /tmp/starship_install_root.sh && sudo /tmp/starship_install_root.sh --yes" "Instalación de Starship para root"
-    execute_command "sudo rm -f /tmp/starship_install_root.sh" "Eliminación del instalador de Starship para root"
-    
-    # Descargar configuración de Starship para root
-    execute_command "sudo wget -q https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml -O /root/.config/starship.toml" "Descarga de configuración para Starship de root"
-    
-    # Copiar archivos de configuración para root
-    execute_command "sudo cp -f ${SCRIPT_DIR}/dotfiles/.zshrc /root/" "Copia del archivo .zshrc para root"
-    
-    # Mover archivos de caché
-    if sudo test -f /root/.zcompdump; then
-        execute_command "sudo mv -f /root/.zcompdump* /root/.cache/zsh/" "Movimiento de archivos de caché para root"
+    if [ $? -ne 0 ]; then
+        print_message "ERROR" "Falló: $msg"
+        return 1
     fi
+}
+
+# Función para mostrar mensajes
+print_message() {
+    local type="$1"
+    local message="$2"
+    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
     
-    # Agregar path de cargo a .zshrc de root
-    local cargo_bin_dir=$(echo $HOME/.cargo/bin)
-    execute_command "echo 'export PATH=\$PATH:$cargo_bin_dir' | sudo tee -a /root/.zshrc > /dev/null" "Configuración de PATH para cargo en root"
-    
-    # Configurar permisos para custom path
-    local custom_path="/usr/share/oh-my-zsh/custom/"
-    execute_command "sudo chmod 755 '$custom_path' -R && sudo chmod go-w '$custom_path' -R" "Configuración de permisos para plugins de root"
-    
-    print_message "SUCCESS" "Instalación de ZSH para root completada"
+    case "$type" in
+        "INFO") echo -e "[$timestamp] \033[1;34mINFO:\033[0m $message" ;;
+        "SUCCESS") echo -e "[$timestamp] \033[1;32mSUCCESS:\033[0m $message" ;;
+        "WARNING") echo -e "[$timestamp] \033[1;33mWARNING:\033[0m $message" ;;
+        "ERROR") echo -e "[$timestamp] \033[1;31mERROR:\033[0m $message" ;;
+        *) echo -e "[$timestamp] $message" ;;
+    esac
 }

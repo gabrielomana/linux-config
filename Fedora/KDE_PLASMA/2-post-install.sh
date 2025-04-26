@@ -138,8 +138,6 @@ install_konsole_and_dotfiles() {
     execute_command "sudo rm -rf /tmp/konsole/ /tmp/konsole.zip" "Limpieza de archivos temporales"
     
     # Copiar archivos de configuración
-    execute_command "mkdir -p ~/.config/neofetch" "Creación de directorio para neofetch"
-    execute_command "cp -r ${SCRIPT_DIR}/dotfiles/neofetch.conf ~/.config/neofetch/config.conf" "Configuración de neofetch"
     execute_command "cp -r ${SCRIPT_DIR}/dotfiles/topgrade.toml ~/.config/topgrade.toml" "Configuración de topgrade"
     execute_command "cp -r ${SCRIPT_DIR}/dotfiles/.nanorc ~/.nanorc" "Configuración de nano"
     execute_command "mkdir -p ~/.local/share/konsole && cp -r ${SCRIPT_DIR}/dotfiles/konsole.profile ~/.local/share/konsole/konsole.profile" "Perfil de Konsole"
@@ -199,7 +197,7 @@ install_zsh() {
         if type install_ZSH &>/dev/null; then
             execute_command "install_zsh_main" "Instalación de ZSH y complementos"
         else
-            print_message "ERROR" "Función install_ZSH_User no encontrada en el archivo importado"
+            print_message "ERROR" "Función install_zsh_main no encontrada en el archivo importado"
             ((ERROR_COUNT++))
         fi
     else
