@@ -105,6 +105,21 @@ run_sudo() {
   fi
 }
 
+run_cmd() {
+  local cmd="$1"
+  local success_msg="$2"
+  local error_msg="$3"
+
+  if eval "$cmd" &>> "$LOG_FILE"; then
+    log_success "$success_msg"
+    return 0
+  else
+    log_error "$error_msg"
+    return 1
+  fi
+}
+
+
 is_root() {
   [[ "$EUID" -eq 0 ]]
 }
