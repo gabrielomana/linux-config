@@ -30,3 +30,8 @@ flameshot
 xclip
 xsel
 liblzo2-2
+gcc
+gcc-c++
+make
+pkg-config
+@development-tools

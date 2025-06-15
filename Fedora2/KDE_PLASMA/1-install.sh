@@ -14,12 +14,17 @@ IFS=$'\n\t'
 SCRIPT_NAME="$(basename "$0")"
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-LOG_DIR="$HOME/fedora_logs"
+REAL_USER="${SUDO_USER:-$USER}"
+REAL_HOME=$(eval echo "~$REAL_USER")
+
+LOG_DIR="$REAL_HOME/fedora_logs"
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 LOG_FILE="$LOG_DIR/install_full_${TIMESTAMP}.log"
 ERR_FILE="$LOG_DIR/install_error_${TIMESTAMP}.log"
+
 mkdir -p "$LOG_DIR"
 touch "$LOG_FILE" "$ERR_FILE"
+
 
 
 # ───── Redirección global: consola + logs con filtrado inteligente ─────
@@ -185,7 +190,4 @@ main() {
   log_info "🔁 Reiniciando sistema para aplicar cambios..."
   sudo reboot
 }
-
-
-
 main

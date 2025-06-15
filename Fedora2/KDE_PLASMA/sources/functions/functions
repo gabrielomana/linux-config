@@ -136,6 +136,22 @@ is_root() {
   [[ "$EUID" -eq 0 ]]
 }
 
+draw_progress_bar() {
+  local current=$1
+  local total=$2
+  local width=40
+  local percent=$(( current * 100 / total ))
+  local filled=$(( current * width / total ))
+  local empty=$(( width - filled ))
+  local progress_bar
+
+  progress_bar=$(printf "%-${filled}s" "#" | tr ' ' '#')
+  progress_bar+=$(printf "%-${empty}s" "-" | tr ' ' '-')
+  
+  printf "\r[%s] %3d%% (%d/%d)" "$progress_bar" "$percent" "$current" "$total"
+  [[ "$current" -eq "$total" ]] && echo ""
+}
+
 #===============================================================================
 # Funciones de instalación y eliminación de paquetes
 #===============================================================================
@@ -774,22 +790,18 @@ install_core_apps() {
   log_section "Instalando aplicaciones básicas del sistema"
 
   # Verificación del archivo de utilidades
-  if [[ ! -f "${utilities}" ]]; then
-    log_error "Archivo de lista de utilidades no encontrado: ${utilities}"
+  if [[ ! -f "${LIST_UTILITIES}" ]]; then
+    log_error "Archivo de lista de utilidades no encontrado: ${LIST_UTILITIES}"
     return 1
   fi
 
   # Herramientas de desarrollo
   log_info "Instalando herramientas de desarrollo (npm, pip)"
-  run_cmd "sudo dnf install -y npm pipx python3-pip" \
-    "Herramientas de desarrollo instaladas" \
-    "Error al instalar herramientas de desarrollo"
+  run_cmd "sudo dnf install -y npm pipx python3-pip"     "Herramientas de desarrollo instaladas"     "Error al instalar herramientas de desarrollo"
 
   # Instalar electron-store si no existe
   if ! npm list -g electron-store &>/dev/null; then
-    run_cmd "sudo npm install -g electron-store" \
-      "electron-store instalado globalmente" \
-      "Error al instalar electron-store"
+    run_cmd "sudo npm install -g electron-store"       "electron-store instalado globalmente"       "Error al instalar electron-store"
   else
     log_info "electron-store ya está instalado"
   fi
@@ -797,68 +809,61 @@ install_core_apps() {
   # Instalación de Rust
   if ! command -v rustc &>/dev/null; then
     log_info "Instalando Rust"
-    run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" \
-      "Rust instalado correctamente" \
-      "Error al instalar Rust"
+    run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"       "Rust instalado correctamente"       "Error al instalar Rust"
     source "$HOME/.cargo/env"
+    [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]] && export PATH="$HOME/.cargo/bin:$PATH"
   else
     log_info "Rust ya está instalado. Verificando actualizaciones..."
-    run_cmd "rustup update" \
-      "Rust actualizado" \
-      "Error al actualizar Rust"
+    run_cmd "rustup update"       "Rust actualizado"       "Error al actualizar Rust"
   fi
 
-  # Verifica si cargo está disponible
-if ! command -v cargo &>/dev/null; then
-  log_error "Cargo no está disponible. Asegúrate de que Rust esté correctamente instalado y cargado en el entorno."
-  return 1
-fi
+  if ! command -v cargo &>/dev/null; then
+    log_error "Cargo no está disponible. Asegúrate de que Rust esté correctamente instalado y cargado en el entorno."
+    return 1
+  fi
 
-# Instalar herramientas de Cargo (solo si no existen)
-for bin in cargo-update topgrade eza; do
-  if ! command -v "$bin" &>/dev/null; then
-    log_info "Intentando instalar '$bin' con cargo..."
-    
-    if cargo install "$bin" &>> "$LOG_FILE"; then
-      # Verificamos si ahora está disponible en $PATH
-      if command -v "$bin" &>/dev/null; then
-        log_success "$bin instalado correctamente."
+  # Instalar herramientas de Cargo (con barra de progreso)
+  cargo_bins=(cargo-update topgrade eza)
+  total=${#cargo_bins[@]}
+
+  for i in "${!cargo_bins[@]}"; do
+    bin="${cargo_bins[$i]}"
+    draw_progress_bar "$((i + 1))" "$total"
+    sleep 0.2
+
+    if ! command -v "$bin" &>/dev/null; then
+      log_info "Intentando instalar '$bin' con Cargo..."
+
+      if cargo install "$bin" &>> "$LOG_FILE"; then
+        if command -v "$bin" &>/dev/null; then
+          log_success "$bin instalado correctamente."
+        else
+          log_warn "$bin fue instalado pero no está en el PATH. Verifica si \$HOME/.cargo/bin está en tu entorno."
+        fi
       else
-        log_warn "$bin fue instalado pero no está en el PATH. Verifica si \$HOME/.cargo/bin está en tu entorno."
+        log_warn "Fallo al instalar $bin con Cargo. Se continúa..."
       fi
     else
-      log_error "Fallo al instalar $bin con Cargo. Revisa el log en $LOG_FILE para más detalles."
+      log_info "$bin ya está instalado. Omitiendo."
     fi
-  else
-    log_info "$bin ya está instalado. Omitiendo."
-  fi
-done
-
+  done
 
   # Grupos de desarrollo
   log_info "Instalando grupos de desarrollo"
-  run_cmd "sudo dnf -y group install development-tools c-development" \
-    "Grupos de desarrollo instalados" \
-    "Error al instalar grupos de desarrollo"
+  run_cmd "sudo dnf -y group install development-tools c-development"     "Grupos de desarrollo instalados"     "Error al instalar grupos de desarrollo"
 
-  # Instalar utilidades desde lista
+  # Instalación de utilidades desde lista
   log_info "Instalando utilidades generales desde lista"
-  install_packages "${utilities}"
+  install_packages "${LIST_UTILITIES}" || log_warn "Fallo parcial al instalar utilidades desde lista"
 
   # pipx + lastversion
   log_info "Instalando pipx + lastversion"
-  run_cmd "python3 -m pip install --user pipx && python3 -m pipx ensurepath" \
-    "pipx instalado correctamente" \
-    "Fallo al instalar pipx"
-  run_cmd "pipx install lastversion" \
-    "lastversion instalado correctamente" \
-    "Fallo al instalar lastversion"
+  run_cmd "python3 -m pip install --user pipx && python3 -m pipx ensurepath"     "pipx instalado correctamente"     "Fallo al instalar pipx"
+  run_cmd "pipx install lastversion"     "lastversion instalado correctamente"     "Fallo al instalar lastversion"
 
   # Fuentes Ubuntu (si no están)
   if ! fc-list | grep -qi "Ubuntu"; then
-    run_cmd "sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts" \
-      "Fuentes Ubuntu instaladas" \
-      "Fallo al instalar fuentes Ubuntu"
+    run_cmd "sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts"       "Fuentes Ubuntu instaladas"       "Fallo al instalar fuentes Ubuntu"
   else
     log_info "Fuentes Ubuntu ya instaladas"
   fi
@@ -1086,21 +1091,7 @@ install_flatpak_apps() {
   return 0
 }
 
-draw_progress_bar() {
-  local current=$1
-  local total=$2
-  local width=40
-  local percent=$(( current * 100 / total ))
-  local filled=$(( current * width / total ))
-  local empty=$(( width - filled ))
-  local progress_bar
 
-  progress_bar=$(printf "%-${filled}s" "#" | tr ' ' '#')
-  progress_bar+=$(printf "%-${empty}s" "-" | tr ' ' '-')
-  
-  printf "\r[%s] %3d%% (%d/%d)" "$progress_bar" "$percent" "$current" "$total"
-  [[ "$current" -eq "$total" ]] && echo ""
-}
 
 
 
