@@ -133,6 +133,10 @@ log_success "Todas las listas han sido validadas correctamente."
 main() {
   log_info ">>> ENTRANDO A MAIN"
   echo ">>> ENTRANDO A MAIN 2"
+  echo "=== TEST DE VISIBILIDAD: STDOUT (echo normal)==="
+echo "=== TEST DE VISIBILIDAD: STDERR (echo error)" >&2
+log_info "=== TEST DE log_info ==="
+
   log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
 
   log_info "▶ Instalando KDE Plasma..."
@@ -158,5 +162,9 @@ main() {
   # log_info "🌀 Reiniciando sistema para aplicar cambios..."
   # sudo reboot
 }
-
+  log_info ">>> ENTRANDO A MAIN 3"
+  echo ">>> ENTRANDO A MAIN 4"
+  echo "=== TEST DE VISIBILIDAD 2: STDOUT (echo normal)==="
+echo "=== TEST DE VISIBILIDAD 2: STDERR (echo error)" >&2
+log_info "=== TEST DE log_info ==="
 main
