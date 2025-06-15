@@ -15,8 +15,9 @@ SCRIPT_NAME="$(basename "$0")"
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 LOG_DIR="$HOME/fedora_logs"
-LOG_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.log"
-ERR_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.err"
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+LOG_FILE="$LOGDIR/install_full_${TIMESTAMP}.log"
+ERR_FILE="$LOGDIR/install_error_${TIMESTAMP}.log"
 mkdir -p "$LOG_DIR"
 
 # ───── Redirección global: consola + logs con filtrado inteligente ─────

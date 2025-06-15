@@ -578,7 +578,7 @@ install_kde() {
 
   if [[ -f "$LIST_KDE_APPS" ]]; then
     log_info "Instalando aplicaciones adicionales de KDE"
-    install_packages "$LIST_KDE_PLASMA_apps"
+    install_packages "$LIST_KDE_APPS"
   else
     log_warn "Lista de apps adicionales de KDE no encontrada: $LIST_KDE_APPS. Omitiendo."
   fi

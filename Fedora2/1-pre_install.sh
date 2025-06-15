@@ -11,8 +11,8 @@ REAL_USER="${SUDO_USER:-$USER}"
 USER_HOME=$(eval echo ~"$REAL_USER")
 LOGDIR="$USER_HOME/fedora_logs"
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-LOG_FILE="$LOGDIR/install_${TIMESTAMP}.log"
-ERR_FILE="$LOGDIR/error_${TIMESTAMP}.log"
+LOG_FILE="$LOGDIR/pre_install_full_${TIMESTAMP}.log"
+ERR_FILE="$LOGDIR/pre_install_error_${TIMESTAMP}.log"
 ERROR_COUNT=0
 
 declare -a PACKAGES_ESSENTIALS=(
