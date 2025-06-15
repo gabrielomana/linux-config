@@ -178,36 +178,37 @@ install_packages() {
     done
   fi
 
-  if [[ ${#packages[@]} -gt 0 ]]; then
-    local dnf_pkg_cmd=(sudo dnf install -y --allowerasing --best)
-    [[ "$skip_broken" == "true" ]] && dnf_pkg_cmd+=(--skip-broken --skip-unavailable)
-    dnf_pkg_cmd+=("${packages[@]}")
+if [[ ${#packages[@]} -gt 0 ]]; then
+  log_info "Instalando ${#packages[@]} paquetes individuales..."
 
-    log_info "Instalando ${#packages[@]} paquetes individuales..."
-    local retries=3
-    for ((i=1; i<=retries; i++)); do
-      if "${dnf_pkg_cmd[@]}" &>> "$LOG_FILE"; then
-        log_info "Paquetes individuales instalados correctamente."
-        break
-      elif [[ $i -lt retries ]]; then
-        log_warn "Intento $i de instalación de paquetes fallido. Reintentando..."
-        sleep 3
-      else
-        log_error "Fallo persistente al instalar paquetes tras $retries intentos."
-      fi
-    done
-  fi
+  local total=${#packages[@]}
+  for i in "${!packages[@]}"; do
+    local pkg="${packages[$i]}"
+    draw_progress_bar "$((i + 1))" "$total"
+    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable "$pkg" &>> "$LOG_FILE" || \
+      log_warn "Fallo al instalar: $pkg"
+  done
 
-  if [[ ${#groups[@]} -gt 0 ]]; then
-    log_info "Instalando ${#groups[@]} grupos de paquetes..."
-    for group in "${groups[@]}"; do
-      if ! sudo dnf group install -y --with-optional --allowerasing "$group" &>> "$LOG_FILE"; then
-        log_warn "Grupo '$group' falló al instalar. Se continúa."
-      else
-        log_info "Grupo '$group' instalado correctamente."
-      fi
-    done
-  fi
+  log_info "Paquetes individuales instalados correctamente."
+fi
+
+
+if [[ ${#groups[@]} -gt 0 ]]; then
+  log_info "Instalando ${#groups[@]} grupos de paquetes..."
+
+  local total_groups=${#groups[@]}
+  for i in "${!groups[@]}"; do
+    local group="${groups[$i]}"
+    draw_progress_bar "$((i + 1))" "$total_groups"
+
+    if ! sudo dnf group install -y --with-optional --allowerasing "$group" &>> "$LOG_FILE"; then
+      log_warn "Grupo '$group' falló al instalar. Se continúa."
+    else
+      log_info "Grupo '$group' instalado correctamente."
+    fi
+  done
+fi
+
 
   log_info "<<< FIN instalación desde '$list_path'"
   return 0
@@ -270,23 +271,26 @@ remove_packages() {
 
   if [[ ${#packages[@]} -gt 0 ]]; then
     log_info "Eliminando ${#packages[@]} paquetes individuales..."
-    local retries=3
-    for ((i=1; i<=retries; i++)); do
-      if sudo dnf remove -y "${packages[@]}" &>> "$LOG_FILE"; then
-        log_info "Paquetes desinstalados correctamente desde '$list_path'."
-        break
-      elif [[ $i -lt retries ]]; then
-        log_warn "Intento $i de desinstalación fallido. Reintentando..."
-        sleep 3
-      else
-        log_error "Fallo persistente al eliminar paquetes tras $retries intentos."
-      fi
+
+    local total=${#packages[@]}
+    for i in "${!packages[@]}"; do
+      local pkg="${packages[$i]}"
+      draw_progress_bar "$((i + 1))" "$total"
+      sudo dnf remove -y "$pkg" &>> "$LOG_FILE" || \
+        log_warn "Fallo al eliminar: $pkg"
     done
+
+    log_info "Paquetes individuales desinstalados correctamente."
   fi
 
   if [[ ${#groups[@]} -gt 0 ]]; then
     log_info "Eliminando ${#groups[@]} grupos de paquetes..."
-    for group in "${groups[@]}"; do
+
+    local total_groups=${#groups[@]}
+    for i in "${!groups[@]}"; do
+      local group="${groups[$i]}"
+      draw_progress_bar "$((i + 1))" "$total_groups"
+
       if ! sudo dnf group remove -y "$group" &>> "$LOG_FILE"; then
         log_warn "Grupo '$group' falló al eliminar. Se continúa."
       else
@@ -298,6 +302,7 @@ remove_packages() {
   log_info "<<< FIN desinstalación desde '$list_path'"
   return 0
 }
+
 
 
 add_repositories() {
@@ -803,17 +808,32 @@ install_core_apps() {
       "Error al actualizar Rust"
   fi
 
-  # Instalar herramientas de Cargo (solo si no existen)
-  for bin in cargo-update topgrade eza; do
-    if ! command -v "$bin" &>/dev/null; then
-      log_info "Instalando $bin desde Cargo"
-      run_cmd "cargo install $bin" \
-        "$bin instalado correctamente" \
-        "Fallo al instalar $bin"
+  # Verifica si cargo está disponible
+if ! command -v cargo &>/dev/null; then
+  log_error "Cargo no está disponible. Asegúrate de que Rust esté correctamente instalado y cargado en el entorno."
+  return 1
+fi
+
+# Instalar herramientas de Cargo (solo si no existen)
+for bin in cargo-update topgrade eza; do
+  if ! command -v "$bin" &>/dev/null; then
+    log_info "Intentando instalar '$bin' con cargo..."
+    
+    if cargo install "$bin" &>> "$LOG_FILE"; then
+      # Verificamos si ahora está disponible en $PATH
+      if command -v "$bin" &>/dev/null; then
+        log_success "$bin instalado correctamente."
+      else
+        log_warn "$bin fue instalado pero no está en el PATH. Verifica si \$HOME/.cargo/bin está en tu entorno."
+      fi
     else
-      log_info "$bin ya está instalado. Omitiendo."
+      log_error "Fallo al instalar $bin con Cargo. Revisa el log en $LOG_FILE para más detalles."
     fi
-  done
+  else
+    log_info "$bin ya está instalado. Omitiendo."
+  fi
+done
+
 
   # Grupos de desarrollo
   log_info "Instalando grupos de desarrollo"
@@ -1065,6 +1085,23 @@ install_flatpak_apps() {
 
   return 0
 }
+
+draw_progress_bar() {
+  local current=$1
+  local total=$2
+  local width=40
+  local percent=$(( current * 100 / total ))
+  local filled=$(( current * width / total ))
+  local empty=$(( width - filled ))
+  local progress_bar
+
+  progress_bar=$(printf "%-${filled}s" "#" | tr ' ' '#')
+  progress_bar+=$(printf "%-${empty}s" "-" | tr ' ' '-')
+  
+  printf "\r[%s] %3d%% (%d/%d)" "$progress_bar" "$percent" "$current" "$total"
+  [[ "$current" -eq "$total" ]] && echo ""
+}
+
 
 
 
