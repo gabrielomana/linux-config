@@ -500,8 +500,8 @@ set_numlock_sddm() {
     "Fallo al recargar SDDM (puede requerir reinicio)"
 }
 
-clean_kde_bloatware() {$LIST_KDE_PLASMA
-  log_section "Eliminando bloatware de KDE"
+clean_kde_bloatware() {
+  log_section "Eliminando bloatware de KDE: $LIST_KDE_PLASMA"
 
   local list_file="${SCRIPT_DIR}/sources/lists/kde_bloatware.list"
   local removed_log="$HOME/fedora_logs/bloatware_removed_$(date +%F_%H-%M-%S).log"
@@ -855,21 +855,6 @@ install_core_apps() {
   return 0
 }
 
-
-install_multimedia() {
-  log_section "Instalando aplicaciones multimedia adicionales"
-
-  if [[ ! -f "${multimedia}" ]]; then
-    log_error "Archivo de lista de multimedia no encontrado: ${multimedia}"
-    return 1
-  fi
-
-  log_info "Instalando herramientas multimedia desde lista: ${multimedia}"
-  install_packages "${multimedia}" || log_warn "Falló instalación parcial de apps multimedia"
-
-  log_success "Aplicaciones multimedia instaladas correctamente"
-  return 0
-}
 
 install_extra_apps() {
   log_section "Instalando aplicaciones adicionales"
