@@ -39,7 +39,7 @@ for bin in dnf sudo tee; do
 done
 
 # ───── Carga de funciones compartidas ─────
-FUNCTIONS_FILE="${BASE_DIR}/sources/functions/functions.sh"
+FUNCTIONS_FILE="${BASE_DIR}/sources/functions/functions"
 
 if [[ -f "$FUNCTIONS_FILE" ]]; then
   source "$FUNCTIONS_FILE"
