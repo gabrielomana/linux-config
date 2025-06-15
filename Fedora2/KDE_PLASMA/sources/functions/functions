@@ -37,6 +37,14 @@ REQUIRED_LISTS=(
   "$LIST_EXTRA_APPS"
 )
 
+# Variables de lista individuales (usadas por funciones instaladoras)
+kde_plasma="$LIST_KDE_PLASMA"
+kde_plasma_apps="$LIST_KDE_APPS"
+kde_bloatware="$LIST_KDE_BLOATWARE"
+multimedia="$LIST_MULTIMEDIA"
+utilities="$LIST_UTILITIES"
+extra_apps="$LIST_EXTRA_APPS"
+
 # Validación de listas necesarias
 for list_file in "${REQUIRED_LISTS[@]}"; do
   if [[ ! -f "$list_file" ]]; then
