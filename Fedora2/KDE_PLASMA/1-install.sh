@@ -127,6 +127,7 @@ validate_package_lists
 log_success "Todas las listas han sido validadas correctamente."
 
 main() {
+  echo ">>> ENTRANDO A MAIN"
   log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
 
   log_info "▶ Instalando KDE Plasma..."
