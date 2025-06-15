@@ -259,7 +259,7 @@ configure_zswap() {
     echo "lz4hc" | sudo tee /sys/module/zswap/parameters/compressor &>/dev/null
 
     log_info "Optimizando ZSWAP según memoria del sistema..."
-    total_ram=$(free -g | awk '/^Mem:/{print $2}')
+     total_ram=$(free -g | awk '/^Mem:/{print $2}')
     if [ "$total_ram" -le 4 ]; then
         swappiness=60
         zswap_max_pool=40
@@ -390,73 +390,65 @@ configure_security() {
     log_info "Configuración de seguridad completada"
 }
 
+
 configure_btrfs_volumes() {
-    log_info "Configurando subvolúmenes BTRFS"
+  log_section "🧩 Configurando BTRFS y subvolúmenes"
 
-    log_info "Verificando sistema de archivos..."
-    local FS_TYPE
-    FS_TYPE=$(df -T / | awk 'NR==2 {print $2}')
-    if [[ "$FS_TYPE" != "btrfs" ]]; then
-        log_warn "El sistema raíz no está en BTRFS. Omitiendo configuración BTRFS."
-        return 0
+  local fs_type
+  fs_type=$(findmnt -n -o FSTYPE /)
+  if [[ "$fs_type" != "btrfs" ]]; then
+    log_warn "Sistema no está en BTRFS. Saltando configuración."
+    return 0
+  fi
+
+  run_cmd dnf install -y --skip-broken btrfs-progs inotify-tools
+
+  log_info "Respaldando fstab..."
+  run_cmd cp /etc/fstab /etc/fstab.old
+  local output_file="/etc/fstab.new"
+  cp /etc/fstab "$output_file"
+
+  get_uuid() {
+    grep -E "$1\s+btrfs\s+" /etc/fstab | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p'
+  }
+
+  declare -A subvolumes=(
+    ["/"]="@"
+    ["/var/log"]="@log"
+    ["/var/tmp"]="@var_tmp"
+    ["/tmp"]="@tmp"
+    ["/timeshift"]="@timeshift"
+  )
+
+  for mount_point in "${!subvolumes[@]}"; do
+    local uuid
+    uuid=$(get_uuid "$mount_point")
+    if [[ -n "$uuid" ]]; then
+      sed -i -E \
+        "s|UUID=.*\s+$mount_point\s+btrfs.*|UUID=$uuid $mount_point btrfs rw,noatime,compress=zstd:3,space_cache=v2,subvol=${subvolumes[$mount_point]} 0 0|" \
+        "$output_file"
     fi
+  done
 
-    log_info "Instalando herramientas necesarias..."
-    sudo dnf install -y --skip-unavailable --skip-broken btrfs-progs inotify-tools &>/dev/null
+  run_cmd cp "$output_file" /etc/fstab
 
-    log_info "Configurando subvolúmenes en fstab..."
+  log_info "Aplicando compresión y balanceo inicial..."
+  btrfs filesystem defragment -r -czstd:3 / &>/dev/null || true
+  btrfs balance start -m / &>/dev/null || true
 
-    get_uuid() {
-        local mount_point=$1
-        grep -E "${mount_point}\s+btrfs\s+" "/etc/fstab" | awk '{print $1}' | sed -n 's/UUID=\(.*\)/\1/p'
-    }
-
-    local output_file="/etc/fstab.new"
-    sudo cp /etc/fstab /etc/fstab.old
-    sudo cp /etc/fstab $output_file
-
-    local ROOT_UUID HOME_UUID VAR_UUID VAR_LOG_UUID SNAPSHOT_UUID
-    ROOT_UUID=$(get_uuid "/")
-    HOME_UUID=$(get_uuid "/home")
-    VAR_UUID=$(get_uuid "/var")
-    VAR_LOG_UUID=$(get_uuid "/var/log")
-    SNAPSHOT_UUID=$(get_uuid "/.snapshots")
-
-    if [ -n "$ROOT_UUID" ]; then
-        sudo sed -i -E "s|UUID=.*\s+/\s+btrfs.*|UUID=${ROOT_UUID} / btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@ 0 0|" $output_file
-    fi
-    if [ -n "$HOME_UUID" ]; then
-        sudo sed -i -E "s|UUID=.*\s+/home\s+btrfs.*|UUID=${HOME_UUID} /home btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@home 0 0|" $output_file
-    fi
-    if [ -n "$VAR_UUID" ]; then
-        sudo sed -i -E "s|UUID=.*\s+/var\s+btrfs.*|UUID=${VAR_UUID} /var btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@var 0 0|" $output_file
-    fi
-    if [ -n "$VAR_LOG_UUID" ]; then
-        sudo sed -i -E "s|UUID=.*\s+/var/log\s+btrfs.*|UUID=${VAR_LOG_UUID} /var/log btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@log 0 0|" $output_file
-    fi
-    if [ -n "$SNAPSHOT_UUID" ]; then
-        sudo sed -i -E "s|UUID=.*\s+/.snapshots\s+btrfs.*|UUID=${SNAPSHOT_UUID} /.snapshots btrfs rw,noatime,compress=lzo,space_cache=v2,subvol=@snapshots 0 0|" $output_file
-    fi
-
-    sudo cp $output_file /etc/fstab
-
-    log_info "Aplicando compresión LZO a subvolúmenes..."
-    sudo btrfs filesystem defragment / -r -clzo &>/dev/null
-    sudo btrfs balance start -m / &>/dev/null
+  log_success "Subvolúmenes BTRFS configurados correctamente."
 }
 
-instalar_grub_btrfs() {
-    log_info "Habilitando repositorio y actualizando sistema..."
-    sudo dnf copr enable -y kylegospo/grub-btrfs || log_error "No se pudo habilitar el repositorio COPR."
-    sudo dnf update -y || log_error "Fallo al actualizar el sistema."
+install_grub_btrfs() {
+  log_section "🔄 Instalación y configuración de grub-btrfs + Timeshift"
 
-    log_info "Instalando grub-btrfs y extensiones..."
-    sudo dnf install -y grub-btrfs || log_error "Fallo al instalar grub-btrfs o sus extensiones."
-    sudo dnf install -y grub-btrfs-timeshift || log_error "Fallo al instalar grub-btrfs o sus extensiones."
+  run_cmd dnf copr enable -y kylegospo/grub-btrfs
+  run_cmd dnf update -y
+  run_cmd dnf install -y grub-btrfs grub-btrfs-timeshift
 
-    log_info "Configurando GRUB para detectar snapshots..."
-    sudo mkdir -p /etc/default/grub-btrfs || log_error "No se pudo crear el directorio de configuración."
-    sudo tee /etc/default/grub-btrfs/config > /dev/null <<EOF
+  log_info "Configurando GRUB..."
+  mkdir -p /etc/default/grub-btrfs
+  tee /etc/default/grub-btrfs/config > /dev/null <<EOF
 GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
 GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
@@ -464,44 +456,21 @@ GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
 GRUB_BTRFS_SNAPSHOT_FORMAT="%Y-%m-%d %H:%M | %c"
 GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rootflags=subvol=@ quiet"
 EOF
-    sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
-    log_info "Configurando monitorización systemd para snapshots Timeshift..."
-    sudo mkdir -p /etc/systemd/system/grub-btrfs.path.d || log_error "No se pudo crear directorio para overrides."
-    sudo tee /etc/systemd/system/grub-btrfs.path > /dev/null <<'EOF'
-[Unit]
-Description=Monitors Timeshift snapshots in /run/timeshift/%i/backup
-DefaultDependencies=no
-BindsTo=run-timeshift-%i.mount
+  run_cmd grub2-mkconfig -o /boot/grub2/grub.cfg
 
-[Path]
-PathModified=/run/timeshift/%i/backup/timeshift-btrfs/snapshots
+  log_info "Habilitando grub-btrfs.path..."
+  run_cmd systemctl enable --now grub-btrfs.path
 
-[Install]
-WantedBy=run-timeshift-%i.mount
-EOF
+  log_info "Configurando Timeshift para snapshots automáticos..."
+  mkdir -p /timeshift
+  timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /timeshift || log_error "Fallo configurando Timeshift."
+  timeshift --create --comments "Snapshot inicial" || log_error "Fallo al crear snapshot inicial."
 
-    sudo systemctl daemon-reexec
-    sudo systemctl daemon-reload
-
-    sudo systemctl enable grub-btrfsd.service || log_error "Fallo al habilitar grub-btrfsd.service"
-    sudo systemctl enable grub-btrfsd@*.service || log_error "Fallo al habilitar grub-btrfsd@*.service"
-    sudo systemctl start grub-btrfsd.service || log_error "Fallo al arrancar grub-btrfsd.service"
-
-    sudo systemctl enable grub-btrfs.path || log_error "Fallo al habilitar grub-btrfs.path"
-    sudo systemctl start grub-btrfs.path || log_error "Fallo al arrancar grub-btrfs.path"
-
-    log_info "Systemd configurado para rutas dinámicas: /run/timeshift/*/backup"
-
-    log_info "Configurando Timeshift para snapshots automáticos..."
-    sudo mkdir -p /.snapshots
-    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /.snapshots || log_error "Fallo al configurar Timeshift."
-    timeshift --create --comments "Snapshot inicial" || log_error "Fallo al crear snapshot inicial."
-
-    sudo tee /etc/timeshift.json > /dev/null <<EOF
+  tee /etc/timeshift.json > /dev/null <<EOF
 {
   "backup_device_uuid" : "$(findmnt -no UUID /)",
-  "snapshot_dir" : "/.snapshots",
+  "snapshot_dir" : "/timeshift",
   "snapshot_name" : "timeshift-btrfs",
   "mode" : "btrfs",
   "schedule_daily" : true,
@@ -513,8 +482,9 @@ EOF
 }
 EOF
 
-    log_info "grub-btrfs y Timeshift instalados y configurados correctamente."
+  log_success "✅ grub-btrfs y Timeshift configurados correctamente."
 }
+
 
 # === UTILITARIOS ADICIONALES ===
 
@@ -576,8 +546,8 @@ main() {
     configure_repositories
     install_essential_packages
     configure_flatpak_repositories
-    configure_zswap
     configure_security
+    configure_zswap
     configure_btrfs_volumes
     instalar_grub_btrfs
 
