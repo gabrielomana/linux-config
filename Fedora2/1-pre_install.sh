@@ -125,6 +125,85 @@ show_help() {
     echo "  -c, --clean     Limpiar el sistema tras la instalación"
     echo
 }
+
+init_environment() {
+  # 🧱 Pilar 1: Seguridad y robustez
+  local PROJECT_ROOT
+  PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+  local REAL_USER="${SUDO_USER:-$USER}"
+  local REAL_HOME
+  REAL_HOME=$(eval echo "~$REAL_USER")
+
+  local LOGDIR="$PROJECT_ROOT/logs"
+  local LOG_TAG="fedora_refactor"
+  local REQUIRED_CMDS=(tee dnf command mkdir logger)
+  local REQUIRED_SPACE_MB=5000
+
+  if [[ $EUID -ne 0 ]]; then
+    echo "❌ Este script debe ejecutarse con privilegios de root (sudo)" >&2
+    exit 1
+  fi
+
+  # 🧱 Pilar 7: Compliance de comandos base
+  for cmd in "${REQUIRED_CMDS[@]}"; do
+    if ! command -v "$cmd" &>/dev/null; then
+      echo "⚠️ El comando '$cmd' no está instalado. Intentando instalar..."
+      if [[ "$cmd" == "logger" ]]; then
+        dnf install -y util-linux >/dev/null
+      else
+        dnf install -y "$cmd" >/dev/null || {
+          echo "❌ No se pudo instalar '$cmd'. Abortando." >&2
+          exit 1
+        }
+      fi
+    fi
+  done
+
+  # 🧱 Pilar 3: Logging empresarial
+  mkdir -p "$LOGDIR"
+
+  # Asignar propiedad y permisos adecuados a carpeta de logs
+  chown "$REAL_USER":"$REAL_USER" "$LOGDIR"
+  chmod 775 "$LOGDIR"
+
+  # Aplicar permisos correctos si los archivos de log ya existen
+  touch "$LOGDIR/install.log" "$LOGDIR/error.log"
+  chown "$REAL_USER":"$REAL_USER" "$LOGDIR"/*.log
+  chmod 664 "$LOGDIR"/*.log
+
+  if command -v logger &>/dev/null; then
+    exec > >(tee -a "$LOGDIR/install.log" | logger -t "$LOG_TAG" -s) \
+         2> >(tee -a "$LOGDIR/error.log" | logger -t "$LOG_TAG" -s >&2)
+  else
+    exec > >(tee -a "$LOGDIR/install.log") \
+         2> >(tee -a "$LOGDIR/error.log" >&2)
+  fi
+
+  echo "[INFO] Fedora Refactor – Init Environment"
+  echo "[INFO] Proyecto: $PROJECT_ROOT"
+  echo "[INFO] Usuario original: $REAL_USER (home: $REAL_HOME)"
+  echo "[INFO] Logs en: $LOGDIR (propietario: $REAL_USER)"
+
+  # 🧱 Pilar 5: Compatibilidad y entorno
+  if [ -n "${DISPLAY:-}" ]; then
+    echo "[INFO] Entorno gráfico detectado: $DISPLAY"
+  else
+    echo "[INFO] Modo consola / TTY"
+  fi
+
+  # 🧱 Pilar 1 y 6: Validación de espacio y CI/CD friendly
+  local AVAILABLE
+  AVAILABLE=$(df "$PROJECT_ROOT" | tail -1 | awk '{print $4}')
+  if (( AVAILABLE < REQUIRED_SPACE_MB * 1024 )); then
+    echo "[ERROR] Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT" >&2
+    exit 1
+  fi
+
+  echo "[INFO] Espacio libre verificado: OK"
+  echo "[INFO] ✅ Entorno inicial preparado correctamente"
+}
+
 configure_dnf() {
     log_info "Configurando DNF para optimizar rendimiento"
     sudo timedatectl set-local-rtc '0' &>/dev/null || log_warn "No se pudo configurar timedatectl"
@@ -540,6 +619,7 @@ main() {
 
     [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
 
+    init_environment
     configure_dnf
     configure_dnf_automatic
     change_hostname
