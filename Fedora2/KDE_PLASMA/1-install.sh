@@ -132,6 +132,7 @@ log_success "Todas las listas han sido validadas correctamente."
 
 main() {
   log_info ">>> ENTRANDO A MAIN"
+  echo ">>> ENTRANDO A MAIN 2"
   log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
 
   log_info "▶ Instalando KDE Plasma..."
