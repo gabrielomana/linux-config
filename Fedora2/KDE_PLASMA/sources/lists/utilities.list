@@ -29,9 +29,12 @@ catfish
 flameshot
 xclip
 xsel
+tesseract-langpack-spa
 liblzo2-2
 gcc
 gcc-c++
 make
 pkg-config
+cups-libs
+lzo
 @development-tools

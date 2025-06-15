@@ -25,6 +25,7 @@ LIST_KDE_PLASMA="${LISTS_DIR}/kde_plasma.list"
 LIST_KDE_APPS="${LISTS_DIR}/kde_plasma_apps.list"
 LIST_KDE_BLOATWARE="${LISTS_DIR}/kde_bloatware.list"
 LIST_MULTIMEDIA="${LISTS_DIR}/multimedia.list"
+LIST_CODECS="${LISTS_DIR}/codecs.list"
 LIST_UTILITIES="${LISTS_DIR}/utilities.list"
 LIST_EXTRA_APPS="${LISTS_DIR}/extra_apps.list"
 
@@ -42,6 +43,7 @@ kde_plasma="$LIST_KDE_PLASMA"
 kde_plasma_apps="$LIST_KDE_APPS"
 kde_bloatware="$LIST_KDE_BLOATWARE"
 multimedia="$LIST_MULTIMEDIA"
+codecs="$LIST_CODECS"
 utilities="$LIST_UTILITIES"
 extra_apps="$LIST_EXTRA_APPS"
 
@@ -319,8 +321,6 @@ remove_packages() {
   return 0
 }
 
-
-
 add_repositories() {
   log_section "Agregando y configurando repositorios adicionales"
 
@@ -341,6 +341,7 @@ enabled=1
 gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF'"
+    ["AppImageLauncher COPR"]="sudo dnf -y copr enable pses/appimagelauncher"
   )
 
   for name in "${!repos[@]}"; do
@@ -372,21 +373,23 @@ configure_hardware() {
   show_section "Configurando hardware del sistema"
 
   # ─── Paquetes multimedia y códecs ────────────────────────────────
-  log_info "Instalando paquetes multimedia base"
-  run_cmd "sudo dnf install -y ffmpeg ffmpeg-libs libva libva-utils"     "Paquetes multimedia instalados"     "Fallo al instalar paquetes multimedia"
+# Instalación de paquetes multimedia adicionales no cubiertos por listas
+log_section "🔊 Instalación directa de paquetes multimedia complementarios"
 
-  log_info "Habilitando repositorio OpenH264"
-  run_cmd "sudo dnf config-manager --set-enabled fedora-cisco-openh264"     "Repositorio OpenH264 habilitado"     "Fallo al habilitar OpenH264"
-
-  run_cmd "sudo dnf install -y openh264 gstreamer1-plugin-openh264 mozilla-openh264"     "Códecs OpenH264 instalados"     "Fallo al instalar códecs OpenH264"
-
-  run_cmd "sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y"     "ffmpeg completo instalado"     "Fallo al reemplazar ffmpeg-free"
-
-  run_cmd "sudo dnf install -y gstreamer1-plugins-base gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-plugins-bad-freeworld gstreamer1-plugins-ugly gstreamer1-libav gstreamer1-plugin-mpg123"     "Plugins GStreamer instalados correctamente"     "Fallo al instalar plugins GStreamer"
-
-  if command -v flatpak &>/dev/null; then
-    run_cmd "flatpak install -y --noninteractive org.freedesktop.Platform.ffmpeg-full"       "Códecs Flatpak instalados (FFmpeg Full)"       "Fallo al instalar códecs para Flatpak"
-  fi
+# Paquetes individuales
+run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
+  ffmpeg-libs \
+  gstreamer1-plugin-mpg123 \
+  gstreamer1-plugin-openh264 \
+  gstreamer1-plugins-bad-free \
+  gstreamer1-plugins-bad-freeworld \
+  gstreamer1-plugins-base \
+  gstreamer1-plugins-good \
+  gstreamer1-plugins-ugly \
+  libva \
+  libva-utils" \
+  "Paquetes multimedia instalados (directos)" \
+  "Fallo al instalar paquetes multimedia directos"
 
   # ─── Soporte gráfico (GPU) ────────────────────────────────────────────────
   show_section "Detectando y configurando GPU"
@@ -769,25 +772,39 @@ reload_plasma() {
 
 # ─── Instalación de Aplicaciones Multimedia ────────────────────────────────
 install_multimedia() {
-  log_section "Instalando aplicaciones multimedia desde lista externa"
+  log_section "🎵 Instalación de aplicaciones multimedia y códecs"
 
-  if [[ ! -f "${multimedia}" ]]; then
-    log_warn "Archivo de lista de multimedia no encontrado: ${multimedia}"
-    return 0
-  fi
+  local lists_to_install=("$LIST_MULTIMEDIA" "$LIST_CODECS")
 
-  log_info "Instalando aplicaciones desde: ${multimedia}"
-  if ! install_packages "${multimedia}"; then
-    log_warn "Algunas aplicaciones multimedia no se pudieron instalar. Revisa el archivo de log."
-  else
-    log_success "Aplicaciones multimedia instaladas correctamente."
-  fi
+  for list_file in "${lists_to_install[@]}"; do
+    if [[ ! -f "$list_file" ]]; then
+      log_warn "Archivo de lista no encontrado: $list_file"
+      continue
+    fi
+
+    log_info "Instalando paquetes desde: $list_file"
+    if ! install_packages "$list_file"; then
+      log_warn "Algunos paquetes de $list_file no se pudieron instalar. Revisa el log."
+    else
+      log_success "Paquetes de $list_file instalados correctamente."
+    fi
+  done
 
   return 0
 }
 
+
 install_core_apps() {
-  log_section "Instalando aplicaciones básicas del sistema"
+  log_section "🧰 Instalación de aplicaciones básicas del sistema"
+  add_repositories
+  install_system_utilities || log_warn "Fallo parcial en instalación de utilidades del sistema"
+  install_cargo_tools || log_warn "Fallo parcial en instalación de herramientas vía Cargo"
+
+  log_success "🧩 Aplicaciones básicas instaladas correctamente"
+}
+
+install_system_utilities() {
+  log_section "🛠️ Instalación de utilidades del sistema"
 
   # Verificación del archivo de utilidades
   if [[ ! -f "${LIST_UTILITIES}" ]]; then
@@ -795,90 +812,111 @@ install_core_apps() {
     return 1
   fi
 
-  # Herramientas de desarrollo
   log_info "Instalando herramientas de desarrollo (npm, pip)"
-  run_cmd "sudo dnf install -y npm pipx python3-pip"     "Herramientas de desarrollo instaladas"     "Error al instalar herramientas de desarrollo"
+  run_cmd "sudo dnf install -y npm pipx python3-pip" "Herramientas de desarrollo instaladas" "Error al instalar herramientas de desarrollo"
 
-  # Instalar electron-store si no existe
   if ! npm list -g electron-store &>/dev/null; then
-    run_cmd "sudo npm install -g electron-store"       "electron-store instalado globalmente"       "Error al instalar electron-store"
+    run_cmd "sudo npm install -g electron-store" "electron-store instalado globalmente" "Error al instalar electron-store"
   else
     log_info "electron-store ya está instalado"
   fi
 
-  # Instalación de Rust
   if ! command -v rustc &>/dev/null; then
     log_info "Instalando Rust"
-    run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"       "Rust instalado correctamente"       "Error al instalar Rust"
-    source "$HOME/.cargo/env"
+    run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" "Rust instalado correctamente" "Error al instalar Rust"
+    [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
     [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]] && export PATH="$HOME/.cargo/bin:$PATH"
   else
     log_info "Rust ya está instalado. Verificando actualizaciones..."
-    run_cmd "rustup update"       "Rust actualizado"       "Error al actualizar Rust"
+    run_cmd "rustup update" "Rust actualizado" "Error al actualizar Rust"
   fi
 
-  if ! command -v cargo &>/dev/null; then
-    log_error "Cargo no está disponible. Asegúrate de que Rust esté correctamente instalado y cargado en el entorno."
-    return 1
-  fi
-
-  # Instalar herramientas de Cargo (con barra de progreso)
-  cargo_bins=(cargo-update topgrade eza)
-  total=${#cargo_bins[@]}
-
-  for i in "${!cargo_bins[@]}"; do
-    bin="${cargo_bins[$i]}"
-    draw_progress_bar "$((i + 1))" "$total"
-    sleep 0.2
-
-    if ! command -v "$bin" &>/dev/null; then
-      log_info "Intentando instalar '$bin' con Cargo..."
-
-      if cargo install "$bin" &>> "$LOG_FILE"; then
-        if command -v "$bin" &>/dev/null; then
-          log_success "$bin instalado correctamente."
-        else
-          log_warn "$bin fue instalado pero no está en el PATH. Verifica si \$HOME/.cargo/bin está en tu entorno."
-        fi
-      else
-        log_warn "Fallo al instalar $bin con Cargo. Se continúa..."
-      fi
-    else
-      log_info "$bin ya está instalado. Omitiendo."
-    fi
-  done
-
-  # Grupos de desarrollo
-  log_info "Instalando grupos de desarrollo"
-  run_cmd "sudo dnf -y group install development-tools c-development"     "Grupos de desarrollo instalados"     "Error al instalar grupos de desarrollo"
-
-  # Instalación de utilidades desde lista
+  run_cmd "sudo dnf -y group install development-tools c-development" "Grupos de desarrollo instalados" "Error al instalar grupos de desarrollo"
   log_info "Instalando utilidades generales desde lista"
   install_packages "${LIST_UTILITIES}" || log_warn "Fallo parcial al instalar utilidades desde lista"
 
-  # pipx + lastversion
-  log_info "Instalando pipx + lastversion"
-  run_cmd "python3 -m pip install --user pipx && python3 -m pipx ensurepath"     "pipx instalado correctamente"     "Fallo al instalar pipx"
-  run_cmd "pipx install lastversion"     "lastversion instalado correctamente"     "Fallo al instalar lastversion"
+  if ! command -v pipx &>/dev/null; then
+    log_info "Instalando pipx + lastversion"
+    run_cmd "python3 -m pip install --user pipx && python3 -m pipx ensurepath" "pipx instalado correctamente" "Fallo al instalar pipx"
+  fi
 
-  # Fuentes Ubuntu (si no están)
+  if ! pipx list | grep -q "lastversion"; then
+    run_cmd "pipx install lastversion" "lastversion instalado correctamente" "Fallo al instalar lastversion"
+  fi
+
   if ! fc-list | grep -qi "Ubuntu"; then
-    run_cmd "sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts"       "Fuentes Ubuntu instaladas"       "Fallo al instalar fuentes Ubuntu"
+    run_cmd "sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts" "Fuentes Ubuntu instaladas" "Fallo al instalar fuentes Ubuntu"
   else
     log_info "Fuentes Ubuntu ya instaladas"
   fi
 
-  # Verificar binarios críticos post-instalación
   log_info "Verificando herramientas críticas"
   for bin in git curl wget zsh bat jq ripgrep fd; do
     if ! command -v "$bin" &>/dev/null; then
       log_warn "El binario $bin no fue encontrado tras la instalación"
     fi
   done
-
-  log_success "Aplicaciones básicas instaladas correctamente"
-  return 0
 }
+
+install_cargo_tools() {
+  log_section "🔧 Instalación de herramientas vía Cargo (Rust)"
+
+  if ! command -v cargo &>/dev/null; then
+    log_info "Rust/Cargo no encontrados. Procediendo a instalación de Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y &>> "$LOG_FILE"
+    if [[ -f "$HOME/.cargo/env" ]]; then
+      source "$HOME/.cargo/env"
+      export PATH="$HOME/.cargo/bin:$PATH"
+    fi
+  fi
+
+  if ! command -v rustup &>/dev/null; then
+    log_error "❌ rustup no se instaló correctamente. Abortando instalación de Cargo."
+    return 1
+  fi
+
+  if ! command -v cargo &>/dev/null; then
+    log_error "Cargo no está disponible después de la instalación. Verifica si \$HOME/.cargo/bin está en el PATH."
+    return 1
+  fi
+
+  local tools=(cargo-update topgrade batbox)
+  log_info "🛠️ Instalando herramientas CLI desde crates.io"
+  local total=${#tools[@]}
+  local count=0
+
+  for tool in "${tools[@]}"; do
+    ((count++))
+    draw_progress_bar "$count" "$total"
+    sleep 0.1
+
+    if command -v "$tool" &>/dev/null; then
+      log_info "🔹 $tool ya está instalado. Omitiendo."
+      continue
+    elif [[ -x "$HOME/.cargo/bin/$tool" ]]; then
+      log_warn "🔍 $tool está instalado en ~/.cargo/bin pero no está en PATH"
+      continue
+    fi
+
+    log_info "📦 Instalando $tool con Cargo..."
+    if cargo install --locked "$tool" &>> "$LOG_FILE"; then
+      if command -v "$tool" &>/dev/null || [[ -x "$HOME/.cargo/bin/$tool" ]]; then
+        log_success "✔️ $tool instalado correctamente"
+      else
+        log_warn "⚠️ $tool instalado pero no detectado en PATH."
+      fi
+    else
+      log_warn "⚠️ Fallo al instalar $tool con Cargo"
+    fi
+  done
+
+  if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
+    log_warn "Agrega $HOME/.cargo/bin a tu PATH para usar los binarios de Cargo"
+  fi
+
+  log_success "🎯 Instalación de herramientas vía Cargo completada"
+}
+
 
 
 install_extra_apps() {
@@ -888,7 +926,7 @@ install_extra_apps() {
     log_error "Archivo de lista de aplicaciones adicionales no encontrado: ${extra_apps}"
     return 1
   fi
-
+  
   log_info "Instalando paquetes adicionales desde lista: ${extra_apps}"
   install_packages "${extra_apps}" || log_warn "Algunos paquetes adicionales no pudieron instalarse"
 

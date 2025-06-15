@@ -25,12 +25,9 @@ ERR_FILE="$LOG_DIR/install_error_${TIMESTAMP}.log"
 mkdir -p "$LOG_DIR"
 touch "$LOG_FILE" "$ERR_FILE"
 
-
-
 # ───── Redirección global: consola + logs con filtrado inteligente ─────
 exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
      2> >(tee >(grep --line-buffered -E "^\[WARN|^\[ERROR|^\[❌" >> "$ERR_FILE") > /dev/tty)
-
 
 # ───── Logging estándar ─────
 log_info() {
@@ -56,7 +53,6 @@ log_success() {
   echo -e "$msg" | tee -a "$LOG_FILE"
 }
 
-
 # ───── Manejador de errores ─────
 error_handler() {
   local exit_code=$?
@@ -66,7 +62,6 @@ error_handler() {
 }
 
 trap 'error_handler $LINENO' ERR
-
 
 # ───── Validación de comandos base ─────
 check_dependency() {
