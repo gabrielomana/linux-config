@@ -733,9 +733,9 @@ main() {
     install_essential_packages
     configure_flatpak_repositories
     configure_security
-    configure_zswap
-    configure_btrfs_volumes
-    install_grub_btrfs
+    #configure_zswap
+    #configure_btrfs_volumes
+    #install_grub_btrfs
 
     [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
 
