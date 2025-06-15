@@ -131,19 +131,11 @@ validate_package_lists
 log_success "Todas las listas han sido validadas correctamente."
 
 main() {
-  echo "Hola"
-
-  log_info ">>> ENTRANDO A MAIN"
-  echo ">>> ENTRANDO A MAIN 2"
-  echo "=== TEST DE VISIBILIDAD: STDOUT (echo normal)==="
-echo "=== TEST DE VISIBILIDAD: STDERR (echo error)" >&2
-log_info "=== TEST DE log_info ==="
-
   log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
 
-  # log_info "▶ Instalando KDE Plasma..."
-  # install_kde || check_error $? "Falló la instalación de KDE Plasma"
-  # log_success "✔ KDE Plasma instalado correctamente."
+  log_info "▶ Instalando KDE Plasma..."
+  install_kde || check_error $? "Falló la instalación de KDE Plasma"
+  log_success "✔ KDE Plasma instalado correctamente."
 
   # Descomenta si deseas ejecutar los pasos siguientes
   # log_info "▶ Instalando aplicaciones base del sistema..."
