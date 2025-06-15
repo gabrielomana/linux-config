@@ -13,6 +13,7 @@ LOG_FILE="$LOGDIR/post_install_full.log"
 ERR_FILE="$LOGDIR/post_install_errors.log"
 ERROR_COUNT=0
 
+# === COLORES ANSI CON DETECCIÓN DE TTY ===
 if [[ -t 1 ]]; then
   RED="\033[0;31m"
   GREEN="\033[0;32m"
@@ -27,15 +28,6 @@ else
   NC=""
 fi
 
-
-# ====== LISTAS DE PAQUETES GLOBALES ======
-PACKAGES_ESSENTIALS=(
-    vim nano git curl wget htop
-    neofetch unzip p7zip p7zip-plugins
-    tar gzip bzip2
-    zsh bash-completion
-)
-
 # === PREPARACIÓN DE LOGS ===
 mkdir -p "$LOGDIR"
 : > "$LOG_FILE"
@@ -49,27 +41,26 @@ for bin in logger awk grep tee; do
     fi
 done
 
-
-# === FUNCIONES DE LOGGING Y FEEDBACK ===
-log_section() {
-    local section="$1"
-    local date_time; date_time=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    echo -e "\n\033[1;34m===== $section =====\033[0m"
-    echo "[$date_time] [SECTION] $section" >> "$LOG_FILE"
-}
+# === FUNCIONES DE LOG Y FEEDBACK ===
 
 log_info() {
     local msg="$1"
     local date_time; date_time=$(date '+%Y-%m-%d %H:%M:%S')
-    echo -e "[INFO] $msg"
+    printf "${BLUE}%-65s %s${NC}\n" "[INFO] $msg" "[OK]"
     echo "[$date_time] [INFO] $msg" >> "$LOG_FILE"
+}
+
+log_success() {
+    local msg="$1"
+    local date_time; date_time=$(date '+%Y-%m-%d %H:%M:%S')
+    printf "${GREEN}%-65s %s${NC}\n" "[✔ SUCCESS] $msg" "[OK]"
+    echo "[$date_time] [SUCCESS] $msg" >> "$LOG_FILE"
 }
 
 log_warn() {
     local msg="$1"
     local date_time; date_time=$(date '+%Y-%m-%d %H:%M:%S')
-    echo -e "[⚠️ WARNING] $msg"
+    printf "${YELLOW}%-65s %s${NC}\n" "[⚠ WARNING] $msg" "[WARN]"
     echo "[$date_time] [WARNING] $msg" | tee -a "$LOG_FILE" >> "$ERR_FILE"
     ERROR_COUNT=$((ERROR_COUNT+1))
 }
@@ -77,57 +68,46 @@ log_warn() {
 log_error() {
     local msg="$1"
     local date_time; date_time=$(date '+%Y-%m-%d %H:%M:%S')
-    echo -e "[❌ ERROR] $msg"
+    printf "${RED}%-65s %s${NC}\n" "[❌ ERROR] $msg" "[FAIL]"
     echo "[$date_time] [ERROR] $msg" | tee -a "$LOG_FILE" >> "$ERR_FILE"
     ERROR_COUNT=$((ERROR_COUNT+1))
 }
 
-log_success() {
-    local msg="$1"
-    local date_time; date_time=$(date '+%Y-%m-%d %H:%M:%S')
-    echo -e "${GREEN}[✔ SUCCESS] $msg${NC}"
-    echo "[$date_time] [SUCCESS] $msg" >> "$LOG_FILE"
+log_section() {
+    local title="$1"
+    local len=${#title}
+    local border
+    border=$(printf '─%.0s' $(seq 1 $((len + 4))))
+    echo -e "\n${BLUE}┌$border┐${NC}"
+    echo -e "${BLUE}│  $title  │${NC}"
+    echo -e "${BLUE}└$border┘${NC}\n"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SECTION] $title" >> "$LOG_FILE"
 }
-
 
 progress_bar() {
     local progress=$1
     local total=$2
-    local bar_size=30
-    local filled=$((progress * bar_size / total))
-    local empty=$((bar_size - filled))
+    local width=40
+    local percent=$((progress * 100 / total))
+    local done=$((width * progress / total))
+    local left=$((width - done))
+
     printf "\r["
-    printf "%0.s#" $(seq 1 $filled)
-    printf "%0.s-" $(seq 1 $empty)
-    printf "] %d%%" $((progress * 100 / total))
-    if [ "$progress" -eq "$total" ]; then
-        echo ""
-    fi
+    printf "%0.s#" $(seq 1 $done)
+    printf "%0.s-" $(seq 1 $left)
+    printf "] %3d%% (%d/%d)" "$percent" "$progress" "$total"
+
+    if (( progress == total )); then echo ""; fi
 }
 
+# === SUDO & PRIVILEGIOS ===
 check_error() {
-    local exit_code=$?
-    local error_msg="$1"
-    local fatal="${2:-false}"
-    if [ $exit_code -ne 0 ]; then
-        log_error "$error_msg (Código: $exit_code)"
-        if [ "$fatal" = "true" ]; then
-            log_error "Error fatal. Abortando script."
-            exit 1
-        fi
-        return 1
-    fi
-    return 0
-}
-
-init_log() {
-    echo "===================================================" > "$LOG_FILE"
-    echo "Post-Instalación Fedora 42 - $(date)" >> "$LOG_FILE"
-    echo "===================================================" >> "$LOG_FILE"
-    echo "" >> "$LOG_FILE"
-    log_info "Iniciando proceso de post-instalación para Fedora 42"
-    log_info "Log completo: $LOG_FILE"
-    log_info "Solo errores y advertencias: $ERR_FILE"
+  local msg="$1"
+  if [[ $? -ne 0 ]]; then
+    log_error "$msg"
+    return 1
+  fi
+  return 0
 }
 
 run_sudo() {
@@ -139,7 +119,6 @@ run_sudo() {
         }
     fi
 
-    # Keep-alive controlado por flag
     if [[ -z "${DISABLE_SUDO_KEEPALIVE:-}" ]]; then
         (
             while sudo -n true 2>/dev/null; do
@@ -151,7 +130,7 @@ run_sudo() {
     fi
 }
 
-
+# === AYUDA CLI ===
 show_help() {
     echo "Script de post-instalación para Fedora 42"
     echo
@@ -163,60 +142,48 @@ show_help() {
 }
 
 init_environment() {
-  # 🧱 Pilar 1: Seguridad y robustez
-  local PROJECT_ROOT
+  log_section "🚀 Inicializando entorno de post-instalación"
+
   PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
+  LOG_TAG="fedora_refactor"
+  REQUIRED_CMDS=(tee dnf command mkdir logger)
+  REQUIRED_SPACE_MB=5000
   local REAL_USER="${SUDO_USER:-$USER}"
-  local REAL_HOME
-  REAL_HOME=$(eval echo "~$REAL_USER")
+local REAL_HOME
+REAL_HOME=$(eval echo "~$REAL_USER")
 
-  local LOG_TAG="fedora_refactor"
-  local REQUIRED_CMDS=(tee dnf command mkdir logger)
-  local REQUIRED_SPACE_MB=5000
 
   if [[ $EUID -ne 0 ]]; then
-    echo "❌ Este script debe ejecutarse con privilegios de root (sudo)" >&2
+    log_error "Este script debe ejecutarse con privilegios de root (sudo)" "true"
     exit 1
   fi
 
-  # 🧱 Pilar 7: Compliance de comandos base
-for cmd in "${REQUIRED_CMDS[@]}"; do
-if ! command -v "$cmd" &>/dev/null; then
-    echo -e "${YELLOW}⚠️ El comando '$cmd' no está instalado. Intentando instalar...${NC}"
+  # Pilar 7: Validación de comandos esenciales
+  for cmd in "${REQUIRED_CMDS[@]}"; do
+    if ! command -v "$cmd" &>/dev/null; then
+      log_warn "El comando '$cmd' no está instalado. Intentando instalar..."
 
-    if [[ "$cmd" == "logger" ]]; then
-    dnf install -y --allowerasing --skip-broken --skip-unavailable util-linux &>/dev/null
-    else
-    dnf install -y --allowerasing --skip-broken --skip-unavailable "$cmd" &>/dev/null || {
-        echo -e "${RED}❌ No se pudo instalar '$cmd'. Abortando.${NC}" >&2
-        exit 1
-    }
+      if [[ "$cmd" == "logger" ]]; then
+        dnf install -y --allowerasing --skip-broken --skip-unavailable util-linux &>/dev/null
+      else
+        dnf install -y --allowerasing --skip-broken --skip-unavailable "$cmd" &>/dev/null || {
+          log_error "No se pudo instalar '$cmd'. Abortando." "true"
+          exit 1
+        }
+      fi
     fi
-fi
-done
+  done
 
+  # Pilar 3: Logging empresarial (permisos y ownership)
+  mkdir -p "$LOGDIR"
+  chmod 775 "$LOGDIR"
 
-  # 🧱 Pilar 3: Logging empresarial
-  # Crear carpeta de logs con permisos consistentes
-mkdir -p "$LOGDIR"
-chmod 775 "$LOGDIR"
-
-# Validar usuario real (fallback a $USER si no hay SUDO_USER)
-REAL_USER="${SUDO_USER:-$USER}"
-
-# Validar existencia de logs antes de cambiar permisos
-for log_file in install.log error.log; do
+  for log_file in install.log error.log; do
     full_path="$LOGDIR/$log_file"
     touch "$full_path"
-
-    # Aplicar permisos si el archivo existe
-    if [[ -f "$full_path" ]]; then
-        chown "$REAL_USER":"$REAL_USER" "$full_path"
-        chmod 664 "$full_path"
-    fi
-done
-
+    chown "$REAL_USER":"$REAL_USER" "$full_path"
+    chmod 664 "$full_path"
+  done
 
   if command -v logger &>/dev/null; then
     exec > >(tee -a "$LOGDIR/install.log" | logger -t "$LOG_TAG" -s) \
@@ -226,36 +193,34 @@ done
          2> >(tee -a "$LOGDIR/error.log" >&2)
   fi
 
-  echo "[INFO] Fedora Refactor – Init Environment"
-  echo "[INFO] Proyecto: $PROJECT_ROOT"
-  echo "[INFO] Usuario original: $REAL_USER (home: $REAL_HOME)"
-  echo "[INFO] Logs en: $LOGDIR (propietario: $REAL_USER)"
+  log_info "Fedora Refactor – Init Environment"
+  log_info "Proyecto: $PROJECT_ROOT"
+  log_info "Usuario original: $REAL_USER (home: $REAL_HOME)"
+  log_info "Logs en: $LOGDIR (propietario: $REAL_USER)"
 
-  # 🧱 Pilar 5: Compatibilidad y entorno
+  # Pilar 5: Compatibilidad visual
   if [ -n "${DISPLAY:-}" ]; then
-    echo "[INFO] Entorno gráfico detectado: $DISPLAY"
+    log_info "Entorno gráfico detectado: $DISPLAY"
   else
-    echo "[INFO] Modo consola / TTY"
+    log_info "Modo consola / TTY"
   fi
 
-  # 🧱 Pilar 1 y 6: Validación de espacio y CI/CD friendly
- # Validación de espacio en disco (requiere df y awk en modo seguro)
-log_info "Verificando espacio disponible en $PROJECT_ROOT..."
+  # Pilar 1 y 6: Validación de espacio
+  log_info "Verificando espacio disponible en $PROJECT_ROOT..."
 
-AVAILABLE_KB=$(df --output=avail "$PROJECT_ROOT" 2>/dev/null | tail -n 1 | tr -d ' ')
-REQUIRED_KB=$((REQUIRED_SPACE_MB * 1024))
+  AVAILABLE_KB=$(df --output=avail "$PROJECT_ROOT" 2>/dev/null | tail -n 1 | tr -d ' ')
+  REQUIRED_KB=$((REQUIRED_SPACE_MB * 1024))
 
-if [[ -z "$AVAILABLE_KB" || "$AVAILABLE_KB" -lt "$REQUIRED_KB" ]]; then
-    log_error "Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT (disponible: $((AVAILABLE_KB / 1024))MB)"
+  if [[ -z "$AVAILABLE_KB" || "$AVAILABLE_KB" -lt "$REQUIRED_KB" ]]; then
+    log_error "Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT (disponible: $((AVAILABLE_KB / 1024))MB)" "true"
     exit 1
-else
-    log_info "Espacio libre verificado: $((AVAILABLE_KB / 1024))MB disponibles (requerido: ${REQUIRED_SPACE_MB}MB)"
-fi
+  else
+    log_success "Espacio libre verificado: $((AVAILABLE_KB / 1024))MB disponibles"
+  fi
 
-
-  echo "[INFO] Espacio libre verificado: OK"
-  echo "[INFO] ✅ Entorno inicial preparado correctamente"
+  log_success "✅ Entorno inicial preparado correctamente"
 }
+
 
 get_uuid() {
   local mount_point="$1"
@@ -639,16 +604,56 @@ configure_btrfs_volumes() {
   log_success "Subvolúmenes BTRFS configurados correctamente."
 }
 
+configure_grub_btrfs_timeshift() {
+    log_section "📌 Configurando grub-btrfs con soporte para /timeshift"
+
+    local CONFIG_FILE="/etc/default/grub-btrfs/config"
+
+    if ! command -v grub-btrfs.path &>/dev/null; then
+        log_warn "grub-btrfs no está instalado. Se omite configuración de grub-btrfs.path"
+        return 0
+    fi
+
+    if [ ! -d "/timeshift" ]; then
+        log_info "Directorio /timeshift no existe. Creándolo..."
+        mkdir -p /timeshift
+    fi
+
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+
+    if grep -q 'GRUB_BTRFS_SNAPSHOT_DIR="/timeshift"' "$CONFIG_FILE" 2>/dev/null; then
+        log_info "Ya existe configuración válida en $CONFIG_FILE. No se sobrescribe."
+    else
+        log_info "Aplicando configuración personalizada a $CONFIG_FILE"
+        echo 'GRUB_BTRFS_SNAPSHOT_DIR="/timeshift"' >> "$CONFIG_FILE"
+    fi
+
+    systemctl daemon-reexec
+
+    if systemctl restart grub-btrfs.path &>/dev/null; then
+        log_success "Servicio grub-btrfs.path reiniciado correctamente"
+    else
+        log_warn "No se pudo reiniciar grub-btrfs.path (puede requerir revisión manual)"
+    fi
+}
+
+
+
 install_grub_btrfs() {
-  log_section "🔄 Instalación y configuración de grub-btrfs + Timeshift"
+    log_section "🔄 Instalación y configuración de grub-btrfs + Timeshift"
 
-  dnf copr enable -y kylegospo/grub-btrfs
-  dnf update -y
-  dnf install -y --allowerasing --skip-broken --skip-unavailable grub-btrfs grub-btrfs-timeshift timeshift
+    log_info "Habilitando repositorio COPR para grub-btrfs..."
+    dnf copr enable -y kylegospo/grub-btrfs
 
-  log_info "Configurando GRUB..."
-  mkdir -p /etc/default/grub-btrfs
-  tee /etc/default/grub-btrfs/config > /dev/null <<EOF
+    log_info "Actualizando paquetes antes de instalar grub-btrfs..."
+    dnf update -y
+
+    log_info "Instalando grub-btrfs, integración con Timeshift y Timeshift..."
+    dnf install -y --allowerasing --skip-broken --skip-unavailable grub-btrfs grub-btrfs-timeshift timeshift
+
+    log_info "Configurando directorio y archivo de grub-btrfs..."
+    mkdir -p /etc/default/grub-btrfs
+    tee /etc/default/grub-btrfs/config > /dev/null <<EOF
 GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
 GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig
 GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
@@ -657,17 +662,24 @@ GRUB_BTRFS_SNAPSHOT_FORMAT="%Y-%m-%d %H:%M | %c"
 GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rootflags=subvol=@ quiet"
 EOF
 
-  grub2-mkconfig -o /boot/grub2/grub.cfg
+    log_info "Regenerando configuración de GRUB..."
+    grub2-mkconfig -o /boot/grub2/grub.cfg
 
-  log_info "Habilitando grub-btrfs.path..."
-  systemctl enable --now grub-btrfs.path
+    configure_grub_btrfs_timeshift
 
-  log_info "Configurando Timeshift para snapshots automáticos..."
-  mkdir -p /timeshift
-  timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /timeshift || log_error "Fallo configurando Timeshift."
-  timeshift --create --comments "Snapshot inicial" || log_error "Fallo al crear snapshot inicial."
+    log_info "Habilitando servicio grub-btrfs.path..."
+    systemctl enable --now grub-btrfs.path || log_warn "No se pudo habilitar grub-btrfs.path"
 
-  tee /etc/timeshift.json > /dev/null <<EOF
+    log_info "Preparando Timeshift y snapshot inicial..."
+    mkdir -p /timeshift
+
+    timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)" --snapshot-dir /timeshift \
+        || log_error "Fallo configurando Timeshift para /timeshift"
+
+    timeshift --create --comments "Snapshot inicial" --tags D \
+        || log_error "Fallo al crear snapshot inicial con Timeshift"
+
+    tee /etc/timeshift.json > /dev/null <<EOF
 {
   "backup_device_uuid" : "$(findmnt -no UUID /)",
   "snapshot_dir" : "/timeshift",
@@ -682,8 +694,9 @@ EOF
 }
 EOF
 
-  log_success "✅ grub-btrfs y Timeshift configurados correctamente."
+    log_success "✅ grub-btrfs y Timeshift configurados correctamente"
 }
+
 
 
 # === UTILITARIOS ADICIONALES ===
@@ -735,7 +748,6 @@ done
 # === FUNCIÓN PRINCIPAL ===
 
 main() {
-    init_log
     run_sudo
 
     [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
