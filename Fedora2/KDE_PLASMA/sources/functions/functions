@@ -53,11 +53,12 @@ touch "$LOG_FILE"
 REQUIRED_CMDS=(dnf awk xargs sort grep)
 
 for cmd in "${REQUIRED_CMDS[@]}"; do
-  command -v "$cmd" &>/dev/null || {
-    echo "[ERROR] Comando requerido no encontrado: $cmd"
-    return 1
-  }
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "[ERROR] Comando requerido no encontrado: $cmd" >&2
+    exit 1
+  fi
 done
+
 
 #===============================================================================
 # Funciones utilitarias genéricas
@@ -87,8 +88,8 @@ run_sudo() {
     log_warn "Se requiere autenticación sudo..."
     sudo -v || {
       log_error "No se pudo elevar a sudo. Abortando."
-      return 1
-    fi
+      exit 1
+    }
   fi
 }
 
