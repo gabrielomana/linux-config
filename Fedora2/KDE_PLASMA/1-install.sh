@@ -42,8 +42,8 @@ for bin in dnf sudo tee; do
   check_dependency "$bin"
 done
 
-# # ───── Carga de funciones compartidas ─────
-# FUNCTIONS_FILE="${BASE_DIR}/sources/functions/functions"
+# ───── Carga de funciones compartidas ─────
+FUNCTIONS_FILE="${BASE_DIR}/sources/functions/functions"
 
 # if [[ -f "$FUNCTIONS_FILE" ]]; then
 #   source "$FUNCTIONS_FILE"
