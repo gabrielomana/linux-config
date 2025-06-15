@@ -610,7 +610,7 @@ configure_flameshot() {
 install_deps() {
   local pkgs=(flameshot tesseract tesseract-langpack-spa imagemagick xclip)
   log_info "Instalando dependencias: ${pkgs[*]}"
-  run_cmd "sudo dnf install -y ${pkgs[*]}"     "Dependencias instaladas"     "Error instalando dependencias" || return 1
+  run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable ${pkgs[*]}"     "Dependencias instaladas"     "Error instalando dependencias" || return 1
 }
 
 create_ocr_script() {
