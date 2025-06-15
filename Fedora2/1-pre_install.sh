@@ -269,8 +269,10 @@ change_hostname() {
 
     local hostname_var="${NEW_HOSTNAME:-}"
 
+    # 🧩 Si no se pasó por variable, pedirlo interactivamente por TTY
     if [[ -z "$hostname_var" ]]; then
-        read -rp "Introduce el nuevo hostname para este sistema: " hostname_var
+        echo -ne "${BLUE}Introduce el nuevo hostname para este sistema: ${NC}" > /dev/tty
+        read -r hostname_var < /dev/tty
     fi
 
     if [[ -z "$hostname_var" ]]; then
@@ -278,7 +280,7 @@ change_hostname() {
         return 0
     fi
 
-    # Validación RFC1123
+    # 📜 Validación RFC1123
     if [[ ! "$hostname_var" =~ ^[a-zA-Z0-9][-a-zA-Z0-9]{0,61}[a-zA-Z0-9]$ ]]; then
         log_error "El hostname '$hostname_var' no es válido (RFC1123). Ejemplo válido: fedora42-dev"
         return 1
@@ -291,6 +293,7 @@ change_hostname() {
         log_error "No se pudo establecer el hostname a $hostname_var"
     fi
 }
+
 
 
 configure_repositories() {
