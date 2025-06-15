@@ -33,10 +33,10 @@ log_success() { echo -e "[ OK ]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
 # ───── Manejador de errores ─────
 trap 'log_error "Error en la línea $LINENO. Abortando $SCRIPT_NAME."' ERR
 
-# # ───── Validación de comandos base ─────
-# check_dependency() {
-#   command -v "$1" &>/dev/null || log_error "Dependencia faltante: $1"
-# }
+# ───── Validación de comandos base ─────
+check_dependency() {
+  command -v "$1" &>/dev/null || log_error "Dependencia faltante: $1"
+}
 
 # for bin in dnf sudo tee; do
 #   check_dependency "$bin"
