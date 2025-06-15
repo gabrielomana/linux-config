@@ -19,7 +19,6 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$HOME/fedora_logs"
 LOG_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.log"
 ERR_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.err"
-
 mkdir -p "$LOG_DIR"
 
 # ───── Logging estándar ─────
@@ -39,6 +38,15 @@ check_dependency() {
 for bin in dnf sudo tee; do
   check_dependency "$bin"
 done
+
+# ───── Carga de funciones compartidas ─────
+FUNCTIONS_DIR="${BASE_DIR}/functions"
+if [[ -f "$FUNCTIONS_DIR/functions.sh" ]]; then
+  source "$FUNCTIONS_DIR/functions.sh"
+  log_info "Funciones cargadas desde $FUNCTIONS_DIR/functions.sh"
+else
+  log_error "Archivo de funciones no encontrado: $FUNCTIONS_DIR/functions.sh"
+fi
 
 # ───── Comprobación de permisos sudo ─────
 if ! sudo -n true 2>/dev/null; then
