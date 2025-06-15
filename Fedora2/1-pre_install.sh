@@ -36,6 +36,14 @@ done
 
 
 # === FUNCIONES DE LOGGING Y FEEDBACK ===
+log_section() {
+    local section="$1"
+    local date_time; date_time=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    echo -e "\n\033[1;34m===== $section =====\033[0m"
+    echo "[$date_time] [SECTION] $section" >> "$LOG_FILE"
+}
+
 log_info() {
     local msg="$1"
     local date_time; date_time=$(date '+%Y-%m-%d %H:%M:%S')
@@ -108,22 +116,26 @@ init_log() {
 }
 
 run_sudo() {
-    sudo -n true 2>/dev/null || {
-        log_info "Se necesitan privilegios de administrador para continuar"
+    if ! sudo -n true 2>/dev/null; then
+        log_info "Solicitando privilegios sudo..."
         sudo -v || {
             log_error "No se pudieron obtener privilegios de administrador" "true"
             exit 1
         }
-    }
-    (
-        while true; do
-            sudo -n true
-            sleep 50
-        done
-    ) &
-    SUDO_PID=$!
-    trap "kill -9 $SUDO_PID" EXIT
+    fi
+
+    # Keep-alive controlado por flag
+    if [[ -z "${DISABLE_SUDO_KEEPALIVE:-}" ]]; then
+        (
+            while sudo -n true 2>/dev/null; do
+                sleep 50
+            done
+        ) &
+        SUDO_PID=$!
+        trap "kill -9 $SUDO_PID 2>/dev/null || true" EXIT
+    fi
 }
+
 
 show_help() {
     echo "Script de post-instalación para Fedora 42"
@@ -144,7 +156,6 @@ init_environment() {
   local REAL_HOME
   REAL_HOME=$(eval echo "~$REAL_USER")
 
-  local LOGDIR="$PROJECT_ROOT/logs"
   local LOG_TAG="fedora_refactor"
   local REQUIRED_CMDS=(tee dnf command mkdir logger)
   local REQUIRED_SPACE_MB=5000
@@ -160,9 +171,9 @@ if ! command -v "$cmd" &>/dev/null; then
     echo -e "${YELLOW}⚠️ El comando '$cmd' no está instalado. Intentando instalar...${NC}"
 
     if [[ "$cmd" == "logger" ]]; then
-    dnf install -y util-linux &>/dev/null
+    dnf install -y --allowerasing --skip-broken --skip-unavailable util-linux &>/dev/null
     else
-    dnf install -y "$cmd" &>/dev/null || {
+    dnf install -y --allowerasing --skip-broken --skip-unavailable "$cmd" &>/dev/null || {
         echo -e "${RED}❌ No se pudo instalar '$cmd'. Abortando.${NC}" >&2
         exit 1
     }
@@ -172,16 +183,25 @@ done
 
 
   # 🧱 Pilar 3: Logging empresarial
-  mkdir -p "$LOGDIR"
+  # Crear carpeta de logs con permisos consistentes
+mkdir -p "$LOGDIR"
+chmod 775 "$LOGDIR"
 
-  # Asignar propiedad y permisos adecuados a carpeta de logs
-  chown "$REAL_USER":"$REAL_USER" "$LOGDIR"
-  chmod 775 "$LOGDIR"
+# Validar usuario real (fallback a $USER si no hay SUDO_USER)
+REAL_USER="${SUDO_USER:-$USER}"
 
-  # Aplicar permisos correctos si los archivos de log ya existen
-  touch "$LOGDIR/install.log" "$LOGDIR/error.log"
-  chown "$REAL_USER":"$REAL_USER" "$LOGDIR"/*.log
-  chmod 664 "$LOGDIR"/*.log
+# Validar existencia de logs antes de cambiar permisos
+for log_file in install.log error.log; do
+    full_path="$LOGDIR/$log_file"
+    touch "$full_path"
+
+    # Aplicar permisos si el archivo existe
+    if [[ -f "$full_path" ]]; then
+        chown "$REAL_USER":"$REAL_USER" "$full_path"
+        chmod 664 "$full_path"
+    fi
+done
+
 
   if command -v logger &>/dev/null; then
     exec > >(tee -a "$LOGDIR/install.log" | logger -t "$LOG_TAG" -s) \
@@ -204,15 +224,27 @@ done
   fi
 
   # 🧱 Pilar 1 y 6: Validación de espacio y CI/CD friendly
-  local AVAILABLE
-  AVAILABLE=$(df "$PROJECT_ROOT" | tail -1 | awk '{print $4}')
-  if (( AVAILABLE < REQUIRED_SPACE_MB * 1024 )); then
-    echo "[ERROR] Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT" >&2
+ # Validación de espacio en disco (requiere df y awk en modo seguro)
+log_info "Verificando espacio disponible en $PROJECT_ROOT..."
+
+AVAILABLE_KB=$(df --output=avail "$PROJECT_ROOT" 2>/dev/null | tail -n 1 | tr -d ' ')
+REQUIRED_KB=$((REQUIRED_SPACE_MB * 1024))
+
+if [[ -z "$AVAILABLE_KB" || "$AVAILABLE_KB" -lt "$REQUIRED_KB" ]]; then
+    log_error "Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT (disponible: $((AVAILABLE_KB / 1024))MB)"
     exit 1
-  fi
+else
+    log_info "Espacio libre verificado: $((AVAILABLE_KB / 1024))MB disponibles (requerido: ${REQUIRED_SPACE_MB}MB)"
+fi
+
 
   echo "[INFO] Espacio libre verificado: OK"
   echo "[INFO] ✅ Entorno inicial preparado correctamente"
+}
+
+get_uuid() {
+  local mount_point="$1"
+  findmnt -no UUID "$mount_point" 2>/dev/null
 }
 
 configure_dnf() {
@@ -236,7 +268,7 @@ deltarpm=True"
 
 configure_dnf_automatic() {
     log_info "Configurando DNF Automatic para actualizaciones automáticas"
-    sudo dnf install -y dnf-automatic
+    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable dnf-automatic
     check_error "No se pudo instalar dnf-automatic"
     sudo cp /usr/lib/systemd/system/dnf-automatic.timer /etc/systemd/system/
     check_error "No se pudo copiar el timer de dnf-automatic"
@@ -246,50 +278,71 @@ configure_dnf_automatic() {
 }
 
 change_hostname() {
-    log_info "Cambiando el hostname del sistema"
+    log_section "🖥️ Configuración del hostname"
+
     local hostname_var="${NEW_HOSTNAME:-}"
+
     if [[ -z "$hostname_var" ]]; then
         read -rp "Introduce el nuevo hostname para este sistema: " hostname_var
     fi
+
     if [[ -z "$hostname_var" ]]; then
-        log_warn "No se especificó un hostname. Se omite el cambio de hostname."
+        log_warn "No se especificó un hostname. Se omite el cambio."
         return 0
     fi
-    sudo hostnamectl set-hostname "$hostname_var"
-    check_error "No se pudo cambiar el hostname"
-    log_info "Hostname cambiado a $hostname_var"
+
+    # Validación RFC1123
+    if [[ ! "$hostname_var" =~ ^[a-zA-Z0-9][-a-zA-Z0-9]{0,61}[a-zA-Z0-9]$ ]]; then
+        log_error "El hostname '$hostname_var' no es válido (RFC1123). Ejemplo válido: fedora42-dev"
+        return 1
+    fi
+
+    log_info "Estableciendo hostname a: $hostname_var"
+    if sudo hostnamectl set-hostname --static "$hostname_var"; then
+        log_success "Hostname establecido correctamente: $hostname_var"
+    else
+        log_error "No se pudo establecer el hostname a $hostname_var"
+    fi
 }
 
+
 configure_repositories() {
-    log_info "Configurando repositorios adicionales"
+    log_section "🌐 Configuración de Repositorios Fedora"
+
     log_info "Instalando repositorios de Fedora Workstation..."
-    sudo dnf -y --quiet install fedora-workstation-repositories
-    if ! check_error "No se pudieron instalar los repositorios de Fedora Workstation"; then
+    if sudo dnf -y --quiet install fedora-workstation-repositories; then
+        log_info "Repositorios Workstation instalados correctamente"
+    else
+        check_error "No se pudieron instalar los repositorios de Fedora Workstation"
         log_warn "Continuando sin los repositorios Workstation"
     fi
+
     log_info "Instalando repositorios RPM Fusion (Free y NonFree)..."
-    sudo dnf -y --quiet install \
-        https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
-        https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-    if check_error "No se pudieron instalar los repositorios RPM Fusion"; then
+    if sudo dnf -y --quiet install \
+        "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
+        "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"; then
         log_info "Repositorios RPM Fusion instalados correctamente"
     else
+        check_error "No se pudieron instalar los repositorios RPM Fusion"
         log_warn "Continuando sin los repositorios RPM Fusion"
     fi
+
     log_info "Actualizando caché de repositorios..."
-    sudo dnf clean all -q
-    sudo dnf makecache --refresh -q
-    sudo dnf update -y -q
-    sudo dnf upgrade -y -q
-    sudo dnf -y -q group upgrade core
-    log_info "Repositorios configurados y actualizados"
+    sudo dnf clean all -q || log_warn "Fallo al limpiar caché DNF"
+    sudo dnf makecache --refresh -q || log_warn "Fallo al refrescar caché DNF"
+    sudo dnf update -y -q || log_warn "Fallo al aplicar 'dnf update'"
+    sudo dnf upgrade -y -q || log_warn "Fallo al aplicar 'dnf upgrade'"
+    sudo dnf -y -q group upgrade core || log_warn "Fallo al actualizar grupo 'core'"
+
+    log_success "Repositorios configurados y actualizados correctamente"
 }
+
 
 install_essential_packages() {
     log_info "Instalando paquetes esenciales del sistema"
     local total=${#PACKAGES_ESSENTIALS[@]}
     for i in "${!PACKAGES_ESSENTIALS[@]}"; do
-        sudo dnf install -y "${PACKAGES_ESSENTIALS[$i]}"
+        sudo dnf install -y --allowerasing --skip-broken --skip-unavailable "${PACKAGES_ESSENTIALS[$i]}"
         check_error "No se pudo instalar ${PACKAGES_ESSENTIALS[$i]}"
         progress_bar "$((i + 1))" "$total"
     done
@@ -297,28 +350,38 @@ install_essential_packages() {
 }
 
 configure_flatpak_repositories() {
-    log_info "Configurando repositorios Flatpak"
+    log_section "📦 Configuración de Repositorios Flatpak"
 
-    log_info "Instalando Flatpak..."
-    sudo dnf -y --quiet install flatpak
-    if ! check_error "No se pudo instalar Flatpak"; then
-        log_warn "Error al instalar Flatpak. Saliendo de esta fase."
-        return 1
+    if ! command -v flatpak &>/dev/null; then
+        log_info "Instalando Flatpak..."
+        sudo dnf install -y --allowerasing --skip-broken --skip-unavailable flatpak
+        check_error "No se pudo instalar Flatpak"
+    else
+        log_info "Flatpak ya está instalado"
     fi
 
-    log_info "Agregando repositorios Flatpak..."
-    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo &>/dev/null
-    sudo flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo &>/dev/null
-    sudo flatpak remote-add --if-not-exists kde https://distribute.kde.org/kdeapps.flatpakrepo &>/dev/null
-    sudo flatpak remote-add --if-not-exists fedora oci+https://registry.fedoraproject.org &>/dev/null
+    log_info "Agregando repositorios Flatpak si no existen..."
 
-    sudo flatpak remote-modify --system --prio=1 kde &>/dev/null || log_warn "No se pudo configurar prioridad de KDE"
-    sudo flatpak remote-modify --system --prio=2 flathub &>/dev/null || log_warn "No se pudo configurar prioridad de Flathub"
-    sudo flatpak remote-modify --system --prio=3 elementary &>/dev/null || log_warn "No se pudo configurar prioridad de Elementary"
-    sudo flatpak remote-modify --system --prio=4 fedora &>/dev/null || log_warn "No se pudo configurar prioridad de Fedora"
+    declare -A flatpak_remotes=(
+        [flathub]="https://flathub.org/repo/flathub.flatpakrepo"
+        [elementary]="https://flatpak.elementary.io/repo.flatpakrepo"
+        [kde]="https://distribute.kde.org/kdeapps.flatpakrepo"
+        [fedora]="oci+https://registry.fedoraproject.org"
+    )
 
-    log_info "Repositorios Flatpak configurados correctamente"
+    prio=1
+    for remote in kde flathub elementary fedora; do
+        url="${flatpak_remotes[$remote]}"
+        log_info "→ Asegurando remoto: $remote ($url)"
+        sudo flatpak remote-add --if-not-exists "$remote" "$url" &>/dev/null || log_warn "No se pudo agregar el remoto $remote"
+
+        sudo flatpak remote-modify --system --prio=$prio "$remote" &>/dev/null || log_warn "No se pudo asignar prioridad al remoto $remote"
+        prio=$((prio + 1))
+    done
+
+    log_success "Repositorios Flatpak configurados correctamente"
 }
+
 
 configure_zswap() {
   log_info "Configurando ZSWAP para mejor rendimiento del sistema"
@@ -426,14 +489,24 @@ EOF
 configure_security() {
     log_info "Configurando seguridad del sistema"
 
-    if ! command -v timeshift &>/dev/null; then
-        log_info "Creando snapshot de seguridad con Timeshift..."
-        sudo timeshift --create --comments "pre-security-update" --tags D &>/dev/null || log_warn "No se pudo crear snapshot con Timeshift"
-        check_error "No se pudo instalar Timeshift"
-    fi
+   # Validar si timeshift está disponible, e instalarlo si no lo está
+if ! command -v timeshift &>/dev/null; then
+    log_info "Timeshift no está instalado. Procediendo con la instalación..."
+    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable timeshift
+    check_error "No se pudo instalar Timeshift"
+fi
+
+# Crear snapshot de seguridad
+log_info "Creando snapshot de seguridad con Timeshift..."
+if ! sudo timeshift --create --comments "pre-security-update" --tags D &>/dev/null; then
+    log_warn "No se pudo crear snapshot de seguridad con Timeshift"
+else
+    log_success "Snapshot de seguridad creado correctamente"
+fi
+
 
     log_info "Instalando paquetes de seguridad..."
-    sudo dnf install -y --skip-unavailable --skip-broken \
+    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable  --skip-broken \
         resolvconf firewalld firewall-config selinux-policy selinux-policy-targeted \
         policycoreutils policycoreutils-python-utils setools npm
 
@@ -491,7 +564,7 @@ configure_security() {
 
     if ! command -v npm &>/dev/null; then
   log_info "Instalando npm..."
-  dnf install -y npm
+  dnf install -y --allowerasing --skip-broken --skip-unavailable npm
   check_error "No se pudo instalar npm"
 fi
 
@@ -517,17 +590,12 @@ configure_btrfs_volumes() {
     return 0
   fi
 
-  dnf install -y --skip-broken btrfs-progs inotify-tools
+  dnf install -y --allowerasing --skip-broken --skip-unavailable btrfs-progs inotify-tools
 
   log_info "Respaldando fstab..."
   cp /etc/fstab /etc/fstab.old
   local output_file="/etc/fstab.new"
   cp /etc/fstab "$output_file"
-
-get_uuid() {
-  local mount_point="$1"
-  findmnt -no UUID "$mount_point" 2>/dev/null
-}
 
 
   declare -A subvolumes=(
@@ -539,7 +607,6 @@ get_uuid() {
   )
 
   for mount_point in "${!subvolumes[@]}"; do
-    local uuid
     uuid=$(get_uuid "$mount_point")
     if [[ -n "$uuid" ]]; then
       sed -i -E \
@@ -562,7 +629,7 @@ install_grub_btrfs() {
 
   dnf copr enable -y kylegospo/grub-btrfs
   dnf update -y
-  dnf install -y grub-btrfs grub-btrfs-timeshift
+  dnf install -y --allowerasing --skip-broken --skip-unavailable grub-btrfs grub-btrfs-timeshift timeshift
 
   log_info "Configurando GRUB..."
   mkdir -p /etc/default/grub-btrfs
