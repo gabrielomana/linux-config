@@ -19,9 +19,9 @@ LOG_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.log"
 ERR_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.err"
 mkdir -p "$LOG_DIR"
 
-# # Redirección global: consola + logs con filtrado inteligente
-# exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
-#      2> >(tee >(grep --line-buffered -E "^\[WARN|^\[ERROR|^\[❌" >> "$ERR_FILE") > /dev/tty)
+# ───── Redirección global: consola + logs con filtrado inteligente ─────
+exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
+     2> >(tee >(grep --line-buffered -E "^\[WARN|^\[ERROR|^\[❌" >> "$ERR_FILE") > /dev/tty)
 
 
 # ───── Logging estándar ─────
@@ -133,28 +133,29 @@ log_success "Todas las listas han sido validadas correctamente."
 main() {
   log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
 
-  log_info "▶ Instalando KDE Plasma..."
-  install_kde || check_error $? "Falló la instalación de KDE Plasma"
-  log_success "✔ KDE Plasma instalado correctamente."
+  log_info "🔹 Instalando KDE Plasma..."
+  install_kde || check_error $? "❌ Falló la instalación de KDE Plasma"
+  log_success "✅ KDE Plasma instalado correctamente"
 
-  # Descomenta si deseas ejecutar los pasos siguientes
-  # log_info "▶ Instalando aplicaciones base del sistema..."
-  # install_core_apps || check_error $? "Falló la instalación de aplicaciones base"
-  # log_success "✔ Aplicaciones base instaladas correctamente."
+  log_info "🔹 Instalando aplicaciones base del sistema..."
+  install_core_apps || check_error $? "❌ Falló la instalación de aplicaciones base"
+  log_success "✅ Aplicaciones base instaladas correctamente"
 
-  # log_info "▶ Instalando aplicaciones multimedia..."
-  # install_multimedia || check_error $? "Falló la instalación de multimedia"
-  # log_success "✔ Aplicaciones multimedia instaladas correctamente."
+  log_info "🔹 Instalando aplicaciones multimedia..."
+  install_multimedia || check_error $? "❌ Falló la instalación de multimedia"
+  log_success "✅ Aplicaciones multimedia instaladas correctamente"
 
-  # log_info "▶ Ejecutando actualización completa del sistema..."
-  # run_sudo
-  # sudo dnf clean all &>> "$LOG_FILE"
-  # sudo dnf update -y &>> "$LOG_FILE"
-  # sudo dnf upgrade -y &>> "$LOG_FILE"
-  # log_success "✔ Sistema actualizado correctamente."
+  log_info "🔄 Ejecutando actualización completa del sistema..."
+  run_sudo
+  sudo dnf clean all &>> "$LOG_FILE"
+  sudo dnf update -y &>> "$LOG_FILE"
+  sudo dnf upgrade -y &>> "$LOG_FILE"
+  log_success "✅ Sistema actualizado correctamente"
 
-  # log_info "🌀 Reiniciando sistema para aplicar cambios..."
-  # sudo reboot
+  log_info "🔁 Reiniciando sistema para aplicar cambios..."
+  sudo reboot
 }
+
+
 
 main
