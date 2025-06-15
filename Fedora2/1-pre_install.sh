@@ -544,7 +544,7 @@ fi
 
     if ! command -v npm &>/dev/null; then
   log_info "Instalando npm..."
-  dnf install -y --allowerasing --skip-broken --skip-unavailable npm
+  sudo dnf install -y --allowerasing --skip-broken --skip-unavailable npm
   check_error "No se pudo instalar npm"
 fi
 
@@ -760,9 +760,9 @@ main() {
     install_essential_packages
     configure_flatpak_repositories
     configure_security
-    #configure_zswap
-    #configure_btrfs_volumes
-    #install_grub_btrfs
+    configure_zswap
+    configure_btrfs_volumes
+    install_grub_btrfs
 
     [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
 
