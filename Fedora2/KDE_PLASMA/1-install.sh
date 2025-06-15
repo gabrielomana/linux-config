@@ -40,12 +40,12 @@ for bin in dnf sudo tee; do
 done
 
 # ───── Carga de funciones compartidas ─────
-FUNCTIONS_DIR="${BASE_DIR}/functions"
-if [[ -f "$FUNCTIONS_DIR/functions.sh" ]]; then
-  source "$FUNCTIONS_DIR/functions.sh"
-  log_info "Funciones cargadas desde $FUNCTIONS_DIR/functions.sh"
+FUNCTIONS_DIR="${BASE_DIR}/sources/functions/functions"
+if [[ -f "$FUNCTIONS_DIR/sources/functions/functions" ]]; then
+  source "$FUNCTIONS_DIR/sources/functions/functions"
+  log_info "Funciones cargadas desde $FUNCTIONS_DIR/sources/functions/functions"
 else
-  log_error "Archivo de funciones no encontrado: $FUNCTIONS_DIR/functions.sh"
+  log_error "Archivo de funciones no encontrado: $FUNCTIONS_DIR/sources/functions/functions"
 fi
 
 # ───── Comprobación de permisos sudo ─────
