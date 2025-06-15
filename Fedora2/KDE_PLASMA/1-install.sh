@@ -24,11 +24,11 @@ mkdir -p "$LOG_DIR"
 #      2> >(tee >(grep --line-buffered -E "^\[WARN|^\[ERROR|^\[❌" >> "$ERR_FILE") > /dev/tty)
 
 
-# # ───── Logging estándar ─────
-# log_info()    { echo -e "[INFO]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
-# log_warn()    { echo -e "[WARN]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE" >&2; }
-# log_error()   { echo -e "[ERROR] $(date '+%F %T')  $*" | tee -a "$LOG_FILE" "$ERR_FILE" >&2; exit 1; }
-# log_success() { echo -e "[ OK ]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
+# ───── Logging estándar ─────
+log_info()    { echo -e "[INFO]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
+log_warn()    { echo -e "[WARN]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE" >&2; }
+log_error()   { echo -e "[ERROR] $(date '+%F %T')  $*" | tee -a "$LOG_FILE" "$ERR_FILE" >&2; exit 1; }
+log_success() { echo -e "[ OK ]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
 
 # # ───── Manejador de errores ─────
 # trap 'log_error "Error en la línea $LINENO. Abortando $SCRIPT_NAME."' ERR
