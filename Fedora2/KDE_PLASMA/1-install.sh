@@ -45,9 +45,9 @@ done
 # ───── Carga de funciones compartidas ─────
 FUNCTIONS_FILE="${BASE_DIR}/sources/functions/functions"
 
-# if [[ -f "$FUNCTIONS_FILE" ]]; then
-#   source "$FUNCTIONS_FILE"
-#   log_info "Funciones cargadas desde $FUNCTIONS_FILE"
+if [[ -f "$FUNCTIONS_FILE" ]]; then
+  source "$FUNCTIONS_FILE"
+  log_info "Funciones cargadas desde $FUNCTIONS_FILE"
 
 #   if ! declare -f install_kde &>/dev/null; then
 #     log_error "La función 'install_kde' no está definida tras cargar el archivo de funciones"
