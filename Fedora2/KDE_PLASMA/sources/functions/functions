@@ -576,17 +576,36 @@ install_kde() {
 }
 
 configure_flameshot() {
-  log_section "Configurando Flameshot + OCR y atajos con kwriteconfig5"
+  log_section "📸 Configurando Flameshot + OCR y atajos con kwriteconfig5"
 
-  install_deps || return 1
-  create_ocr_script
-  configure_kwrite_shortcuts
-  create_menu_shortcut
-  reload_plasma
+  if ! install_deps; then
+    log_error "Falló la instalación de dependencias de Flameshot"
+    return 1
+  fi
 
-  log_success "¡Listo! Flameshot con OCR y atajos configurados."
+  if ! create_ocr_script; then
+    log_error "Error al crear el script OCR de Flameshot"
+    return 1
+  fi
+
+  if ! configure_kwrite_shortcuts; then
+    log_error "Error al configurar los atajos de teclado con kwriteconfig5"
+    return 1
+  fi
+
+  if ! create_menu_shortcut; then
+    log_error "Error al crear el acceso directo en el menú de aplicaciones"
+    return 1
+  fi
+
+  if ! reload_plasma; then
+    log_warn "No se pudo recargar Plasma automáticamente. Requiere reinicio o logout"
+  fi
+
+  log_success "✅ Flameshot con OCR y atajos configurado correctamente"
   return 0
 }
+
 
 install_deps() {
   local pkgs=(flameshot tesseract tesseract-langpack-spa imagemagick xclip)
