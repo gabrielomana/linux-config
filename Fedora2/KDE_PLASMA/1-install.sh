@@ -41,11 +41,11 @@ done
 
 # ───── Carga de funciones compartidas ─────
 FUNCTIONS_DIR="${BASE_DIR}/sources/functions/functions"
-if [[ -f "$FUNCTIONS_DIR/sources/functions/functions" ]]; then
-  source "$FUNCTIONS_DIR/sources/functions/functions"
-  log_info "Funciones cargadas desde $FUNCTIONS_DIR/sources/functions/functions"
+if [[ -f "$FUNCTIONS_DIR" ]]; then
+  source "$FUNCTIONS_DIR"
+  log_info "Funciones cargadas desde $FUNCTIONS_DIR"
 else
-  log_error "Archivo de funciones no encontrado: $FUNCTIONS_DIR/sources/functions/functions"
+  log_error "Archivo de funciones no encontrado: $FUNCTIONS_DIR"
 fi
 
 # ───── Comprobación de permisos sudo ─────
