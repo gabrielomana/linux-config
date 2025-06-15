@@ -7,11 +7,23 @@ IFS=$'\n\t'
 # ===============================================
 
 # === VARIABLES GLOBALES ===
-USER_HOME=$(eval echo ~$(logname))
+REAL_USER="${SUDO_USER:-$USER}"
+USER_HOME=$(eval echo ~"$REAL_USER")
 LOGDIR="$USER_HOME/fedora_logs"
-LOG_FILE="$LOGDIR/post_install_full.log"
-ERR_FILE="$LOGDIR/post_install_errors.log"
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+LOG_FILE="$LOGDIR/install_${TIMESTAMP}.log"
+ERR_FILE="$LOGDIR/error_${TIMESTAMP}.log"
 ERROR_COUNT=0
+
+declare -a PACKAGES_ESSENTIALS=(
+  vim nano git curl wget htop
+  neofetch unzip p7zip p7zip-plugins
+  tar gzip bzip2
+  zsh bash-completion
+)
+
+
+
 
 # === COLORES ANSI CON DETECCIÓN DE TTY ===
 if [[ -t 1 ]]; then
@@ -142,77 +154,71 @@ show_help() {
 }
 
 init_environment() {
+  # 🧱 Pilar 1: Seguridad y robustez
   log_section "🚀 Inicializando entorno de post-instalación"
 
+  # Variables críticas de entorno
   PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   LOG_TAG="fedora_refactor"
   REQUIRED_CMDS=(tee dnf command mkdir logger)
   REQUIRED_SPACE_MB=5000
-  local REAL_USER="${SUDO_USER:-$USER}"
-local REAL_HOME
-REAL_HOME=$(eval echo "~$REAL_USER")
 
+  # Usuario real (para uso en permisos)
+  REAL_USER="${SUDO_USER:-$USER}"
+  REAL_HOME=$(eval echo "~$REAL_USER")
 
+  # Validación de permisos root
   if [[ $EUID -ne 0 ]]; then
-    log_error "Este script debe ejecutarse con privilegios de root (sudo)" "true"
+    echo -e "${RED}❌ Este script debe ejecutarse con privilegios de root (sudo)${NC}" >&2
     exit 1
   fi
 
-  # Pilar 7: Validación de comandos esenciales
+  # 🧱 Pilar 3: Logging empresarial
+  mkdir -p "$LOGDIR"
+  chmod 775 "$LOGDIR"
+  touch "$LOG_FILE" "$ERR_FILE"
+  chown "$REAL_USER":"$REAL_USER" "$LOG_FILE" "$ERR_FILE"
+  chmod 664 "$LOG_FILE" "$ERR_FILE"
+
+  # 🧱 Pilar 3: Redirección global (1B – salida mínima en consola)
+  exec > >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") \
+       2> >(grep --line-buffered -E "^\[⚠|\[❌" >> "$ERR_FILE")
+
+  # Logging inicial
+  log_info "Fedora Refactor – Init Environment"
+  log_info "Proyecto: $PROJECT_ROOT"
+  log_info "Usuario original: $REAL_USER (home: $REAL_HOME)"
+  log_info "Logs en: $LOGDIR (propietario: $REAL_USER)"
+
+  # 🧱 Pilar 7: Validación de comandos esenciales
   for cmd in "${REQUIRED_CMDS[@]}"; do
     if ! command -v "$cmd" &>/dev/null; then
       log_warn "El comando '$cmd' no está instalado. Intentando instalar..."
-
       if [[ "$cmd" == "logger" ]]; then
         dnf install -y --allowerasing --skip-broken --skip-unavailable util-linux &>/dev/null
       else
         dnf install -y --allowerasing --skip-broken --skip-unavailable "$cmd" &>/dev/null || {
-          log_error "No se pudo instalar '$cmd'. Abortando." "true"
+          log_error "No se pudo instalar '$cmd'. Abortando."
           exit 1
         }
       fi
     fi
   done
 
-  # Pilar 3: Logging empresarial (permisos y ownership)
-  mkdir -p "$LOGDIR"
-  chmod 775 "$LOGDIR"
-
-  for log_file in install.log error.log; do
-    full_path="$LOGDIR/$log_file"
-    touch "$full_path"
-    chown "$REAL_USER":"$REAL_USER" "$full_path"
-    chmod 664 "$full_path"
-  done
-
-  if command -v logger &>/dev/null; then
-    exec > >(tee -a "$LOGDIR/install.log" | logger -t "$LOG_TAG" -s) \
-         2> >(tee -a "$LOGDIR/error.log" | logger -t "$LOG_TAG" -s >&2)
-  else
-    exec > >(tee -a "$LOGDIR/install.log") \
-         2> >(tee -a "$LOGDIR/error.log" >&2)
-  fi
-
-  log_info "Fedora Refactor – Init Environment"
-  log_info "Proyecto: $PROJECT_ROOT"
-  log_info "Usuario original: $REAL_USER (home: $REAL_HOME)"
-  log_info "Logs en: $LOGDIR (propietario: $REAL_USER)"
-
-  # Pilar 5: Compatibilidad visual
+  # 🧱 Pilar 5: Compatibilidad de entorno
   if [ -n "${DISPLAY:-}" ]; then
     log_info "Entorno gráfico detectado: $DISPLAY"
   else
     log_info "Modo consola / TTY"
   fi
 
-  # Pilar 1 y 6: Validación de espacio
+  # 🧱 Pilar 6: Validación de espacio
   log_info "Verificando espacio disponible en $PROJECT_ROOT..."
-
   AVAILABLE_KB=$(df --output=avail "$PROJECT_ROOT" 2>/dev/null | tail -n 1 | tr -d ' ')
   REQUIRED_KB=$((REQUIRED_SPACE_MB * 1024))
 
   if [[ -z "$AVAILABLE_KB" || "$AVAILABLE_KB" -lt "$REQUIRED_KB" ]]; then
-    log_error "Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT (disponible: $((AVAILABLE_KB / 1024))MB)" "true"
+    log_error "Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT (disponible: $((AVAILABLE_KB / 1024))MB)"
     exit 1
   else
     log_success "Espacio libre verificado: $((AVAILABLE_KB / 1024))MB disponibles"
@@ -220,6 +226,7 @@ REAL_HOME=$(eval echo "~$REAL_USER")
 
   log_success "✅ Entorno inicial preparado correctamente"
 }
+
 
 
 get_uuid() {
@@ -319,15 +326,25 @@ configure_repositories() {
 
 
 install_essential_packages() {
-    log_info "Instalando paquetes esenciales del sistema"
+    log_section "📦 Instalando paquetes esenciales del sistema"
+
+    if [[ -z "${PACKAGES_ESSENTIALS[*]:-}" ]]; then
+        log_error "La variable PACKAGES_ESSENTIALS está vacía o no definida"
+        return 1
+    fi
+
     local total=${#PACKAGES_ESSENTIALS[@]}
     for i in "${!PACKAGES_ESSENTIALS[@]}"; do
-        sudo dnf install -y --allowerasing --skip-broken --skip-unavailable "${PACKAGES_ESSENTIALS[$i]}"
-        check_error "No se pudo instalar ${PACKAGES_ESSENTIALS[$i]}"
+        local pkg="${PACKAGES_ESSENTIALS[$i]}"
+        log_info "→ Instalando $pkg"
+        sudo dnf install -y --allowerasing --skip-broken --skip-unavailable "$pkg"
+        check_error "No se pudo instalar $pkg"
         progress_bar "$((i + 1))" "$total"
     done
-    log_info "Paquetes esenciales instalados correctamente"
+
+    log_success "Todos los paquetes esenciales fueron instalados correctamente"
 }
+
 
 configure_flatpak_repositories() {
     log_section "📦 Configuración de Repositorios Flatpak"
