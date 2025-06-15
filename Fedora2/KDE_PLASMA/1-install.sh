@@ -38,9 +38,9 @@ check_dependency() {
   command -v "$1" &>/dev/null || log_error "Dependencia faltante: $1"
 }
 
-# for bin in dnf sudo tee; do
-#   check_dependency "$bin"
-# done
+for bin in dnf sudo tee; do
+  check_dependency "$bin"
+done
 
 # # ───── Carga de funciones compartidas ─────
 # FUNCTIONS_FILE="${BASE_DIR}/sources/functions/functions"
