@@ -191,11 +191,13 @@ install_zsh() {
     # Importar funciones específicas para ZSH
     if [ -f "${SCRIPT_DIR}/sources/functions/zsh_starship" ]; then
         # Primero cargar las funciones
-        . "${SCRIPT_DIR}/sources/functions/zsh_starship"
+        source "${SCRIPT_DIR}/sources/functions/zsh_starship"
         
-        # Si existe la función install_ZSH, ejecutarla
-        if type install_ZSH &>/dev/null; then
-            execute_command "install_zsh_main" "Instalación de ZSH y complementos"
+        # Verificar que las funciones necesarias existen
+        if declare -f install_zsh_main > /dev/null; then
+            print_message "INFO" "Ejecutando instalación principal de ZSH"
+            # Invocar la función correctamente
+            install_zsh_main
         else
             print_message "ERROR" "Función install_zsh_main no encontrada en el archivo importado"
             ((ERROR_COUNT++))
@@ -204,7 +206,7 @@ install_zsh() {
         print_message "ERROR" "Archivo de funciones ZSH no encontrado: ${SCRIPT_DIR}/sources/functions/zsh_starship"
         ((ERROR_COUNT++))
     fi
-    
+
     print_message "SUCCESS" "=== FINALIZADA INSTALACIÓN DE ZSH, OH-MY-ZSH Y STARSHIP ==="
 }
 
@@ -225,7 +227,8 @@ main() {
         print_message "ERROR" "Archivo de funciones adicionales no encontrado: ${SCRIPT_DIR}/sources/functions/functions"
         ((ERROR_COUNT++))
     fi
-    
+    configure_hardware
+    install_multimedia
     # Ejecutar módulos en secuencia
     install_konsole_and_dotfiles
     install_extra_apps

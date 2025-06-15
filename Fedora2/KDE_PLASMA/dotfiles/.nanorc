@@ -1,0 +1,48 @@
+###############################################################################
+# Archivo: ~/.nanorc
+# Descripción: Configuración avanzada del editor nano para usuarios Fedora
+# -----------------------------------------------------------------------------
+# Características: numeración, indentación automática, colores personalizados,
+# respaldo de archivos, corrector ortográfico, soporte para mouse y sintaxis.
+###############################################################################
+
+## === Comportamiento general === ##
+set linenumbers              # Mostrar números de línea
+set constantshow             # Mostrar posición del cursor
+set smarthome                # Home inteligente (salta entre inicio visual/lógico)
+set magic                    # Mejor interpretación de expresiones regulares
+
+## === Edición y navegación === ##
+set autoindent               # Mantener indentación automática
+set tabsize 4                # Tamaño de tabulación (ajustado desde 10)
+set tabstospaces             # Reemplazar tabs por espacios
+set softwrap                 # Ajuste de línea suave
+set casesensitive            # Búsqueda sensible a mayúsculas
+
+## === Seguridad y respaldo === ##
+set backup                   # Activar respaldo automático
+set backupdir "~/.backups/"  # Directorio para respaldos
+set saveonexit               # Guardar configuración al salir
+
+## === Historial y corrector === ##
+set historylog               # Guardar historial de comandos
+set speller "aspell -c"      # Corrector ortográfico con aspell
+
+## === Interfaz === ##
+set boldtext                 # Usar texto en negrita
+set mouse                    # Soporte de mouse
+
+## === Colores === ##
+set titlecolor magenta
+set statuscolor magenta
+set errorcolor red
+set selectedcolor red
+set stripecolor yellow
+set numbercolor green
+set keycolor green
+set functioncolor blue
+
+## === Inclusión de sintaxis extendida === ##
+include "/usr/share/nano/*.nanorc"
+include "/usr/share/nano/extra/*.nanorc"
+include "/opt/nanorc/*.nanorc"

@@ -19,7 +19,7 @@ guestfs-tools
 msttcorefonts
 kdenlive
 libguestfs-tools
-libvirt*
+$(dnf list --available 'libvirt*' | awk '{print $1}' | grep '^libvirt')
 qemu
 qemu-kvm
 topgrade
