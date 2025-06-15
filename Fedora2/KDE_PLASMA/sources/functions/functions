@@ -606,26 +606,95 @@ configure_flameshot() {
   return 0
 }
 
-
 install_deps() {
   local pkgs=(flameshot tesseract tesseract-langpack-spa imagemagick xclip)
-  log_info "Instalando dependencias: ${pkgs[*]}"
-  run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable ${pkgs[*]}"     "Dependencias instaladas"     "Error instalando dependencias" || return 1
+  local msg="Instalando dependencias: ${pkgs[*]}"
+  log_section "📦 $msg"
+  run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable ${pkgs[*]}" \
+    "Dependencias instaladas correctamente" \
+    "Fallo al instalar dependencias requeridas para Flameshot" || return 1
 }
 
 create_ocr_script() {
   local desk="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
   local script="$desk/flameshot_ocr.sh"
 
+  log_info "Creando script OCR en: $script"
+
+  mkdir -p "$desk" || {
+    log_error "No se pudo crear el directorio del escritorio: $desk"
+    return 1
+  }
+
   cat > "$script" << 'EOF'
 #!/usr/bin/env bash
 flameshot gui --raw | convert - -resize 400% png:- | \
-tesseract stdin stdout | awk 'NR==1{printf "%s", \$0} NR>1{printf "\n%s", \$0}' | \
+tesseract stdin stdout | awk 'NR==1{printf "%s", $0} NR>1{printf "\n%s", $0}' | \
 xclip -selection clipboard
 EOF
 
-  chmod +x "$script"
-  log_success "Script OCR creado en: $script"
+  chmod +x "$script" || {
+    log_error "No se pudo hacer ejecutable el script: $script"
+    return 1
+  }
+
+  log_success "Script OCR creado correctamente en: $script"
+  return 0
+}
+
+configure_kwrite_shortcuts() {
+  local file="$HOME/.config/kglobalshortcutsrc"
+
+  log_info "Escribiendo atajos con kwriteconfig5"
+
+  kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Capture "Print,none,Tomar captura de pantalla" &&
+  kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Configure "Ctrl+Shift+Print,none,Configurar" &&
+  kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Launcher "Ctrl+Print,none,Open launcher" &&
+  kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key _k_friendly_name "Flameshot" &&
+  kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key _launch "none,none,Flameshot" || {
+    log_error "No se pudieron escribir los atajos de Flameshot"
+    return 1
+  }
+
+  kwriteconfig5 --file "$file" --group PlasmaShortcuts --key Print "flameshot gui" || {
+    log_error "No se pudo escribir el atajo global de Plasma"
+    return 1
+  }
+
+  return 0
+}
+
+create_menu_shortcut() {
+  local script_path="${XDG_DESKTOP_DIR:-$HOME/Desktop}/flameshot_ocr.sh"
+  local desktop_entry="$HOME/.local/share/applications/flameshot-ocr.desktop"
+
+  mkdir -p "$(dirname "$desktop_entry")"
+  cat > "$desktop_entry" <<EOF
+[Desktop Entry]
+Name=Flameshot OCR
+Exec=${script_path}
+Icon=flameshot
+Type=Application
+Categories=Utility;
+EOF
+
+  log_success "Acceso directo creado en el menú: $desktop_entry"
+  return 0
+}
+
+reload_plasma() {
+  if command -v qdbus &>/dev/null; then
+    qdbus org.kde.KWin /KWin reconfigure && {
+      log_success "Atajos recargados en Plasma"
+      return 0
+    } || {
+      log_warn "Falló recarga por D-Bus; quizás requieras logout/login"
+      return 1
+    }
+  else
+    log_warn "qdbus no encontrado; reinicia tu sesión para aplicar cambios"
+    return 1
+  fi
 }
 
 configure_kwrite_shortcuts() {

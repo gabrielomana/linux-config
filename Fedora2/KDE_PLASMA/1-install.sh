@@ -127,23 +127,23 @@ main() {
   install_kde || check_error $? "Falló la instalación de KDE Plasma"
   log_success "✔ KDE Plasma instalado correctamente."
 
-  log_info "▶ Instalando aplicaciones base del sistema..."
-  install_core_apps || check_error $? "Falló la instalación de aplicaciones base"
-  log_success "✔ Aplicaciones base instaladas correctamente."
+  # log_info "▶ Instalando aplicaciones base del sistema..."
+  # install_core_apps || check_error $? "Falló la instalación de aplicaciones base"
+  # log_success "✔ Aplicaciones base instaladas correctamente."
 
-  log_info "▶ Instalando aplicaciones multimedia..."
-  install_multimedia || check_error $? "Falló la instalación de multimedia"
-  log_success "✔ Aplicaciones multimedia instaladas correctamente."
+  # log_info "▶ Instalando aplicaciones multimedia..."
+  # install_multimedia || check_error $? "Falló la instalación de multimedia"
+  # log_success "✔ Aplicaciones multimedia instaladas correctamente."
 
-  log_info "▶ Ejecutando actualización completa del sistema..."
-  run_sudo
-  sudo dnf clean all &>> "$LOG_FILE"
-  sudo dnf update -y &>> "$LOG_FILE"
-  sudo dnf upgrade -y &>> "$LOG_FILE"
-  log_success "✔ Sistema actualizado correctamente."
+  # log_info "▶ Ejecutando actualización completa del sistema..."
+  # run_sudo
+  # sudo dnf clean all &>> "$LOG_FILE"
+  # sudo dnf update -y &>> "$LOG_FILE"
+  # sudo dnf upgrade -y &>> "$LOG_FILE"
+  # log_success "✔ Sistema actualizado correctamente."
 
-  log_info "🌀 Reiniciando sistema para aplicar cambios..."
-  sudo reboot
+  # log_info "🌀 Reiniciando sistema para aplicar cambios..."
+  # sudo reboot
 }
 
 main
