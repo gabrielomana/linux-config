@@ -34,84 +34,6 @@ for bin in logger awk grep tee; do
     fi
 done
 
-# ===============================================
-# Wrappers UX para comandos críticos
-# ===============================================
-
-# Colores
-GREEN='\e[1;32m'
-RED='\e[1;31m'
-BLUE='\e[1;34m'
-NC='\e[0m'
-
-# Logdir predefinido
-mkdir -p "$LOGDIR"
-
-# ──────────────────────────────
-# Wrapper: DNF
-# ──────────────────────────────
-dnf() {
-  local cmd="$1"
-  shift
-
-  echo -ne "${BLUE}▶ sudo dnf $cmd...${NC} "
-
-  local common_flags=(--allowerasing --skip-broken --setopt=skip_if_unavailable=true)
-  local safe_cmds=(install upgrade update group)
-
-  if [[ " ${safe_cmds[*]} " == *" $cmd "* ]]; then
-    if sudo dnf "$cmd" "${common_flags[@]}" "$@" >>"$LOGDIR/install.log" 2>>"$LOGDIR/error.log"; then
-      echo -e "${GREEN}(OK)${NC}"
-    else
-      echo -e "${RED}(FAIL)${NC}"
-      echo "[ERROR] sudo dnf $cmd $*" >>"$LOGDIR/error.log"
-    fi
-  else
-    if sudo dnf "$cmd" "$@" >>"$LOGDIR/install.log" 2>>"$LOGDIR/error.log"; then
-      echo -e "${GREEN}(OK)${NC}"
-    else
-      echo -e "${RED}(FAIL)${NC}"
-      echo "[ERROR] sudo dnf $cmd $*" >>"$LOGDIR/error.log"
-    fi
-  fi
-}
-
-
-# ──────────────────────────────
-# Wrapper: Flatpak
-# ──────────────────────────────
-flatpak() {
-  local cmd="$1"
-  shift
-
-  echo -ne "${BLUE}▶ flatpak $cmd...${NC} "
-
-  if command flatpak "$cmd" "$@" >>"$LOGDIR/install.log" 2>>"$LOGDIR/error.log"; then
-    echo -e "${GREEN}(OK)${NC}"
-  else
-    echo -e "${RED}(FAIL)${NC}"
-    echo "[ERROR] flatpak $cmd $*" >>"$LOGDIR/error.log"
-  fi
-}
-
-# ──────────────────────────────
-# Wrapper: Systemctl
-# ──────────────────────────────
-systemctl() {
-  local cmd="$1"
-  shift
-
-  echo -ne "${BLUE}▶ systemctl $cmd...${NC} "
-
-  if command systemctl "$cmd" "$@" >>"$LOGDIR/install.log" 2>>"$LOGDIR/error.log"; then
-    echo -e "${GREEN}(OK)${NC}"
-  else
-    echo -e "${RED}(FAIL)${NC}"
-    echo "[ERROR] systemctl $cmd $*" >>"$LOGDIR/error.log"
-  fi
-}
-
-
 
 # === FUNCIONES DE LOGGING Y FEEDBACK ===
 log_info() {
@@ -314,7 +236,7 @@ deltarpm=True"
 
 configure_dnf_automatic() {
     log_info "Configurando DNF Automatic para actualizaciones automáticas"
-    dnf install -y dnf-automatic
+    sudo dnf install -y dnf-automatic
     check_error "No se pudo instalar dnf-automatic"
     sudo cp /usr/lib/systemd/system/dnf-automatic.timer /etc/systemd/system/
     check_error "No se pudo copiar el timer de dnf-automatic"
@@ -367,7 +289,7 @@ install_essential_packages() {
     log_info "Instalando paquetes esenciales del sistema"
     local total=${#PACKAGES_ESSENTIALS[@]}
     for i in "${!PACKAGES_ESSENTIALS[@]}"; do
-        dnf install -y "${PACKAGES_ESSENTIALS[$i]}"
+        sudo dnf install -y "${PACKAGES_ESSENTIALS[$i]}"
         check_error "No se pudo instalar ${PACKAGES_ESSENTIALS[$i]}"
         progress_bar "$((i + 1))" "$total"
     done
@@ -511,7 +433,7 @@ configure_security() {
     fi
 
     log_info "Instalando paquetes de seguridad..."
-    dnf install -y --skip-unavailable --skip-broken \
+    sudo dnf install -y --skip-unavailable --skip-broken \
         resolvconf firewalld firewall-config selinux-policy selinux-policy-targeted \
         policycoreutils policycoreutils-python-utils setools npm
 
