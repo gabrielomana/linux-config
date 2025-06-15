@@ -19,6 +19,8 @@ TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 LOG_FILE="$LOG_DIR/install_full_${TIMESTAMP}.log"
 ERR_FILE="$LOG_DIR/install_error_${TIMESTAMP}.log"
 mkdir -p "$LOG_DIR"
+touch "$LOG_FILE" "$ERR_FILE"
+
 
 # ───── Redirección global: consola + logs con filtrado inteligente ─────
 exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
@@ -26,13 +28,40 @@ exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/t
 
 
 # ───── Logging estándar ─────
-log_info()    { echo -e "[INFO]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
-log_warn()    { echo -e "[WARN]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE" >&2; }
-log_error()   { echo -e "[ERROR] $(date '+%F %T')  $*" | tee -a "$LOG_FILE" "$ERR_FILE" >&2; exit 1; }
-log_success() { echo -e "[ OK ]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
+log_info() {
+  local msg="[INFO]  $(date '+%F %T')  $*"
+  echo -e "$msg" | tee -a "$LOG_FILE"
+}
+
+log_warn() {
+  local msg="[WARN]  $(date '+%F %T')  $*"
+  echo -e "$msg" | tee -a "$LOG_FILE" >&2
+  echo -e "$msg" >> "$ERR_FILE"
+}
+
+log_error() {
+  local msg="[ERROR] $(date '+%F %T')  $*"
+  echo -e "$msg" | tee -a "$LOG_FILE" >&2
+  echo -e "$msg" >> "$ERR_FILE"
+  exit 1
+}
+
+log_success() {
+  local msg="[ OK ]  $(date '+%F %T')  $*"
+  echo -e "$msg" | tee -a "$LOG_FILE"
+}
+
 
 # ───── Manejador de errores ─────
-trap 'log_error "Error en la línea $LINENO. Abortando $SCRIPT_NAME."' ERR
+error_handler() {
+  local exit_code=$?
+  local line_no=$1
+  log_error "❌ Error en la línea $line_no. Código de salida: $exit_code. Abortando $SCRIPT_NAME"
+  exit "$exit_code"
+}
+
+trap 'error_handler $LINENO' ERR
+
 
 # ───── Validación de comandos base ─────
 check_dependency() {
