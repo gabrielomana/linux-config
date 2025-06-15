@@ -742,9 +742,6 @@ reload_plasma() {
   fi
 }
 
-# Ejecutar función principal
-configure_flameshot
-
 # ─── Instalación de Aplicaciones Multimedia ────────────────────────────────
 install_multimedia() {
   log_section "Instalando aplicaciones multimedia desde lista externa"
