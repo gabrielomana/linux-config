@@ -13,6 +13,21 @@ LOG_FILE="$LOGDIR/post_install_full.log"
 ERR_FILE="$LOGDIR/post_install_errors.log"
 ERROR_COUNT=0
 
+if [[ -t 1 ]]; then
+  RED="\033[0;31m"
+  GREEN="\033[0;32m"
+  YELLOW="\033[1;33m"
+  BLUE="\033[1;34m"
+  NC="\033[0m"
+else
+  RED=""
+  GREEN=""
+  YELLOW=""
+  BLUE=""
+  NC=""
+fi
+
+
 # ====== LISTAS DE PAQUETES GLOBALES ======
 PACKAGES_ESSENTIALS=(
     vim nano git curl wget htop
