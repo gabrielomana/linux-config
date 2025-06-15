@@ -17,8 +17,12 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$HOME/fedora_logs"
 LOG_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.log"
 ERR_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.err"
-
 mkdir -p "$LOG_DIR"
+
+# Redirección global: consola + logs con filtrado inteligente
+exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
+     2> >(tee >(grep --line-buffered -E "^\[WARN|^\[ERROR|^\[❌" >> "$ERR_FILE") > /dev/tty)
+
 
 # ───── Logging estándar ─────
 log_info()    { echo -e "[INFO]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
@@ -127,7 +131,7 @@ validate_package_lists
 log_success "Todas las listas han sido validadas correctamente."
 
 main() {
-  echo ">>> ENTRANDO A MAIN"
+  log_info ">>> ENTRANDO A MAIN"
   log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
 
   log_info "▶ Instalando KDE Plasma..."
