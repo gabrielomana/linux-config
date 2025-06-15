@@ -54,27 +54,28 @@ dnf() {
   local cmd="$1"
   shift
 
-  echo -ne "${BLUE}▶ dnf $cmd...${NC} "
+  echo -ne "${BLUE}▶ sudo dnf $cmd...${NC} "
 
   local common_flags=(--allowerasing --skip-broken --setopt=skip_if_unavailable=true)
   local safe_cmds=(install upgrade update group)
 
   if [[ " ${safe_cmds[*]} " == *" $cmd "* ]]; then
-    if command dnf "$cmd" "${common_flags[@]}" "$@" >>"$LOGDIR/install.log" 2>>"$LOGDIR/error.log"; then
+    if sudo dnf "$cmd" "${common_flags[@]}" "$@" >>"$LOGDIR/install.log" 2>>"$LOGDIR/error.log"; then
       echo -e "${GREEN}(OK)${NC}"
     else
       echo -e "${RED}(FAIL)${NC}"
-      echo "[ERROR] dnf $cmd $*" >>"$LOGDIR/error.log"
+      echo "[ERROR] sudo dnf $cmd $*" >>"$LOGDIR/error.log"
     fi
   else
-    if command dnf "$cmd" "$@" >>"$LOGDIR/install.log" 2>>"$LOGDIR/error.log"; then
+    if sudo dnf "$cmd" "$@" >>"$LOGDIR/install.log" 2>>"$LOGDIR/error.log"; then
       echo -e "${GREEN}(OK)${NC}"
     else
       echo -e "${RED}(FAIL)${NC}"
-      echo "[ERROR] dnf $cmd $*" >>"$LOGDIR/error.log"
+      echo "[ERROR] sudo dnf $cmd $*" >>"$LOGDIR/error.log"
     fi
   fi
 }
+
 
 # ──────────────────────────────
 # Wrapper: Flatpak
@@ -313,7 +314,7 @@ deltarpm=True"
 
 configure_dnf_automatic() {
     log_info "Configurando DNF Automatic para actualizaciones automáticas"
-    sudo dnf install -y dnf-automatic
+    dnf install -y dnf-automatic
     check_error "No se pudo instalar dnf-automatic"
     sudo cp /usr/lib/systemd/system/dnf-automatic.timer /etc/systemd/system/
     check_error "No se pudo copiar el timer de dnf-automatic"
@@ -366,7 +367,7 @@ install_essential_packages() {
     log_info "Instalando paquetes esenciales del sistema"
     local total=${#PACKAGES_ESSENTIALS[@]}
     for i in "${!PACKAGES_ESSENTIALS[@]}"; do
-        sudo dnf install -y "${PACKAGES_ESSENTIALS[$i]}"
+        dnf install -y "${PACKAGES_ESSENTIALS[$i]}"
         check_error "No se pudo instalar ${PACKAGES_ESSENTIALS[$i]}"
         progress_bar "$((i + 1))" "$total"
     done
@@ -510,7 +511,7 @@ configure_security() {
     fi
 
     log_info "Instalando paquetes de seguridad..."
-    sudo dnf install -y --skip-unavailable --skip-broken \
+    dnf install -y --skip-unavailable --skip-broken \
         resolvconf firewalld firewall-config selinux-policy selinux-policy-targeted \
         policycoreutils policycoreutils-python-utils setools npm
 
