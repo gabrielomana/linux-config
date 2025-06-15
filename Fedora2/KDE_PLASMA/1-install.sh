@@ -123,6 +123,7 @@ validate_package_lists
 log_success "Todas las listas han sido validadas correctamente."
 
 main() {
+  echo "Hola mundo 1"
   log_info "▶ Instalando KDE Plasma..."
   install_kde || check_error $? "Falló la instalación de KDE Plasma"
   log_success "✔ KDE Plasma instalado correctamente."

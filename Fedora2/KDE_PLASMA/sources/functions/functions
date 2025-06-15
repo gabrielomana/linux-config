@@ -533,15 +533,15 @@ clean_kde_bloatware() {
 
 # ─── Instalación de KDE Plasma ───────────────────────────────────────────────
 install_kde() {
-  log_section "Instalando entorno de escritorio KDE Plasma"
+  log_section "🚀 Instalando entorno de escritorio KDE Plasma"
 
-  if [[ ! -f "${kde_plasma}" ]]; then
-    log_error "Lista de paquetes de KDE Plasma no encontrada: ${kde_plasma}"
+  if [[ ! -f "$kde_plasma" ]]; then
+    log_error "Lista de paquetes de KDE Plasma no encontrada: $kde_plasma"
     return 1
   fi
 
   log_info "Iniciando instalación de paquetes base de KDE Plasma"
-  install_packages "${kde_plasma}"
+  install_packages "$kde_plasma"
 
   log_info "Habilitando SDDM como gestor de sesiones"
   run_cmd "sudo systemctl enable sddm" \
@@ -557,23 +557,24 @@ install_kde() {
     log_warn "Falló la configuración automática de NumLock en SDDM"
   fi
 
-  if [[ -f "${kde_bloatware}" ]]; then
+  if [[ -f "$kde_bloatware" ]]; then
     log_info "Eliminando bloatware de KDE"
-    remove_packages "${kde_bloatware}"
+    remove_packages "$kde_bloatware"
   else
-    log_warn "Lista de bloatware de KDE no encontrada: ${kde_bloatware}. Omitiendo limpieza."
+    log_warn "Lista de bloatware de KDE no encontrada: $kde_bloatware. Omitiendo limpieza."
   fi
 
-  if [[ -f "${kde_plasma_apps}" ]]; then
+  if [[ -f "$kde_plasma_apps" ]]; then
     log_info "Instalando aplicaciones adicionales de KDE"
-    install_packages "${kde_plasma_apps}"
+    install_packages "$kde_plasma_apps"
   else
-    log_warn "Lista de apps adicionales de KDE no encontrada: ${kde_plasma_apps}. Omitiendo."
+    log_warn "Lista de apps adicionales de KDE no encontrada: $kde_plasma_apps. Omitiendo."
   fi
 
-  log_success "KDE Plasma instalado y configurado correctamente"
+  log_success "✅ KDE Plasma instalado y configurado correctamente"
   return 0
 }
+
 
 configure_flameshot() {
   log_section "📸 Configurando Flameshot + OCR y atajos con kwriteconfig5"
