@@ -19,8 +19,7 @@ fi
 #===============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-LISTS_DIR="${SCRIPT_DIR}/../lists"
+LISTS_DIR="${SCRIPT_DIR}/../lists"  # ← Corrección aplicada aquí
 
 LIST_KDE_PLASMA="${LISTS_DIR}/kde_plasma.list"
 LIST_KDE_APPS="${LISTS_DIR}/kde_plasma_apps.list"
@@ -37,6 +36,15 @@ REQUIRED_LISTS=(
   "$LIST_UTILITIES"
   "$LIST_EXTRA_APPS"
 )
+
+# Validación de listas necesarias
+for list_file in "${REQUIRED_LISTS[@]}"; do
+  if [[ ! -f "$list_file" ]]; then
+    echo "[ERROR] Lista no encontrada: $list_file"
+    return 1
+  fi
+done
+
 
 # Colores ANSI
 if [[ -t 1 ]]; then

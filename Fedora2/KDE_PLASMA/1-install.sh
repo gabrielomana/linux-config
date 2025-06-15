@@ -3,11 +3,10 @@
 # ───────────────────────────────────────────────────────────────
 # Fedora KDE Plasma: Instalación automatizada
 # Autor: Gabriel Omaña / Initium
-# Última revisión: 2025-06-14
+# Última revisión: 2025-06-15
 # Descripción: Script para instalación base y preparación del entorno KDE Plasma.
 # ───────────────────────────────────────────────────────────────
 
-# Seguridad y entorno estricto
 set -euo pipefail
 IFS=$'\n\t'
 
@@ -15,17 +14,17 @@ IFS=$'\n\t'
 SCRIPT_NAME="$(basename "$0")"
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Directorio de logs
 LOG_DIR="$HOME/fedora_logs"
 LOG_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.log"
 ERR_FILE="$LOG_DIR/${SCRIPT_NAME%.sh}.err"
+
 mkdir -p "$LOG_DIR"
 
 # ───── Logging estándar ─────
-log_info()   { echo -e "[INFO]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
-log_warn()   { echo -e "[WARN]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE" >&2; }
-log_error()  { echo -e "[ERROR] $(date '+%F %T')  $*" | tee -a "$LOG_FILE" "$ERR_FILE" >&2; exit 1; }
-log_success(){ echo -e "[ OK ]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
+log_info()    { echo -e "[INFO]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
+log_warn()    { echo -e "[WARN]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE" >&2; }
+log_error()   { echo -e "[ERROR] $(date '+%F %T')  $*" | tee -a "$LOG_FILE" "$ERR_FILE" >&2; exit 1; }
+log_success() { echo -e "[ OK ]  $(date '+%F %T')  $*" | tee -a "$LOG_FILE"; }
 
 # ───── Manejador de errores ─────
 trap 'log_error "Error en la línea $LINENO. Abortando $SCRIPT_NAME."' ERR
@@ -40,12 +39,17 @@ for bin in dnf sudo tee; do
 done
 
 # ───── Carga de funciones compartidas ─────
-FUNCTIONS_DIR="${BASE_DIR}/sources/functions/functions"
-if [[ -f "$FUNCTIONS_DIR" ]]; then
-  source "$FUNCTIONS_DIR"
-  log_info "Funciones cargadas desde $FUNCTIONS_DIR"
+FUNCTIONS_FILE="${BASE_DIR}/sources/functions/functions.sh"
+
+if [[ -f "$FUNCTIONS_FILE" ]]; then
+  source "$FUNCTIONS_FILE"
+  log_info "Funciones cargadas desde $FUNCTIONS_FILE"
+
+  if ! declare -f install_kde &>/dev/null; then
+    log_error "La función 'install_kde' no está definida tras cargar el archivo de funciones"
+  fi
 else
-  log_error "Archivo de funciones no encontrado: $FUNCTIONS_DIR"
+  log_error "Archivo de funciones no encontrado: $FUNCTIONS_FILE"
 fi
 
 # ───── Comprobación de permisos sudo ─────
@@ -123,11 +127,13 @@ validate_package_lists
 log_success "Todas las listas han sido validadas correctamente."
 
 main() {
-  echo "Hola mundo 1"
+  log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
+
   log_info "▶ Instalando KDE Plasma..."
   install_kde || check_error $? "Falló la instalación de KDE Plasma"
   log_success "✔ KDE Plasma instalado correctamente."
 
+  # Descomenta si deseas ejecutar los pasos siguientes
   # log_info "▶ Instalando aplicaciones base del sistema..."
   # install_core_apps || check_error $? "Falló la instalación de aplicaciones base"
   # log_success "✔ Aplicaciones base instaladas correctamente."
