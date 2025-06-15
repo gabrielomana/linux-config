@@ -104,13 +104,15 @@ progress_bar() {
     local done=$((width * progress / total))
     local left=$((width - done))
 
-    printf "\r["
-    printf "%0.s#" $(seq 1 $done)
-    printf "%0.s-" $(seq 1 $left)
-    printf "] %3d%% (%d/%d)" "$percent" "$progress" "$total"
-
-    if (( progress == total )); then echo ""; fi
+    {
+        printf "\r[" > /dev/tty
+        printf "%0.s#" $(seq 1 $done) > /dev/tty
+        printf "%0.s-" $(seq 1 $left) > /dev/tty
+        printf "] %3d%% (%d/%d)" "$percent" "$progress" "$total" > /dev/tty
+        if (( progress == total )); then echo "" > /dev/tty; fi
+    } 2>/dev/null
 }
+
 
 # === SUDO & PRIVILEGIOS ===
 check_error() {
@@ -154,43 +156,45 @@ show_help() {
 }
 
 init_environment() {
-  # 🧱 Pilar 1: Seguridad y robustez
   log_section "🚀 Inicializando entorno de post-instalación"
 
-  # Variables críticas de entorno
   PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   LOG_TAG="fedora_refactor"
   REQUIRED_CMDS=(tee dnf command mkdir logger)
   REQUIRED_SPACE_MB=5000
-
-  # Usuario real (para uso en permisos)
   REAL_USER="${SUDO_USER:-$USER}"
   REAL_HOME=$(eval echo "~$REAL_USER")
 
-  # Validación de permisos root
+  # Pilar 1: Seguridad y permisos de ejecución
   if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}❌ Este script debe ejecutarse con privilegios de root (sudo)${NC}" >&2
+    echo "❌ Este script debe ejecutarse con privilegios de root (sudo)" >&2
     exit 1
   fi
 
-  # 🧱 Pilar 3: Logging empresarial
+  # Pilar 3: Crear y configurar carpeta de logs
   mkdir -p "$LOGDIR"
   chmod 775 "$LOGDIR"
+
+  # Pilar 4: Definir archivos de log con timestamp para trazabilidad
+  timestamp="$(date +'%Y%m%d_%H%M%S')"
+  export LOG_FILE="$LOGDIR/install_${timestamp}.log"
+  export ERR_FILE="$LOGDIR/error_${timestamp}.log"
+
   touch "$LOG_FILE" "$ERR_FILE"
   chown "$REAL_USER":"$REAL_USER" "$LOG_FILE" "$ERR_FILE"
   chmod 664 "$LOG_FILE" "$ERR_FILE"
 
-  # 🧱 Pilar 3: Redirección global (1B – salida mínima en consola)
-  exec > >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") \
-       2> >(grep --line-buffered -E "^\[⚠|\[❌" >> "$ERR_FILE")
+  # Pilar 3: Redirección avanzada de salida/logs (stdout → install, stderr → error)
+  exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
+       2> >(tee >(grep --line-buffered -E "^\[⚠|\[❌" >> "$ERR_FILE") > /dev/tty)
 
-  # Logging inicial
-  log_info "Fedora Refactor – Init Environment"
-  log_info "Proyecto: $PROJECT_ROOT"
-  log_info "Usuario original: $REAL_USER (home: $REAL_HOME)"
-  log_info "Logs en: $LOGDIR (propietario: $REAL_USER)"
+  log_info "🧭 Proyecto: $PROJECT_ROOT"
+  log_info "👤 Usuario original: $REAL_USER (home: $REAL_HOME)"
+  log_info "📁 Logs en: $LOGDIR"
+  log_info "📄 Archivo de instalación: $(basename "$LOG_FILE")"
+  log_info "📄 Archivo de errores: $(basename "$ERR_FILE")"
 
-  # 🧱 Pilar 7: Validación de comandos esenciales
+  # Pilar 7: Validación de comandos esenciales
   for cmd in "${REQUIRED_CMDS[@]}"; do
     if ! command -v "$cmd" &>/dev/null; then
       log_warn "El comando '$cmd' no está instalado. Intentando instalar..."
@@ -198,27 +202,27 @@ init_environment() {
         dnf install -y --allowerasing --skip-broken --skip-unavailable util-linux &>/dev/null
       else
         dnf install -y --allowerasing --skip-broken --skip-unavailable "$cmd" &>/dev/null || {
-          log_error "No se pudo instalar '$cmd'. Abortando."
+          log_error "No se pudo instalar '$cmd'. Abortando." "true"
           exit 1
         }
       fi
     fi
   done
 
-  # 🧱 Pilar 5: Compatibilidad de entorno
+  # Pilar 5: Compatibilidad visual
   if [ -n "${DISPLAY:-}" ]; then
-    log_info "Entorno gráfico detectado: $DISPLAY"
+    log_info "🖥️ Entorno gráfico detectado: $DISPLAY"
   else
-    log_info "Modo consola / TTY"
+    log_info "📦 Modo consola / TTY"
   fi
 
-  # 🧱 Pilar 6: Validación de espacio
+  # Pilar 1 y 6: Validación de espacio
   log_info "Verificando espacio disponible en $PROJECT_ROOT..."
   AVAILABLE_KB=$(df --output=avail "$PROJECT_ROOT" 2>/dev/null | tail -n 1 | tr -d ' ')
   REQUIRED_KB=$((REQUIRED_SPACE_MB * 1024))
 
   if [[ -z "$AVAILABLE_KB" || "$AVAILABLE_KB" -lt "$REQUIRED_KB" ]]; then
-    log_error "Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT (disponible: $((AVAILABLE_KB / 1024))MB)"
+    log_error "Espacio insuficiente: se requieren ${REQUIRED_SPACE_MB}MB libres en $PROJECT_ROOT (disponible: $((AVAILABLE_KB / 1024))MB)" "true"
     exit 1
   else
     log_success "Espacio libre verificado: $((AVAILABLE_KB / 1024))MB disponibles"
@@ -226,6 +230,7 @@ init_environment() {
 
   log_success "✅ Entorno inicial preparado correctamente"
 }
+
 
 
 
