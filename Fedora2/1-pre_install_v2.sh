@@ -649,54 +649,15 @@ configure_btrfs_volumes() {
 }
 
 
-# === Snapshot inicial con Timeshift ===
-initialize_timeshift_config() {
-  log_section "📸 Configurando Timeshift y creando snapshot inicial"
-
-  local device=$(findmnt -no SOURCE / | sed 's|UUID=||' | xargs blkid -o device)
-  local uuid=$(findmnt -no UUID /)
-
-  sudo mkdir -p /timeshift
-
-  sudo tee /etc/timeshift/timeshift.json > /dev/null <<EOF
-{
-  "backup_device_uuid" : "$uuid",
-  "snapshot_dir" : "/timeshift",
-  "snapshot_name" : "timeshift-btrfs",
-  "mode" : "btrfs",
-  "schedule_daily" : true,
-  "count_daily" : 5,
-  "schedule_weekly" : true,
-  "count_weekly" : 3,
-  "schedule_monthly" : true,
-  "count_monthly" : 2
-}
-EOF
-
-log_info "🕒 Configurando Timeshift y creando snapshot inicial"
-if [[ ! -f /etc/timeshift/timeshift.json ]]; then
-  if sudo timeshift --check &>/dev/null; then
-    run_cmd sudo timeshift --create --comments "Snapshot inicial post instalación" --tags D
-    log_success "✅ Timeshift configurado correctamente"
-  else
-    log_warn "⚠️ Timeshift no detectó un entorno BTRFS activo o válido. Revisa configuración manual."
-  fi
-else
-  log_info "✔️ Timeshift ya configurado. Saltando creación inicial."
-fi
-
-}
-
 ensure_grub_btrfsd_service() {
   log_info "🔁 Verificando existencia de grub-btrfsd.service"
 
-  # Si el servicio ya está presente, activarlo
   if systemctl list-unit-files | grep -q grub-btrfsd.service; then
     run_cmd sudo systemctl enable --now grub-btrfsd.service
-    return
+    return 0
   fi
 
-  # Intentar instalarlo manualmente si fue compilado pero no instalado
+  # Intentar instalarlo manualmente si fue compilado pero no copiado
   local candidate
   candidate=$(find "$HOME" /tmp -type f -name "grub-btrfsd.service" 2>/dev/null | head -n 1)
 
@@ -706,87 +667,43 @@ ensure_grub_btrfsd_service() {
     run_cmd sudo systemctl daemon-reexec
     run_cmd sudo systemctl daemon-reload
     run_cmd sudo systemctl enable --now grub-btrfsd.service
-    log_success "✅ grub-btrfsd.service instalado y activado manualmente"
+
+    # Validar activación
+    if systemctl is-active --quiet grub-btrfsd.service; then
+      log_success "✅ grub-btrfsd.service instalado y activo"
+      return 0
+    else
+      log_warn "⚠️ Se instaló grub-btrfsd.service pero no pudo activarse. Verifica manualmente"
+      return 1
+    fi
   else
-    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado ni compilado. Revisa manualmente"
-  fi
-  return
-}
-
-generate_timeshift_config() {
-  log_info "📄 Generando /etc/timeshift/timeshift.json desde plantilla oficial (GUI), con UUID raíz detectado"
-
-  sudo mkdir -p /etc/timeshift
-  sudo mkdir -p /timeshift
-
-  local uuid
-  uuid=$(findmnt -no UUID /)
-  if [[ -z "$uuid" ]]; then
-    log_error "❌ No se pudo detectar UUID del subvolumen raíz (/)"
+    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado ni compilado en el sistema. Abortando activación"
     return 1
   fi
-
-  # Crear archivo con formato validado por GUI
-  sudo tee /etc/timeshift/timeshift.json >/dev/null <<EOF
-{
-  "backup_device_uuid" : "$uuid",
-  "parent_device_uuid" : "",
-  "do_first_run" : "false",
-  "btrfs_mode" : "true",
-  "include_btrfs_home_for_backup" : "false",
-  "include_btrfs_home_for_restore" : "false",
-  "stop_cron_emails" : "true",
-  "schedule_monthly" : "false",
-  "schedule_weekly" : "false",
-  "schedule_daily" : "false",
-  "schedule_hourly" : "false",
-  "schedule_boot" : "false",
-  "count_monthly" : "2",
-  "count_weekly" : "3",
-  "count_daily" : "5",
-  "count_hourly" : "6",
-  "count_boot" : "5",
-  "date_format" : "%Y-%m-%d %H:%M:%S",
-  "exclude" : [],
-  "exclude-apps" : []
 }
-EOF
 
-  log_success "✅ Archivo timeshift.json generado correctamente con UUID: $uuid"
-
-  # Crear snapshot inicial si no existen
-  if ! sudo timeshift --list | grep -q "Device name"; then
-    log_info "📸 Creando snapshot inicial"
-    sudo timeshift --create --comments "Snapshot inicial" --tags D
-  else
-    log_info "✔️ Ya existen snapshots, no se crea uno nuevo"
-  fi
-
-  # Reiniciar grub-btrfsd
-  if systemctl list-unit-files | grep -q grub-btrfsd-custom.service; then
-    run_cmd sudo systemctl restart grub-btrfsd-custom.service
-  elif systemctl list-unit-files | grep -q grub-btrfsd.service; then
-    run_cmd sudo systemctl restart grub-btrfsd.service
-  else
-    log_warn "⚠️ Servicio grub-btrfsd no encontrado para reiniciar"
-  fi
-
-  return 0
-}
 
 force_timeshift_init() {
   log_info "📦 Lanzando Timeshift GUI en segundo plano para generar configuración base"
 
   local gtk_pid
 
-  # Ejecutar GUI en background con DISPLAY heredado
-  sudo timeshift-gtk >/dev/null 2>&1 &
-  gtk_pid=$!
+  if ! command -v timeshift-gtk &>/dev/null; then
+    log_warn "⚠️ timeshift-gtk no está disponible en el sistema"
+    return 1
+  fi
 
-  # Esperar que inicialice estructuras internas
+  # Ejecutar GUI como el usuario original si está en sudo
+  if [[ -n "$SUDO_USER" && "$SUDO_USER" != "root" ]]; then
+    sudo -u timeshift-gtk >/dev/null 2>&1 &
+  else
+    nohup sudo timeshift-gtk >/dev/null 2>&1 &
+  fi
+
+  gtk_pid=$!
   sleep 5
 
-  # Matar proceso si sigue activo
+  # Cerrar proceso si sigue activo
   if ps -p "$gtk_pid" &>/dev/null; then
     sudo kill "$gtk_pid"
     log_info "🧹 timeshift-gtk cerrado tras inicialización automática"
@@ -794,17 +711,15 @@ force_timeshift_init() {
     log_info "✔️ timeshift-gtk se cerró por sí solo"
   fi
 
-  # Verificación mínima
+  # Verificar existencia del archivo generado
   if [[ -f /etc/timeshift/timeshift.json ]]; then
     log_success "✅ Configuración de Timeshift generada correctamente"
     return 0
   else
-    log_warn "⚠️ timeshift.json no se generó. Requiere verificación manual."
+    log_warn "⚠️ timeshift.json no se generó. Requiere verificación manual"
     return 1
   fi
 }
-
-
 
 
 
@@ -815,34 +730,24 @@ install_grub_btrfs() {
   local workdir="/tmp/grub-btrfs-src"
   local repo_url="https://github.com/Antynea/grub-btrfs"
 
-  # Validación de dependencias (por comando real)
-for cmd in git make gcc grub2-mkconfig grub2-script-check inotifywait; do
-  if ! command -v "$cmd" &>/dev/null; then
-    log_error "❌ Dependencia no encontrada: $cmd"
-    return 1
-  fi
-done
+  # Validación de dependencias
+  for cmd in git make gcc grub2-mkconfig grub2-script-check inotifywait timeshift; do
+    if ! command -v "$cmd" &>/dev/null; then
+      log_error "❌ Dependencia no encontrada: $cmd"
+      return 1
+    fi
+  done
 
-  # Instalación por si faltara alguno
+  # Instalación defensiva
   run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     git make gcc grub2 grub2-tools inotify-tools timeshift
 
-run_cmd sudo dnf reinstall -y timeshift
+  # Lanzar GUI Timeshift solo si no existe config
+  if [[ ! -f /etc/timeshift/timeshift.json ]]; then
+    force_timeshift_init
+  fi
 
-# Lanzar GUI para generar timeshift.json si aún no existe
-if [[ ! -f /etc/timeshift/timeshift.json ]]; then
-  force_timeshift_init
-fi
-
-
-# if ! generate_timeshift_config; then
-#   log_warn "⚠️ No se pudo generar configuración de Timeshift automáticamente"
-# fi
-
-
-    
-
-  # Clonación limpia del repo
+  # Clonación y preparación del repositorio
   run_cmd rm -rf "$workdir"
   run_cmd git clone --depth=1 "$repo_url" "$workdir" || {
     log_error "❌ No se pudo clonar $repo_url"
@@ -854,7 +759,7 @@ fi
     return 1
   }
 
-  # Parches para Fedora en archivo config
+  # Parches para Fedora
   if [[ -f config ]]; then
     run_cmd sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config
     run_cmd sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config
@@ -863,7 +768,7 @@ fi
     log_warn "⚠️ Archivo config no encontrado. Puede que ya no sea necesario parchearlo."
   fi
 
-  # Detección robusta del archivo 41_snapshots-btrfs
+  # Parches en 41_snapshots-btrfs
   local snapshot_file
   snapshot_file=$(find . -maxdepth 2 -type f -iname '41_snapshots-btrfs' | head -n 1)
 
@@ -888,47 +793,32 @@ fi
   popd >/dev/null
   run_cmd rm -rf "$workdir"
 
-  # Validar que grub-mkconfig_lib exista (reinstalar grub2-tools si falta)
+  # Validación de grub-mkconfig_lib
   if [[ ! -f /etc/grub.d/grub-mkconfig_lib ]]; then
     log_warn "⚠️ grub-mkconfig_lib no encontrado. Reinstalando grub2-tools."
     run_cmd sudo dnf reinstall -y grub2-tools
   fi
 
-  # Regenerar GRUB config correctamente
+  # Regenerar configuración de GRUB
   log_info "🌀 Regenerando configuración de GRUB"
   run_cmd sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
-  # Activar grub-btrfsd si se instaló correctamente
-  log_info "🔁 Verificando grub-btrfsd.service"
-  if systemctl list-unit-files | grep -q grub-btrfsd.service; then
-    run_cmd sudo systemctl enable --now grub-btrfsd.service || \
-      log_warn "⚠️ No se pudo habilitar grub-btrfsd.service automáticamente"
-  elif [[ -f grub-btrfsd.service ]]; then
-    log_info "📄 Instalando manualmente grub-btrfsd.service"
-    run_cmd sudo cp grub-btrfsd.service /etc/systemd/system/
-    run_cmd sudo systemctl daemon-reexec
-    run_cmd sudo systemctl daemon-reload
-    run_cmd sudo systemctl enable --now grub-btrfsd.service
-  else
-    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado ni compilado. Revisa manualmente."
-  fi
-  # Activar servicio grub-btrfsd (versión robusta)
-  
+  # Activar el servicio grub-btrfsd de forma robusta
   ensure_grub_btrfsd_service
 
-  # Configurar Timeshift y crear snapshot inicial si no existe
+  # Crear snapshot inicial si no existe
   log_info "🕒 Configurando Timeshift y creando snapshot inicial"
   if [[ ! -f /etc/timeshift/timeshift.json ]]; then
+    log_error "❌ timeshift.json sigue sin existir. Aborta configuración"
+    return 1
+  elif ! sudo timeshift --list | grep -q "Device name"; then
     run_cmd sudo timeshift --create --comments "Snapshot inicial post instalación" --tags D
   else
-    log_info "✔️ Timeshift ya configurado. Saltando creación inicial."
+    log_info "✔️ Ya existen snapshots. No se crea uno nuevo."
   fi
 
   log_success "✅ grub-btrfs instalado, configurado y vinculado con Timeshift exitosamente"
 }
-
-
-
 
 
 
@@ -981,7 +871,6 @@ main() {
 
   configure_btrfs_volumes
   install_grub_btrfs
-  initialize_timeshift_config
 
   [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
 
