@@ -1,4 +1,4 @@
-$(dnf list --available 'libreoffice*' | awk '{print $1}' | grep '^libreoffice')
+libreoffice*
 gwenview
 akregator
 kmail

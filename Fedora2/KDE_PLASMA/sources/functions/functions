@@ -159,76 +159,59 @@ draw_progress_bar() {
 #===============================================================================
 
 install_packages() {
-  local list_path="$1"
-  local skip_broken="${2:-true}"
+  local list_file="$1"
 
-  ensure_file_exists "$list_path" || return 1
-
-  local -a packages=()
-  local -a groups=()
-  local -a dynamic_wildcards=()
-
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line%%#*}"               
-    line="$(echo "$line" | xargs)"
-    [[ -z "$line" ]] && continue
-
-    if [[ "$line" =~ ^@ ]]; then
-      groups+=("${line#@}")
-    elif [[ "$line" =~ ^\$\(dnf ]]; then
-      dynamic_wildcards+=("$line")
-    else
-      packages+=("$line")
-    fi
-  done < "$list_path"
-
-  mapfile -t packages < <(printf "%s\n" "${packages[@]}" | sort -u)
-  mapfile -t groups < <(printf "%s\n" "${groups[@]}" | sort -u)
-  mapfile -t dynamic_wildcards < <(printf "%s\n" "${dynamic_wildcards[@]}" | sort -u)
-
-  log_info ">>> INICIO instalación desde '$list_path'"
-
-  if [[ ${#dynamic_wildcards[@]} -gt 0 ]]; then
-    log_info "Procesando ${#dynamic_wildcards[@]} comodines dinámicos..."
-    for eval_line in "${dynamic_wildcards[@]}"; do
-      eval "$eval_line" | xargs -r sudo dnf install -y --allowerasing --skip-broken --skip-unavailable &>> "$LOG_FILE" || \
-        log_warn "Fallo parcial al ejecutar wildcard: $eval_line"
-    done
+  if [[ ! -f "$list_file" ]]; then
+    log_warn "Archivo de lista no encontrado: $list_file"
+    return 0
   fi
 
-if [[ ${#packages[@]} -gt 0 ]]; then
-  log_info "Instalando ${#packages[@]} paquetes individuales..."
+  log_section "📦 Instalación desde lista: $(basename "$list_file")"
+
+  mapfile -t raw_lines < "$list_file"
+  local packages=()
+  
+  for line in "${raw_lines[@]}"; do
+    local clean_line
+    clean_line=$(echo "$line" | sed 's/#.*//' | xargs)
+    [[ -z "$clean_line" ]] && continue
+    packages+=("$clean_line")
+  done
 
   local total=${#packages[@]}
-  for i in "${!packages[@]}"; do
-    local pkg="${packages[$i]}"
-    draw_progress_bar "$((i + 1))" "$total"
-    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable "$pkg" &>> "$LOG_FILE" || \
-      log_warn "Fallo al instalar: $pkg"
-  done
+  local count=0
 
-  log_info "Paquetes individuales instalados correctamente."
-fi
+  for pkg in "${packages[@]}"; do
+    ((count++))
+    draw_progress_bar "$count" "$total"
+    sleep 0.1
 
+    local dnf_flags="-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true"
 
-if [[ ${#groups[@]} -gt 0 ]]; then
-  log_info "Instalando ${#groups[@]} grupos de paquetes..."
-
-  local total_groups=${#groups[@]}
-  for i in "${!groups[@]}"; do
-    local group="${groups[$i]}"
-    draw_progress_bar "$((i + 1))" "$total_groups"
-
-    if ! sudo dnf group install -y --with-optional --allowerasing "$group" &>> "$LOG_FILE"; then
-      log_warn "Grupo '$group' falló al instalar. Se continúa."
+    if [[ "$pkg" == @* ]]; then
+      log_info "➡️ Instalando grupo: $pkg"
+      if sudo dnf group install ${dnf_flags} "${pkg#@}" &>> "$LOG_FILE"; then
+        log_success "✅ Grupo instalado: $pkg"
+      else
+        log_warn "⚠️ Fallo al instalar grupo: $pkg"
+      fi
+    elif [[ "$pkg" == *'*'* ]]; then
+      log_info "🔍 Instalando comodín: $pkg"
+      if sudo dnf install ${dnf_flags} "$pkg" &>> "$LOG_FILE"; then
+        log_success "✅ Wildcard instalado: $pkg"
+      else
+        log_warn "⚠️ Fallo wildcard: $pkg"
+      fi
     else
-      log_info "Grupo '$group' instalado correctamente."
+      log_info "📦 Instalando: $pkg"
+      if sudo dnf install ${dnf_flags} "$pkg" &>> "$LOG_FILE"; then
+        log_success "✅ Instalado: $pkg"
+      else
+        log_warn "⚠️ Fallo paquete: $pkg"
+      fi
     fi
   done
-fi
 
-
-  log_info "<<< FIN instalación desde '$list_path'"
   return 0
 }
 
@@ -246,80 +229,62 @@ log_section() {
 
 
 remove_packages() {
-  local list_path="$1"
+  local list_file="$1"
 
-  ensure_file_exists "$list_path" || return 1
-
-  local -a packages=()
-  local -a groups=()
-  local -a dynamic_wildcards=()
-
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line%%#*}"
-    line="$(echo "$line" | xargs)"
-    [[ -z "$line" ]] && continue
-
-    if [[ "$line" =~ ^@ ]]; then
-      groups+=("${line#@}")
-    elif [[ "$line" =~ ^\$\(dnf ]]; then
-      dynamic_wildcards+=("$line")
-    else
-      packages+=("$line")
-    fi
-  done < "$list_path"
-
-  mapfile -t packages < <(printf "%s\n" "${packages[@]}" | sort -u)
-  mapfile -t groups < <(printf "%s\n" "${groups[@]}" | sort -u)
-  mapfile -t dynamic_wildcards < <(printf "%s\n" "${dynamic_wildcards[@]}" | sort -u)
-
-  if [[ ${#packages[@]} -eq 0 && ${#groups[@]} -eq 0 && ${#dynamic_wildcards[@]} -eq 0 ]]; then
-    log_warn "La lista '$list_path' no contiene elementos válidos para eliminar."
+  if [[ ! -f "$list_file" ]]; then
+    log_warn "Archivo de lista no encontrado: $list_file"
     return 0
   fi
 
-  log_info ">>> INICIO desinstalación desde '$list_path'"
+  log_section "🧹 Eliminación desde lista: $(basename "$list_file")"
 
-  if [[ ${#dynamic_wildcards[@]} -gt 0 ]]; then
-    log_info "Procesando ${#dynamic_wildcards[@]} comodines dinámicos..."
-    for eval_line in "${dynamic_wildcards[@]}"; do
-      eval "$eval_line" | xargs -r sudo dnf remove -y &>> "$LOG_FILE" || \
-        log_warn "Fallo parcial al ejecutar wildcard: $eval_line"
-    done
-  fi
+  mapfile -t raw_lines < "$list_file"
+  local packages=()
 
-  if [[ ${#packages[@]} -gt 0 ]]; then
-    log_info "Eliminando ${#packages[@]} paquetes individuales..."
+  for line in "${raw_lines[@]}"; do
+    local clean_line
+    clean_line=$(echo "$line" | sed 's/#.*//' | xargs)
+    [[ -z "$clean_line" ]] && continue
+    packages+=("$clean_line")
+  done
 
-    local total=${#packages[@]}
-    for i in "${!packages[@]}"; do
-      local pkg="${packages[$i]}"
-      draw_progress_bar "$((i + 1))" "$total"
-      sudo dnf remove -y "$pkg" &>> "$LOG_FILE" || \
-        log_warn "Fallo al eliminar: $pkg"
-    done
+  local total=${#packages[@]}
+  local count=0
 
-    log_info "Paquetes individuales desinstalados correctamente."
-  fi
+  for pkg in "${packages[@]}"; do
+    ((count++))
+    draw_progress_bar "$count" "$total"
+    sleep 0.1
 
-  if [[ ${#groups[@]} -gt 0 ]]; then
-    log_info "Eliminando ${#groups[@]} grupos de paquetes..."
+    local dnf_flags="-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true"
 
-    local total_groups=${#groups[@]}
-    for i in "${!groups[@]}"; do
-      local group="${groups[$i]}"
-      draw_progress_bar "$((i + 1))" "$total_groups"
-
-      if ! sudo dnf group remove -y "$group" &>> "$LOG_FILE"; then
-        log_warn "Grupo '$group' falló al eliminar. Se continúa."
+    if [[ "$pkg" == @* ]]; then
+      log_info "❌ Eliminando grupo: $pkg"
+      if sudo dnf group remove ${dnf_flags} "${pkg#@}" &>> "$LOG_FILE"; then
+        log_success "✅ Grupo eliminado: $pkg"
       else
-        log_info "Grupo '$group' eliminado correctamente."
+        log_warn "⚠️ Fallo al eliminar grupo: $pkg"
       fi
-    done
-  fi
+    elif [[ "$pkg" == *'*'* ]]; then
+      log_info "❌ Eliminando comodín: $pkg"
+      if sudo dnf remove ${dnf_flags} "$pkg" &>> "$LOG_FILE"; then
+        log_success "✅ Wildcard eliminado: $pkg"
+      else
+        log_warn "⚠️ Fallo wildcard: $pkg"
+      fi
+    else
+      log_info "❌ Eliminando paquete: $pkg"
+      if sudo dnf remove ${dnf_flags} "$pkg" &>> "$LOG_FILE"; then
+        log_success "✅ Eliminado: $pkg"
+      else
+        log_warn "⚠️ Fallo al eliminar: $pkg"
+      fi
+    fi
+  done
 
-  log_info "<<< FIN desinstalación desde '$list_path'"
   return 0
 }
+
 
 add_repositories() {
   log_section "Agregando y configurando repositorios adicionales"
