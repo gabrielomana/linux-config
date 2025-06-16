@@ -780,7 +780,7 @@ force_timeshift_init() {
   local gtk_pid
 
   # Ejecutar GUI en background con DISPLAY heredado
-  sudo -u "$SUDO_USER" nohup timeshift-gtk >/dev/null 2>&1 &
+  sudo timeshift-gtk >/dev/null 2>&1 &
   gtk_pid=$!
 
   # Esperar que inicialice estructuras internas
