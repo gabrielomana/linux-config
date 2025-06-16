@@ -714,9 +714,10 @@ ensure_grub_btrfsd_service() {
 }
 
 generate_timeshift_config_fixed() {
-  log_info "🧰 Generando configuración válida y completa para Timeshift en /etc/timeshift/timeshift.json"
+  log_info "🧰 Generando configuración completa y válida de Timeshift"
 
   sudo mkdir -p /etc/timeshift
+  sudo mkdir -p /timeshift
 
   local device mount_uuid parent_dev parent_uuid
 
@@ -732,14 +733,11 @@ generate_timeshift_config_fixed() {
   parent_uuid=$(blkid -s UUID -o value "/dev/${parent_dev}" 2>/dev/null || true)
 
   if [[ -z "$mount_uuid" ]]; then
-    log_error "❌ No se pudo detectar UUID de $device"
+    log_error "❌ No se pudo obtener UUID de $device"
     return 1
   fi
 
-  # Asegurar que el directorio de destino exista
-  run_cmd sudo mkdir -p /timeshift
-
-  # Crear archivo JSON completo
+  # Crear archivo JSON válido para Timeshift GUI y CLI
   sudo tee /etc/timeshift/timeshift.json >/dev/null <<EOF
 {
   "backup_device_uuid": "$mount_uuid",
@@ -767,9 +765,42 @@ generate_timeshift_config_fixed() {
 }
 EOF
 
-  log_success "✅ timeshift.json válido creado correctamente con destino en /timeshift"
+  log_success "✅ Archivo timeshift.json generado correctamente con destino en /timeshift"
+
+  # Crear snapshot inicial si no existen
+  if ! sudo timeshift --list | grep -q "Device name"; then
+    log_info "📸 Creando snapshot inicial"
+    sudo timeshift --create --comments "Snapshot inicial" --tags D
+  else
+    log_info "✔️ Ya existen snapshots. Saltando creación inicial"
+  fi
+
+  # Reiniciar servicio grub-btrfsd si aplica
+  if systemctl list-unit-files | grep -q grub-btrfsd.service; then
+    log_info "🔁 Reiniciando grub-btrfsd.service"
+    sudo systemctl restart grub-btrfsd.service
+  elif systemctl list-unit-files | grep -q grub-btrfsd-custom.service; then
+    log_info "🔁 Reiniciando grub-btrfsd-custom.service"
+    sudo systemctl restart grub-btrfsd-custom.service
+  else
+    log_warn "⚠️ No se detectó ningún servicio grub-btrfsd activo para reiniciar"
+  fi
+
+  # Probar si GUI puede abrirse correctamente
+  if command -v timeshift-gtk &>/dev/null; then
+    log_info "🧪 Probando apertura de Timeshift GUI"
+    sudo timeshift-gtk &
+    sleep 3
+    if ! pgrep -f timeshift-gtk &>/dev/null; then
+      log_warn "⚠️ La GUI de Timeshift no se pudo lanzar. Verifica configuración o entorno gráfico"
+    else
+      log_success "✅ GUI de Timeshift lanzada correctamente"
+    fi
+  fi
+
   return 0
 }
+
 
 
 
@@ -794,9 +825,12 @@ done
   run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     git make gcc grub2 grub2-tools inotify-tools timeshift
 
-    if ! generate_timeshift_config; then
-  log_warn "⚠️ Error al generar configuración automática de Timeshift. Verifica manualmente con sudo timeshift-gtk"
+run_cmd sudo dnf reinstall -y timeshift
+
+if ! generate_timeshift_config_fixed; then
+  log_warn "⚠️ No se pudo generar configuración de Timeshift automáticamente"
 fi
+
 
     
 
