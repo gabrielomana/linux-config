@@ -716,15 +716,14 @@ ensure_grub_btrfsd_service() {
 generate_timeshift_config() {
   log_info "🧰 Generando configuración automática de Timeshift en /etc/timeshift/timeshift.json"
 
-  # Crear carpeta de configuración
   sudo mkdir -p /etc/timeshift
 
-  # Detectar dispositivo montado en /
-  local device mount_uuid parent_uuid
+  local device mount_uuid parent_dev parent_uuid
 
+  # Detectar el dispositivo real de /
   device=$(findmnt -no SOURCE / | sed 's|UUID=||' | xargs blkid -o device)
-  if [[ -z "$device" ]]; then
-    log_error "❌ No se pudo detectar el dispositivo raíz (/)"
+  if [[ -z "$device" || ! -b "$device" ]]; then
+    log_error "❌ No se pudo detectar el dispositivo raíz real (/)"
     return 1
   fi
 
@@ -737,8 +736,11 @@ generate_timeshift_config() {
     return 1
   fi
 
-  # Crear archivo JSON
-  sudo tee /etc/timeshift/timeshift.json >/dev/null <<EOF
+  log_info "📦 UUID detectado: $mount_uuid"
+  log_info "📦 Dispositivo: $device"
+  log_info "📦 Ruta de snapshots: /timeshift"
+
+  sudo tee /etc/timeshift/timeshift.json > /dev/null <<EOF
 {
   "backup_device_uuid": "$mount_uuid",
   "parent_device_uuid": "${parent_uuid:-$mount_uuid}",
@@ -747,15 +749,28 @@ generate_timeshift_config() {
   "include_btrfs_home": false,
   "snapshot_device": "$device",
   "snapshot_mount_path": "/timeshift",
+  "stop_cron_emails": true,
+  "schedule_monthly": false,
+  "schedule_weekly": false,
+  "schedule_daily": false,
+  "schedule_hourly": false,
+  "schedule_boot": false,
+  "count_monthly": 2,
+  "count_weekly": 3,
+  "count_daily": 5,
+  "count_hourly": 6,
+  "count_boot": 3,
+  "snapshot_size": 0,
+  "snapshot_count": 0,
   "exclude": [],
-  "exclude-applications": []
+  "exclude-apps": []
 }
 EOF
 
   log_success "✅ timeshift.json creado correctamente con destino en /timeshift"
-return 0
-
+  return 0
 }
+
 
 
 # === Instalación desde COPR ===
