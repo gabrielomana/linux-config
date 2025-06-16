@@ -690,8 +690,8 @@ install_grub_btrfs() {
   local workdir="/tmp/grub-btrfs-src"
   local repo_url="https://github.com/Antynea/grub-btrfs"
 
-  # Validación de dependencias por comando
-  for cmd in git make gcc grub2-mkconfig grub2-script-check inotifywait; do
+  # Validación de dependencias (por comando real)
+  for cmd in git make gcc grub2-mkconfig grub2-script-check inotifywait timeshift; do
     if ! command -v "$cmd" &>/dev/null; then
       log_error "❌ Dependencia no encontrada: $cmd"
       return 1
@@ -700,9 +700,9 @@ install_grub_btrfs() {
 
   # Instalación por si faltara alguno
   run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
-    git make gcc grub2 grub2-tools inotify-tools
+    git make gcc grub2 grub2-tools inotify-tools timeshift
 
-  # Preparar entorno
+  # Clonación limpia del repo
   run_cmd rm -rf "$workdir"
   run_cmd git clone --depth=1 "$repo_url" "$workdir" || {
     log_error "❌ No se pudo clonar $repo_url"
@@ -723,7 +723,7 @@ install_grub_btrfs() {
     log_warn "⚠️ Archivo config no encontrado. Puede que ya no sea necesario parchearlo."
   fi
 
-  # Detección robusta del archivo de snapshots
+  # Detección robusta del archivo 41_snapshots-btrfs
   local snapshot_file
   snapshot_file=$(find . -maxdepth 2 -type f -iname '41_snapshots-btrfs' | head -n 1)
 
@@ -740,7 +740,6 @@ install_grub_btrfs() {
   export GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"
   export GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"
 
-  # Instalación segura
   run_cmd sudo make install \
     GRUB_BTRFS_DIRNAME="$GRUB_BTRFS_DIRNAME" \
     GRUB_BTRFS_MKCONFIG="$GRUB_BTRFS_MKCONFIG" \
@@ -749,21 +748,42 @@ install_grub_btrfs() {
   popd >/dev/null
   run_cmd rm -rf "$workdir"
 
-  # Regenerar GRUB (ruta correcta para BIOS y EFI en Fedora)
+  # Validar que grub-mkconfig_lib exista (reinstalar grub2-tools si falta)
+  if [[ ! -f /etc/grub.d/grub-mkconfig_lib ]]; then
+    log_warn "⚠️ grub-mkconfig_lib no encontrado. Reinstalando grub2-tools."
+    run_cmd sudo dnf reinstall -y grub2-tools
+  fi
+
+  # Regenerar GRUB config correctamente
   log_info "🌀 Regenerando configuración de GRUB"
   run_cmd sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
-  # Activar servicio grub-btrfsd
+  # Activar grub-btrfsd si se instaló correctamente
   log_info "🔁 Verificando grub-btrfsd.service"
   if systemctl list-unit-files | grep -q grub-btrfsd.service; then
     run_cmd sudo systemctl enable --now grub-btrfsd.service || \
       log_warn "⚠️ No se pudo habilitar grub-btrfsd.service automáticamente"
+  elif [[ -f grub-btrfsd.service ]]; then
+    log_info "📄 Instalando manualmente grub-btrfsd.service"
+    run_cmd sudo cp grub-btrfsd.service /etc/systemd/system/
+    run_cmd sudo systemctl daemon-reexec
+    run_cmd sudo systemctl daemon-reload
+    run_cmd sudo systemctl enable --now grub-btrfsd.service
   else
-    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado. Revisa instalación manual."
+    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado ni compilado. Revisa manualmente."
   fi
 
-  log_success "✅ grub-btrfs instalado y configurado exitosamente"
+  # Configurar Timeshift y crear snapshot inicial si no existe
+  log_info "🕒 Configurando Timeshift y creando snapshot inicial"
+  if [[ ! -f /etc/timeshift/timeshift.json ]]; then
+    run_cmd sudo timeshift --create --comments "Snapshot inicial post instalación" --tags D
+  else
+    log_info "✔️ Timeshift ya configurado. Saltando creación inicial."
+  fi
+
+  log_success "✅ grub-btrfs instalado, configurado y vinculado con Timeshift exitosamente"
 }
+
 
 
 
