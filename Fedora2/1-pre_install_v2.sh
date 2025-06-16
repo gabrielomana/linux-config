@@ -713,14 +713,14 @@ ensure_grub_btrfsd_service() {
   return
 }
 
-generate_timeshift_config() {
-  log_info "🧰 Generando configuración automática de Timeshift en /etc/timeshift/timeshift.json"
+generate_timeshift_config_fixed() {
+  log_info "🧰 Generando configuración válida y completa para Timeshift en /etc/timeshift/timeshift.json"
 
   sudo mkdir -p /etc/timeshift
 
   local device mount_uuid parent_dev parent_uuid
 
-  # Detectar el dispositivo real de /
+  # Detectar dispositivo real montado en /
   device=$(findmnt -no SOURCE / | sed 's|UUID=||' | xargs blkid -o device)
   if [[ -z "$device" || ! -b "$device" ]]; then
     log_error "❌ No se pudo detectar el dispositivo raíz real (/)"
@@ -736,11 +736,11 @@ generate_timeshift_config() {
     return 1
   fi
 
-  log_info "📦 UUID detectado: $mount_uuid"
-  log_info "📦 Dispositivo: $device"
-  log_info "📦 Ruta de snapshots: /timeshift"
+  # Asegurar que el directorio de destino exista
+  run_cmd sudo mkdir -p /timeshift
 
-  sudo tee /etc/timeshift/timeshift.json > /dev/null <<EOF
+  # Crear archivo JSON completo
+  sudo tee /etc/timeshift/timeshift.json >/dev/null <<EOF
 {
   "backup_device_uuid": "$mount_uuid",
   "parent_device_uuid": "${parent_uuid:-$mount_uuid}",
@@ -767,9 +767,10 @@ generate_timeshift_config() {
 }
 EOF
 
-  log_success "✅ timeshift.json creado correctamente con destino en /timeshift"
+  log_success "✅ timeshift.json válido creado correctamente con destino en /timeshift"
   return 0
 }
+
 
 
 
