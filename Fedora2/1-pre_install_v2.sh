@@ -208,6 +208,16 @@ configure_dnf_automatic() {
   log_success "✅ dnf-automatic activado correctamente"
 }
 
+check_error() {
+  local msg="${1:-Ha ocurrido un error}"
+  local code="${2:-$?}"
+
+  if [[ "$code" -ne 0 ]]; then
+    log_error "$msg"
+    return "$code"
+  fi
+}
+
 
 # === [📦 Pilar 2] Procesamiento de Argumentos CLI ===
 show_help() {
