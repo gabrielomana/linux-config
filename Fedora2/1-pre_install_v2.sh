@@ -674,7 +674,7 @@ EOF
 
 # === Instalación desde COPR ===
 install_grub_btrfs() {
-  log_section "🔧 Instalando grub-btrfs desde GitHub"
+  log_section "📥 Instalando grub-btrfs desde GitHub (adaptado para Fedora)"
 
   sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     git make gcc grub2 grub2-tools inotify-tools
@@ -688,24 +688,44 @@ install_grub_btrfs() {
 
   pushd "$workdir" >/dev/null
 
-  # Ajustar rutas Fedora en config
+  # Ajustes explícitos para entorno Fedora
   sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config
   sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config
   sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config
 
-  sudo make install >/dev/null
-  check_error "❌ Error al instalar grub-btrfs"
+  # Exportar entorno para make
+  export GRUB_BTRFS_DIRNAME="/boot/grub2"
+  export GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"
+  export GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"
+
+  # Instalación segura
+  sudo make install \
+    GRUB_BTRFS_DIRNAME="$GRUB_BTRFS_DIRNAME" \
+    GRUB_BTRFS_MKCONFIG="$GRUB_BTRFS_MKCONFIG" \
+    GRUB_BTRFS_SCRIPT_CHECK="$GRUB_BTRFS_SCRIPT_CHECK" || {
+      log_error "❌ Error durante make install de grub-btrfs"
+      popd >/dev/null
+      return 1
+    }
 
   popd >/dev/null && rm -rf "$workdir"
 
+  # Regenerar GRUB
   log_info "🌀 Regenerando configuración de GRUB"
   sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
-  log_info "🟢 Habilitando grub-btrfsd.service"
-  sudo systemctl enable --now grub-btrfsd.service || log_warn "⚠️ No se pudo habilitar grub-btrfsd.service"
+  # Habilitar daemon que detecta snapshots
+  log_info "🔁 Habilitando grub-btrfsd.service"
+  if systemctl list-unit-files | grep -q grub-btrfsd.service; then
+    sudo systemctl enable --now grub-btrfsd.service
+    check_error "❌ No se pudo activar grub-btrfsd.service"
+  else
+    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado. Instala manualmente si es necesario."
+  fi
 
-  log_success "✅ grub-btrfs instalado y funcional"
+  log_success "✅ grub-btrfs instalado y configurado exitosamente"
 }
+
 
 
 final_cleanup_and_reboot() {
@@ -755,7 +775,7 @@ main() {
   configure_security
   configure_network_security
 
-  iconfigure_btrfs_volumes
+  configure_btrfs_volumes
   install_grub_btrfs
   initialize_timeshift_config
 
