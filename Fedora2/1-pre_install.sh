@@ -378,7 +378,12 @@ configure_flatpak_repositories() {
     for remote in kde flathub elementary fedora; do
         url="${flatpak_remotes[$remote]}"
         log_info "→ Asegurando remoto: $remote ($url)"
-        sudo flatpak remote-add --if-not-exists "$remote" "$url" &>/dev/null || log_warn "No se pudo agregar el remoto $remote"
+
+        if [[ "$url" == *.flatpakrepo ]]; then
+            sudo flatpak remote-add --if-not-exists --from "$remote" "$url" &>/dev/null || log_warn "No se pudo agregar el remoto $remote"
+        else
+            sudo flatpak remote-add --if-not-exists "$remote" "$url" &>/dev/null || log_warn "No se pudo agregar el remoto $remote"
+        fi
 
         sudo flatpak remote-modify --system --prio=$prio "$remote" &>/dev/null || log_warn "No se pudo asignar prioridad al remoto $remote"
         prio=$((prio + 1))
@@ -386,6 +391,7 @@ configure_flatpak_repositories() {
 
     log_success "Repositorios Flatpak configurados correctamente"
 }
+
 
 
 configure_zswap() {
@@ -492,96 +498,137 @@ EOF
 }
 
 configure_security() {
-    log_info "Configurando seguridad del sistema"
+    log_info "🔐 Iniciando configuración de seguridad y servicios para entorno doméstico y multimedia"
 
-   # Validar si timeshift está disponible, e instalarlo si no lo está
-if ! command -v timeshift &>/dev/null; then
-    log_info "Timeshift no está instalado. Procediendo con la instalación..."
-    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable timeshift
-    check_error "No se pudo instalar Timeshift"
-fi
+    # 1. INSTALACIÓN DE PAQUETES NECESARIOS
+    log_info "📦 Instalando herramientas base..."
+    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
+        firewalld firewall-config \
+        selinux-policy selinux-policy-targeted \
+        policycoreutils policycoreutils-python-utils \
+        samba samba-client avahi nss-mdns \
+        ftp lftp openssh-clients bluez-obexd \
+        kde-connect qt6-qml kde-connectd \
+        rclone fuse
 
-# Crear snapshot de seguridad
-log_info "Creando snapshot de seguridad con Timeshift..."
-if ! sudo timeshift --create --comments "pre-security-update" --tags D &>/dev/null; then
-    log_warn "No se pudo crear snapshot de seguridad con Timeshift"
-else
-    log_success "Snapshot de seguridad creado correctamente"
-fi
-
-
-    log_info "Instalando paquetes de seguridad..."
-    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable  --skip-broken \
-        resolvconf firewalld firewall-config selinux-policy selinux-policy-targeted \
-        policycoreutils policycoreutils-python-utils setools npm
-
-    log_info "Habilitando firewall..."
+    # 2. FIREWALL – ZONA Y SERVICIOS
+    log_info "🔥 Activando firewalld y configurando zona"
     sudo systemctl enable --now firewalld &>/dev/null
-    if ! check_error "No se pudo habilitar firewalld"; then
-        log_warn "Error al activar firewalld, pero continuando"
-    fi
+    check_error "❌ No se pudo activar firewalld"
 
-    log_info "Configurando SELinux en modo enforcing..."
-    sudo sed -i 's/SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
-
-    log_info "Configurando reglas de firewall..."
-    sudo firewall-cmd --set-default-zone=FedoraWorkstation &>/dev/null
-    sudo firewall-cmd --complete-reload &>/dev/null
-
-    sudo firewall-cmd --zone=FedoraWorkstation --remove-port=1-65535/tcp --permanent &>/dev/null
-    sudo firewall-cmd --zone=FedoraWorkstation --remove-port=1-65535/udp --permanent &>/dev/null
-
-    enabled_ports=$(sudo firewall-cmd --zone=FedoraWorkstation --list-ports 2>/dev/null)
-    if [ -n "$enabled_ports" ]; then
-        read -r -a ports_array <<< "$enabled_ports"
-        for port in "${ports_array[@]}"; do
-            sudo firewall-cmd --zone=FedoraWorkstation --remove-port="$port" --permanent &>/dev/null
-        done
-    fi
-
+    sudo firewall-cmd --set-default-zone=FedoraWorkstation --permanent
     sudo firewall-cmd --reload &>/dev/null
 
-    sudo firewall-cmd --add-interface=lo --zone=FedoraWorkstation --permanent &>/dev/null
-
-    declare -a services=(http https ssh samba dns dhcpv6-client ping)
-    declare -a ports=("22/tcp" "631/tcp" "1194/udp" "5353/udp" "33434-33523/udp")
-
-    log_info "Habilitando servicios esenciales en firewall..."
+    log_info "📺 Habilitando servicios en FedoraWorkstation..."
+    services=(
+        ssh http https
+        samba samba-client
+        mdns ipp
+        dns dhcpv6-client
+        plex jellyfin
+        ftp sftp
+        bluetooth obex
+    )
     for service in "${services[@]}"; do
         sudo firewall-cmd --add-service="$service" --zone=FedoraWorkstation --permanent &>/dev/null
     done
 
-    log_info "Habilitando puertos esenciales en firewall..."
-    for port in "${ports[@]}"; do
-        sudo firewall-cmd --add-port="$port" --zone=FedoraWorkstation --permanent &>/dev/null
-    done
-
+    # 3. PUERTOS MANUALES CON COMENTARIOS
+    log_info "📡 Habilitando puertos individuales necesarios..."
+    sudo firewall-cmd --add-port=22/tcp --zone=FedoraWorkstation --permanent      # SSH
+    sudo firewall-cmd --add-port=631/tcp --zone=FedoraWorkstation --permanent     # Impresoras IPP
+    sudo firewall-cmd --add-port=32400/tcp --zone=FedoraWorkstation --permanent   # Plex
+    sudo firewall-cmd --add-port=8096/tcp --zone=FedoraWorkstation --permanent    # Jellyfin
+    sudo firewall-cmd --add-port=21/tcp --zone=FedoraWorkstation --permanent      # FTP
+    sudo firewall-cmd --add-port=60000-61000/tcp --zone=FedoraWorkstation --permanent # FTP pasivo
+    sudo firewall-cmd --add-port=650/tcp --zone=FedoraWorkstation --permanent     # OBEX Bluetooth
+    sudo firewall-cmd --add-port=1714-1764/tcp --zone=FedoraWorkstation --permanent # KDE Connect TCP
+    sudo firewall-cmd --add-port=1714-1764/udp --zone=FedoraWorkstation --permanent # KDE Connect UDP
+    sudo firewall-cmd --add-port=8080/tcp --zone=FedoraWorkstation --permanent     # rclone serve http/webdav
     sudo firewall-cmd --reload &>/dev/null
 
-    log_info "Ajustando SELinux para firewalld..."
+    # 4. RED LOCAL
+    log_info "📡 Activando servicios de red local (Avahi, Bluetooth)"
+    sudo systemctl enable --now avahi-daemon &>/dev/null
+    sudo systemctl enable --now bluetooth &>/dev/null
+
+    # 5. SELINUX
+    log_info "🔒 Configurando SELinux en modo enforcing"
+    sudo sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+    log_info "⚙️ Aplicando excepción permisiva para firewalld"
     sudo semanage permissive -a firewalld_t &>/dev/null
 
-    log_info "Configurando servidores DNS seguros..."
-    sudo mkdir -p '/etc/systemd/resolved.conf.d'
-    echo -e "[Resolve]\nDNS=94.140.14.14 94.140.15.15 1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\nDNSOverTLS=yes" \
-        | sudo tee /etc/systemd/resolved.conf.d/99-dns-over-tls.conf > /dev/null
+    # 6. DNS OVER TLS – DOCUMENTADO
+    log_info "🌐 Configurando DNS seguros con DNS-over-TLS"
+    sudo mkdir -p /etc/systemd/resolved.conf.d
+    {
+        echo "[Resolve]"
+        echo "DNS=94.140.14.14"       # AdGuard primario
+        echo "DNS=94.140.15.15"       # AdGuard secundario
+        echo "DNS=1.1.1.1"             # Cloudflare primario
+        echo "DNS=1.0.0.1"             # Cloudflare secundario
+        echo "DNSOverTLS=yes"
+    } | sudo tee /etc/systemd/resolved.conf.d/99-dns-over-tls.conf > /dev/null
     sudo systemctl restart systemd-resolved &>/dev/null
 
-    if ! command -v npm &>/dev/null; then
-  log_info "Instalando npm..."
-  sudo dnf install -y --allowerasing --skip-broken --skip-unavailable npm
-  check_error "No se pudo instalar npm"
-fi
+    # 7. HBLOCK
+    log_info "🚫 Instalando hblock desde COPR"
+    sudo dnf -y copr enable pesader/hblock &>/dev/null
+    sudo dnf install -y hblock &>/dev/null
+    if command -v hblock &>/dev/null; then
+        sudo hblock &>/dev/null
+        log_success "✅ hblock instalado y ejecutado correctamente"
+    else
+        log_warn "⚠️ hblock no se instaló correctamente"
+    fi
 
-log_info "Instalando bloqueador de anuncios (hblock)..."
-npm install -g hblock &>/dev/null
-if ! command -v hblock &>/dev/null; then
-  log_warn "hblock no se instaló correctamente con npm"
-else
-  hblock &>/dev/null
-fi
+    log_success "🎉 Configuración general de seguridad finalizada"
+    configure_network_security
+}
 
-    log_info "Configuración de seguridad completada"
+configure_network_security() {
+    log_info "🌐 Aplicando configuraciones de seguridad de red avanzada"
+
+    # 1. Desactivar chronyd si no se requiere
+    log_info "🕒 Desactivando servicio de sincronización NTP (chronyd)"
+    sudo systemctl disable --now chronyd.service &>/dev/null || \
+        log_warn "chronyd ya estaba desactivado o no instalado"
+
+    # 2. Instalar y configurar fail2ban
+    log_info "🔐 Instalando fail2ban"
+    sudo dnf install -y fail2ban &>/dev/null
+    sudo systemctl enable --now fail2ban &>/dev/null
+    check_error "No se pudo activar fail2ban"
+
+    log_info "🛠️ Configurando fail2ban para proteger SSH"
+    sudo tee /etc/fail2ban/jail.local > /dev/null <<EOF
+[sshd]
+enabled = true
+port    = 2222
+logpath = /var/log/secure
+maxretry = 3
+bantime = 1h
+EOF
+    sudo systemctl restart fail2ban
+
+    # 3. Configurar SSH endurecido en puerto alternativo
+    log_info "🔐 Ajustando configuración de SSH"
+    sudo sed -i 's/^#\?Port .*/Port 2222/' /etc/ssh/sshd_config
+    sudo sed -i 's/^#\?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
+    sudo sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sudo systemctl restart sshd
+    check_error "No se pudo reiniciar SSH con nuevos ajustes"
+
+    # 4. Limitar SSH a red local
+    log_info "🌐 Restringiendo acceso SSH a red local"
+    sudo firewall-cmd --add-rich-rule='rule family="ipv4" source address="192.168.1.0/24" port port="2222" protocol="tcp" accept' --zone=FedoraWorkstation --permanent
+    sudo firewall-cmd --remove-service=ssh --zone=FedoraWorkstation --permanent
+    sudo firewall-cmd --reload &>/dev/null
+
+    # Registrar nuevo puerto en SELinux si es necesario
+    sudo semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || true
+
+    log_success "✅ Seguridad de red configurada correctamente"
 }
 
 
