@@ -691,12 +691,13 @@ install_grub_btrfs() {
   local repo_url="https://github.com/Antynea/grub-btrfs"
 
   # Validación de dependencias (por comando real)
-  for cmd in git make gcc grub2-mkconfig grub2-script-check inotifywait timeshift; do
-    if ! command -v "$cmd" &>/dev/null; then
-      log_error "❌ Dependencia no encontrada: $cmd"
-      return 1
-    fi
-  done
+for cmd in git make gcc grub2-mkconfig grub2-script-check inotifywait; do
+  if ! command -v "$cmd" &>/dev/null; then
+    log_error "❌ Dependencia no encontrada: $cmd"
+    return 1
+  fi
+done
+
 
   # Instalación por si faltara alguno
   run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
