@@ -752,6 +752,8 @@ generate_timeshift_config() {
 EOF
 
   log_success "✅ timeshift.json creado correctamente con destino en /timeshift"
+return 0
+
 }
 
 
@@ -775,7 +777,10 @@ done
   run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     git make gcc grub2 grub2-tools inotify-tools timeshift
 
-    generate_timeshift_config
+    if ! generate_timeshift_config; then
+  log_warn "⚠️ Error al generar configuración automática de Timeshift. Verifica manualmente con sudo timeshift-gtk"
+fi
+
     
 
   # Clonación limpia del repo
