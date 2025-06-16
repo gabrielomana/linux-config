@@ -673,13 +673,18 @@ initialize_timeshift_config() {
 }
 EOF
 
-  if sudo timeshift --btrfs --snapshot-device "$device"; then
-    sudo timeshift --create --comments "Snapshot inicial" --tags D || \
-      log_warn "⚠️ No se pudo crear el snapshot inicial"
+log_info "🕒 Configurando Timeshift y creando snapshot inicial"
+if [[ ! -f /etc/timeshift/timeshift.json ]]; then
+  if sudo timeshift --check &>/dev/null; then
+    run_cmd sudo timeshift --create --comments "Snapshot inicial post instalación" --tags D
     log_success "✅ Timeshift configurado correctamente"
   else
-    log_error "❌ Fallo al configurar Timeshift para $device"
+    log_warn "⚠️ Timeshift no detectó un entorno BTRFS activo o válido. Revisa configuración manual."
   fi
+else
+  log_info "✔️ Timeshift ya configurado. Saltando creación inicial."
+fi
+
 }
 
 
