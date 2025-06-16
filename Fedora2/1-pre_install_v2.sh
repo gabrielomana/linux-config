@@ -1,3 +1,38 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Fedora 42 Post-Install Script – Professional Hardening & Configuration Suite
+# 
+# Description:
+#   This script automates the secure and optimal post-install configuration
+#   of a Fedora 42 workstation or server environment. It applies system
+#   hardening practices, network security, package installation, BTRFS-based
+#   snapshot integration with grub-btrfs and Timeshift, firewall setup, DNS
+#   privacy enhancements, automatic updates and essential desktop/server tools.
+#
+# Features:
+#   - Essential packages and Flatpak repositories
+#   - DNF and update optimizations
+#   - SSH hardening (fail2ban, custom ports, SELinux)
+#   - firewalld and port/service management
+#   - SELinux enforcing setup
+#   - grub-btrfs and Timeshift snapshot integration
+#   - Logs and error tracking per session
+#   - Interactive hostname and reboot prompt
+#
+# Author: Gabriel Omaña – Initium | https://initiumsoft.com
+# Version: 1.0
+# License: MIT (or specify otherwise)
+# Created: 2025-06-17
+# Compatible with: Fedora 42+ (Bash 5.1+, systemd, BTRFS root)
+# 
+# Usage:
+#   sudo ./fedora_postinstall.sh [--update] [--clean]
+#
+# Notes:
+#   - Requires internet access and sudo privileges.
+#   - BTRFS root is mandatory for snapshot features.
+#   - Flatpak, grub2-tools, and COPR enabled.
+# ──────────────────────────────────────────────────────────────────────────────
+
 #!/bin/bash
 set -euo pipefail
 IFS=$'\n\t'
