@@ -687,6 +687,32 @@ fi
 
 }
 
+ensure_grub_btrfsd_service() {
+  log_info "🔁 Verificando existencia de grub-btrfsd.service"
+
+  # Si el servicio ya está presente, activarlo
+  if systemctl list-unit-files | grep -q grub-btrfsd.service; then
+    run_cmd sudo systemctl enable --now grub-btrfsd.service
+    return
+  fi
+
+  # Intentar instalarlo manualmente si fue compilado pero no instalado
+  local candidate
+  candidate=$(find "$HOME" /tmp -type f -name "grub-btrfsd.service" 2>/dev/null | head -n 1)
+
+  if [[ -n "$candidate" ]]; then
+    log_warn "⚠️ grub-btrfsd.service no estaba instalado. Se detectó: $candidate"
+    run_cmd sudo cp "$candidate" /etc/systemd/system/
+    run_cmd sudo systemctl daemon-reexec
+    run_cmd sudo systemctl daemon-reload
+    run_cmd sudo systemctl enable --now grub-btrfsd.service
+    log_success "✅ grub-btrfsd.service instalado y activado manualmente"
+  else
+    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado ni compilado. Revisa manualmente"
+  fi
+}
+
+
 
 # === Instalación desde COPR ===
 install_grub_btrfs() {
@@ -778,6 +804,8 @@ done
   else
     log_warn "⚠️ Servicio grub-btrfsd.service no encontrado ni compilado. Revisa manualmente."
   fi
+  # Activar servicio grub-btrfsd (versión robusta)
+ensure_grub_btrfsd_service
 
   # Configurar Timeshift y crear snapshot inicial si no existe
   log_info "🕒 Configurando Timeshift y creando snapshot inicial"
