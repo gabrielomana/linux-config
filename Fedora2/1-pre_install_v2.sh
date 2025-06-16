@@ -749,13 +749,9 @@ install_grub_btrfs() {
   popd >/dev/null
   run_cmd rm -rf "$workdir"
 
-  # Regenerar GRUB
+  # Regenerar GRUB (ruta correcta para BIOS y EFI en Fedora)
   log_info "🌀 Regenerando configuración de GRUB"
-  if [[ -d /sys/firmware/efi ]]; then
-    run_cmd sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
-  else
-    run_cmd sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-  fi
+  run_cmd sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
   # Activar servicio grub-btrfsd
   log_info "🔁 Verificando grub-btrfsd.service"
@@ -768,6 +764,7 @@ install_grub_btrfs() {
 
   log_success "✅ grub-btrfs instalado y configurado exitosamente"
 }
+
 
 
 
