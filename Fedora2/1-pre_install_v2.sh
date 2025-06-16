@@ -541,8 +541,8 @@ bantime = 1h
 EOF
   sudo systemctl restart fail2ban
 
-   # 3. Endurecer configuración SSH
-log_info "🔐 Ajustando configuración de SSH"
+  # 3. Endurecer configuración SSH
+  log_info "🔐 Ajustando configuración de SSH"
 
   local ssh_config="/etc/ssh/sshd_config"
   local ssh_backup="/etc/ssh/sshd_config.bak"
@@ -579,6 +579,18 @@ log_info "🔐 Ajustando configuración de SSH"
     sudo systemctl restart sshd
   fi
 
+
+  # 4. Limitar acceso SSH a red local
+  log_info "🌐 Restringiendo acceso SSH al segmento local 192.168.1.0/24"
+  sudo firewall-cmd --add-rich-rule='rule family="ipv4" source address="192.168.1.0/24" port port="2222" protocol="tcp" accept' --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --remove-service=ssh --zone=FedoraWorkstation --permanent
+  sudo firewall-cmd --reload &>/dev/null
+
+  # 5. Registrar nuevo puerto SSH en SELinux (si aplica)
+  sudo semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || true
+
+  log_success "✅ Seguridad de red configurada correctamente (fail2ban + SSH endurecido)"
+}
 
 # === [🧰 Pilar 5] Configuración de subvolúmenes BTRFS ===
 configure_btrfs_volumes() {
