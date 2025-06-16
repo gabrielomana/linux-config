@@ -368,7 +368,7 @@ configure_security() {
 
   # 1. Instalación de herramientas base
   log_info "📦 Instalando paquetes de seguridad y red..."
-  sudo dnf install -y \
+  sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     firewalld firewall-config \
     selinux-policy selinux-policy-targeted \
     policycoreutils policycoreutils-python-utils \
