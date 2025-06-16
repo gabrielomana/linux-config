@@ -385,9 +385,6 @@ sudo systemctl enable --now firewalld &>/dev/null || log_warn "No se pudo activa
 sudo firewall-cmd --set-default-zone=FedoraWorkstation
 sudo firewall-cmd --get-default-zone
 
-# Aplicar cambios a los servicios agregados más adelante
-sudo firewall-cmd --reload
-
   # 3. Servicios comunes
   log_info "📡 Habilitando servicios estándar en firewalld"
   local services=(
@@ -400,9 +397,17 @@ sudo firewall-cmd --reload
     bluetooth obex
   )
   local idx=0
+  local total_services=${#services[@]}
+
   for service in "${services[@]}"; do
-    sudo firewall-cmd --add-service="$service" --zone=FedoraWorkstation --permanent &>/dev/null
-    progress_bar "$((++idx))" "${#services[@]}"
+    if [[ -n "$service" ]] && sudo firewall-cmd --get-services | grep -qw "$service"; then
+      sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-service="$service"
+      check_error "❌ Error al agregar servicio: $service"
+      log_info "✔ Servicio agregado correctamente: $service"
+    else
+      log_warn "⚠ Servicio no reconocido o vacío: $service"
+    fi
+    progress_bar "$((++idx))" "$total_services"
   done
 
   # 4. Puertos manuales adicionales
@@ -419,15 +424,31 @@ sudo firewall-cmd --reload
     [8080]="rclone serve http"
   )
 
-  local idx=0
+  idx=0
+  local total_ports=${#ports_tcp[@]}
+
   for port in "${!ports_tcp[@]}"; do
-    sudo firewall-cmd --add-port=${port}/tcp --zone=FedoraWorkstation --permanent &>/dev/null
-    [[ "$port" == "1714-1764" ]] && \
-      sudo firewall-cmd --add-port=${port}/udp --zone=FedoraWorkstation --permanent &>/dev/null
-    progress_bar "$((++idx))" "${#ports_tcp[@]}"
+    if [[ "$port" =~ ^[0-9]+(-[0-9]+)?$ ]]; then
+      sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-port="${port}/tcp"
+      check_error "❌ Error al agregar puerto TCP: $port (${ports_tcp[$port]})"
+      log_info "✔ Puerto TCP agregado: ${port} (${ports_tcp[$port]})"
+
+      if [[ "$port" == "1714-1764" ]]; then
+        sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-port="${port}/udp"
+        check_error "❌ Error al agregar puerto UDP: $port"
+        log_info "✔ Puerto UDP agregado: ${port}"
+      fi
+    else
+      log_warn "⚠ Puerto no válido: $port"
+    fi
+    progress_bar "$((++idx))" "$total_ports"
   done
 
-  sudo firewall-cmd --reload &>/dev/null
+  log_info "🔁 Recargando configuración de firewalld..."
+  sudo firewall-cmd --reload
+  check_error "❌ Error al recargar firewalld"
+  log_success "✅ firewalld recargado correctamente"
+
 
   # 5. Servicios de red local
   log_info "⚙️ Activando servicios locales (Avahi, Bluetooth)"
