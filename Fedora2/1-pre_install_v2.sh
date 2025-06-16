@@ -653,7 +653,7 @@ configure_btrfs_volumes() {
 initialize_timeshift_config() {
   log_section "📸 Configurando Timeshift y creando snapshot inicial"
 
-  local device=$(findmnt -no SOURCE /)
+  local device=$(findmnt -no SOURCE / | sed 's|UUID=||' | xargs blkid -o device)
   local uuid=$(findmnt -no UUID /)
 
   sudo mkdir -p /timeshift
@@ -722,14 +722,15 @@ generate_timeshift_config() {
   # Detectar dispositivo montado en /
   local device mount_uuid parent_uuid
 
-  device=$(findmnt -no SOURCE /)
+  device=$(findmnt -no SOURCE / | sed 's|UUID=||' | xargs blkid -o device)
   if [[ -z "$device" ]]; then
     log_error "❌ No se pudo detectar el dispositivo raíz (/)"
     return 1
   fi
 
   mount_uuid=$(blkid -s UUID -o value "$device")
-  parent_uuid=$(lsblk -no UUID "$(lsblk -no PKNAME "$device")" 2>/dev/null)
+  parent_dev=$(lsblk -no PKNAME "$device" 2>/dev/null || true)
+  parent_uuid=$(blkid -s UUID -o value "/dev/${parent_dev}" 2>/dev/null || true)
 
   if [[ -z "$mount_uuid" ]]; then
     log_error "❌ No se pudo detectar UUID de $device"
