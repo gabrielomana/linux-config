@@ -15,6 +15,13 @@ LOG_FILE="$LOGDIR/install_$TIMESTAMP.log"
 ERR_FILE="$LOGDIR/error_$TIMESTAMP.log"
 ERROR_COUNT=0
 
+declare -a PACKAGES_ESSENTIALS=(
+  vim nano git curl wget htop
+  neofetch unzip p7zip p7zip-plugins
+  tar gzip bzip2
+  zsh bash-completion
+)
+
 # === [🧱 Pilar 3] Colores y Logging Empresarial ===
 if [[ -t 1 ]]; then
   RED="\033[0;31m"
@@ -216,6 +223,51 @@ check_error() {
     log_error "$msg"
     return "$code"
   fi
+}
+
+update_system() {
+  log_section "📦 Actualización del sistema base"
+
+  log_info "🔁 Ejecutando: dnf upgrade --refresh"
+  sudo dnf upgrade --refresh -y
+  check_error "❌ No se pudo actualizar el sistema"
+
+  log_success "✅ Sistema actualizado correctamente"
+}
+
+install_essential_packages() {
+  log_section "📦 Instalación de paquetes esenciales del sistema"
+
+  # Verificación de variable
+  if [[ -z "${PACKAGES_ESSENTIALS[*]:-}" ]]; then
+    log_error "Variable PACKAGES_ESSENTIALS no definida o vacía"
+    return 1
+  fi
+
+  local total=${#PACKAGES_ESSENTIALS[@]}
+  for i in "${!PACKAGES_ESSENTIALS[@]}"; do
+    local pkg="${PACKAGES_ESSENTIALS[$i]}"
+    log_info "→ Instalando: $pkg"
+    sudo dnf install -y --allowerasing --skip-broken --skip-unavailable "$pkg"
+    check_error "❌ Fallo al instalar $pkg"
+    progress_bar "$((i + 1))" "$total"
+  done
+
+  log_success "✅ Todos los paquetes esenciales fueron instalados correctamente"
+}
+
+clean_system() {
+  log_section "🧼 Limpieza del sistema"
+
+  log_info "🧹 Ejecutando autoremove de paquetes obsoletos"
+  sudo dnf autoremove -y
+  check_error "❌ No se pudo ejecutar dnf autoremove"
+
+  log_info "🧼 Limpiando caché de DNF"
+  sudo dnf clean all
+  check_error "❌ No se pudo limpiar la caché de DNF"
+
+  log_success "✅ Sistema limpiado correctamente"
 }
 
 
