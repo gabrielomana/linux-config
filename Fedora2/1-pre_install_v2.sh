@@ -162,6 +162,52 @@ init_environment() {
   fi
 }
 
+configure_dnf() {
+  log_section "⚙️ Configuración de DNF (optimizaciones básicas)"
+
+  log_info "📅 Desactivando reloj local (UTC por defecto)"
+  sudo timedatectl set-local-rtc '0' &>/dev/null || \
+    log_warn "No se pudo configurar timedatectl para usar UTC"
+
+  log_info "🧾 Aplicando parámetros recomendados en /etc/dnf/dnf.conf"
+  local dnf_conf="/etc/dnf/dnf.conf"
+
+  sudo tee "$dnf_conf" > /dev/null <<EOF
+[main]
+gpgcheck=1
+installonly_limit=3
+clean_requirements_on_remove=True
+best=False
+skip_if_unavailable=True
+fastestmirror=True
+max_parallel_downloads=10
+defaultyes=True
+keepcache=True
+deltarpm=True
+EOF
+
+  check_error "No se pudo escribir la configuración en $dnf_conf"
+  log_success "✅ DNF optimizado correctamente"
+}
+
+configure_dnf_automatic() {
+  log_section "🛠️ Configurando DNF Automatic (actualizaciones automáticas)"
+
+  log_info "📦 Instalando dnf-automatic si es necesario"
+  sudo dnf install -y --allowerasing --skip-broken --skip-unavailable dnf-automatic
+  check_error "No se pudo instalar dnf-automatic"
+
+  log_info "⏱️ Copiando timer al sistema (systemd)"
+  sudo cp /usr/lib/systemd/system/dnf-automatic.timer /etc/systemd/system/
+  check_error "No se pudo copiar el timer de dnf-automatic"
+
+  log_info "🔁 Habilitando y arrancando dnf-automatic.timer"
+  sudo systemctl enable --now dnf-automatic.timer
+  check_error "No se pudo habilitar dnf-automatic.timer"
+
+  log_success "✅ dnf-automatic activado correctamente"
+}
+
 
 # === [📦 Pilar 2] Procesamiento de Argumentos CLI ===
 show_help() {
