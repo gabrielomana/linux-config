@@ -542,7 +542,7 @@ EOF
   sudo systemctl restart fail2ban
 
    # 3. Endurecer configuración SSH
-  log_info "🔐 Ajustando configuración de SSH"
+log_info "🔐 Ajustando configuración de SSH"
 
   local ssh_config="/etc/ssh/sshd_config"
   local ssh_backup="/etc/ssh/sshd_config.bak"
@@ -551,18 +551,25 @@ EOF
   sudo cp "$ssh_config" "$ssh_backup"
   log_info "🗂️ Backup de sshd_config creado en: $ssh_backup"
 
-  # 🛠️ Aplicar cambios seguros
+  # 🛠️ Aplicar cambios seguros con sed
   sudo sed -i -E 's/^#?\s*Port\s+.*/Port 2222/' "$ssh_config" || log_warn "No se pudo establecer el puerto"
   sudo sed -i -E 's/^#?\s*PermitRootLogin\s+.*/PermitRootLogin no/' "$ssh_config" || log_warn "No se pudo deshabilitar root"
   sudo sed -i -E 's/^#?\s*PasswordAuthentication\s+.*/PasswordAuthentication no/' "$ssh_config" || log_warn "No se pudo deshabilitar autenticación por contraseña"
 
-  # Si las directivas no estaban presentes, añadirlas al final
+  # Si no estaban presentes, añadirlas al final
   grep -q "^Port " "$ssh_config" || echo "Port 2222" | sudo tee -a "$ssh_config" > /dev/null
   grep -q "^PermitRootLogin " "$ssh_config" || echo "PermitRootLogin no" | sudo tee -a "$ssh_config" > /dev/null
   grep -q "^PasswordAuthentication " "$ssh_config" || echo "PasswordAuthentication no" | sudo tee -a "$ssh_config" > /dev/null
 
   # 🔍 Validar sintaxis antes de reiniciar
   if sudo sshd -t; then
+    # 🔐 Registrar puerto en SELinux si es necesario
+    log_info "📌 Registrando puerto 2222 en SELinux para SSH"
+    sudo semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || \
+    sudo semanage port -m -t ssh_port_t -p tcp 2222
+    check_error "❌ No se pudo registrar el puerto 2222 en SELinux"
+
+    # Reiniciar SSH
     sudo systemctl restart sshd
     check_error "❌ No se pudo reiniciar SSH con nuevos ajustes"
     log_success "✅ Configuración de SSH endurecida y servicio reiniciado correctamente"
@@ -572,18 +579,6 @@ EOF
     sudo systemctl restart sshd
   fi
 
-
-  # 4. Limitar acceso SSH a red local
-  log_info "🌐 Restringiendo acceso SSH al segmento local 192.168.1.0/24"
-  sudo firewall-cmd --add-rich-rule='rule family="ipv4" source address="192.168.1.0/24" port port="2222" protocol="tcp" accept' --zone=FedoraWorkstation --permanent
-  sudo firewall-cmd --remove-service=ssh --zone=FedoraWorkstation --permanent
-  sudo firewall-cmd --reload &>/dev/null
-
-  # 5. Registrar nuevo puerto SSH en SELinux (si aplica)
-  sudo semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || true
-
-  log_success "✅ Seguridad de red configurada correctamente (fail2ban + SSH endurecido)"
-}
 
 # === [🧰 Pilar 5] Configuración de subvolúmenes BTRFS ===
 configure_btrfs_volumes() {
