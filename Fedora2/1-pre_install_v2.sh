@@ -710,6 +710,7 @@ ensure_grub_btrfsd_service() {
   else
     log_warn "⚠️ Servicio grub-btrfsd.service no encontrado ni compilado. Revisa manualmente"
   fi
+  return
 }
 
 generate_timeshift_config() {
@@ -848,7 +849,8 @@ done
     log_warn "⚠️ Servicio grub-btrfsd.service no encontrado ni compilado. Revisa manualmente."
   fi
   # Activar servicio grub-btrfsd (versión robusta)
-ensure_grub_btrfsd_service
+  
+  ensure_grub_btrfsd_service
 
   # Configurar Timeshift y crear snapshot inicial si no existe
   log_info "🕒 Configurando Timeshift y creando snapshot inicial"
