@@ -496,7 +496,7 @@ DNS=94.140.14.14        # AdGuard primario
 DNS=94.140.15.15        # AdGuard secundario
 DNS=1.1.1.1             # Cloudflare primario
 DNS=1.0.0.1             # Cloudflare secundario
-DNSOverTLS=yes
+DNSOverTLS=no
 EOF
   sudo systemctl restart systemd-resolved &>/dev/null
   log_success "DNS over TLS configurado (AdGuard + Cloudflare)"
