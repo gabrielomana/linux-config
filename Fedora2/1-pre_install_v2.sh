@@ -103,6 +103,17 @@ run_sudo() {
   fi
 }
 
+run_cmd() {
+  log_info "▶️ Ejecutando: $*"
+  if "$@"; then
+    log_success "✔️ Comando exitoso"
+  else
+    log_error "❌ Falló: $*"
+    return 1
+  fi
+}
+
+
 # === [🧱 Pilar 6] Preparación del Entorno (Logging y Espacio) ===
 init_environment() {
   # Seguridad mínima: evitar fallos de log anticipados
