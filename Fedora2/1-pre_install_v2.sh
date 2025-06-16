@@ -98,20 +98,70 @@ run_sudo() {
 
 # === [🧱 Pilar 6] Preparación del Entorno (Logging y Espacio) ===
 init_environment() {
-  log_section "🚀 Inicializando entorno de instalación"
-  mkdir -p "$LOGDIR"
+  # Seguridad mínima: evitar fallos de log anticipados
+  LOGDIR_FALLBACK="/tmp/fedora_logs_debug"
+  TIMESTAMP="$(date +'%Y%m%d_%H%M%S')"
+
+  # Determinar usuario real
+  REAL_USER="${SUDO_USER:-$USER}"
+
+  # Validar existencia de usuario
+  if id "$REAL_USER" &>/dev/null; then
+    USER_HOME=$(eval echo "~$REAL_USER")
+  else
+    USER_HOME="/root"
+    echo "[WARN] REAL_USER '$REAL_USER' no tiene home válido. Usando $USER_HOME"
+  fi
+
+  # Validar que el directorio home sea accesible
+  if [[ -z "$USER_HOME" || ! -d "$USER_HOME" ]]; then
+    echo "[ERROR] No se pudo determinar directorio HOME para $REAL_USER"
+    USER_HOME="/root"
+  fi
+
+  # Preparar carpeta de logs
+  LOGDIR="$USER_HOME/fedora_logs"
+  LOG_FILE="$LOGDIR/install_$TIMESTAMP.log"
+  ERR_FILE="$LOGDIR/error_$TIMESTAMP.log"
+
+  if ! mkdir -p "$LOGDIR" 2>/dev/null; then
+    echo "[ERROR] No se pudo crear $LOGDIR. Usando fallback $LOGDIR_FALLBACK"
+    LOGDIR="$LOGDIR_FALLBACK"
+    LOG_FILE="$LOGDIR/install_$TIMESTAMP.log"
+    ERR_FILE="$LOGDIR/error_$TIMESTAMP.log"
+    mkdir -p "$LOGDIR"
+  fi
+
+  # Crear archivos de log antes de log_section o log_info
   touch "$LOG_FILE" "$ERR_FILE"
   chmod 664 "$LOG_FILE" "$ERR_FILE"
-  chown "$REAL_USER:$REAL_USER" "$LOG_FILE" "$ERR_FILE"
+  chown "$REAL_USER:$REAL_USER" "$LOG_FILE" "$ERR_FILE" 2>/dev/null || true
 
+  # Iniciar redirección
   exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
        2> >(tee >(grep --line-buffered -E "^\[⚠|\[❌" >> "$ERR_FILE") > /dev/tty)
 
+  log_section "🚀 Inicializando entorno de instalación"
+
   log_info "🧭 Usuario real: $REAL_USER"
+  log_info "🏠 Carpeta HOME: $USER_HOME"
   log_info "📁 Carpeta de logs: $LOGDIR"
-  log_info "📄 Log principal: $(basename "$LOG_FILE")"
-  log_info "📄 Log errores: $(basename "$ERR_FILE")"
+  log_info "📄 Log de instalación: $(basename "$LOG_FILE")"
+  log_info "📄 Log de errores: $(basename "$ERR_FILE")"
+
+  # Validar espacio libre
+  REQUIRED_SPACE_MB=5000
+  AVAILABLE_KB=$(df --output=avail "$LOGDIR" | tail -n1 | tr -d ' ')
+  REQUIRED_KB=$((REQUIRED_SPACE_MB * 1024))
+
+  if [[ -z "$AVAILABLE_KB" || "$AVAILABLE_KB" -lt "$REQUIRED_KB" ]]; then
+    log_error "Espacio insuficiente. Requiere ${REQUIRED_SPACE_MB}MB en $LOGDIR (disponible: $((AVAILABLE_KB / 1024))MB)"
+    exit 1
+  else
+    log_success "💽 Espacio libre verificado: $((AVAILABLE_KB / 1024))MB"
+  fi
 }
+
 
 # === [📦 Pilar 2] Procesamiento de Argumentos CLI ===
 show_help() {
@@ -504,11 +554,12 @@ final_cleanup_and_reboot() {
 
 
 main() {
+  
+  init_environment
+
   run_sudo
 
   [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
-
-  init_environment
 
   configure_dnf
   configure_dnf_automatic
@@ -531,7 +582,7 @@ main() {
   else
     log_warn "⚠️ Script finalizado con $ERROR_COUNT error(es)/advertencia(s). Revisa el archivo: $ERR_FILE"
   fi
-  
+
   final_cleanup_and_reboot
 }
 
