@@ -541,13 +541,37 @@ bantime = 1h
 EOF
   sudo systemctl restart fail2ban
 
-  # 3. Endurecer configuración SSH
+   # 3. Endurecer configuración SSH
   log_info "🔐 Ajustando configuración de SSH"
-  sudo sed -i 's/^#\?Port .*/Port 2222/' /etc/ssh/sshd_config
-  sudo sed -i 's/^#\?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
-  sudo sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
-  sudo systemctl restart sshd
-  check_error "No se pudo reiniciar SSH con nuevos ajustes"
+
+  local ssh_config="/etc/ssh/sshd_config"
+  local ssh_backup="/etc/ssh/sshd_config.bak"
+
+  # 🔐 Backup por seguridad
+  sudo cp "$ssh_config" "$ssh_backup"
+  log_info "🗂️ Backup de sshd_config creado en: $ssh_backup"
+
+  # 🛠️ Aplicar cambios seguros
+  sudo sed -i -E 's/^#?\s*Port\s+.*/Port 2222/' "$ssh_config" || log_warn "No se pudo establecer el puerto"
+  sudo sed -i -E 's/^#?\s*PermitRootLogin\s+.*/PermitRootLogin no/' "$ssh_config" || log_warn "No se pudo deshabilitar root"
+  sudo sed -i -E 's/^#?\s*PasswordAuthentication\s+.*/PasswordAuthentication no/' "$ssh_config" || log_warn "No se pudo deshabilitar autenticación por contraseña"
+
+  # Si las directivas no estaban presentes, añadirlas al final
+  grep -q "^Port " "$ssh_config" || echo "Port 2222" | sudo tee -a "$ssh_config" > /dev/null
+  grep -q "^PermitRootLogin " "$ssh_config" || echo "PermitRootLogin no" | sudo tee -a "$ssh_config" > /dev/null
+  grep -q "^PasswordAuthentication " "$ssh_config" || echo "PasswordAuthentication no" | sudo tee -a "$ssh_config" > /dev/null
+
+  # 🔍 Validar sintaxis antes de reiniciar
+  if sudo sshd -t; then
+    sudo systemctl restart sshd
+    check_error "❌ No se pudo reiniciar SSH con nuevos ajustes"
+    log_success "✅ Configuración de SSH endurecida y servicio reiniciado correctamente"
+  else
+    log_error "❌ Error de sintaxis en sshd_config. Se restaura desde backup."
+    sudo cp "$ssh_backup" "$ssh_config"
+    sudo systemctl restart sshd
+  fi
+
 
   # 4. Limitar acceso SSH a red local
   log_info "🌐 Restringiendo acceso SSH al segmento local 192.168.1.0/24"
