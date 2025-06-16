@@ -411,43 +411,69 @@ sudo firewall-cmd --get-default-zone
   done
 
   # 4. Puertos manuales adicionales
-  log_info "🔌 Apertura de puertos manuales"
-  declare -A ports_tcp=(
-    [22]="SSH"
-    [631]="Impresoras IPP"
-    [32400]="Plex"
-    [8096]="Jellyfin"
-    [21]="FTP"
-    [60000-61000]="FTP pasivo"
-    [650]="OBEX Bluetooth"
-    [1714-1764]="KDE Connect TCP/UDP"
-    [8080]="rclone serve http"
-  )
+  log_info "🔌 Apertura de puertos manuales en firewalld"
+
+declare -A ports_tcp=(
+  [22]="SSH"
+  [2222]="SSH endurecido"
+  [3389]="Escritorio remoto (RDP)"
+  [5900]="VNC"
+  [80]="HTTP local"
+  [443]="HTTPS local"
+  [8080]="rclone / apps web"
+  [8000-8100]="Dev servers"
+  [32400]="Plex"
+  [8096]="Jellyfin"
+  [21]="FTP"
+  [60000-61000]="FTP pasivo"
+  [22000]="Syncthing"
+  [853]="DNS over TLS"
+  [53]="DNS TCP"
+  [1714-1764]="KDE Connect"
+)
+
+
+declare -A ports_udp=(
+  [1900]="UPnP"
+  [5353]="mDNS"
+  [21027]="Syncthing discovery"
+  [123]="NTP"
+  [5355]="LLMNR"
+  [67-68]="DHCP"
+  [53]="DNS UDP"
+  [1714-1764]="KDE Connect"
+)
+
 
   idx=0
-  local total_ports=${#ports_tcp[@]}
+  local total_tcp=${#ports_tcp[@]}
+  local total_udp=${#ports_udp[@]}
 
+  # TCP ports
   for port in "${!ports_tcp[@]}"; do
-    if [[ "$port" =~ ^[0-9]+(-[0-9]+)?$ ]]; then
-      sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-port="${port}/tcp"
-      check_error "❌ Error al agregar puerto TCP: $port (${ports_tcp[$port]})"
-      log_info "✔ Puerto TCP agregado: ${port} (${ports_tcp[$port]})"
+    local desc="${ports_tcp[$port]}"
+    log_info "↪️ TCP $port ($desc)"
+    sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-port="${port}/tcp"
+    check_error "❌ Error al habilitar puerto TCP: $port ($desc)"
+    log_success "✔️ TCP $port habilitado correctamente ($desc)"
+    progress_bar "$((++idx))" "$((total_tcp + total_udp))"
+  done
 
-      if [[ "$port" == "1714-1764" ]]; then
-        sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-port="${port}/udp"
-        check_error "❌ Error al agregar puerto UDP: $port"
-        log_info "✔ Puerto UDP agregado: ${port}"
-      fi
-    else
-      log_warn "⚠ Puerto no válido: $port"
-    fi
-    progress_bar "$((++idx))" "$total_ports"
+  # UDP ports
+  for port in "${!ports_udp[@]}"; do
+    local desc="${ports_udp[$port]}"
+    log_info "↪️ UDP $port ($desc)"
+    sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-port="${port}/udp"
+    check_error "❌ Error al habilitar puerto UDP: $port ($desc)"
+    log_success "✔️ UDP $port habilitado correctamente ($desc)"
+    progress_bar "$((++idx))" "$((total_tcp + total_udp))"
   done
 
   log_info "🔁 Recargando configuración de firewalld..."
   sudo firewall-cmd --reload
   check_error "❌ Error al recargar firewalld"
   log_success "✅ firewalld recargado correctamente"
+
 
 
   # 5. Servicios de red local
