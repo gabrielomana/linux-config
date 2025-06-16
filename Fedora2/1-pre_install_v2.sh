@@ -680,12 +680,13 @@ install_grub_btrfs() {
   local repo_url="https://github.com/Antynea/grub-btrfs"
 
   # Validación de dependencias
-  for cmd in git make gcc grub2 grub2-tools inotify-tools; do
-    if ! command -v "$cmd" &>/dev/null; then
-      log_error "❌ Dependencia no encontrada: $cmd"
-      return 1
-    fi
-  done
+for pkg in git make gcc grub2 grub2-tools inotify-tools; do
+  if ! rpm -q "$pkg" &>/dev/null; then
+    log_error "❌ Paquete no instalado: $pkg"
+    return 1
+  fi
+done
+
 
   # Instalación de dependencias por si acaso
   run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
