@@ -379,14 +379,13 @@ configure_security() {
 
   # 2. Activación de firewalld y zona FedoraWorkstation
   log_info "🔥 Activando firewalld"
-  sudo systemctl enable --now firewalld &>/dev/null || log_warn "No se pudo activar firewalld"
-  # Establecer zona por defecto (no se puede usar --permanent aquí)
+sudo systemctl enable --now firewalld &>/dev/null || log_warn "No se pudo activar firewalld"
+
+# Establecer zona por defecto (solo en runtime)
 sudo firewall-cmd --set-default-zone=FedoraWorkstation
+sudo firewall-cmd --get-default-zone
 
-# Guardar configuración de zona por defecto permanentemente
-sudo firewall-cmd --permanent --set-default-zone=FedoraWorkstation
-
-# Aplicar cambios
+# Aplicar cambios a los servicios agregados más adelante
 sudo firewall-cmd --reload
 
   # 3. Servicios comunes
