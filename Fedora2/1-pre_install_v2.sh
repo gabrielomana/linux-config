@@ -603,9 +603,10 @@ configure_btrfs_volumes() {
     return 0
   fi
 
-  sudo dnf install -y btrfs-progs inotify-tools
+  sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
+    btrfs-progs inotify-tools
 
-  log_info "Respaldando fstab actual..."
+  log_info "📄 Respaldando fstab actual..."
   sudo cp /etc/fstab /etc/fstab.old
   local output_file="/etc/fstab.new"
   sudo cp /etc/fstab "$output_file"
@@ -629,32 +630,26 @@ configure_btrfs_volumes() {
 
   sudo cp "$output_file" /etc/fstab
 
-  log_info "Aplicando compresión y balanceo inicial..."
+  log_info "🧼 Aplicando compresión y balanceo inicial..."
   sudo btrfs filesystem defragment -r -czstd:3 / &>/dev/null || true
   sudo btrfs balance start -m / &>/dev/null || true
 
-  log_success "Subvolúmenes BTRFS configurados correctamente"
+  log_success "✅ Subvolúmenes BTRFS configurados correctamente"
 }
+
 
 # === Snapshot inicial con Timeshift ===
 initialize_timeshift_config() {
-  log_info "📸 Configurando Timeshift y creando snapshot inicial"
+  log_section "📸 Configurando Timeshift y creando snapshot inicial"
+
+  local device=$(findmnt -no SOURCE /)
+  local uuid=$(findmnt -no UUID /)
 
   sudo mkdir -p /timeshift
 
-  if ! sudo timeshift --btrfs --snapshot-device "$(findmnt -no SOURCE /)"; then
-    log_error "Fallo al configurar Timeshift para /timeshift"
-    return 1
-  fi
-
-  if ! sudo timeshift --create --comments "Snapshot inicial" --tags D; then
-    log_error "Fallo al crear snapshot inicial con Timeshift"
-    return 1
-  fi
-
   sudo tee /etc/timeshift/timeshift.json > /dev/null <<EOF
 {
-  "backup_device_uuid" : "$(findmnt -no UUID /)",
+  "backup_device_uuid" : "$uuid",
   "snapshot_dir" : "/timeshift",
   "snapshot_name" : "timeshift-btrfs",
   "mode" : "btrfs",
@@ -667,53 +662,51 @@ initialize_timeshift_config() {
 }
 EOF
 
-  log_success "✅ Timeshift configurado correctamente con snapshot inicial"
+  if sudo timeshift --btrfs --snapshot-device "$device"; then
+    sudo timeshift --create --comments "Snapshot inicial" --tags D || \
+      log_warn "⚠️ No se pudo crear el snapshot inicial"
+    log_success "✅ Timeshift configurado correctamente"
+  else
+    log_error "❌ Fallo al configurar Timeshift para $device"
+  fi
 }
 
-# === Configuración de GRUB-BTRFS + Timeshift ===
-configure_grub_btrfs_timeshift() {
-  log_info "🔧 Configurando integración grub-btrfs con Timeshift"
 
-  sudo mkdir -p /etc/default/grub-btrfs
-  sudo tee /etc/default/grub-btrfs/config > /dev/null <<EOF
-GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
-GRUB_BTRFS_MKCONFIG=/sbin/grub2-mkconfig
-GRUB_BTRFS_SCRIPT_CHECK=grub2-script-check
-GRUB_BTRFS_SUBMENUNAME="Snapshots BTRFS"
-GRUB_BTRFS_SNAPSHOT_FORMAT="%Y-%m-%d %H:%M | %c"
-GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rootflags=subvol=@ quiet"
-EOF
+# === Instalación desde COPR ===
+install_grub_btrfs() {
+  log_section "🔧 Instalando grub-btrfs desde GitHub"
+
+  sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
+    git make gcc grub2 grub2-tools inotify-tools
+
+  local workdir="/tmp/grub-btrfs-src"
+  rm -rf "$workdir"
+  git clone --depth=1 https://github.com/Antynea/grub-btrfs "$workdir" || {
+    log_error "❌ No se pudo clonar grub-btrfs desde GitHub"
+    return 1
+  }
+
+  pushd "$workdir" >/dev/null
+
+  # Ajustar rutas Fedora en config
+  sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config
+  sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config
+  sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config
+
+  sudo make install >/dev/null
+  check_error "❌ Error al instalar grub-btrfs"
+
+  popd >/dev/null && rm -rf "$workdir"
 
   log_info "🌀 Regenerando configuración de GRUB"
   sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
-  if systemctl list-unit-files | grep -q '^grub-btrfs.path'; then
-    log_info "🟢 Habilitando grub-btrfs.path"
-    sudo systemctl enable --now grub-btrfs.path || log_warn "No se pudo habilitar grub-btrfs.path"
-  else
-    log_warn "Servicio grub-btrfs.path no disponible. Se omite."
-  fi
+  log_info "🟢 Habilitando grub-btrfsd.service"
+  sudo systemctl enable --now grub-btrfsd.service || log_warn "⚠️ No se pudo habilitar grub-btrfsd.service"
 
-  initialize_timeshift_config || log_warn "Problemas al inicializar Timeshift"
-
-  log_success "GRUB-BTRFS y Timeshift configurados correctamente"
+  log_success "✅ grub-btrfs instalado y funcional"
 }
 
-# === Instalación desde COPR ===
-install_grub_btrfs_timeshift() {
-  log_section "📥 Instalando grub-btrfs y Timeshift desde COPR"
-
-  if ! dnf copr list | grep -q "kylegospo/grub-btrfs"; then
-    log_info "🔗 Habilitando COPR: grub-btrfs"
-    sudo dnf copr enable -y kylegospo/grub-btrfs || log_warn "No se pudo habilitar COPR grub-btrfs"
-  fi
-
-  sudo dnf -y update
-  sudo dnf install -y timeshift grub-btrfs-timeshift || log_warn "Error parcial en instalación de paquetes grub-btrfs"
-
-  configure_btrfs_volumes
-  configure_grub_btrfs_timeshift
-}
 
 final_cleanup_and_reboot() {
   log_section "🧹 Limpieza Final y Preparación para Reinicio"
@@ -762,7 +755,9 @@ main() {
   configure_security
   configure_network_security
 
-  install_grub_btrfs_timeshift
+  iconfigure_btrfs_volumes
+  install_grub_btrfs
+  initialize_timeshift_config
 
   [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
 
