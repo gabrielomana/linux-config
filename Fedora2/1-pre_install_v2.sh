@@ -676,55 +676,77 @@ EOF
 install_grub_btrfs() {
   log_section "📥 Instalando grub-btrfs desde GitHub (adaptado para Fedora)"
 
-  sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
+  local workdir="/tmp/grub-btrfs-src"
+  local repo_url="https://github.com/Antynea/grub-btrfs"
+
+  # Validación de dependencias
+  for cmd in git make gcc grub2 grub2-tools inotify-tools; do
+    if ! command -v "$cmd" &>/dev/null; then
+      log_error "❌ Dependencia no encontrada: $cmd"
+      return 1
+    fi
+  done
+
+  # Instalación de dependencias por si acaso
+  run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     git make gcc grub2 grub2-tools inotify-tools
 
-  local workdir="/tmp/grub-btrfs-src"
-  rm -rf "$workdir"
-  git clone --depth=1 https://github.com/Antynea/grub-btrfs "$workdir" || {
-    log_error "❌ No se pudo clonar grub-btrfs desde GitHub"
+  # Preparar directorio limpio
+  run_cmd rm -rf "$workdir"
+  run_cmd git clone --depth=1 "$repo_url" "$workdir" || {
+    log_error "❌ No se pudo clonar $repo_url"
     return 1
   }
 
-  pushd "$workdir" >/dev/null
+  pushd "$workdir" >/dev/null || {
+    log_error "❌ No se pudo acceder al directorio de trabajo $workdir"
+    return 1
+  }
 
-  # Ajustes explícitos para entorno Fedora
-  sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config
-  sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config
-  sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config
+  # Parches de configuración para Fedora
+  run_cmd sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config
+  run_cmd sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config
+  run_cmd sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config
+
+  # Ajustes adicionales en script 41_snapshots-btrfs
+  run_cmd sed -i 's|/boot/grub|/boot/grub2|' grub.d/41_snapshots-btrfs
+  run_cmd sed -i 's|grub-mkconfig|grub2-mkconfig|' grub.d/41_snapshots-btrfs
+  run_cmd sed -i 's|grub-script-check|grub2-script-check|' grub.d/41_snapshots-btrfs
 
   # Exportar entorno para make
   export GRUB_BTRFS_DIRNAME="/boot/grub2"
   export GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"
   export GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"
 
-  # Instalación segura
-  sudo make install \
+  # Compilación e instalación segura
+  run_cmd sudo make install \
     GRUB_BTRFS_DIRNAME="$GRUB_BTRFS_DIRNAME" \
     GRUB_BTRFS_MKCONFIG="$GRUB_BTRFS_MKCONFIG" \
-    GRUB_BTRFS_SCRIPT_CHECK="$GRUB_BTRFS_SCRIPT_CHECK" || {
-      log_error "❌ Error durante make install de grub-btrfs"
-      popd >/dev/null
-      return 1
-    }
+    GRUB_BTRFS_SCRIPT_CHECK="$GRUB_BTRFS_SCRIPT_CHECK"
 
-  popd >/dev/null && rm -rf "$workdir"
+  popd >/dev/null
+  run_cmd rm -rf "$workdir"
 
-  # Regenerar GRUB
+  # Regenerar configuración de GRUB
   log_info "🌀 Regenerando configuración de GRUB"
-  sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-
-  # Habilitar daemon que detecta snapshots
-  log_info "🔁 Habilitando grub-btrfsd.service"
-  if systemctl list-unit-files | grep -q grub-btrfsd.service; then
-    sudo systemctl enable --now grub-btrfsd.service
-    check_error "❌ No se pudo activar grub-btrfsd.service"
+  if [ -d /sys/firmware/efi ]; then
+    run_cmd sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
   else
-    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado. Instala manualmente si es necesario."
+    run_cmd sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+  fi
+
+  # Habilitar daemon de monitoreo de snapshots
+  log_info "🔁 Verificando grub-btrfsd.service"
+  if systemctl list-unit-files | grep -q grub-btrfsd.service; then
+    run_cmd sudo systemctl enable --now grub-btrfsd.service || \
+      log_warn "⚠️ No se pudo habilitar grub-btrfsd.service automáticamente"
+  else
+    log_warn "⚠️ Servicio grub-btrfsd.service no encontrado. Revisa instalación manual."
   fi
 
   log_success "✅ grub-btrfs instalado y configurado exitosamente"
 }
+
 
 
 
@@ -765,15 +787,15 @@ main() {
 
   [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
 
-  configure_dnf
-  configure_dnf_automatic
-  change_hostname
+  # configure_dnf
+  # configure_dnf_automatic
+  # change_hostname
 
-  install_essential_packages
-  configure_flatpak_repositories
+  # install_essential_packages
+  # configure_flatpak_repositories
 
-  configure_security
-  configure_network_security
+  # configure_security
+  # configure_network_security
 
   configure_btrfs_volumes
   install_grub_btrfs
