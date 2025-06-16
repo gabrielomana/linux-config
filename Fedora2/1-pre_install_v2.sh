@@ -690,21 +690,19 @@ install_grub_btrfs() {
   local workdir="/tmp/grub-btrfs-src"
   local repo_url="https://github.com/Antynea/grub-btrfs"
 
-  # Validación de dependencias
-for cmd in git make gcc grub2-mkconfig grub2-script-check inotifywait; do
-  if ! command -v "$cmd" &>/dev/null; then
-    log_error "❌ Dependencia no encontrada: $cmd"
-    return 1
-  fi
-done
+  # Validación de dependencias por comando
+  for cmd in git make gcc grub2-mkconfig grub2-script-check inotifywait; do
+    if ! command -v "$cmd" &>/dev/null; then
+      log_error "❌ Dependencia no encontrada: $cmd"
+      return 1
+    fi
+  done
 
-
-
-  # Instalación de dependencias por si acaso
+  # Instalación por si faltara alguno
   run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     git make gcc grub2 grub2-tools inotify-tools
 
-  # Preparar directorio limpio
+  # Preparar entorno
   run_cmd rm -rf "$workdir"
   run_cmd git clone --depth=1 "$repo_url" "$workdir" || {
     log_error "❌ No se pudo clonar $repo_url"
@@ -712,26 +710,37 @@ done
   }
 
   pushd "$workdir" >/dev/null || {
-    log_error "❌ No se pudo acceder al directorio de trabajo $workdir"
+    log_error "❌ No se pudo acceder a $workdir"
     return 1
   }
 
-  # Parches de configuración para Fedora
-  run_cmd sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config
-  run_cmd sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config
-  run_cmd sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config
+  # Parches para Fedora en archivo config
+  if [[ -f config ]]; then
+    run_cmd sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config
+    run_cmd sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config
+    run_cmd sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config
+  else
+    log_warn "⚠️ Archivo config no encontrado. Puede que ya no sea necesario parchearlo."
+  fi
 
-  # Ajustes adicionales en script 41_snapshots-btrfs
-  run_cmd sed -i 's|/boot/grub|/boot/grub2|' grub.d/41_snapshots-btrfs
-  run_cmd sed -i 's|grub-mkconfig|grub2-mkconfig|' grub.d/41_snapshots-btrfs
-  run_cmd sed -i 's|grub-script-check|grub2-script-check|' grub.d/41_snapshots-btrfs
+  # Detección robusta del archivo de snapshots
+  local snapshot_file
+  snapshot_file=$(find . -maxdepth 2 -type f -iname '41_snapshots-btrfs' | head -n 1)
+
+  if [[ -n "$snapshot_file" ]]; then
+    run_cmd sed -i 's|/boot/grub|/boot/grub2|' "$snapshot_file"
+    run_cmd sed -i 's|grub-mkconfig|grub2-mkconfig|' "$snapshot_file"
+    run_cmd sed -i 's|grub-script-check|grub2-script-check|' "$snapshot_file"
+  else
+    log_warn "⚠️ No se encontró el archivo 41_snapshots-btrfs. Saltando modificaciones."
+  fi
 
   # Exportar entorno para make
   export GRUB_BTRFS_DIRNAME="/boot/grub2"
   export GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"
   export GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"
 
-  # Compilación e instalación segura
+  # Instalación segura
   run_cmd sudo make install \
     GRUB_BTRFS_DIRNAME="$GRUB_BTRFS_DIRNAME" \
     GRUB_BTRFS_MKCONFIG="$GRUB_BTRFS_MKCONFIG" \
@@ -740,15 +749,15 @@ done
   popd >/dev/null
   run_cmd rm -rf "$workdir"
 
-  # Regenerar configuración de GRUB
+  # Regenerar GRUB
   log_info "🌀 Regenerando configuración de GRUB"
-  if [ -d /sys/firmware/efi ]; then
+  if [[ -d /sys/firmware/efi ]]; then
     run_cmd sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
   else
     run_cmd sudo grub2-mkconfig -o /boot/grub2/grub.cfg
   fi
 
-  # Habilitar daemon de monitoreo de snapshots
+  # Activar servicio grub-btrfsd
   log_info "🔁 Verificando grub-btrfsd.service"
   if systemctl list-unit-files | grep -q grub-btrfsd.service; then
     run_cmd sudo systemctl enable --now grub-btrfsd.service || \
