@@ -712,6 +712,46 @@ ensure_grub_btrfsd_service() {
   fi
 }
 
+generate_timeshift_config() {
+  log_info "🧰 Generando configuración automática de Timeshift en /etc/timeshift/timeshift.json"
+
+  # Crear carpeta de configuración
+  sudo mkdir -p /etc/timeshift
+
+  # Detectar dispositivo montado en /
+  local device mount_uuid parent_uuid
+
+  device=$(findmnt -no SOURCE /)
+  if [[ -z "$device" ]]; then
+    log_error "❌ No se pudo detectar el dispositivo raíz (/)"
+    return 1
+  fi
+
+  mount_uuid=$(blkid -s UUID -o value "$device")
+  parent_uuid=$(lsblk -no UUID "$(lsblk -no PKNAME "$device")" 2>/dev/null)
+
+  if [[ -z "$mount_uuid" ]]; then
+    log_error "❌ No se pudo detectar UUID de $device"
+    return 1
+  fi
+
+  # Crear archivo JSON
+  sudo tee /etc/timeshift/timeshift.json >/dev/null <<EOF
+{
+  "backup_device_uuid": "$mount_uuid",
+  "parent_device_uuid": "${parent_uuid:-$mount_uuid}",
+  "do_first_run": "false",
+  "btrfs_mode": true,
+  "include_btrfs_home": false,
+  "snapshot_device": "$device",
+  "snapshot_mount_path": "/timeshift",
+  "exclude": [],
+  "exclude-applications": []
+}
+EOF
+
+  log_success "✅ timeshift.json creado correctamente con destino en /timeshift"
+}
 
 
 # === Instalación desde COPR ===
@@ -733,6 +773,9 @@ done
   # Instalación por si faltara alguno
   run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     git make gcc grub2 grub2-tools inotify-tools timeshift
+
+    generate_timeshift_config
+    
 
   # Clonación limpia del repo
   run_cmd rm -rf "$workdir"
