@@ -107,11 +107,17 @@ log_section() {
   local title="$1"
   local border
   border=$(printf '─%.0s' $(seq 1 $(( ${#title} + 4 ))))
+
   echo -e "\n${BLUE}┌$border┐${NC}"
   echo -e "${BLUE}│  $title  │${NC}"
   echo -e "${BLUE}└$border┘${NC}\n"
+
+ if [[ -n "${LOG_FILE:-}" && -f "$LOG_FILE" ]]; then
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SECTION] $title" >> "$LOG_FILE"
+fi
+
 }
+
 
 # === [3. Sudo Helpers and Command Execution] ===
 run_sudo() {
