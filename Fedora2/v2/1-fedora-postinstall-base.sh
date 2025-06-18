@@ -450,7 +450,7 @@ configure_security() {
     samba samba-client avahi nss-mdns \
     ftp lftp openssh-clients bluez-obexd \
     kde-connect qt6-qml kde-connectd \
-    rclone fuse
+    fuse
 
   # Step 2: Enable firewalld and set default zone
   log_info "🔥 Enabling firewalld service"
@@ -655,6 +655,56 @@ EOF
   sudo semanage port -a -t ssh_port_t -p tcp 2222 2>/dev/null || true
 
   log_success "✅ Network hardening completed: fail2ban + SSH + firewall rules"
+}
+
+configure_btrfs_volumes() {
+  log_section "🧩 Configurando BTRFS y subvolúmenes"
+
+  local fs_type
+  fs_type=$(findmnt -n -o FSTYPE /)
+  if [[ "$fs_type" != "btrfs" ]]; then
+    log_warn "El sistema de archivos raíz no es BTRFS. Se omite la configuración de subvolúmenes."
+    return 0
+  fi
+
+  run_cmd sudo dnf install -y --allowerasing --skip-broken --skip-unavailable btrfs-progs inotify-tools
+
+  log_info "🔐 Realizando backup de /etc/fstab"
+  run_cmd sudo cp /etc/fstab /etc/fstab.bak
+
+  local output_file="/etc/fstab"
+  local uuid
+  uuid=$(findmnt -n -o UUID /)
+
+  if [[ -z "$uuid" ]]; then
+    log_error "No se pudo obtener el UUID del volumen raíz."
+    return 1
+  fi
+
+  declare -A subvolumes=(
+    ["/"]="@"
+    ["/var/log"]="@log"
+    ["/var/tmp"]="@var_tmp"
+    ["/tmp"]="@tmp"
+    ["/timeshift"]="@timeshift"
+  )
+
+  for mount_point in "${!subvolumes[@]}"; do
+    log_info "⛓️ Reconfigurando entrada para: $mount_point → subvol=${subvolumes[$mount_point]}"
+    if grep -q "$mount_point" "$output_file"; then
+      sudo sed -i -E \
+        "s|UUID=[^ ]+\s+$mount_point\s+btrfs.*|UUID=$uuid $mount_point btrfs rw,noatime,compress=zstd:3,space_cache=v2,subvol=${subvolumes[$mount_point]} 0 0|" \
+        "$output_file"
+    else
+      echo "UUID=$uuid $mount_point btrfs rw,noatime,compress=zstd:3,space_cache=v2,subvol=${subvolumes[$mount_point]} 0 0" | sudo tee -a "$output_file" > /dev/null
+    fi
+  done
+
+  log_info "🌀 Aplicando compresión inicial..."
+  sudo btrfs filesystem defragment -r -czstd:3 / &>/dev/null || log_warn "No se pudo desfragmentar"
+  sudo btrfs balance start -m / &>/dev/null || log_warn "Balanceo no aplicable"
+
+  log_success "✅ Subvolúmenes BTRFS configurados correctamente"
 }
 
 
@@ -995,6 +1045,7 @@ main() {
   configure_security
   configure_network_security
 
+  configure_btrfs_volumes
   install_grub_btrfs_from_source  || exit 1
   configure_grub_btrfs_default_config || exit 1
   setup_timeshift_config_btrfs || exit 1
