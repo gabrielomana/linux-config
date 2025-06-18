@@ -805,20 +805,38 @@ EOF
 
 
 create_initial_timeshift_snapshot() {
-  log_section "🕒 Creating first Timeshift snapshot (if needed)"
+  log_section "🕒 Ensuring Timeshift config is valid and creating first snapshot"
 
+  if ! command -v timeshift &>/dev/null; then
+    log_error "❌ Timeshift is not installed. Cannot create snapshot."
+    return 1
+  fi
+
+  # Asegurar que el archivo de configuración JSON exista
+  if [[ ! -f /etc/timeshift/timeshift.json ]]; then
+    log_warn "⚠️ Timeshift configuration file missing. Re-generating..."
+    setup_timeshift_config_btrfs || return 1
+  fi
+
+  # Validar si ya hay snapshots
   if sudo timeshift --list | grep -q "Snapshot"; then
-    log_info "✔️ Snapshots already exist. No new snapshot created."
+    log_info "✔️ Existing Timeshift snapshot(s) found. Skipping creation."
     return 0
   fi
 
+  # Workaround: ejecutar la GUI durante 5 segundos para generar estado inicial
+  log_info "⚙️ Starting Timeshift GTK briefly to stabilize config..."
+  sudo timeshift-gtk & sleep 5 && sudo killall timeshift-gtk
+
+  # Crear snapshot ahora que la configuración es válida
   run_cmd sudo timeshift --create --comments "Initial system snapshot" --tags D || {
-    log_error "❌ Failed to create initial Timeshift snapshot"
+    log_error "❌ Could not create Timeshift snapshot. Possibly corrupted state."
     return 1
   }
 
-  log_success "✅ Initial Timeshift snapshot created"
+  log_success "✅ Initial Timeshift snapshot created successfully"
 }
+
 
 
 # === [24. Regenerate grub.cfg after grub-btrfs integration] ===
@@ -846,20 +864,20 @@ main() {
 
   [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
 
-  configure_dnf
-  configure_dnf_automatic
-  change_hostname
+  #configure_dnf
+  #configure_dnf_automatic
+  #change_hostname
 
-  install_essential_packages
-  configure_flatpak_repositories
+  #install_essential_packages
+  #configure_flatpak_repositories
 
-  configure_security
-  configure_network_security
+  #configure_security
+  #configure_network_security
 
-  install_grub_btrfs_from_copr || exit 1
-  configure_grub_btrfs_default_config || exit 1
-  setup_grub_btrfsd_services || exit 1
-  setup_timeshift_config_btrfs || exit 1
+  #install_grub_btrfs_from_copr || exit 1
+  #configure_grub_btrfs_default_config || exit 1
+  #setup_grub_btrfsd_services || exit 1
+  #setup_timeshift_config_btrfs || exit 1
   create_initial_timeshift_snapshot || exit 1
   regenerate_grub_config || exit 1
 
