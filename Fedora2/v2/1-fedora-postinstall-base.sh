@@ -243,15 +243,15 @@ install_essential_packages() {
   log_section "📦 Installing Essential System Packages"
 
   # Sanity check
-  if [[ -z "${PACKAGES_ESSENTIALS[*]:-}" ]]; then
-    log_error "Variable PACKAGES_ESSENTIALS is not defined or empty"
+  if [[ -z "${ESSENTIAL_PACKAGES[*]:-}" ]]; then
+    log_error "Variable ESSENTIAL_PACKAGES is not defined or empty"
     return 1
   fi
 
-  local total=${#PACKAGES_ESSENTIALS[@]}
+  local total=${#ESSENTIAL_PACKAGES[@]}
 
-  for i in "${!PACKAGES_ESSENTIALS[@]}"; do
-    local pkg="${PACKAGES_ESSENTIALS[$i]}"
+  for i in "${!ESSENTIAL_PACKAGES[@]}"; do
+    local pkg="${ESSENTIAL_PACKAGES[$i]}"
     log_info "→ Installing: $pkg"
     sudo dnf install -y --allowerasing --skip-broken --skip-unavailable "$pkg"
     check_error "❌ Failed to install package: $pkg"
@@ -672,7 +672,7 @@ install_grub_btrfs_from_copr() {
     return 1
   }
 
-  run_cmd sudo dnf install -y grub-btrfs grub-btrfs-timeshift || {
+  run_cmd sudo dnf install -y grub-btrfs || {
     log_error "❌ Failed to install grub-btrfs or its extensions"
     return 1
   }
@@ -701,47 +701,65 @@ EOF
 
 # === [21. Enable grub-btrfsd systemd monitoring services] ===
 setup_grub_btrfsd_services() {
-  log_section "🔧 Configuring systemd monitoring for grub-btrfs"
+  log_section "🔧 Configuring grub-btrfs systemd monitoring"
 
   local path_unit="/etc/systemd/system/grub-btrfs.path"
-  run_cmd sudo mkdir -p "$(dirname "$path_unit")"
 
+  # Function to check unit existence
+  unit_exists() {
+    systemctl list-unit-files | grep -q "^$1"
+  }
+
+  # Create simplified static .path unit (uses /.snapshots directly)
   run_cmd sudo tee "$path_unit" > /dev/null <<'EOF'
 [Unit]
-Description=Monitors Timeshift snapshots in /run/timeshift/%i/backup
-DefaultDependencies=no
-BindsTo=run-timeshift-%i.mount
-
+Description=Monitor /.snapshots for grub-btrfs
 [Path]
-PathModified=/run/timeshift/%i/backup/timeshift-btrfs/snapshots
-
+PathModified=/.snapshots
 [Install]
-WantedBy=run-timeshift-%i.mount
+WantedBy=multi-user.target
 EOF
 
   run_cmd sudo systemctl daemon-reexec
   run_cmd sudo systemctl daemon-reload
 
-  run_cmd sudo systemctl enable grub-btrfsd.service
-  run_cmd sudo systemctl enable grub-btrfsd@-.service
+  # Enable static grub-btrfs.path
+  if unit_exists "grub-btrfs.path"; then
+    run_cmd sudo systemctl enable grub-btrfs.path
+    run_cmd sudo systemctl start grub-btrfs.path
+  else
+    log_warn "⚠️ grub-btrfs.path unit not found"
+  fi
 
-  run_cmd sudo systemctl start grub-btrfsd.service || log_warn "⚠️ grub-btrfsd.service failed to start"
-  run_cmd sudo systemctl start grub-btrfsd@-.service || log_warn "⚠️ grub-btrfsd@-.service failed to start"
+  # Optional: enable grub-btrfsd.service only if present
+  if unit_exists "grub-btrfsd.service"; then
+    run_cmd sudo systemctl enable grub-btrfsd.service
+    run_cmd sudo systemctl start grub-btrfsd.service || log_warn "⚠️ grub-btrfsd.service failed to start"
+  else
+    log_warn "⚠️ grub-btrfsd.service not found (may not be shipped with this package)"
+  fi
 
-  run_cmd sudo systemctl enable grub-btrfs.path
-  run_cmd sudo systemctl start grub-btrfs.path
-
-  log_success "✅ grub-btrfsd monitoring services enabled"
+  log_success "✅ grub-btrfs monitoring system configured"
 }
+
 
 # === [22. Configure Timeshift in BTRFS mode at /.snapshots] ===
 setup_timeshift_config_btrfs() {
-  log_section "🧰 Setting up Timeshift in BTRFS mode (snapshots at /.snapshots)"
+  log_section "🧰 Setting up Timeshift for BTRFS at /.snapshots"
 
   local config_dir="/etc/timeshift"
   local config_file="$config_dir/timeshift.json"
   local snapshots_dir="/.snapshots"
   local device uuid
+
+  # Ensure Timeshift is installed
+  if ! command -v timeshift &>/dev/null; then
+    log_info "📦 Installing Timeshift..."
+    sudo dnf install -y timeshift || {
+      log_error "❌ Failed to install Timeshift"
+      return 1
+    }
+  fi
 
   run_cmd sudo mkdir -p "$snapshots_dir"
   run_cmd sudo chown root:root "$snapshots_dir"
@@ -751,7 +769,7 @@ setup_timeshift_config_btrfs() {
   uuid=$(findmnt -no UUID /)
 
   if [[ -z "$device" || -z "$uuid" ]]; then
-    log_error "❌ Could not detect root device or UUID"
+    log_error "❌ Failed to detect root device or UUID"
     return 1
   fi
 
@@ -782,25 +800,9 @@ setup_timeshift_config_btrfs() {
 }
 EOF
 
-  log_success "✅ Timeshift BTRFS config written to $config_file"
+  log_success "✅ Timeshift configured in BTRFS mode with target $snapshots_dir"
 }
 
-# === [23. Create initial snapshot if none exists] ===
-create_initial_timeshift_snapshot() {
-  log_section "🕒 Creating first Timeshift snapshot (if needed)"
-
-  if sudo timeshift --list | grep -q "Snapshot"; then
-    log_info "✔️ Snapshots already exist. No new snapshot created."
-    return 0
-  fi
-
-  run_cmd sudo timeshift --create --comments "Initial system snapshot" --tags D || {
-    log_error "❌ Failed to create initial Timeshift snapshot"
-    return 1
-  }
-
-  log_success "✅ Initial Timeshift snapshot created"
-}
 
 # === [24. Regenerate grub.cfg after grub-btrfs integration] ===
 regenerate_grub_config() {
