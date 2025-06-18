@@ -487,20 +487,15 @@ configure_dnf() {
     fi
 
     log_info "[DNF] 💾 Respaldando configuración actual de DNF"
+    local dnf_conf="/etc/dnf/dnf.conf"
+    local backup_conf="${dnf_conf}.backup.$(date +%Y%m%d)"
 
-local dnf_conf="/etc/dnf/dnf.conf"
-local backup_conf="${dnf_conf}.backup.$(date +%Y%m%d)"
-
-if [[ -f "$dnf_conf" ]]; then
     if [[ ! -f "$backup_conf" ]]; then
         run_cmd sudo cp "$dnf_conf" "$backup_conf"
         log_success "[DNF] Backup creado: $backup_conf"
     else
         log_info "[DNF] Ya existía backup previo: $backup_conf"
     fi
-else
-    log_warn "[DNF] Archivo de configuración no encontrado: $dnf_conf"
-fi
 
     log_info "[DNF] 🛠️ Aplicando parámetros optimizados"
 
