@@ -231,30 +231,15 @@ run_cmd() {
 
 # Manejo mejorado de sudo
 ensure_sudo() {
-    if [[ $EUID -eq 0 ]]; then
-        log_warn "Running as root. This is not recommended."
-        return 0
+    # Validación estricta: debe ejecutarse como root
+    if [[ $EUID -ne 0 ]]; then
+        log_error "This script must be run as root. Use 'sudo' or switch to root user."
+        exit 1
     fi
-    
-    if ! sudo -n true 2>/dev/null; then
-        log_info "Requesting sudo privileges..."
-        if ! sudo -v; then
-            log_error "Unable to obtain sudo privileges"
-            exit 1
-        fi
-    fi
-    
-    # Mantener sudo vivo en segundo plano
-    if [[ -z "${DISABLE_SUDO_KEEPALIVE:-}" ]]; then
-        {
-            while sudo -n true 2>/dev/null; do 
-                sleep 45
-            done
-        } &
-        SUDO_PID=$!
-        log_debug "Sudo keepalive started (PID: $SUDO_PID)"
-    fi
+
+    log_info "Running as root — OK"
 }
+
 
 # Funciones de limpieza
 cleanup_on_exit() {
