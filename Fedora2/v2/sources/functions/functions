@@ -170,7 +170,6 @@ install_packages() {
 
   mapfile -t raw_lines < "$list_file"
   local packages=()
-  
   for line in "${raw_lines[@]}"; do
     local clean_line
     clean_line=$(echo "$line" | sed 's/#.*//' | xargs)
@@ -180,31 +179,38 @@ install_packages() {
 
   local total=${#packages[@]}
   local count=0
+  local dnf_flags=(-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true)
 
   for pkg in "${packages[@]}"; do
     ((count++))
-    draw_progress_bar "$count" "$total"
-    sleep 0.1
 
-    local dnf_flags="-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true"
+    # Validar entrada sospechosa
+    if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
+      log_warn "⚠️ Entrada inválida detectada: '$pkg' — omitida"
+      continue
+    fi
+
+    draw_progress_bar "$count" "$total"
 
     if [[ "$pkg" == @* ]]; then
       log_info "➡️ Instalando grupo: $pkg"
-      if sudo dnf group install ${dnf_flags} "${pkg#@}" &>> "$LOG_FILE"; then
+      if sudo dnf group install "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"; then
         log_success "✅ Grupo instalado: $pkg"
       else
         log_warn "⚠️ Fallo al instalar grupo: $pkg"
       fi
+
     elif [[ "$pkg" == *'*'* ]]; then
       log_info "🔍 Instalando comodín: $pkg"
-      if sudo dnf install ${dnf_flags} "$pkg" &>> "$LOG_FILE"; then
+      if sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
         log_success "✅ Wildcard instalado: $pkg"
       else
         log_warn "⚠️ Fallo wildcard: $pkg"
       fi
+
     else
       log_info "📦 Instalando: $pkg"
-      if sudo dnf install ${dnf_flags} "$pkg" &>> "$LOG_FILE"; then
+      if sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
         log_success "✅ Instalado: $pkg"
       else
         log_warn "⚠️ Fallo paquete: $pkg"
@@ -215,16 +221,23 @@ install_packages() {
   return 0
 }
 
+
 log_section() {
   local title="$1"
-  local len=${#title}
+  local clean_title="${title//[$'\t\r\n']}"
+  local visual_width=${#clean_title}
+  local padding=4
+  local total_width=$((visual_width + padding))
   local border
-  border=$(printf '─%.0s' $(seq 1 $((len + 4))))
+  border=$(printf '─%.0s' $(seq 1 "$total_width"))
+
   echo -e "\n${BLUE}┌$border┐${NC}"
-  echo -e "${BLUE}│  $title  │${NC}"
+  echo -e "${BLUE}│  ${BOLD}${title}${NC}${BLUE}  │${NC}"
   echo -e "${BLUE}└$border┘${NC}\n"
-  echo "[SECTION] $(date +'%F %T')  $title" >> "$LOG_FILE"
+
+  [[ -f "$LOG_FILE" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SECTION] $title" >> "$LOG_FILE"
 }
+
 
 
 
@@ -250,31 +263,37 @@ remove_packages() {
 
   local total=${#packages[@]}
   local count=0
+  local dnf_flags=(-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true)
 
   for pkg in "${packages[@]}"; do
     ((count++))
-    draw_progress_bar "$count" "$total"
-    sleep 0.1
 
-    local dnf_flags="-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true"
+    if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
+      log_warn "⚠️ Entrada inválida: '$pkg' — omitida"
+      continue
+    fi
+
+    draw_progress_bar "$count" "$total"
 
     if [[ "$pkg" == @* ]]; then
       log_info "❌ Eliminando grupo: $pkg"
-      if sudo dnf group remove ${dnf_flags} "${pkg#@}" &>> "$LOG_FILE"; then
+      if sudo dnf group remove "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"; then
         log_success "✅ Grupo eliminado: $pkg"
       else
         log_warn "⚠️ Fallo al eliminar grupo: $pkg"
       fi
+
     elif [[ "$pkg" == *'*'* ]]; then
       log_info "❌ Eliminando comodín: $pkg"
-      if sudo dnf remove ${dnf_flags} "$pkg" &>> "$LOG_FILE"; then
+      if sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
         log_success "✅ Wildcard eliminado: $pkg"
       else
         log_warn "⚠️ Fallo wildcard: $pkg"
       fi
+
     else
       log_info "❌ Eliminando paquete: $pkg"
-      if sudo dnf remove ${dnf_flags} "$pkg" &>> "$LOG_FILE"; then
+      if sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
         log_success "✅ Eliminado: $pkg"
       else
         log_warn "⚠️ Fallo al eliminar: $pkg"
@@ -284,6 +303,7 @@ remove_packages() {
 
   return 0
 }
+
 
 
 add_repositories() {
