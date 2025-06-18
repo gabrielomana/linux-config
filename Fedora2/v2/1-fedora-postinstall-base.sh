@@ -666,61 +666,35 @@ install_grub_btrfs_from_source() {
   local repo_url="https://github.com/Antynea/grub-btrfs.git"
   local binary_path="/usr/bin/grub-btrfsd"
 
-  # ── Step 1: Install build dependencies ─────────────────────────────
   log_info "🔧 Installing build dependencies..."
   run_cmd sudo dnf install -y git make gcc grub2-tools grub2-tools-extra || return 1
 
-  # ── Step 2: Clone repo cleanly ─────────────────────────────────────
-  log_info "📥 Cloning grub-btrfs repository..."
+  log_info "📅 Cloning grub-btrfs repository..."
   run_cmd rm -rf "$workdir"
   run_cmd git clone --depth=1 "$repo_url" "$workdir" || return 1
   pushd "$workdir" >/dev/null || return 1
 
-  # ── Step 3: Patch Makefile for Fedora ──────────────────────────────
-  log_info "🩹 Patching Makefile for Fedora (/boot/grub2 compatibility)"
+  log_info "🦩 Patching Makefile for Fedora compatibility"
   run_cmd sed -i 's|/boot/grub/|/boot/grub2/|g' Makefile
   run_cmd sed -i 's|/boot/grub|/boot/grub2|g' Makefile
 
-  # ── Step 4: Export environment variables (for compatibility) ───────
   export GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
   export GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"
   export GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"
 
-  # ── Step 5: Build and install ──────────────────────────────────────
   log_info "⚙️ Building and installing grub-btrfs..."
-  run_cmd sudo make install || {
-    log_error "❌ make install failed"
-    popd >/dev/null
-    return 1
-  }
+  run_cmd sudo make install || { log_error "❌ make install failed"; popd >/dev/null; return 1; }
 
-  # ── Step 6: Verify binary ──────────────────────────────────────────
   if [[ ! -x "$binary_path" ]]; then
     log_error "❌ grub-btrfsd binary not found at $binary_path"
     popd >/dev/null
     return 1
   fi
 
-  # ── Step 7: Create fallback systemd units ──────────────────────────
   log_info "🔧 Creating grub-btrfs systemd units (fallback safe)"
-
   sudo tee /etc/systemd/system/grub-btrfsd.service > /dev/null <<EOF
 [Unit]
 Description=grub-btrfs daemon - detects BTRFS snapshots and updates GRUB
-After=multi-user.target
-
-[Service]
-ExecStart=$binary_path -r /mnt -g
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-  sudo tee /etc/systemd/system/grub-btrfsd@.service > /dev/null <<EOF
-[Unit]
-Description=grub-btrfs daemon for %i
 After=multi-user.target
 
 [Service]
@@ -743,24 +717,20 @@ PathModified=/run/timeshift/backup/timeshift-btrfs/snapshots
 WantedBy=multi-user.target
 EOF
 
-  # ── Step 8: Reload systemd and enable services ─────────────────────
   run_cmd sudo systemctl daemon-reexec
   run_cmd sudo systemctl daemon-reload
-
   run_cmd sudo systemctl enable --now grub-btrfsd.service
-  run_cmd sudo systemctl enable --now grub-btrfs.path
 
-  # ── Cleanup ────────────────────────────────────────────────────────
+  if [[ -d /run/timeshift ]]; then
+    run_cmd sudo systemctl enable --now grub-btrfs.path
+  else
+    log_warn "⚠️ Skipping grub-btrfs.path activation — Timeshift not initialized yet"
+  fi
+
   popd >/dev/null
   run_cmd rm -rf "$workdir"
-
   log_success "✅ grub-btrfs installed and services enabled"
 }
-
-
-
-
-
 
 
 
@@ -781,76 +751,6 @@ GRUB_BTRFS_SNAPSHOT_KERNEL_PARAMETERS="rootflags=subvol=@ quiet"
 EOF
 
   log_success "✅ grub-btrfs config saved to $config_file"
-}
-
-# === [21. Enable grub-btrfsd systemd monitoring services] ===
-setup_grub_btrfsd_services() {
-  log_section "🔧 Configuring grub-btrfs systemd monitoring services (fallback enabled)"
-
-  local unit_dir="/etc/systemd/system"
-
-  # grub-btrfsd.service
-  if [[ ! -f "$unit_dir/grub-btrfsd.service" ]]; then
-    log_warn "⚠️ grub-btrfsd.service not found — creating fallback"
-    sudo tee "$unit_dir/grub-btrfsd.service" > /dev/null <<'EOF'
-[Unit]
-Description=grub-btrfs daemon - detects BTRFS snapshots and updates GRUB
-After=multi-user.target
-
-[Service]
-ExecStart=/usr/bin/grub-btrfsd -r /mnt -g
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-  fi
-
-  # grub-btrfsd@.service (template version)
-  if [[ ! -f "$unit_dir/grub-btrfsd@.service" ]]; then
-    log_warn "⚠️ grub-btrfsd@.service not found — creating fallback"
-    sudo tee "$unit_dir/grub-btrfsd@.service" > /dev/null <<'EOF'
-[Unit]
-Description=grub-btrfs daemon for %i
-After=multi-user.target
-
-[Service]
-ExecStart=/usr/bin/grub-btrfsd -r /mnt -g
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-  fi
-
-  # grub-btrfs.path
-  if [[ ! -f "$unit_dir/grub-btrfs.path" ]]; then
-    log_warn "⚠️ grub-btrfs.path not found — creating fallback"
-    sudo tee "$unit_dir/grub-btrfs.path" > /dev/null <<'EOF'
-[Unit]
-Description=Monitor Timeshift snapshots for GRUB integration
-DefaultDependencies=no
-
-[Path]
-PathModified=/run/timeshift/.*/backup/timeshift-btrfs/snapshots
-
-[Install]
-WantedBy=multi-user.target
-EOF
-  fi
-
-  # Reload systemd
-  run_cmd sudo systemctl daemon-reexec
-  run_cmd sudo systemctl daemon-reload
-
-  # Enable and start services conditionally
-  run_cmd sudo systemctl enable --now grub-btrfsd.service || log_warn "⚠️ Failed to start grub-btrfsd.service"
-  run_cmd sudo systemctl enable --now grub-btrfsd@.service || log_warn "⚠️ Failed to start grub-btrfsd@.service"
-  run_cmd sudo systemctl enable --now grub-btrfs.path || log_warn "⚠️ Failed to start grub-btrfs.path"
-
-  log_success "✅ grub-btrfs monitoring system configured (fallback safe)"
 }
 
 
@@ -1009,6 +909,21 @@ regenerate_grub_config() {
   log_success "✅ GRUB configuration updated successfully"
 }
 
+
+enable_grub_btrfs_watchers_after_timeshift() {
+  log_section "🚀 Activating grub-btrfs.path after Timeshift initialization"
+
+  if [[ -d /run/timeshift ]]; then
+    run_cmd sudo systemctl restart grub-btrfsd.service
+    run_cmd sudo systemctl enable --now grub-btrfs.path
+    log_success "✅ grub-btrfs.path and daemon activated post-Timeshift"
+  else
+    log_warn "⚠️ Timeshift not ready. grub-btrfs.path activation skipped"
+  fi
+}
+
+
+
 main() {
   init_environment
   run_sudo
@@ -1030,7 +945,10 @@ main() {
   setup_grub_btrfsd_services || exit 1
   # setup_timeshift_config_btrfs || exit 1
   # create_first_timeshift_snapshot || exit 1
+  #enable_grub_btrfs_watchers_after_timeshift || exit 1
   # regenerate_grub_config || exit 1
+  #verify_grub_btrfs_status
+
 
   [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
 
