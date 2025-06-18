@@ -463,14 +463,16 @@ configure_security() {
   # Step 3: Enable common services in firewalld
   log_info "📡 Enabling standard services in firewalld"
   local services=(
-    ssh http https
-    samba samba-client
-    mdns ipp
-    dns dhcpv6-client
-    plex jellyfin
-    ftp sftp
-    bluetooth obex
-  )
+  ssh
+  http
+  https
+  samba
+  mdns
+  ipp
+  dhcpv6-client
+  ftp
+)
+
   local idx=0
   local total_services=${#services[@]}
 
@@ -655,30 +657,48 @@ EOF
   log_success "✅ Network hardening completed: fail2ban + SSH + firewall rules"
 }
 # === [19. Install grub-btrfs from COPR repo] ===
-install_grub_btrfs_from_copr() {
-  log_section "📦 Installing grub-btrfs from COPR (kylegospo)"
+install_grub_btrfs_from_source() {
+  log_section "📦 Installing grub-btrfs from GitHub (Antynea repo)"
 
-  if ! sudo dnf repolist | grep -q "kylegospo-grub-btrfs"; then
-    run_cmd sudo dnf copr enable -y kylegospo/grub-btrfs || {
-      log_error "❌ Failed to enable COPR repository"
-      return 1
-    }
-  else
-    log_info "✅ COPR repository already enabled"
-  fi
+  local temp_dir="/tmp/grub-btrfs-src"
+  local repo_url="https://github.com/Antynea/grub-btrfs.git"
 
-  run_cmd sudo dnf update -y || {
-    log_error "❌ System update failed"
+  # Install required build dependencies
+  log_info "🔧 Installing build dependencies..."
+  sudo dnf install -y git make automake gcc grub2 grub2-tools systemd-devel btrfs-progs &>/dev/null
+  check_error "❌ Failed to install build dependencies"
+
+  # Clone and compile
+  log_info "📥 Cloning grub-btrfs repository..."
+  rm -rf "$temp_dir"
+  git clone "$repo_url" "$temp_dir" || {
+    log_error "❌ Failed to clone grub-btrfs repo"
     return 1
   }
 
-  run_cmd sudo dnf install -y grub-btrfs || {
-    log_error "❌ Failed to install grub-btrfs or its extensions"
+  log_info "⚙️ Building and installing grub-btrfs from source..."
+  cd "$temp_dir"
+  sudo make install || {
+    log_error "❌ Build or install failed"
     return 1
   }
 
-  log_success "✅ grub-btrfs and extensions installed"
+  log_info "🧼 Cleaning up temporary directory..."
+  rm -rf "$temp_dir"
+
+  # Enable systemd units
+  log_info "🛠️ Enabling grub-btrfsd and grub-btrfs.path..."
+  sudo systemctl daemon-reexec
+  sudo systemctl daemon-reload
+
+  sudo systemctl enable grub-btrfsd.service grub-btrfs.path
+  sudo systemctl start grub-btrfsd.service grub-btrfs.path || {
+    log_warn "⚠️ grub-btrfsd or grub-btrfs.path failed to start"
+  }
+
+  log_success "✅ grub-btrfs successfully compiled and enabled from source"
 }
+
 
 # === [20. Configure grub-btrfs default settings] ===
 configure_grub_btrfs_default_config() {
@@ -874,7 +894,7 @@ main() {
   configure_security
   configure_network_security
 
-  install_grub_btrfs_from_copr || exit 1
+  install_grub_btrfs_from_source  || exit 1
   configure_grub_btrfs_default_config || exit 1
   setup_grub_btrfsd_services || exit 1
   setup_timeshift_config_btrfs || exit 1
