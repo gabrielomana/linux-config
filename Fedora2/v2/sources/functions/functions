@@ -171,6 +171,16 @@ draw_progress_bar() {
   [[ "$current" -eq "$total" ]] && echo ""
 }
 
+try_cmd() {
+  local desc="$1"; shift
+  if "$@"; then
+    log_success "✔️ $desc completado"
+  else
+    log_warn "⚠️ $desc falló: $*"
+  fi
+}
+
+
 #===============================================================================
 # Funciones de instalación y eliminación de paquetes
 #===============================================================================
@@ -324,10 +334,10 @@ remove_packages() {
 
 
 add_repositories() {
-  log_section "Agregando y configurando repositorios adicionales"
+  log_section "🌐 Agregando y configurando repositorios adicionales"
 
   declare -A repos=(
-    ["RPM Fusion"]="sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+    ["RPM Fusion"]="sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-\$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-\$(rpm -E %fedora).noarch.rpm"
     ["WebApp Manager"]="sudo dnf -y copr enable refi64/webapp-manager"
     ["Brave Repo"]="sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/"
     ["Brave GPG"]="sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc"
@@ -335,41 +345,42 @@ add_repositories() {
     ["OnlyOffice"]="sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm"
     ["Personal COPR"]="sudo dnf -y copr enable ayoungdukie/Personal_Repo"
     ["MS GPG Key"]="sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc"
-    ["VSCode Repo"]="sudo sh -c 'cat > /etc/yum.repos.d/vscode.repo <<EOF
+    ["VSCode Repo"]="sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<EOF
 [code]
 name=Visual Studio Code
 baseurl=https://packages.microsoft.com/yumrepos/vscode
 enabled=1
 gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
-EOF'"
+EOF"
     ["AppImageLauncher COPR"]="sudo dnf -y copr enable pses/appimagelauncher"
   )
 
-  for name in "${!repos[@]}"; do
-    log_info "Configurando repositorio: $name"
-    if ! eval "${repos[$name]}" &>> "$LOG_FILE"; then
-      log_warn "Fallo al configurar repositorio: $name. Se continúa con los demás."
+  local total=${#repos[@]}
+  local count=0
+
+  for name in "RPM Fusion" "WebApp Manager" "Brave Repo" "Brave GPG" "Balena Etcher" "OnlyOffice" "Personal COPR" "MS GPG Key" "VSCode Repo" "AppImageLauncher COPR"; do
+    ((count++))
+    draw_progress_bar "$count" "$total"
+    log_info "🔧 Configurando repositorio: $name"
+    eval "${repos[$name]}" &>> "$LOG_FILE"
+    if [[ $? -eq 0 ]]; then
+      log_success "✅ Repositorio '$name' configurado correctamente."
     else
-      log_info "Repositorio '$name' configurado correctamente."
+      log_warn "⚠️ Fallo al configurar repositorio: $name. Se continúa con los demás."
     fi
   done
 
-  # Actualizar y regenerar caché
-  log_info "Actualizando caché de DNF..."
-  if ! sudo dnf check-update &>> "$LOG_FILE"; then
-    log_warn "Fallo al ejecutar check-update. Continuando."
-  fi
+  draw_progress_bar "$total" "$total"
+  log_info "🔄 Actualizando caché de DNF..."
 
-  if ! sudo dnf makecache --refresh &>> "$LOG_FILE"; then
-    log_warn "Fallo al regenerar caché de repositorios."
-  else
-    log_info "Caché de DNF actualizada correctamente."
-  fi
+  try_cmd "dnf check-update" sudo dnf check-update
+  try_cmd "dnf makecache" sudo dnf makecache --refresh
 
-  log_success "Repositorios configurados correctamente."
+  log_success "🗂️ Repositorios configurados y caché actualizada"
   return 0
 }
+
 
 configure_hardware() {
   show_section "Configurando hardware del sistema"

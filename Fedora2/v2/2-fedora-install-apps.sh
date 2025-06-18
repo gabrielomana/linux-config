@@ -18,16 +18,25 @@ REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME=$(eval echo "~$REAL_USER")
 
 LOG_DIR="$REAL_HOME/fedora_logs"
-TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-LOG_FILE="$LOG_DIR/install_full_${TIMESTAMP}.log"
-ERR_FILE="$LOG_DIR/install_error_${TIMESTAMP}.log"
+DATESTAMP=$(date '+%Y%m%d-%H%M')
+LOG_FILE="$LOG_DIR/install_full_${DATESTAMP}.log"
+ERR_FILE="$LOG_DIR/install_error_${DATESTAMP}.log"
+
+# Preguntar si se desea eliminar logs anteriores
+if [[ -d "$LOG_DIR" ]]; then
+  read -rp $'\e[1;34m¿Deseas eliminar logs anteriores en "$LOG_DIR"? [s/N]: \e[0m' clear_logs
+  if [[ "$clear_logs" =~ ^[sS]$ ]]; then
+    find "$LOG_DIR" -type f -name 'install_*.log' -delete
+    echo "[INFO]  $(date '+%F %T')  Logs anteriores eliminados en $LOG_DIR"
+  fi
+fi
 
 mkdir -p "$LOG_DIR"
 touch "$LOG_FILE" "$ERR_FILE"
 
 # ───── Redirección global: consola + logs con filtrado inteligente ─────
 exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
-     2> >(tee >(grep --line-buffered -E "^\[WARN|^\[ERROR|^\[❌" >> "$ERR_FILE") > /dev/tty)
+     2> >(tee >(grep --line-buffered -E "^\[WARN|^\[ERROR|^\[❗" >> "$ERR_FILE") > /dev/tty)
 
 # ───── Logging estándar ─────
 log_info() {
@@ -57,11 +66,13 @@ log_success() {
 error_handler() {
   local exit_code=$?
   local line_no=$1
-  log_error "❌ Error en la línea $line_no. Código de salida: $exit_code. Abortando $SCRIPT_NAME"
+  log_error "❗ Error en la línea $line_no. Código de salida: $exit_code. Abortando $SCRIPT_NAME"
   exit "$exit_code"
 }
 
 trap 'error_handler $LINENO' ERR
+
+
 
 # ───── Validación de comandos base ─────
 check_dependency() {
@@ -161,7 +172,7 @@ validate_package_lists
 log_success "Todas las listas han sido validadas correctamente."
 
 main() {
-  log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
+#   log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
 
 #   log_info "🔹 Instalando KDE Plasma..."
 #   install_kde || check_error $? "❌ Falló la instalación de KDE Plasma"
