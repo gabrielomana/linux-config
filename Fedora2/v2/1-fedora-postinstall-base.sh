@@ -51,12 +51,10 @@ ERR_FILE="$LOG_DIR/error_$TIMESTAMP.log"
 ERROR_COUNT=0
 
 # Essential packages list
-declare -a ESSENTIAL_PACKAGES=(
-  vim nano git curl wget htop
+declare -a ESSENTIAL_PACKAGES=(vim nano git curl wget htop
   neofetch unzip p7zip p7zip-plugins
   tar gzip bzip2
-  zsh bash-completion
-)
+  zsh bash-completion)
 
 # === [2. Colored Logging Utilities] ===
 if [[ -t 1 ]]; then
