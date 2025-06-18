@@ -919,12 +919,12 @@ main() {
   # configure_security
   # configure_network_security
 
-  install_grub_btrfs_from_source  || exit 1
-  configure_grub_btrfs_default_config || exit 1
-  setup_grub_btrfsd_services || exit 1
-  setup_timeshift_config_btrfs || exit 1
-  # create_initial_timeshift_snapshot || exit 1
-  # regenerate_grub_config || exit 1
+  # install_grub_btrfs_from_source  || exit 1
+  # configure_grub_btrfs_default_config || exit 1
+  # setup_grub_btrfsd_services || exit 1
+  # setup_timeshift_config_btrfs || exit 1
+  create_initial_timeshift_snapshot || exit 1
+  regenerate_grub_config || exit 1
 
   [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
 
