@@ -686,7 +686,7 @@ configure_btrfs_volumes() {
     ["/var/log"]="@log"
     ["/var/tmp"]="@var_tmp"
     ["/tmp"]="@tmp"
-    ["/timeshift"]="@timeshift"
+    ["/.snapshots"]="@timeshift"
   )
 
   for mount_point in "${!subvolumes[@]}"; do
@@ -1035,24 +1035,24 @@ main() {
 
   [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
 
-  configure_dnf
-  configure_dnf_automatic
-  change_hostname
+  # configure_dnf
+  # configure_dnf_automatic
+  # change_hostname
 
-  install_essential_packages
-  configure_flatpak_repositories
+  # install_essential_packages
+  # configure_flatpak_repositories
 
-  configure_security
-  configure_network_security
+  # configure_security
+  # configure_network_security
 
   configure_btrfs_volumes
-  install_grub_btrfs_from_source  || exit 1
-  configure_grub_btrfs_default_config || exit 1
-  setup_timeshift_config_btrfs || exit 1
-  create_first_timeshift_snapshot || exit 1
-  enable_grub_btrfs_watchers_after_timeshift || exit 1
-  regenerate_grub_config || exit 1
-  verify_grub_btrfs_status
+  # install_grub_btrfs_from_source  || exit 1
+  # configure_grub_btrfs_default_config || exit 1
+  # setup_timeshift_config_btrfs || exit 1
+  # create_first_timeshift_snapshot || exit 1
+  # enable_grub_btrfs_watchers_after_timeshift || exit 1
+  # regenerate_grub_config || exit 1
+   verify_grub_btrfs_status
 
 
   [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
