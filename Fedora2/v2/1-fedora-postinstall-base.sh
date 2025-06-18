@@ -696,6 +696,8 @@ install_grub_btrfs_from_source() {
       return 1
   }
 
+  install_grub_btrfsd_units_if_present
+
   # Clean up
   log_info "🧼 Cleaning up..."
   rm -rf "$temp_dir"
@@ -738,44 +740,52 @@ EOF
 setup_grub_btrfsd_services() {
   log_section "🔧 Configuring grub-btrfs systemd monitoring"
 
-  local path_unit="/etc/systemd/system/grub-btrfs.path"
-
-  # Function to check unit existence
-  unit_exists() {
-    systemctl list-unit-files | grep -q "^$1"
-  }
-
-  # Create simplified static .path unit (uses /.snapshots directly)
-  run_cmd sudo tee "$path_unit" > /dev/null <<'EOF'
-[Unit]
-Description=Monitor /.snapshots for grub-btrfs
-[Path]
-PathModified=/.snapshots
-[Install]
-WantedBy=multi-user.target
-EOF
-
+  # Ensure systemd is refreshed
   run_cmd sudo systemctl daemon-reexec
   run_cmd sudo systemctl daemon-reload
 
-  # Enable static grub-btrfs.path
-  if unit_exists "grub-btrfs.path"; then
-    run_cmd sudo systemctl enable grub-btrfs.path
-    run_cmd sudo systemctl start grub-btrfs.path
+  # === Enable grub-btrfsd.service if available
+  if systemctl list-unit-files | grep -q '^grub-btrfsd.service'; then
+    run_cmd sudo systemctl enable --now grub-btrfsd.service || \
+      log_warn "⚠️ grub-btrfsd.service failed to start"
   else
-    log_warn "⚠️ grub-btrfs.path unit not found"
+    log_warn "⚠️ grub-btrfsd.service not found – not installed or not included in this version"
   fi
 
-  # Optional: enable grub-btrfsd.service only if present
-  if unit_exists "grub-btrfsd.service"; then
-    run_cmd sudo systemctl enable grub-btrfsd.service
-    run_cmd sudo systemctl start grub-btrfsd.service || log_warn "⚠️ grub-btrfsd.service failed to start"
+  # === Enable grub-btrfsd@-.service if available
+  if systemctl list-unit-files | grep -q '^grub-btrfsd@.service'; then
+    run_cmd sudo systemctl enable --now grub-btrfsd@-.service || \
+      log_warn "⚠️ grub-btrfsd@-.service failed to start"
   else
-    log_warn "⚠️ grub-btrfsd.service not found (may not be shipped with this package)"
+    log_warn "⚠️ grub-btrfsd@-.service not found – not installed or not included in this version"
   fi
 
-  log_success "✅ grub-btrfs monitoring system configured"
+  # === Enable grub-btrfs.path if available
+  if systemctl list-unit-files | grep -q '^grub-btrfs.path'; then
+    run_cmd sudo systemctl enable --now grub-btrfs.path || \
+      log_warn "⚠️ grub-btrfs.path failed to start"
+  else
+    log_warn "⚠️ grub-btrfs.path not found – no dynamic watcher will run"
+  fi
+
+  log_success "✅ grub-btrfs monitoring system configured (conditional mode)"
 }
+
+install_grub_btrfsd_units_if_present() {
+  local source_dir="/tmp/grub-btrfs-src"
+
+  for unit in grub-btrfsd.service grub-btrfsd@.service grub-btrfs.path; do
+    if [[ -f "$source_dir/$unit" ]]; then
+      log_info "📄 Installing unit $unit manually"
+      run_cmd sudo cp "$source_dir/$unit" /etc/systemd/system/
+    fi
+  done
+
+  run_cmd sudo systemctl daemon-reexec
+  run_cmd sudo systemctl daemon-reload
+}
+
+
 
 
 # === [22. Configure Timeshift in BTRFS mode at /.snapshots] ===
