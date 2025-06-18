@@ -864,22 +864,22 @@ main() {
 
   [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
 
-  #configure_dnf
-  #configure_dnf_automatic
-  #change_hostname
+  configure_dnf
+  configure_dnf_automatic
+  change_hostname
 
-  #install_essential_packages
-  #configure_flatpak_repositories
+  install_essential_packages
+  configure_flatpak_repositories
 
-  #configure_security
-  #configure_network_security
+  configure_security
+  configure_network_security
 
-  #install_grub_btrfs_from_copr || exit 1
-  #configure_grub_btrfs_default_config || exit 1
-  #setup_grub_btrfsd_services || exit 1
-  #setup_timeshift_config_btrfs || exit 1
-  create_initial_timeshift_snapshot || exit 1
-  regenerate_grub_config || exit 1
+  install_grub_btrfs_from_copr || exit 1
+  configure_grub_btrfs_default_config || exit 1
+  setup_grub_btrfsd_services || exit 1
+  setup_timeshift_config_btrfs || exit 1
+  # create_initial_timeshift_snapshot || exit 1
+  # regenerate_grub_config || exit 1
 
   [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
 
@@ -891,7 +891,7 @@ main() {
     log_warn "⚠️ Script finished with $ERROR_COUNT error(s). Review: $ERR_FILE"
   fi
 
-  final_cleanup_and_reboot
+  #final_cleanup_and_reboot
 }
 
 # === [ Entry Point ] ===
