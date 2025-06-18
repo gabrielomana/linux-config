@@ -806,74 +806,66 @@ setup_timeshift_config_btrfs() {
     }
   fi
 
+  # Prepare snapshot directory and config folder
   run_cmd sudo mkdir -p "$snapshots_dir"
   run_cmd sudo chown root:root "$snapshots_dir"
   run_cmd sudo mkdir -p "$config_dir"
 
-  device=$(findmnt -no SOURCE /)
-  uuid=$(findmnt -no UUID /)
-
-  if [[ -z "$device" || -z "$uuid" ]]; then
-    log_error "❌ Failed to detect root device or UUID"
-    return 1
+  # Launch timeshift-gtk with original user to auto-generate config
+  log_info "🧪 Launching Timeshift GTK briefly to stabilize config..."
+  if [[ -n "$REAL_USER" && "$REAL_USER" != "root" ]]; then
+    sudo -u "$REAL_USER" nohup timeshift-gtk >/dev/null 2>&1 &
+  else
+    nohup timeshift-gtk >/dev/null 2>&1 &
+  fi
+  local gtk_pid=$!
+  sleep 5
+  if ps -p "$gtk_pid" &>/dev/null; then
+    sudo kill "$gtk_pid"
+    log_info "🧹 Timeshift GTK closed after initialization"
   fi
 
-  run_cmd sudo tee "$config_file" > /dev/null <<EOF
-{
-  "backup_device_uuid": "$uuid",
-  "parent_device_uuid": "",
-  "do_first_run": "false",
-  "btrfs_mode": "true",
-  "include_btrfs_home_for_backup": "false",
-  "include_btrfs_home_for_restore": "false",
-  "stop_cron_emails": "true",
-  "schedule_monthly": "true",
-  "schedule_weekly": "true",
-  "schedule_daily": "true",
-  "schedule_hourly": "false",
-  "schedule_boot": "false",
-  "count_monthly": 2,
-  "count_weekly": 3,
-  "count_daily": 5,
-  "count_hourly": 0,
-  "count_boot": 0,
-  "snapshot_device": "$device",
-  "snapshot_mount_path": "$snapshots_dir",
-  "date_format": "%Y-%m-%d %H:%M:%S",
-  "exclude": [],
-  "exclude-apps": []
-}
-EOF
+  # Validate that config was generated
+  if [[ ! -f "$config_file" ]]; then
+    log_error "❌ timeshift.json was not generated. Aborting Timeshift setup"
+    return 1
+  fi
 
   log_success "✅ Timeshift configured in BTRFS mode with target $snapshots_dir"
 }
 
 
-create_initial_timeshift_snapshot() {
+
+create_first_timeshift_snapshot() {
   log_section "🕒 Ensuring Timeshift config is valid and creating first snapshot"
 
-  if ! command -v timeshift &>/dev/null; then
-    log_error "❌ Timeshift is not installed. Cannot create snapshot."
+  # Verificación de config JSON
+  if [[ ! -f /etc/timeshift/timeshift.json ]]; then
+    log_warn "⚠️ timeshift.json not found. Timeshift might not be properly configured yet"
     return 1
   fi
 
-  # Asegurar que el archivo de configuración JSON exista
-  if [[ ! -f /etc/timeshift/timeshift.json ]]; then
-    log_warn "⚠️ Timeshift configuration file missing. Re-generating..."
-    setup_timeshift_config_btrfs || return 1
+  # Lanzar GUI para estabilizar estado interno
+  log_info "✴️ Starting Timeshift GTK briefly to stabilize config..."
+  if command -v timeshift-gtk &>/dev/null; then
+    sudo -u "$REAL_USER" timeshift-gtk >/dev/null 2>&1 &
+    local gtk_pid=$!
+    sleep 5
+    if ps -p "$gtk_pid" &>/dev/null; then
+      sudo kill "$gtk_pid"
+    fi
+    log_info "✔️ Timeshift GTK closed after stabilization"
+  else
+    log_warn "⚠️ timeshift-gtk not found. Continuing anyway"
   fi
 
-  # Validar si ya hay snapshots
+  # Verificar si existen snapshots
   if sudo timeshift --list | grep -q "Snapshot"; then
-    log_info "✔️ Existing Timeshift snapshot(s) found. Skipping creation."
+    log_info "✔️ Snapshots already exist. Skipping creation."
     return 0
   fi
 
-  # Workaround: ejecutar la GUI durante 5 segundos para generar estado inicial
-  log_info "⚙️ Starting Timeshift GTK briefly to stabilize config..."
-  sudo timeshift-gtk & sleep 5 && sudo killall timeshift-gtk
-
-  # Crear snapshot ahora que la configuración es válida
+  # Crear snapshot
   run_cmd sudo timeshift --create --comments "Initial system snapshot" --tags D || {
     log_error "❌ Could not create Timeshift snapshot. Possibly corrupted state."
     return 1
@@ -881,6 +873,7 @@ create_initial_timeshift_snapshot() {
 
   log_success "✅ Initial Timeshift snapshot created successfully"
 }
+
 
 
 
@@ -909,22 +902,22 @@ main() {
 
   [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
 
-  # configure_dnf
-  # configure_dnf_automatic
-  # change_hostname
+  configure_dnf
+  configure_dnf_automatic
+  change_hostname
 
-  # install_essential_packages
-  # configure_flatpak_repositories
+  install_essential_packages
+  configure_flatpak_repositories
 
-  # configure_security
-  # configure_network_security
+  configure_security
+  configure_network_security
 
-  # install_grub_btrfs_from_source  || exit 1
-  # configure_grub_btrfs_default_config || exit 1
-  # setup_grub_btrfsd_services || exit 1
+  install_grub_btrfs_from_source  || exit 1
+  configure_grub_btrfs_default_config || exit 1
+  setup_grub_btrfsd_services || exit 1
   # setup_timeshift_config_btrfs || exit 1
-  create_initial_timeshift_snapshot || exit 1
-  regenerate_grub_config || exit 1
+  # create_first_timeshift_snapshot || exit 1
+  # regenerate_grub_config || exit 1
 
   [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
 
