@@ -13,10 +13,7 @@ p7zip
 unzip
 bat
 v4l2loopback-utils
-neofetch
 cups-pdf
-grub-customizer
-tesseract-spa
 gimagereader
 timeshift
 appimagelauncher
@@ -30,11 +27,14 @@ flameshot
 xclip
 xsel
 tesseract-langpack-spa
-liblzo2-2
 gcc
 gcc-c++
 make
 pkg-config
 cups-libs
 lzo
+fastfetch
+bat
+ripgrep
+fd-find
 @development-tools

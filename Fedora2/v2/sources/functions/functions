@@ -337,34 +337,58 @@ add_repositories() {
   log_section "🌐 Agregando y configurando repositorios adicionales"
 
   declare -A repos=(
+    # RPM Fusion
     ["RPM Fusion"]="sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-\$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-\$(rpm -E %fedora).noarch.rpm"
+
+    # WebApp Manager
     ["WebApp Manager"]="sudo dnf -y copr enable refi64/webapp-manager"
-    ["Brave Repo"]="sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/"
-    ["Brave GPG"]="sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc"
-    ["Balena Etcher"]="curl -1sLf 'https://dl.cloudsmith.io/public/balena/etcher/setup.rpm.sh' | sudo -E bash"
-    ["OnlyOffice"]="sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm"
+
+    # Brave Browser (incluye importación de GPG key)
+    ["Brave Repo"]="
+      sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc &&
+      sudo tee /etc/yum.repos.d/brave-browser.repo > /dev/null <<EOF
+[brave-browser]
+name=Brave Browser
+baseurl=https://brave-browser-rpm-release.s3.brave.com/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+EOF
+"
+
+    # OnlyOffice
+    ["OnlyOffice"]="
+      sudo rpm --import https://download.onlyoffice.com/repo/onlyoffice.key &&
+      sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
+    "
+
+    # Personal COPR
     ["Personal COPR"]="sudo dnf -y copr enable ayoungdukie/Personal_Repo"
-    ["MS GPG Key"]="sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc"
-    ["VSCode Repo"]="sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<EOF
+
+    # Microsoft GPG + VSCode Repo
+    ["VSCode Repo"]="
+      sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc &&
+      sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<EOF
 [code]
 name=Visual Studio Code
 baseurl=https://packages.microsoft.com/yumrepos/vscode
 enabled=1
 gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
-EOF"
-    ["AppImageLauncher COPR"]="sudo dnf -y copr enable pses/appimagelauncher"
+EOF
+"
   )
 
   local total=${#repos[@]}
   local count=0
 
-  for name in "RPM Fusion" "WebApp Manager" "Brave Repo" "Brave GPG" "Balena Etcher" "OnlyOffice" "Personal COPR" "MS GPG Key" "VSCode Repo" "AppImageLauncher COPR"; do
+  # Lista secuencial explícita para ejecución ordenada
+  for name in "RPM Fusion" "WebApp Manager" "Brave Repo" "OnlyOffice" "Personal COPR" "VSCode Repo"; do
     ((count++))
     draw_progress_bar "$count" "$total"
     log_info "🔧 Configurando repositorio: $name"
-    eval "${repos[$name]}" &>> "$LOG_FILE"
-    if [[ $? -eq 0 ]]; then
+    
+    if eval "${repos[$name]}" &>> "$LOG_FILE"; then
       log_success "✅ Repositorio '$name' configurado correctamente."
     else
       log_warn "⚠️ Fallo al configurar repositorio: $name. Se continúa con los demás."
@@ -380,6 +404,7 @@ EOF"
   log_success "🗂️ Repositorios configurados y caché actualizada"
   return 0
 }
+
 
 
 configure_hardware() {
@@ -503,40 +528,6 @@ done
   fi
 }
 
-# ─── Configurar gestor de sesión SDDM ─────────────────────────────────────
-configure_sddm() {
-  log_info "Habilitando SDDM como gestor de sesiones..."
-  run_cmd "sudo systemctl enable sddm" \
-    "SDDM habilitado correctamente" \
-    "Fallo al habilitar SDDM"
-
-  run_cmd "sudo systemctl set-default graphical.target" \
-    "Target gráfico establecido como predeterminado" \
-    "Fallo al establecer graphical.target"
-}
-
-# ─── Configurar NumLock en SDDM ───────────────────────────────────────────
-set_numlock_sddm() {
-  log_info "Configurando NumLock en SDDM..."
-
-  local config_file="/etc/sddm.conf"
-
-  if [ -f "$config_file" ]; then
-    if grep -q "^\[General\]" "$config_file"; then
-      sudo sed -i '/^\[General\]/,/^\[/ s/^Numlock=.*/Numlock=on/' "$config_file" || \
-      echo "Numlock=on" | sudo tee -a "$config_file" > /dev/null
-    else
-      echo -e "\n[General]\nNumlock=on" | sudo tee -a "$config_file" > /dev/null
-    fi
-  else
-    echo -e "[General]\nNumlock=on" | sudo tee "$config_file" > /dev/null
-  fi
-
-  run_cmd "sudo systemctl daemon-reexec" \
-    "SDDM recargado correctamente" \
-    "Fallo al recargar SDDM (puede requerir reinicio)"
-}
-
 clean_kde_bloatware() {
   log_section "Eliminando bloatware de KDE: $LIST_KDE_PLASMA"
 
@@ -591,7 +582,7 @@ install_kde() {
 
   log_info "Iniciando instalación de paquetes base de KDE Plasma"
   install_packages "$LIST_KDE_PLASMA"
-
+  configure_sddm
   log_info "Habilitando SDDM como gestor de sesiones"
   run_cmd "sudo systemctl enable sddm" \
     "SDDM habilitado correctamente" \
@@ -747,34 +738,6 @@ reload_plasma() {
   fi
 }
 
-configure_kwrite_shortcuts() {
-  local file="$HOME/.config/kglobalshortcutsrc"
-
-  log_info "Escribiendo atajos con kwriteconfig5"
-
-  # Grupo Flameshot
-  kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Capture      "Print,none,Tomar captura de pantalla"        &&   kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Configure    "Ctrl+Shift+Print,none,Configurar"            &&   kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Launcher     "Ctrl+Print,none,Open launcher"              &&   kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key _k_friendly_name "Flameshot"                              &&   kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key _launch      "none,none,Flameshot"                          || log_error "No se pudieron escribir los atajos de Flameshot"
-
-  # Atajo global simple: Print → flameshot gui
-  kwriteconfig5 --file "$file" --group PlasmaShortcuts --key Print "flameshot gui"   || log_error "No se pudo escribir el atajo global de Plasma"
-}
-
-create_menu_shortcut() {
-  local script_path="${XDG_DESKTOP_DIR:-$HOME/Desktop}/flameshot_ocr.sh"
-  local desktop_entry="$HOME/.local/share/applications/flameshot-ocr.desktop"
-
-  mkdir -p "$(dirname "$desktop_entry")"
-  cat > "$desktop_entry" <<EOF
-[Desktop Entry]
-Name=Flameshot OCR
-Exec=${script_path}
-Icon=flameshot
-Type=Application
-Categories=Utility;
-EOF
-  log_success "Acceso directo creado en el menú: $desktop_entry"
-}
-
 reload_plasma() {
   if command -v qdbus &>/dev/null; then
     qdbus org.kde.KWin /KWin reconfigure       && log_success "Atajos recargados en Plasma"       || log_warn "Falló recarga por D-Bus; quizás requieras logout/login"
@@ -834,15 +797,15 @@ install_system_utilities() {
     log_info "electron-store ya está instalado"
   fi
 
-  if ! command -v rustc &>/dev/null; then
-    log_info "Instalando Rust"
-    run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" "Rust instalado correctamente" "Error al instalar Rust"
-    [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
-    [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]] && export PATH="$HOME/.cargo/bin:$PATH"
-  else
-    log_info "Rust ya está instalado. Verificando actualizaciones..."
-    run_cmd "rustup update" "Rust actualizado" "Error al actualizar Rust"
-  fi
+  # if ! command -v rustc &>/dev/null; then
+  #   log_info "Instalando Rust"
+  #   run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" "Rust instalado correctamente" "Error al instalar Rust"
+  #   [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
+  #   [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]] && export PATH="$HOME/.cargo/bin:$PATH"
+  # else
+  #   log_info "Rust ya está instalado. Verificando actualizaciones..."
+  #   run_cmd "rustup update" "Rust actualizado" "Error al actualizar Rust"
+  # fi
 
   run_cmd "sudo dnf -y group install development-tools c-development" "Grupos de desarrollo instalados" "Error al instalar grupos de desarrollo"
   log_info "Instalando utilidades generales desde lista"
@@ -872,62 +835,69 @@ install_system_utilities() {
 }
 
 install_cargo_tools() {
-  log_section "🔧 Instalación de herramientas vía Cargo (Rust)"
+log_section "🔧 Instalación de herramientas vía Cargo (Rust)"
 
-  if ! command -v cargo &>/dev/null; then
-    log_info "Rust/Cargo no encontrados. Procediendo a instalación de Rust..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y &>> "$LOG_FILE"
-    if [[ -f "$HOME/.cargo/env" ]]; then
-      source "$HOME/.cargo/env"
-      export PATH="$HOME/.cargo/bin:$PATH"
-    fi
+# Verifica si cargo está disponible, de lo contrario instala Rust
+if ! command -v cargo &>/dev/null; then
+  log_info "Rust/Cargo no encontrados. Procediendo a instalación de Rust..."
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y &>> "$LOG_FILE"
+
+  if [[ -f "$HOME/.cargo/env" ]]; then
+    source "$HOME/.cargo/env"
+    export PATH="$HOME/.cargo/bin:$PATH"
+  fi
+fi
+
+# Validaciones post-instalación
+if ! command -v rustup &>/dev/null; then
+  log_error "❌ rustup no se instaló correctamente. Abortando instalación de herramientas Cargo."
+  return 1
+fi
+
+if ! command -v cargo &>/dev/null; then
+  log_error "❌ Cargo no está disponible tras instalación. Verifica si \$HOME/.cargo/bin está en el PATH."
+  return 1
+fi
+
+# Lista de herramientas a instalar vía Cargo
+local tools=(cargo-update topgrade ripgrep fd-find)
+log_info "🛠️ Instalando herramientas CLI desde crates.io"
+local total=${#tools[@]}
+local count=0
+
+for tool in "${tools[@]}"; do
+  ((count++))
+  draw_progress_bar "$count" "$total"
+  sleep 0.1
+
+  if command -v "$tool" &>/dev/null; then
+    log_info "🔹 $tool ya está instalado. Omitiendo."
+    continue
+  elif [[ -x "$HOME/.cargo/bin/$tool" ]]; then
+    log_warn "🔍 $tool está instalado en ~/.cargo/bin pero no está en PATH"
+    continue
   fi
 
-  if ! command -v rustup &>/dev/null; then
-    log_error "❌ rustup no se instaló correctamente. Abortando instalación de Cargo."
-    return 1
-  fi
-
-  if ! command -v cargo &>/dev/null; then
-    log_error "Cargo no está disponible después de la instalación. Verifica si \$HOME/.cargo/bin está en el PATH."
-    return 1
-  fi
-
-  local tools=(cargo-update topgrade batbox)
-  log_info "🛠️ Instalando herramientas CLI desde crates.io"
-  local total=${#tools[@]}
-  local count=0
-
-  for tool in "${tools[@]}"; do
-    ((count++))
-    draw_progress_bar "$count" "$total"
-    sleep 0.1
-
-    if command -v "$tool" &>/dev/null; then
-      log_info "🔹 $tool ya está instalado. Omitiendo."
-      continue
-    elif [[ -x "$HOME/.cargo/bin/$tool" ]]; then
-      log_warn "🔍 $tool está instalado en ~/.cargo/bin pero no está en PATH"
-      continue
-    fi
-
-    log_info "📦 Instalando $tool con Cargo..."
-    if cargo install --locked "$tool" &>> "$LOG_FILE"; then
-      if command -v "$tool" &>/dev/null || [[ -x "$HOME/.cargo/bin/$tool" ]]; then
-        log_success "✔️ $tool instalado correctamente"
-      else
-        log_warn "⚠️ $tool instalado pero no detectado en PATH."
-      fi
+  log_info "📦 Instalando $tool con Cargo..."
+  if cargo install --locked "$tool" &>> "$LOG_FILE"; then
+    if command -v "$tool" &>/dev/null || [[ -x "$HOME/.cargo/bin/$tool" ]]; then
+      log_success "✔️ $tool instalado correctamente"
     else
-      log_warn "⚠️ Fallo al instalar $tool con Cargo"
+      log_warn "⚠️ $tool instalado pero no detectado en PATH."
     fi
-  done
-
-  if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
-    log_warn "Agrega $HOME/.cargo/bin a tu PATH para usar los binarios de Cargo"
+  else
+    log_warn "⚠️ Fallo al instalar $tool con Cargo"
   fi
+done
 
-  log_success "🎯 Instalación de herramientas vía Cargo completada"
+# PATH Check
+if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
+  log_warn "⚠️ \$HOME/.cargo/bin no está en tu PATH. Añádelo con:"
+  log_info "echo 'export PATH=\"\$HOME/.cargo/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+fi
+
+log_success "🎯 Instalación de herramientas vía Cargo completada"
+
 }
 
 
@@ -944,8 +914,8 @@ install_extra_apps() {
   install_packages "${extra_apps}" || log_warn "Algunos paquetes adicionales no pudieron instalarse"
 
   configure_libvirtd
-  configure_sddm_hide_users
-  configure_local_time_clock
+  configure_sddm
+  configure_rtc_clock
   install_onlyoffice
   install_flatpak_apps
   install_vscode_with_extensions
@@ -966,6 +936,44 @@ configure_libvirtd() {
     "Error al habilitar libvirtd"
 }
 
+# ─── Configurar gestor de sesión SDDM ─────────────────────────────────────
+configure_sddm_core() {
+  log_info "Habilitando SDDM como gestor de sesiones..."
+  run_cmd "sudo systemctl enable sddm" \
+    "SDDM habilitado correctamente" \
+    "Fallo al habilitar SDDM"
+
+  run_cmd "sudo systemctl set-default graphical.target" \
+    "Target gráfico establecido como predeterminado" \
+    "Fallo al establecer graphical.target"
+}
+
+# ─── Configurar NumLock en SDDM ───────────────────────────────────────────
+configure_sddm_numlock() {
+  log_info "Configurando NumLock en SDDM..."
+
+  local config_file="/etc/sddm.conf"
+
+  if [[ -f "$config_file" ]]; then
+    if grep -q "^\[General\]" "$config_file"; then
+      if grep -q "^Numlock=" "$config_file"; then
+        sudo sed -i "s/^Numlock=.*/Numlock=on/" "$config_file"
+      else
+        sudo sed -i "/^\[General\]/a Numlock=on" "$config_file"
+      fi
+    else
+      echo -e "\n[General]\nNumlock=on" | sudo tee -a "$config_file" > /dev/null
+    fi
+  else
+    echo -e "[General]\nNumlock=on" | sudo tee "$config_file" > /dev/null
+  fi
+
+  run_cmd "sudo systemctl daemon-reexec" \
+    "SDDM recargado correctamente" \
+    "Fallo al recargar SDDM (puede requerir reinicio)"
+}
+
+# ─── Ocultar usuarios en pantalla de inicio de SDDM ───────────────────────
 configure_sddm_hide_users() {
   local conf_file="/etc/sddm.conf"
   local username="libvirt-qemu"
@@ -988,6 +996,14 @@ configure_sddm_hide_users() {
     echo -e "[Users]\nHideUsers=$username" | sudo tee "$conf_file" > /dev/null
     log_success "Archivo sddm.conf creado con usuario oculto"
   fi
+}
+
+# ─── Configuración completa de SDDM (núcleo, numlock, ocultar usuarios) ──
+configure_sddm() {
+  log_section "⚙️ Configurando SDDM"
+  configure_sddm_core
+  configure_sddm_numlock
+  configure_sddm_hide_users
 }
 
 configure_rtc_clock() {
@@ -1022,6 +1038,8 @@ install_flatpak_apps() {
     "org.nomacs.ImageLounge"
     "com.github.vkohaupt.vokoscreenNG"
     "tv.kodi.Kodi"
+    "org.appimage.AppImageLauncher"
+    "com.github.manisandro.gImageReader"
   )
 
   if ! command -v flatpak &>/dev/null; then
@@ -1101,46 +1119,6 @@ EOF
   return 0
 }
 
-install_flatpak_apps() {
-  log_section "Instalando aplicaciones mediante Flatpak"
-
-  local flatpak_apps=(
-    "com.github.dail8859.NotepadNext"
-    "org.localsend.localsend_app"
-    "org.strawberrymusicplayer.strawberry"
-    "org.nomacs.ImageLounge"
-    "com.github.vkohaupt.vokoscreenNG"
-    "tv.kodi.Kodi"
-  )
-
-  # Verificar si flatpak está instalado
-  if ! command -v flatpak &>/dev/null; then
-    log_info "Flatpak no detectado. Instalando..."
-    run_cmd "sudo dnf install -y flatpak" \
-      "Flatpak instalado correctamente" \
-      "Fallo al instalar Flatpak"
-  fi
-
-  # Verificar que flathub esté agregado
-  if ! flatpak remotes | grep -q flathub; then
-    log_info "Agregando repositorio Flathub..."
-    run_cmd "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo" \
-      "Repositorio Flathub añadido" \
-      "Fallo al agregar Flathub"
-  fi
-
-  # Instalar cada aplicación
-  for app in "${flatpak_apps[@]}"; do
-    show_progress "Instalando $app..." "$app"
-    if ! flatpak install -y --noninteractive flathub "$app" &>> "$LOG_FILE"; then
-      log_warn "Error al instalar $app (se continúa)"
-    else
-      log_success "$app instalado correctamente"
-    fi
-  done
-
-  return 0
-}
 
 
 
