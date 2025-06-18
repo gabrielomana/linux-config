@@ -656,7 +656,9 @@ EOF
 
   log_success "✅ Network hardening completed: fail2ban + SSH + firewall rules"
 }
-# === [19. Install grub-btrfs from COPR repo] ===
+
+
+# === [19. Install grub-btrfs from source] ===
 install_grub_btrfs_from_source() {
   log_section "📦 Installing grub-btrfs from GitHub (Antynea repo)"
 
@@ -665,28 +667,40 @@ install_grub_btrfs_from_source() {
 
   # Install required build dependencies
   log_info "🔧 Installing build dependencies..."
-  sudo dnf install -y git make automake gcc grub2 grub2-tools systemd-devel btrfs-progs &>/dev/null
+  sudo dnf install -y git make gcc automake grub2 grub2-tools systemd-devel btrfs-progs &>/dev/null
   check_error "❌ Failed to install build dependencies"
 
-  # Clone and compile
-  log_info "📥 Cloning grub-btrfs repository..."
+  # Clean previous build if any
   rm -rf "$temp_dir"
+
+  # Clone repository
+  log_info "📥 Cloning grub-btrfs repository..."
   git clone "$repo_url" "$temp_dir" || {
     log_error "❌ Failed to clone grub-btrfs repo"
     return 1
   }
 
-  log_info "⚙️ Building and installing grub-btrfs from source..."
   cd "$temp_dir"
-  sudo make install || {
-    log_error "❌ Build or install failed"
-    return 1
+
+  # Fedora-specific GRUB paths
+  export GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
+  export GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"
+  export GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"
+
+  log_info "⚙️ Building and installing grub-btrfs..."
+  sudo make install \
+    GRUB_BTRFS_GRUB_DIRNAME="$GRUB_BTRFS_GRUB_DIRNAME" \
+    GRUB_BTRFS_MKCONFIG="$GRUB_BTRFS_MKCONFIG" \
+    GRUB_BTRFS_SCRIPT_CHECK="$GRUB_BTRFS_SCRIPT_CHECK" || {
+      log_error "❌ Build or install failed"
+      return 1
   }
 
-  log_info "🧼 Cleaning up temporary directory..."
+  # Clean up
+  log_info "🧼 Cleaning up..."
   rm -rf "$temp_dir"
 
-  # Enable systemd units
+  # Enable systemd services
   log_info "🛠️ Enabling grub-btrfsd and grub-btrfs.path..."
   sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
@@ -696,8 +710,9 @@ install_grub_btrfs_from_source() {
     log_warn "⚠️ grub-btrfsd or grub-btrfs.path failed to start"
   }
 
-  log_success "✅ grub-btrfs successfully compiled and enabled from source"
+  log_success "✅ grub-btrfs successfully compiled and integrated with Fedora"
 }
+
 
 
 # === [20. Configure grub-btrfs default settings] ===
@@ -884,15 +899,15 @@ main() {
 
   [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
 
-  configure_dnf
-  configure_dnf_automatic
-  change_hostname
+  # configure_dnf
+  # configure_dnf_automatic
+  # change_hostname
 
-  install_essential_packages
-  configure_flatpak_repositories
+  # install_essential_packages
+  # configure_flatpak_repositories
 
-  configure_security
-  configure_network_security
+  # configure_security
+  # configure_network_security
 
   install_grub_btrfs_from_source  || exit 1
   configure_grub_btrfs_default_config || exit 1
