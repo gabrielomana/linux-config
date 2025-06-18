@@ -940,13 +940,13 @@ main() {
   # configure_security
   # configure_network_security
 
-  install_grub_btrfs_from_source  || exit 1
-  configure_grub_btrfs_default_config || exit 1
-  # setup_timeshift_config_btrfs || exit 1
-  # create_first_timeshift_snapshot || exit 1
-  #enable_grub_btrfs_watchers_after_timeshift || exit 1
-  # regenerate_grub_config || exit 1
-  #verify_grub_btrfs_status
+  # install_grub_btrfs_from_source  || exit 1
+  # configure_grub_btrfs_default_config || exit 1
+  setup_timeshift_config_btrfs || exit 1
+  create_first_timeshift_snapshot || exit 1
+  enable_grub_btrfs_watchers_after_timeshift || exit 1
+  regenerate_grub_config || exit 1
+  verify_grub_btrfs_status
 
 
   [[ "$CLEAN_SYSTEM" -eq 1 ]] && clean_system
