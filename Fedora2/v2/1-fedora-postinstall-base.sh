@@ -411,9 +411,7 @@ parse_arguments() {
 
 init_environment() {
     log_section "🚀 Environment Initialization"
-    
     setup_colors
-    
     # Determinar usuario real y directorio home
     if [[ -n "${SUDO_USER:-}" ]]; then
         REAL_USER="$SUDO_USER"
@@ -680,7 +678,7 @@ clean_system() {
 main() {
     local start_time
     start_time=$(date +%s)
-    
+    setup_colors
     # Parsear argumentos
     parse_arguments "$@"
     
