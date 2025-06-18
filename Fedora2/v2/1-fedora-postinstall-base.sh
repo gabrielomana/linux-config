@@ -664,56 +664,94 @@ install_grub_btrfs_from_source() {
 
   local workdir="/tmp/grub-btrfs-src"
   local repo_url="https://github.com/Antynea/grub-btrfs.git"
+  local binary_path="/usr/bin/grub-btrfsd"
 
-  # ── Install build dependencies ───────────────────────────────
+  # ── Step 1: Build dependencies ────────────────────────────────
   log_info "🔧 Installing build dependencies..."
-  run_cmd sudo dnf install -y git make gcc grub2-tools grub2-tools-extra || {
-    log_error "❌ Failed to install required build dependencies"
-    return 1
-  }
+  run_cmd sudo dnf install -y git make gcc grub2-tools grub2-tools-extra || return 1
 
-  # ── Clone repo cleanly ───────────────────────────────────────
+  # ── Step 2: Clone repo cleanly ────────────────────────────────
   log_info "📥 Cloning grub-btrfs repository..."
   run_cmd rm -rf "$workdir"
-  run_cmd git clone --depth=1 "$repo_url" "$workdir" || {
-    log_error "❌ Could not clone $repo_url"
-    return 1
-  }
+  run_cmd git clone --depth=1 "$repo_url" "$workdir" || return 1
+  pushd "$workdir" >/dev/null || return 1
 
-  pushd "$workdir" >/dev/null || {
-    log_error "❌ Failed to enter $workdir"
-    return 1
-  }
-
-  # ── Fedora-specific patch for GRUB2 directory ────────────────
+  # ── Step 3: Fedora patch for GRUB2 ────────────────────────────
   export GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
   export GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"
   export GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"
 
-  if [[ -f config ]]; then
-    run_cmd sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config
-    run_cmd sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config
-    run_cmd sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config
+  sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config || true
+  sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config || true
+  sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config || true
+
+  # ── Step 4: Build and install ─────────────────────────────────
+  log_info "⚙️ Building and installing grub-btrfs..."
+  run_cmd sudo make install || return 1
+
+  # ── Step 5: Verify binary ─────────────────────────────────────
+  if [[ ! -x "$binary_path" ]]; then
+    log_error "❌ grub-btrfsd binary not found at $binary_path"
+    return 1
   fi
 
-  # ── Build and install ────────────────────────────────────────
-  log_info "⚙️ Building and installing grub-btrfs..."
-  run_cmd sudo make install \
-    GRUB_BTRFS_GRUB_DIRNAME="$GRUB_BTRFS_GRUB_DIRNAME" \
-    GRUB_BTRFS_MKCONFIG="$GRUB_BTRFS_MKCONFIG" \
-    GRUB_BTRFS_SCRIPT_CHECK="$GRUB_BTRFS_SCRIPT_CHECK" || {
-    log_error "❌ Build or install failed"
-    return 1
-  }
+  # ── Step 6: Create fallback systemd units ─────────────────────
+  log_info "🔧 Creating grub-btrfs systemd units (fallback safe)"
 
-  # ── Install systemd units if provided ────────────────────────
-  install_grub_btrfsd_units_if_present
+  sudo tee /etc/systemd/system/grub-btrfsd.service > /dev/null <<EOF
+[Unit]
+Description=grub-btrfs daemon - detects BTRFS snapshots and updates GRUB
+After=multi-user.target
 
-  # ── Cleanup ──────────────────────────────────────────────────
+[Service]
+ExecStart=$binary_path -r /mnt -g
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  sudo tee /etc/systemd/system/grub-btrfsd@.service > /dev/null <<EOF
+[Unit]
+Description=grub-btrfs daemon for %i
+After=multi-user.target
+
+[Service]
+ExecStart=$binary_path -r /mnt -g
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  sudo tee /etc/systemd/system/grub-btrfs.path > /dev/null <<EOF
+[Unit]
+Description=Monitor Timeshift snapshots for GRUB integration
+
+[Path]
+PathModified=/run/timeshift/backup/timeshift-btrfs/snapshots
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # ── Step 7: Reload and enable ─────────────────────────────────
+  log_info "🔄 Reloading systemd daemon and enabling services"
+  run_cmd sudo systemctl daemon-reexec
+  run_cmd sudo systemctl daemon-reload
+
+  run_cmd sudo systemctl enable --now grub-btrfsd.service
+  run_cmd sudo systemctl enable --now grub-btrfs.path
+
+  # ── Cleanup ───────────────────────────────────────────────────
   popd >/dev/null
   run_cmd rm -rf "$workdir"
-  log_success "✅ grub-btrfs successfully compiled and integrated with Fedora"
+
+  log_success "✅ grub-btrfs installed and services enabled"
 }
+
 
 
 
