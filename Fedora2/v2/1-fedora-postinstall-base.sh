@@ -808,7 +808,6 @@ setup_timeshift_config_btrfs() {
   local config_dir="/etc/timeshift"
   local config_file="$config_dir/timeshift.json"
   local snapshots_dir="/.snapshots"
-  local device uuid
 
   # Ensure Timeshift is installed
   if ! command -v timeshift &>/dev/null; then
@@ -824,18 +823,27 @@ setup_timeshift_config_btrfs() {
   run_cmd sudo chown root:root "$snapshots_dir"
   run_cmd sudo mkdir -p "$config_dir"
 
-  # Launch timeshift-gtk with original user to auto-generate config
+  # Get real user and UID
+  local user="${REAL_USER:-$(logname 2>/dev/null || echo "$USER")}"
+  local uid
+  uid=$(id -u "$user")
+
+  # Launch timeshift-gtk with full graphical context
   log_info "🧪 Launching Timeshift GTK briefly to stabilize config..."
-  if [[ -n "$REAL_USER" && "$REAL_USER" != "root" ]]; then
-    sudo -u "$REAL_USER" nohup timeshift-gtk >/dev/null 2>&1 &
+  if [[ -n "$user" && "$user" != "root" ]]; then
+    sudo -u "$user" env \
+      XDG_RUNTIME_DIR="/run/user/$uid" \
+      DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" \
+      nohup timeshift-gtk >/dev/null 2>&1 &
+    local gtk_pid=$!
+    sleep 5
+    if ps -p "$gtk_pid" &>/dev/null; then
+      sudo kill "$gtk_pid"
+      log_info "🧹 Timeshift GTK closed after initialization"
+    fi
   else
-    nohup timeshift-gtk >/dev/null 2>&1 &
-  fi
-  local gtk_pid=$!
-  sleep 5
-  if ps -p "$gtk_pid" &>/dev/null; then
-    sudo kill "$gtk_pid"
-    log_info "🧹 Timeshift GTK closed after initialization"
+    log_error "❌ Cannot launch timeshift-gtk as root without session bus. Aborting."
+    return 1
   fi
 
   # Validate that config was generated
@@ -846,6 +854,7 @@ setup_timeshift_config_btrfs() {
 
   log_success "✅ Timeshift configured in BTRFS mode with target $snapshots_dir"
 }
+
 
 
 
