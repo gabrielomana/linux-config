@@ -410,9 +410,7 @@ parse_arguments() {
 }
 
 init_environment() {
-    log_section "🚀 Environment Initialization"
-    setup_colors
-    # Determinar usuario real y directorio home
+    # 1. Determinar usuario real y su $HOME
     if [[ -n "${SUDO_USER:-}" ]]; then
         REAL_USER="$SUDO_USER"
         USER_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
@@ -423,45 +421,45 @@ init_environment() {
         REAL_USER="root"
         USER_HOME="/root"
     fi
-    
-    # Validar directorio home
+
+    # 2. Validar existencia de HOME
     if [[ ! -d "$USER_HOME" ]]; then
-        log_warn "User home directory '$USER_HOME' not found, using /tmp"
         USER_HOME="/tmp"
     fi
-    
-    # Configurar variables de tiempo y logging
+
+    # 3. Configurar timestamp y rutas de logs
     TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
     LOG_DIR="$USER_HOME/fedora_logs"
-    
-    # Crear directorio de logs con fallback
+
+    # Crear directorio de logs (fallback incluido)
     if ! mkdir -p "$LOG_DIR" 2>/dev/null; then
         LOG_DIR="/tmp/fedora_logs_$TIMESTAMP"
         mkdir -p "$LOG_DIR"
-        log_warn "Using fallback log directory: $LOG_DIR"
     fi
-    
+
+    # 4. Definir archivos de log
     LOG_FILE="$LOG_DIR/install_$TIMESTAMP.log"
     ERR_FILE="$LOG_DIR/error_$TIMESTAMP.log"
-    
-    # Crear archivos de log
+
+    # 5. Crear y proteger archivos de log
     touch "$LOG_FILE" "$ERR_FILE"
     chmod 644 "$LOG_FILE" "$ERR_FILE" 2>/dev/null || true
-    
-    # Cambiar ownership si no somos root
+
+    # 6. Corregir permisos si no es root
     if [[ "$REAL_USER" != "root" ]]; then
         chown "$REAL_USER:$REAL_USER" "$LOG_FILE" "$ERR_FILE" 2>/dev/null || true
     fi
-    
-    # Log información del entorno
+
+    # 7. Ahora que todo está definido, se puede usar logging
+    log_section "🚀 Environment Initialization"
     log_info "Script version: $SCRIPT_VERSION"
     log_info "Real user: $REAL_USER"
     log_info "Home directory: $USER_HOME"
     log_info "Log directory: $LOG_DIR"
     log_info "Verbose mode: $([[ $VERBOSE -eq 1 ]] && echo "enabled" || echo "disabled")"
-    
     log_success "Environment initialized successfully"
 }
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # FUNCIONES DE CONFIGURACIÓN DEL SISTEMA OPTIMIZADAS
