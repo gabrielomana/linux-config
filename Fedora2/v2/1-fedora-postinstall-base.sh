@@ -470,21 +470,24 @@ update_system() {
 
 configure_dnf() {
     log_section "⚙️ DNF Optimization"
-    
-    # Configurar zona horaria
+
+    log_info "[DNF] ⏱️  Configurando hora del sistema (UTC + NTP)"
     run_cmd sudo timedatectl set-local-rtc 0
     run_cmd sudo timedatectl set-ntp true
-    
-    # Backup de configuración original
+
+    log_info "[DNF] 💾  Respaldando configuración original de DNF"
     local dnf_conf="/etc/dnf/dnf.conf"
     local backup_conf="${dnf_conf}.backup.$(date +%Y%m%d)"
-    
+
     if [[ ! -f "$backup_conf" ]]; then
         run_cmd sudo cp "$dnf_conf" "$backup_conf"
-        log_info "DNF config backed up to: $backup_conf"
+        log_success "[DNF] Backup creado: $backup_conf"
+    else
+        log_info "[DNF] Ya existía backup previo: $backup_conf"
     fi
-    
-    # Escribir configuración optimizada
+
+    log_info "[DNF] 🛠️  Aplicando parámetros optimizados a DNF"
+
     run_cmd sudo tee "$dnf_conf" > /dev/null << 'EOF'
 [main]
 gpgcheck=1
@@ -504,31 +507,33 @@ minrate=1000
 metadata_expire=3600
 countme=False
 EOF
-    
-    log_success "DNF configuration optimized"
+
+    log_success "[DNF] ✅ Configuración optimizada aplicada con éxito"
 }
+
 
 configure_automatic_updates() {
     log_section "🔄 Automatic Updates Setup"
-    
-    # Instalar dnf-automatic
+
+    log_info "[AUTO] 📦 Instalando paquete: dnf-automatic"
     run_cmd sudo dnf install -y dnf-automatic
-    
-    # Configurar dnf-automatic
+
+    log_info "[AUTO] ⚙️ Configurando /etc/dnf/automatic.conf"
     local auto_conf="/etc/dnf/automatic.conf"
-    run_cmd sudo sed -i 's/apply_updates = no/apply_updates = yes/' "$auto_conf"
-    run_cmd sudo sed -i 's/emit_via = stdio/emit_via = email/' "$auto_conf"
-    
-    # Habilitar el timer
+
+    run_cmd sudo sed -i 's/^apply_updates =.*/apply_updates = yes/' "$auto_conf"
+    run_cmd sudo sed -i 's/^emit_via =.*/emit_via = email/' "$auto_conf"
+
+    log_info "[AUTO] ⏰ Habilitando y activando dnf-automatic.timer"
     run_cmd sudo systemctl enable --now dnf-automatic.timer
-    
-    # Verificar estado
+
     if systemctl is-active --quiet dnf-automatic.timer; then
-        log_success "Automatic updates enabled and running"
+        log_success "[AUTO] ✅ Actualizaciones automáticas activadas y en ejecución"
     else
-        log_warn "Automatic updates timer may not be running properly"
+        log_warn "[AUTO] ⚠️ El timer de dnf-automatic no se está ejecutando correctamente"
     fi
 }
+
 
 # Instalación de paquetes con manejo mejorado de errores
 install_packages() {
