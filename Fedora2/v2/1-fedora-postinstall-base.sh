@@ -803,7 +803,7 @@ EOF
 
 # === [22. Configure Timeshift in BTRFS mode at /.snapshots] ===
 setup_timeshift_config_btrfs() {
-  log_section "🧰 Setting up Timeshift for BTRFS at /.snapshots"
+  log_section "🛠 Setting up Timeshift for BTRFS at /.snapshots"
 
   local config_dir="/etc/timeshift"
   local config_file="$config_dir/timeshift.json"
@@ -828,18 +828,21 @@ setup_timeshift_config_btrfs() {
   local uid
   uid=$(id -u "$user")
 
-  # Launch timeshift-gtk with full graphical context
-  log_info "🧪 Launching Timeshift GTK briefly to stabilize config..."
+  # Launch timeshift-gtk with full graphical context and root perms
+  log_info "🧪 Launching Timeshift GTK with graphical root context..."
   if [[ -n "$user" && "$user" != "root" ]]; then
-    sudo -u "$user" env \
-      XDG_RUNTIME_DIR="/run/user/$uid" \
+    sudo env \
+      DISPLAY="$DISPLAY" \
+      XAUTHORITY="/home/$user/.Xauthority" \
       DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" \
+      XDG_RUNTIME_DIR="/run/user/$uid" \
+      HOME="/home/$user" \
       nohup timeshift-gtk >/dev/null 2>&1 &
     local gtk_pid=$!
     sleep 5
     if ps -p "$gtk_pid" &>/dev/null; then
       sudo kill "$gtk_pid"
-      log_info "🧹 Timeshift GTK closed after initialization"
+      log_info "🛋 Timeshift GTK closed after initialization"
     fi
   else
     log_error "❌ Cannot launch timeshift-gtk as root without session bus. Aborting."
@@ -853,6 +856,18 @@ setup_timeshift_config_btrfs() {
   fi
 
   log_success "✅ Timeshift configured in BTRFS mode with target $snapshots_dir"
+}
+
+enable_grub_btrfs_watchers_after_timeshift() {
+  log_section "🚀 Activating grub-btrfs.path after Timeshift initialization"
+
+  if [[ -d /run/timeshift ]]; then
+    run_cmd sudo systemctl restart grub-btrfsd.service
+    run_cmd sudo systemctl enable --now grub-btrfs.path
+    log_success "✅ grub-btrfs.path and daemon activated post-Timeshift"
+  else
+    log_warn "⚠️ Timeshift not ready. grub-btrfs.path activation skipped"
+  fi
 }
 
 
