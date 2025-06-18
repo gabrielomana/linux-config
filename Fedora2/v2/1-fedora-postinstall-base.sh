@@ -295,12 +295,13 @@ check_prerequisites() {
     if [[ -f /etc/fedora-release ]]; then
         local fedora_version
         fedora_version=$(grep -oP 'Fedora.*?release \K\d+' /etc/fedora-release)
-        
-        if [[ " ${SUPPORTED_FEDORA_VERSIONS[*]} " =~ " ${fedora_version} " ]]; then
-            log_success "Fedora $fedora_version detected (supported)"
+        log_info "Detected Fedora version: $fedora_version"
+       if [[ " ${SUPPORTED_FEDORA_VERSIONS[@]} " =~ (^|[[:space:]])"$fedora_version"($|[[:space:]]) ]]; then
+        log_success "Fedora $fedora_version detected (supported)"
         else
             log_warn "Fedora $fedora_version may not be fully supported"
-        fi
+      fi
+
     else
         log_error "This script is designed for Fedora Linux"
         return 1
