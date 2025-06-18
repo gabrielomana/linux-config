@@ -804,6 +804,23 @@ EOF
 }
 
 
+create_initial_timeshift_snapshot() {
+  log_section "🕒 Creating first Timeshift snapshot (if needed)"
+
+  if sudo timeshift --list | grep -q "Snapshot"; then
+    log_info "✔️ Snapshots already exist. No new snapshot created."
+    return 0
+  fi
+
+  run_cmd sudo timeshift --create --comments "Initial system snapshot" --tags D || {
+    log_error "❌ Failed to create initial Timeshift snapshot"
+    return 1
+  }
+
+  log_success "✅ Initial Timeshift snapshot created"
+}
+
+
 # === [24. Regenerate grub.cfg after grub-btrfs integration] ===
 regenerate_grub_config() {
   log_section "🌀 Regenerating GRUB configuration"
