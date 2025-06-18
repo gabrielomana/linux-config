@@ -666,36 +666,42 @@ install_grub_btrfs_from_source() {
   local repo_url="https://github.com/Antynea/grub-btrfs.git"
   local binary_path="/usr/bin/grub-btrfsd"
 
-  # ── Step 1: Build dependencies ────────────────────────────────
+  # ── Step 1: Install build dependencies ─────────────────────────────
   log_info "🔧 Installing build dependencies..."
   run_cmd sudo dnf install -y git make gcc grub2-tools grub2-tools-extra || return 1
 
-  # ── Step 2: Clone repo cleanly ────────────────────────────────
+  # ── Step 2: Clone repo cleanly ─────────────────────────────────────
   log_info "📥 Cloning grub-btrfs repository..."
   run_cmd rm -rf "$workdir"
   run_cmd git clone --depth=1 "$repo_url" "$workdir" || return 1
   pushd "$workdir" >/dev/null || return 1
 
-  # ── Step 3: Fedora patch for GRUB2 ────────────────────────────
+  # ── Step 3: Patch Makefile for Fedora ──────────────────────────────
+  log_info "🩹 Patching Makefile for Fedora (/boot/grub2 compatibility)"
+  run_cmd sed -i 's|/boot/grub/|/boot/grub2/|g' Makefile
+  run_cmd sed -i 's|/boot/grub|/boot/grub2|g' Makefile
+
+  # ── Step 4: Export environment variables (for compatibility) ───────
   export GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"
   export GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"
   export GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"
 
-  sed -i 's|^GRUB_BTRFS_GRUB_DIRNAME=.*|GRUB_BTRFS_GRUB_DIRNAME="/boot/grub2"|' config || true
-  sed -i 's|^GRUB_BTRFS_MKCONFIG=.*|GRUB_BTRFS_MKCONFIG="/sbin/grub2-mkconfig"|' config || true
-  sed -i 's|^GRUB_BTRFS_SCRIPT_CHECK=.*|GRUB_BTRFS_SCRIPT_CHECK="grub2-script-check"|' config || true
-
-  # ── Step 4: Build and install ─────────────────────────────────
+  # ── Step 5: Build and install ──────────────────────────────────────
   log_info "⚙️ Building and installing grub-btrfs..."
-  run_cmd sudo make install || return 1
+  run_cmd sudo make install || {
+    log_error "❌ make install failed"
+    popd >/dev/null
+    return 1
+  }
 
-  # ── Step 5: Verify binary ─────────────────────────────────────
+  # ── Step 6: Verify binary ──────────────────────────────────────────
   if [[ ! -x "$binary_path" ]]; then
     log_error "❌ grub-btrfsd binary not found at $binary_path"
+    popd >/dev/null
     return 1
   fi
 
-  # ── Step 6: Create fallback systemd units ─────────────────────
+  # ── Step 7: Create fallback systemd units ──────────────────────────
   log_info "🔧 Creating grub-btrfs systemd units (fallback safe)"
 
   sudo tee /etc/systemd/system/grub-btrfsd.service > /dev/null <<EOF
@@ -737,15 +743,14 @@ PathModified=/run/timeshift/backup/timeshift-btrfs/snapshots
 WantedBy=multi-user.target
 EOF
 
-  # ── Step 7: Reload and enable ─────────────────────────────────
-  log_info "🔄 Reloading systemd daemon and enabling services"
+  # ── Step 8: Reload systemd and enable services ─────────────────────
   run_cmd sudo systemctl daemon-reexec
   run_cmd sudo systemctl daemon-reload
 
   run_cmd sudo systemctl enable --now grub-btrfsd.service
   run_cmd sudo systemctl enable --now grub-btrfs.path
 
-  # ── Cleanup ───────────────────────────────────────────────────
+  # ── Cleanup ────────────────────────────────────────────────────────
   popd >/dev/null
   run_cmd rm -rf "$workdir"
 
@@ -1010,15 +1015,15 @@ main() {
 
   [[ "$UPDATE_SYSTEM" -eq 1 ]] && update_system
 
-  configure_dnf
-  configure_dnf_automatic
-  change_hostname
+  # configure_dnf
+  # configure_dnf_automatic
+  # change_hostname
 
-  install_essential_packages
-  configure_flatpak_repositories
+  # install_essential_packages
+  # configure_flatpak_repositories
 
-  configure_security
-  configure_network_security
+  # configure_security
+  # configure_network_security
 
   install_grub_btrfs_from_source  || exit 1
   configure_grub_btrfs_default_config || exit 1
