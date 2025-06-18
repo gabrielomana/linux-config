@@ -860,7 +860,7 @@ if ! command -v cargo &>/dev/null; then
 fi
 
 # Lista de herramientas a instalar vía Cargo
-local tools=(cargo-update topgrade ripgrep fd-find)
+local tools=(cargo-update topgrade)
 log_info "🛠️ Instalando herramientas CLI desde crates.io"
 local total=${#tools[@]}
 local count=0
