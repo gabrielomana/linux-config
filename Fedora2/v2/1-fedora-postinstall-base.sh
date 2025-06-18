@@ -422,3 +422,65 @@ EOF
 }
 
 main "$@"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MAIN FUNCTION
+# ══════════════════════════════════════════════════════════════════════════════
+
+main() {
+    local start_time=$(date +%s)
+
+    setup_colors
+    parse_arguments "$@"
+    init_environment
+    ensure_sudo
+
+    log_section "✨ Fedora $SCRIPT_VERSION Post-Install Script"
+
+    [[ $UPDATE_SYSTEM -eq 1 ]] && update_system
+
+    configure_dnf
+    configure_automatic_updates
+
+    install_packages "essential"
+    install_packages "security"
+    install_packages "network"
+
+    configure_hostname
+    configure_flatpak
+    configure_firewall
+    configure_selinux
+    configure_dns
+    configure_ssh_security
+    enable_system_services
+
+    install_grub_btrfs
+    configure_grub_btrfs
+    setup_timeshift
+    create_initial_snapshot
+    finalize_grub_btrfs
+    verify_snapshot_setup
+
+    [[ $CLEAN_SYSTEM -eq 1 ]] && clean_system
+
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+
+    log_section "📊 Installation Summary"
+    log_info "Script version: $SCRIPT_VERSION"
+    log_info "Execution time: ${duration} seconds"
+    log_info "Total errors: $ERROR_COUNT"
+    log_info "Log file: $LOG_FILE"
+
+    if [[ $ERROR_COUNT -eq 0 ]]; then
+        log_success "All configurations completed successfully!"
+    else
+        log_warn "Completed with $ERROR_COUNT errors. Check logs for details."
+    fi
+
+    echo -e "\n${GREEN}${BOLD}🎉 Fedora post-installation configuration completed!${NC}"
+    echo -e "${CYAN}Please reboot your system to ensure all changes take effect.${NC}\n"
+}
+
+main "$@"
