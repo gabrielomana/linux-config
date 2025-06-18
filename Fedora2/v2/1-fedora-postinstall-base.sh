@@ -698,7 +698,10 @@ EOF
     configure_automatic_updates
 
     # 9. Instalar paquetes esenciales, de seguridad y de red
-    log_info "9. Instalar paquetes esenciales"
+    log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+log_info "    9. Instalar paquetes esenciales"
+log_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
     install_packages "essential"
     install_packages "security"
     install_packages "network"
