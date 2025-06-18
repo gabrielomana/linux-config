@@ -678,20 +678,14 @@ clean_system() {
 main() {
     local start_time
     start_time=$(date +%s)
+
+    # 1. Inicializar colores antes de cualquier uso de variables de color
     setup_colors
-    # Parsear argumentos
-    parse_arguments "$@"
-    
-    # Inicializar entorno
+
+    # 2. Inicializar entorno (define LOG_FILE, LOG_DIR, USER_HOME, etc.)
     init_environment
-    
-    # Verificar prerrequisitos
-    check_prerequisites
-    
-    # Asegurar privilegios sudo
-    ensure_sudo
-    
-    # Banner de inicio
+
+    # 3. Mostrar banner ahora que CYAN, BOLD, etc. están definidos correctamente
     cat << EOF
 
 ${CYAN}╔════════════════════════════════════════════════════════════════════════════════╗
@@ -700,54 +694,67 @@ ${CYAN}╔═══════════════════════�
 ╚════════════════════════════════════════════════════════════════════════════════╝${NC}
 
 EOF
-    
-    # Ejecutar configuraciones
+
+    # 4. Parsear argumentos de línea de comandos
+    parse_arguments "$@"
+
+    # 5. Verificar prerrequisitos de sistema
+    check_prerequisites
+
+    # 6. Elevar privilegios si es necesario
+    ensure_sudo
+
+    # 7. Actualizar sistema si se solicitó
     if [[ $UPDATE_SYSTEM -eq 1 ]]; then
         update_system
     fi
-    
+
+    # 8. Configurar DNF y actualizaciones automáticas
     configure_dnf
     configure_automatic_updates
-    
-    # Instalar paquetes por grupos
+
+    # 9. Instalar paquetes esenciales, de seguridad y de red
     install_packages "essential"
-    install_packages "security" 
+    install_packages "security"
     install_packages "network"
-    
+
+    # 10. Configurar nombre de host
     configure_hostname
-    
-    # Configuraciones adicionales pueden ir aquí
+
+    # 11. Configuraciones adicionales (comentadas por ahora)
     # configure_flatpak
     # configure_firewall
     # configure_selinux
     # configure_dns
     # configure_ssh_security
     # enable_system_services
-    
+
+    # 12. Limpieza del sistema si se indicó
     if [[ $CLEAN_SYSTEM -eq 1 ]]; then
         clean_system
     fi
-    
-    # Resumen final
+
+    # 13. Resumen final
     local end_time
     end_time=$(date +%s)
     local duration=$((end_time - start_time))
-    
+
     log_section "📊 Installation Summary"
     log_info "Script version: $SCRIPT_VERSION"
     log_info "Execution time: ${duration} seconds"
     log_info "Total errors: $ERROR_COUNT"
     log_info "Log file: $LOG_FILE"
-    
+
     if [[ $ERROR_COUNT -eq 0 ]]; then
         log_success "All configurations completed successfully!"
     else
         log_warn "Completed with $ERROR_COUNT errors. Check logs for details."
     fi
-    
+
     echo -e "\n${GREEN}${BOLD}🎉 Fedora post-installation configuration completed!${NC}"
     echo -e "${CYAN}Please reboot your system to ensure all changes take effect.${NC}\n"
 }
+
 
 # Ejecutar función principal con todos los argumentos
 main "$@"
