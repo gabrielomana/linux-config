@@ -742,16 +742,16 @@ EOF
 
 # === [21. Enable grub-btrfsd systemd monitoring services] ===
 setup_grub_btrfsd_services() {
-  log_section "🔧 Configuring grub-btrfs systemd monitoring services"
+  log_section "🔧 Configuring grub-btrfs systemd monitoring services (fallback enabled)"
 
   local unit_dir="/etc/systemd/system"
 
-  # Fallback: grub-btrfsd.service
+  # grub-btrfsd.service
   if [[ ! -f "$unit_dir/grub-btrfsd.service" ]]; then
-    log_warn "⚠️ grub-btrfsd.service not found — writing fallback unit"
+    log_warn "⚠️ grub-btrfsd.service not found — creating fallback"
     sudo tee "$unit_dir/grub-btrfsd.service" > /dev/null <<'EOF'
 [Unit]
-Description=Update grub-btrfs snapshots
+Description=grub-btrfs daemon - detects BTRFS snapshots and updates GRUB
 After=multi-user.target
 
 [Service]
@@ -764,14 +764,31 @@ WantedBy=multi-user.target
 EOF
   fi
 
-  # Fallback: grub-btrfs.path
+  # grub-btrfsd@.service (template version)
+  if [[ ! -f "$unit_dir/grub-btrfsd@.service" ]]; then
+    log_warn "⚠️ grub-btrfsd@.service not found — creating fallback"
+    sudo tee "$unit_dir/grub-btrfsd@.service" > /dev/null <<'EOF'
+[Unit]
+Description=grub-btrfs daemon for %i
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/grub-btrfsd -r /mnt -g
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  fi
+
+  # grub-btrfs.path
   if [[ ! -f "$unit_dir/grub-btrfs.path" ]]; then
-    log_warn "⚠️ grub-btrfs.path not found — writing fallback unit"
+    log_warn "⚠️ grub-btrfs.path not found — creating fallback"
     sudo tee "$unit_dir/grub-btrfs.path" > /dev/null <<'EOF'
 [Unit]
-Description=Monitor Timeshift snapshots
+Description=Monitor Timeshift snapshots for GRUB integration
 DefaultDependencies=no
-BindsTo=run-timeshift-.mount
 
 [Path]
 PathModified=/run/timeshift/.*/backup/timeshift-btrfs/snapshots
@@ -781,16 +798,18 @@ WantedBy=multi-user.target
 EOF
   fi
 
-  # Recargar systemd
+  # Reload systemd
   run_cmd sudo systemctl daemon-reexec
   run_cmd sudo systemctl daemon-reload
 
-  # Activar servicios
-  run_cmd sudo systemctl enable --now grub-btrfsd.service || log_warn "⚠️ grub-btrfsd.service failed to start"
-  run_cmd sudo systemctl enable --now grub-btrfs.path || log_warn "⚠️ grub-btrfs.path failed to start"
+  # Enable and start services conditionally
+  run_cmd sudo systemctl enable --now grub-btrfsd.service || log_warn "⚠️ Failed to start grub-btrfsd.service"
+  run_cmd sudo systemctl enable --now grub-btrfsd@.service || log_warn "⚠️ Failed to start grub-btrfsd@.service"
+  run_cmd sudo systemctl enable --now grub-btrfs.path || log_warn "⚠️ Failed to start grub-btrfs.path"
 
-  log_success "✅ grub-btrfs monitoring system configured and activated"
+  log_success "✅ grub-btrfs monitoring system configured (fallback safe)"
 }
+
 
 
 install_grub_btrfsd_units_if_present() {
