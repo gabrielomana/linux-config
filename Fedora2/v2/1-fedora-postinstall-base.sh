@@ -871,46 +871,31 @@ enable_grub_btrfs_watchers_after_timeshift() {
 }
 
 
-
-
 create_first_timeshift_snapshot() {
-  log_section "🕒 Ensuring Timeshift config is valid and creating first snapshot"
+  log_section "🕒 Creating initial Timeshift snapshot"
 
-  # Verificación de config JSON
-  if [[ ! -f /etc/timeshift/timeshift.json ]]; then
-    log_warn "⚠️ timeshift.json not found. Timeshift might not be properly configured yet"
+  if ! command -v timeshift &>/dev/null; then
+    log_error "❌ Timeshift is not installed"
     return 1
   fi
 
-  # Lanzar GUI para estabilizar estado interno
-  log_info "✴️ Starting Timeshift GTK briefly to stabilize config..."
-  if command -v timeshift-gtk &>/dev/null; then
-    sudo -u "$REAL_USER" timeshift-gtk >/dev/null 2>&1 &
-    local gtk_pid=$!
-    sleep 5
-    if ps -p "$gtk_pid" &>/dev/null; then
-      sudo kill "$gtk_pid"
-    fi
-    log_info "✔️ Timeshift GTK closed after stabilization"
-  else
-    log_warn "⚠️ timeshift-gtk not found. Continuing anyway"
+  if ! sudo test -f /etc/timeshift/timeshift.json; then
+    log_error "❌ Timeshift is not configured yet (timeshift.json missing)"
+    return 1
   fi
 
-  # Verificar si existen snapshots
   if sudo timeshift --list | grep -q "Snapshot"; then
-    log_info "✔️ Snapshots already exist. Skipping creation."
+    log_info "✅ Timeshift snapshot already exists. Skipping creation."
     return 0
   fi
 
-  # Crear snapshot
   run_cmd sudo timeshift --create --comments "Initial system snapshot" --tags D || {
-    log_error "❌ Could not create Timeshift snapshot. Possibly corrupted state."
+    log_error "❌ Could not create Timeshift snapshot"
     return 1
   }
 
   log_success "✅ Initial Timeshift snapshot created successfully"
 }
-
 
 
 
@@ -946,6 +931,52 @@ enable_grub_btrfs_watchers_after_timeshift() {
   fi
 }
 
+verify_grub_btrfs_status() {
+  log_section "🔍 Verifying grub-btrfs installation status"
+
+  local binary="/usr/bin/grub-btrfsd"
+  local config="/etc/default/grub-btrfs/config"
+
+  # Binary check
+  if [[ -x "$binary" ]]; then
+    log_success "✅ Binary found: $binary"
+  else
+    log_error "❌ Binary missing: $binary"
+  fi
+
+  # Config file check
+  if [[ -f "$config" ]]; then
+    log_success "✅ Config file present: $config"
+  else
+    log_error "❌ Config file missing: $config"
+  fi
+
+  # Service status: grub-btrfsd.service
+  if systemctl is-active --quiet grub-btrfsd.service; then
+    log_success "✅ Service active: grub-btrfsd.service"
+  else
+    log_warn "⚠️ Service not running: grub-btrfsd.service"
+  fi
+
+  # Path monitor status: grub-btrfs.path
+  if systemctl is-enabled --quiet grub-btrfs.path 2>/dev/null; then
+    log_info "🔎 grub-btrfs.path is enabled"
+    if systemctl is-active --quiet grub-btrfs.path; then
+      log_success "✅ Path monitor active: grub-btrfs.path"
+    else
+      log_warn "⚠️ grub-btrfs.path is enabled but not running"
+    fi
+  else
+    log_warn "⚠️ grub-btrfs.path is not enabled"
+  fi
+
+  # Snapshot detection
+  if timeshift --list | grep -q "Snapshot"; then
+    log_success "✅ At least one Timeshift snapshot is present"
+  else
+    log_warn "⚠️ No Timeshift snapshots found"
+  fi
+}
 
 
 main() {
