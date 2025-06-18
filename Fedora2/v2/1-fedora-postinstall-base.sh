@@ -471,11 +471,22 @@ update_system() {
 configure_dnf() {
     log_section "⚙️ DNF Optimization"
 
-    log_info "[DNF] ⏱️  Configurando hora del sistema (UTC + NTP)"
-    run_cmd sudo timedatectl set-local-rtc 0
-    run_cmd sudo timedatectl set-ntp true
+    log_info "[DNF] ⏱️ Configurando hora del sistema (UTC + NTP)"
+    
+    # Aplicar configuración de hora (no crítica)
+    if ! sudo timedatectl set-local-rtc 0 2>/dev/null; then
+        log_warn "[DNF] No se pudo aplicar 'set-local-rtc 0'. Ya está configurado o no es compatible"
+    else
+        log_success "[DNF] RTC configurado en modo UTC"
+    fi
 
-    log_info "[DNF] 💾  Respaldando configuración original de DNF"
+    if ! sudo timedatectl set-ntp true 2>/dev/null; then
+        log_warn "[DNF] No se pudo habilitar NTP. Verifica si systemd está activo"
+    else
+        log_success "[DNF] NTP habilitado correctamente"
+    fi
+
+    log_info "[DNF] 💾 Respaldando configuración actual de DNF"
     local dnf_conf="/etc/dnf/dnf.conf"
     local backup_conf="${dnf_conf}.backup.$(date +%Y%m%d)"
 
@@ -486,7 +497,7 @@ configure_dnf() {
         log_info "[DNF] Ya existía backup previo: $backup_conf"
     fi
 
-    log_info "[DNF] 🛠️  Aplicando parámetros optimizados a DNF"
+    log_info "[DNF] 🛠️ Aplicando parámetros optimizados"
 
     run_cmd sudo tee "$dnf_conf" > /dev/null << 'EOF'
 [main]
