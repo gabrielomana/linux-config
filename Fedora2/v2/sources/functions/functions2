@@ -423,6 +423,45 @@ EOF
   log_success "✅ Repositorios adicionales configurados correctamente"
 }
 
+install_konsole_and_dotfiles() {
+  log_section "🎨 Instalación de Konsole y dotfiles personalizados"
+
+  local config_src="${PROJECT_ROOT}/dotfiles"
+  local fastfetch_dir="${PROJECT_ROOT}/fastfetch"
+
+  try_cmd "Eliminar instalación previa de Fastfetch" sudo rm -rf "$fastfetch_dir"
+
+  try_cmd "Clonar repositorio Fastfetch" \
+    sudo git clone https://github.com/fastfetch-cli/fastfetch.git "$fastfetch_dir"
+
+  try_cmd "Compilar Fastfetch" \
+    bash -c "cd $fastfetch_dir && mkdir -p build && cd build && cmake .. && cmake --build ."
+
+  try_cmd "Instalar binarios Fastfetch" \
+    sudo cp "$fastfetch_dir/build/"{fastfetch,flashfetch} /usr/bin/
+
+  try_cmd "Generar configuración de Fastfetch" \
+    fastfetch --gen-config-force
+
+  try_cmd "Copiar configuración personalizada de Fastfetch" \
+    mkdir -p ~/.config/fastfetch && cp -f "$config_src/fastfetch_config.jsonc" ~/.config/fastfetch/config.jsonc
+
+  try_cmd "Descargar temas de Konsole" \
+    sudo wget -q https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip -O /tmp/konsole.zip
+
+  try_cmd "Descomprimir e instalar temas de Konsole" \
+    unzip -o /tmp/konsole.zip -d /tmp/ && sudo cp -rf /tmp/konsole/* /usr/share/konsole/
+
+  try_cmd "Eliminar archivos temporales de temas" sudo rm -rf /tmp/konsole /tmp/konsole.zip
+
+  try_cmd "Configurar dotfiles" cp -f "$config_src/.nanorc" ~/.nanorc
+  try_cmd "Configurar topgrade" cp -f "$config_src/topgrade.toml" ~/.config/topgrade.toml
+  try_cmd "Configurar konsolerc" cp -f "$config_src/konsolerc" ~/.config/konsolerc
+  try_cmd "Copiar perfil Konsole" mkdir -p ~/.local/share/konsole && cp -f "$config_src/konsole.profile" ~/.local/share/konsole/
+
+  log_success "Konsole y dotfiles instalados correctamente"
+}
+
 
 
 configure_hardware() {
