@@ -350,98 +350,66 @@ remove_packages() {
   return 0
 }
 
-
-
 add_repositories() {
-  log_section "🌐 Agregando y configurando repositorios adicionales necesarios"
+  log_section "🌐 Configuración de repositorios adicionales"
 
-  declare -A repos=(
+  # ─── Repositorios estándar (instalación directa o importación) ────────────────
 
-    # ─── RPM Fusion (Free + Nonfree) ───────────────────────────────
-    ["RPM Fusion"]="sudo dnf install -y \
-      https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-\$(rpm -E %fedora).noarch.rpm \
-      https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-\$(rpm -E %fedora).noarch.rpm"
+  try_cmd "Importar GPG Brave" \
+    sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
 
-    # ─── Brave Browser ─────────────────────────────────────────────
-    ["Brave Repo"]="
-      sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc &&
-      sudo tee /etc/yum.repos.d/brave-browser.repo > /dev/null <<EOF
-[brave-browser]
-name=Brave Browser
-baseurl=https://brave-browser-rpm-release.s3.brave.com/x86_64/
-enabled=1
-gpgcheck=1
-gpgkey=https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
-EOF
-"
+  try_cmd "Añadir repo Brave con dnf config-manager" \
+    sudo dnf config-manager --add-repo=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
 
-    # ─── Microsoft (VSCode) ─────────────────────────────────────────
-    ["VSCode Repo"]="
-      sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc &&
-      sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<EOF
+  try_cmd "Importar GPG Microsoft (VSCode)" \
+    sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+
+  try_cmd "Añadir repo VSCode manualmente" \
+    bash -c 'cat > /etc/yum.repos.d/vscode.repo <<EOF
 [code]
 name=Visual Studio Code
 baseurl=https://packages.microsoft.com/yumrepos/vscode
 enabled=1
 gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
-EOF
-"
+EOF'
 
-    # ─── OnlyOffice ────────────────────────────────────────────────
-    ["OnlyOffice"]="
-      sudo rpm --import https://download.onlyoffice.com/repo/onlyoffice.key &&
-      sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
-    "
+  try_cmd "Importar GPG OnlyOffice" \
+    sudo rpm --import https://download.onlyoffice.com/repo/onlyoffice.key
 
-    # ─── Copr: WebApp Manager ──────────────────────────────────────
-    ["WebApp Manager"]="sudo dnf -y copr enable refi64/webapp-manager"
+  try_cmd "Instalar repo OnlyOffice" \
+    sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
 
-    # ─── Copr: Topgrade ────────────────────────────────────────────
-    ["Topgrade"]="sudo dnf -y copr enable lilay/topgrade"
+  try_cmd "Instalar RPM Fusion Free/Nonfree" \
+    sudo dnf install -y \
+      https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+      https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 
-    # ─── Copr: Variety (si no está en main repo) ───────────────────
-    ["Variety"]="sudo dnf -y copr enable danyspin97/variety"
+  # ─── COPR: Repositorios comunitarios ─────────────────────────────────────────
 
-    # ─── Copr: msttcorefonts (si no tienes el script oficial) ──────
-    ["msttcorefonts"]="sudo dnf -y copr enable dawid/better_fonts"
-
+  declare -A coprs=(
+    [webapp-manager]="refi64/webapp-manager"
+    [topgrade]="lilay/topgrade"
+    [variety]="danyspin97/variety"
+    [msttcorefonts]="dawid/better_fonts"
   )
 
-  local ordered=(
-    "RPM Fusion"
-    "Brave Repo"
-    "VSCode Repo"
-    "OnlyOffice"
-    "WebApp Manager"
-    "Topgrade"
-    "Variety"
-    "msttcorefonts"
-  )
-
-  local total=${#ordered[@]}
-  local count=0
-
-  for name in "${ordered[@]}"; do
-    ((count++))
-    draw_progress_bar "$count" "$total"
-    log_info "🔧 Configurando repositorio: $name"
-
-    if eval "${repos[$name]}" &>> "$LOG_FILE"; then
-      log_success "✅ Repositorio '$name' configurado correctamente."
+  for name in "${!coprs[@]}"; do
+    log_info "⚙️ Habilitando COPR: ${coprs[$name]}"
+    if sudo dnf -y copr enable "${coprs[$name]}" &>> "$LOG_FILE"; then
+      log_success "COPR habilitado: ${coprs[$name]}"
     else
-      log_warn "⚠️ Fallo al configurar repositorio: $name. Se continúa con los demás."
+      log_warn "No se pudo habilitar COPR: ${coprs[$name]} (puede estar ya activo)"
     fi
   done
 
-  draw_progress_bar "$total" "$total"
-  log_info "🔄 Actualizando caché de DNF..."
+  # ─── Actualización de caché ──────────────────────────────────────────────────
 
-  try_cmd "dnf check-update" sudo dnf check-update
-  try_cmd "dnf makecache" sudo dnf makecache --refresh
+  log_info "🔄 Actualizando metadatos de DNF..."
+  try_cmd "Actualizar metadatos" sudo dnf makecache --refresh
+  try_cmd "Validar integridad de caché" sudo dnf check-update
 
-  log_success "🗂️ Repositorios configurados y caché actualizada"
-  return 0
+  log_success "✅ Repositorios configurados correctamente"
 }
 
 
