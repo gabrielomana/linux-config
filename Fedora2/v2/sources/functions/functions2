@@ -428,7 +428,9 @@ install_konsole_and_dotfiles() {
 
   local config_src="${SCRIPT_DIR}/dotfiles"
   local fastfetch_dir="${SCRIPT_DIR}/fastfetch"
+  local fastfetch_bin="/usr/bin/fastfetch"
 
+  # ─── Preparar entorno Fastfetch ─────────────────────────────────────
   try_cmd "Eliminar instalación previa de Fastfetch" sudo rm -rf "$fastfetch_dir"
 
   try_cmd "Clonar repositorio Fastfetch" \
@@ -440,12 +442,18 @@ install_konsole_and_dotfiles() {
   try_cmd "Instalar binarios Fastfetch" \
     sudo cp "$fastfetch_dir/build/"{fastfetch,flashfetch} /usr/bin/
 
-  try_cmd "Generar configuración de Fastfetch" \
-    fastfetch --gen-config-force
+  # ─── Configurar Fastfetch ───────────────────────────────────────────
+  if [[ -x "$fastfetch_bin" ]]; then
+    try_cmd "Generar configuración de Fastfetch" \
+      fastfetch --gen-config-force
 
-  try_cmd "Copiar configuración personalizada de Fastfetch" \
-    mkdir -p ~/.config/fastfetch && cp -f "$config_src/fastfetch_config.jsonc" ~/.config/fastfetch/config.jsonc
+    try_cmd "Copiar configuración personalizada de Fastfetch" \
+      mkdir -p ~/.config/fastfetch && cp -f "$config_src/fastfetch_config.jsonc" ~/.config/fastfetch/config.jsonc
+  else
+    log_warn "Fastfetch no disponible tras compilación. Saltando configuración."
+  fi
 
+  # ─── Instalar temas Konsole ─────────────────────────────────────────
   try_cmd "Descargar temas de Konsole" \
     sudo wget -q https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip -O /tmp/konsole.zip
 
@@ -454,14 +462,14 @@ install_konsole_and_dotfiles() {
 
   try_cmd "Eliminar archivos temporales de temas" sudo rm -rf /tmp/konsole /tmp/konsole.zip
 
-  try_cmd "Configurar dotfiles" cp -f "$config_src/.nanorc" ~/.nanorc
-  try_cmd "Configurar topgrade" cp -f "$config_src/topgrade.toml" ~/.config/topgrade.toml
+  # ─── Dotfiles adicionales ───────────────────────────────────────────
+  try_cmd "Configurar .nanorc" cp -f "$config_src/.nanorc" ~/.nanorc
+  try_cmd "Configurar topgrade.toml" cp -f "$config_src/topgrade.toml" ~/.config/topgrade.toml
   try_cmd "Configurar konsolerc" cp -f "$config_src/konsolerc" ~/.config/konsolerc
-  try_cmd "Copiar perfil Konsole" mkdir -p ~/.local/share/konsole && cp -f "$config_src/konsole.profile" ~/.local/share/konsole/
+  try_cmd "Instalar perfil Konsole" mkdir -p ~/.local/share/konsole && cp -f "$config_src/konsole.profile" ~/.local/share/konsole/
 
-  log_success "Konsole y dotfiles instalados correctamente"
+  log_success "✅ Konsole y dotfiles instalados (con tolerancia a fallos)"
 }
-
 
 
 
