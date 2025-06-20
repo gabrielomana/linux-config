@@ -1,14 +1,2 @@
-ffmpeg
-x264
-x265
-openssl
 gstreamer1-libav
-gstreamer1-plugins-bad-free-extras
-mozilla-openh264
-openh264
-webp-pixbuf-loader
-gstreamer1-plugins-bad-free-fluidsynth
-gstreamer1-plugins-bad-free-wildmidi
-libopenraw
-dav1d
-rav1e
+gstreamer1-plugins-bad-freeworld

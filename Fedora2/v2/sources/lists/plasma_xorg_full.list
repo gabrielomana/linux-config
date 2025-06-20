@@ -1,10 +1,10 @@
 @base-x
 plasma-desktop
+xorg-x11-server-Xorg
 sddm
 konsole
-dolphin
-xorg-x11-server-Xorg
-xorg-x11-drv-libinput
 plasma-nm
 plasma-pa
 plasma-systemmonitor
+bluedevil
+firewall-config

@@ -1,0 +1,9 @@
+GRUB_DEFAULT=saved
+GRUB_SAVEDEFAULT=saved
+GRUB_DISABLE_SUBMENU=true
+GRUB_TIMEOUT=15
+#GRUB_TIMEOUT_STYLE=hidden
+GRUB_DISTRIBUTOR="$(sed 's, release .*$,,g' /etc/system-release)"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet zswap.enabled=1 zswap.max_pool_percent=33 zswap.zpool=z3fold zswap.compressor=lz4hc"
+GRUB_CMDLINE_LINUX=""
+GRUB_ENABLE_BLSCFG=true

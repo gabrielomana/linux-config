@@ -1,199 +1,113 @@
-#!/bin/bash
-
-# ───────────────────────────────────────────────────────────────
-# Fedora KDE Plasma: Instalación automatizada
-# Autor: Gabriel Omaña / Initium
-# Última revisión: 2025-06-15
-# Descripción: Script para instalación base y preparación del entorno KDE Plasma.
-# ───────────────────────────────────────────────────────────────
-
+#!/usr/bin/env bash
 set -euo pipefail
 IFS=$'\n\t'
 
-# ───── Variables globales ─────
+# ───────────────────────────────────────────────────────────────
+# Fedora 42 Post-install Script - Initium
+# Seguridad, modularidad, logging y CI/CD-friendly
+# ───────────────────────────────────────────────────────────────
+
+# ========== VARIABLES GLOBALES ==========
 SCRIPT_NAME="$(basename "$0")"
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-REAL_USER="${SUDO_USER:-$USER}"
-REAL_HOME=$(eval echo "~$REAL_USER")
-
-LOG_DIR="$REAL_HOME/fedora_logs"
-DATESTAMP=$(date '+%Y%m%d-%H%M')
-LOG_FILE="$LOG_DIR/install_full_${DATESTAMP}.log"
-ERR_FILE="$LOG_DIR/install_error_${DATESTAMP}.log"
-
-# Preguntar si se desea eliminar logs anteriores
-if [[ -d "$LOG_DIR" ]]; then
-  read -rp $'\e[1;34m¿Deseas eliminar logs anteriores en "$LOG_DIR"? [s/N]: \e[0m' clear_logs
-  if [[ "$clear_logs" =~ ^[sS]$ ]]; then
-    find "$LOG_DIR" -type f -name 'install_*.log' -delete
-    echo "[INFO]  $(date '+%F %T')  Logs anteriores eliminados en $LOG_DIR"
-  fi
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EXTRA_APPS_LIST="$SCRIPT_DIR/sources/lists/extra_apps.list"
+LOG_DIR="$HOME/fedora_logs"
+LOG_FILE="$LOG_DIR/fedora_post_install.log"
+ERROR_COUNT=0
+TIMESTAMP="$(date +'%Y-%m-%d %H:%M:%S')"
 
 mkdir -p "$LOG_DIR"
-touch "$LOG_FILE" "$ERR_FILE"
 
-# ───── Redirección global: consola + logs con filtrado inteligente ─────
-exec > >(tee >(grep --line-buffered -E "^\[|^\s*\[.*\]" >> "$LOG_FILE") > /dev/tty) \
-     2> >(tee >(grep --line-buffered -E "^\[WARN|^\[ERROR|^\[❗" >> "$ERR_FILE") > /dev/tty)
-
-# ───── Logging estándar ─────
-log_info() {
-  local msg="[INFO]  $(date '+%F %T')  $*"
-  echo -e "$msg" | tee -a "$LOG_FILE"
+# ========== LOGGING ==========
+log() {
+    local level="$1"
+    local message="$2"
+    local timestamp
+    timestamp="$(date +'%Y-%m-%d %H:%M:%S')"
+    echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
 }
 
-log_warn() {
-  local msg="[WARN]  $(date '+%F %T')  $*"
-  echo -e "$msg" | tee -a "$LOG_FILE" >&2
-  echo -e "$msg" >> "$ERR_FILE"
+print_message() {
+    local level="$1"
+    local message="$2"
+    local color=""
+    case "$level" in
+        INFO) color="\033[0;34m" ;;
+        ERROR) color="\033[0;31m" ;;
+        SUCCESS) color="\033[0;32m" ;;
+        *) color="\033[0m" ;;
+    esac
+    echo -e "${color}[$level] $message\033[0m"
+    log "$level" "$message"
 }
 
-log_error() {
-  local msg="[ERROR] $(date '+%F %T')  $*"
-  echo -e "$msg" | tee -a "$LOG_FILE" >&2
-  echo -e "$msg" >> "$ERR_FILE"
-  exit 1
+execute_command() {
+    local cmd="$1"
+    local description="$2"
+    print_message "INFO" "Ejecutando: $description"
+    output=$(eval "$cmd" 2>&1) || {
+        print_message "ERROR" "Error al ejecutar: $description"
+        log "ERROR_DETAIL" "$output"
+        ((ERROR_COUNT++))
+        return 1
+    }
+    print_message "SUCCESS" "$description completado correctamente"
+    log "OUTPUT" "$output"
 }
 
-log_success() {
-  local msg="[ OK ]  $(date '+%F %T')  $*"
-  echo -e "$msg" | tee -a "$LOG_FILE"
-}
-
-# ───── Manejador de errores ─────
-error_handler() {
-  local exit_code=$?
-  local line_no=$1
-  log_error "❗ Error en la línea $line_no. Código de salida: $exit_code. Abortando $SCRIPT_NAME"
-  exit "$exit_code"
-}
-
-trap 'error_handler $LINENO' ERR
-
-
-
-# ───── Validación de comandos base ─────
-check_dependency() {
-  command -v "$1" &>/dev/null || log_error "Dependencia faltante: $1"
-}
-
-for bin in dnf sudo tee; do
-  check_dependency "$bin"
-done
-
-# ───── Carga de funciones compartidas ─────
-FUNCTIONS_FILE="${BASE_DIR}/sources/functions/functions"
-
-if [[ -f "$FUNCTIONS_FILE" ]]; then
-  source "$FUNCTIONS_FILE"
-  log_info "Funciones cargadas desde $FUNCTIONS_FILE"
-
-  if ! declare -f install_kde &>/dev/null; then
-    log_error "La función 'install_kde' no está definida tras cargar el archivo de funciones"
-  fi
+# ========== CARGA DE FUNCIONES EXTERNAS ==========
+if [[ -f "$SCRIPT_DIR/sources/functions/functions" ]]; then
+    source "$SCRIPT_DIR/sources/functions/functions"
+    print_message "INFO" "Funciones externas cargadas correctamente"
 else
-  log_error "Archivo de funciones no encontrado: $FUNCTIONS_FILE"
+    print_message "ERROR" "Archivo de funciones no encontrado en sources/functions/"
+    exit 1
 fi
 
-# ───── Comprobación de permisos sudo ─────
-if ! sudo -n true 2>/dev/null; then
-  log_warn "Se requieren permisos sudo para continuar."
-  sudo -v || log_error "No se pudo obtener permisos sudo. Abortando."
-fi
-
-# ───── Mantenimiento de sesión sudo ─────
-run_sudo() {
-  while true; do
-    sleep 60
-    sudo -n true || break
-  done & disown
+# ========== INICIALIZACIÓN LOG ==========
+setup_log_file() {
+    {
+        echo "==============================================================="
+        echo "    LOG DE POST-INSTALACIÓN FEDORA 42 - $TIMESTAMP"
+        echo "==============================================================="
+        echo ""
+    } > "$LOG_FILE"
+    print_message "INFO" "Archivo de log creado en $LOG_FILE"
 }
 
-# ───── Barra de progreso ─────
-progress_bar() {
-  local current=$1
-  local total=$2
-  local width=40
-  local progress=$(( current * width / total ))
-  local percent=$(( current * 100 / total ))
-  local filled=$(printf "%${progress}s" | tr ' ' '#')
-  local empty=$(printf "%$((width - progress))s" | tr ' ' '-')
-  printf "\r[%s%s] %3d%% (%d/%d)" "$filled" "$empty" "$percent" "$current" "$total"
-  [[ "$current" -eq "$total" ]] && echo ""
-}
-
-# ───── Backup de entorno del usuario ─────
-BASHRC_BACKUP="$HOME/.bashrc_original"
-if [[ -f "$HOME/.bashrc" && ! -f "$BASHRC_BACKUP" ]]; then
-  cp "$HOME/.bashrc" "$BASHRC_BACKUP"
-  log_info "Se realizó respaldo de .bashrc en $BASHRC_BACKUP"
-fi
-
-# ───── Carga de listas de paquetes ─────
-LISTS_DIR="${BASE_DIR}/sources/lists"
-
-declare -A PACKAGE_LISTS=(
-  [codecs]="$LISTS_DIR/codecs.list"
-  [extra_apps]="$LISTS_DIR/extra_apps.list"
-  [kde_plasma]="$LISTS_DIR/kde_plasma.list"
-  [kde_plasma_apps]="$LISTS_DIR/kde_plasma_apps.list"
-  [multimedia]="$LISTS_DIR/multimedia.list"
-  [tools]="$LISTS_DIR/tools.list"
-  [utilities]="$LISTS_DIR/utilities.list"
-  [xfce]="$LISTS_DIR/xfce.list"
-  [kde_bloatware]="$LISTS_DIR/kde_bloatware.list"
-)
-
-validate_package_lists() {
-  for key in "${!PACKAGE_LISTS[@]}"; do
-    local list_path="${PACKAGE_LISTS[$key]}"
-    if [[ ! -f "$list_path" ]]; then
-      log_error "Archivo obligatorio no encontrado: $list_path"
-    else
-      log_info "✓ Lista validada: $key"
-    fi
-  done
-}
-
-check_error() {
-  local exit_code=$1
-  local msg=$2
-  if [[ "$exit_code" -ne 0 ]]; then
-    log_error "$msg"
-  fi
-}
-
-# ───── Ejecución principal ─────
-
-log_info "Validando listas de paquetes requeridas..."
-validate_package_lists
-log_success "Todas las listas han sido validadas correctamente."
-
+# ========== FLUJO PRINCIPAL ==========
 main() {
-#   log_section "🚀 Iniciando instalación automatizada de Fedora KDE"
+    setup_log_file
 
-#   log_info "🔹 Instalando KDE Plasma..."
-#   install_kde || check_error $? "❌ Falló la instalación de KDE Plasma"
-#   log_success "✅ KDE Plasma instalado correctamente"
+    check_dependencies
+    add_repositories
+    configure_hardware
+    install_multimedia
+    install_konsole_and_dotfiles
+    install_extra_apps
+    system_cleanup
+    install_zsh
+    install_from_list "$SCRIPT_DIR/sources/lists/plasma_xorg_full.list" true
 
-  log_info "🔹 Instalando aplicaciones base del sistema..."
-  install_core_apps || check_error $? "❌ Falló la instalación de aplicaciones base"
-  log_success "✅ Aplicaciones base instaladas correctamente"
+    echo ""
+    echo "==============================================================="
+    if [[ $ERROR_COUNT -eq 0 ]]; then
+        print_message "SUCCESS" "INSTALACIÓN COMPLETADA SIN ERRORES"
+    else
+        print_message "ERROR" "INSTALACIÓN COMPLETADA CON $ERROR_COUNT ERRORES"
+        print_message "INFO" "Revise el archivo de log en $LOG_FILE"
+    fi
+    echo "==============================================================="
 
-  log_info "🔹 Instalando aplicaciones multimedia..."
-  install_multimedia || check_error $? "❌ Falló la instalación de multimedia"
-  log_success "✅ Aplicaciones multimedia instaladas correctamente"
-
-  log_info "🔄 Ejecutando actualización completa del sistema..."
-  run_sudo
-  sudo dnf clean all &>> "$LOG_FILE"
-  sudo dnf update -y &>> "$LOG_FILE"
-  sudo dnf upgrade -y &>> "$LOG_FILE"
-  log_success "✅ Sistema actualizado correctamente"
-
-  log_info "🔁 Reiniciando sistema para aplicar cambios..."
-  sudo reboot
+    echo ""
+    read -p "¿Desea reiniciar el sistema ahora? (s/n): " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Ss]$ ]]; then
+        print_message "INFO" "Reiniciando el sistema..."
+        execute_command "sudo reboot" "Reinicio del sistema"
+    else
+        print_message "INFO" "Reinicio cancelado. Reinicie manualmente para aplicar los cambios."
+    fi
 }
+
 main
