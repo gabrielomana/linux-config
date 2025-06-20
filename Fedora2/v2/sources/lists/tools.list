@@ -1,6 +1,6 @@
 firefox
 unrar
-p7zip-full
+p7zip
 unzip
 ark
 featherpad
@@ -8,11 +8,11 @@ digikam
 timeshift
 ksnip
 pdfarranger
-development-tools
+@development-tools
 gcc
 make
 perl
-g++
+gcc-c++                    # Equivalente a g++
 npm
 wget
 curl
@@ -20,14 +20,12 @@ git
 cabextract
 fontconfig
 cmake
-anacron
-software-properties-common
+cronie-anacron             # Fedora: reemplazo moderno de anacron
 ca-certificates
-gnupg2
+gnupg2                     # Fedora mantiene ambos, gnupg2 es válido
 gnupg
 java-11-openjdk
 nodejs
-libssl-devel
-pkg-config
+openssl-devel              # Equivalente a libssl-devel
+pkgconf-pkg-config         # Reemplaza a pkg-config
 python3-pip
-

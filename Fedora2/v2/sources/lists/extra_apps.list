@@ -1,46 +1,30 @@
-# ============================================
-# Lista de aplicaciones adicionales para Fedora 42+
-# Clasificadas por categoría y origen
-# ============================================
-
-# ─── Virtualización y sistemas invitados ─────
-qemu                        # base Fedora
-qemu-kvm                    # base Fedora
-libvirt*                    # base Fedora (comodín)
-virt-manager                # base Fedora
-virt-top                    # base Fedora
-virt-viewer                 # base Fedora
-guestfs-tools               # base Fedora
-libguestfs-tools            # base Fedora
-
-# ─── Seguridad y antivirus ───────────────────
-clamav                      # base Fedora
-clamtk                      # base Fedora
-
-# ─── Navegadores y oficina ───────────────────
-brave-browser               # Requiere repo Brave
-code                        # Requiere repo Microsoft (VSCode)
-onlyoffice-desktopeditors   # Requiere repo OnlyOffice
-
-# ─── Fonts ───────────────────────────────────
-dejavu-fonts-all            # base Fedora
-gnu-free-sans-fonts         # base Fedora
-gnu-free-serif-fonts        # base Fedora
-gnu-free-mono-fonts         # base Fedora
-lyx-fonts                   # base Fedora
-google-roboto-fonts         # base Fedora
-google-roboto-condensed-fonts # base Fedora
-bitstream-vera-fonts-all    # base Fedora
-msttcorefonts               # requiere instalación manual o Copr
-
-# ─── Herramientas y utilidades ───────────────
-bleachbit                   # base Fedora
-bridge-utils                # ⚠️ Obsoleto, aún disponible
-dnf-plugin-system-upgrade   # ya incluido en DNF base
-dnf-utils                   # ⚠️ Deprecado
-filezilla                   # base Fedora
-topgrade                    # disponible vía Copr: lilay/topgrade
-variety                     # disponible vía Copr
-webapp-manager              # disponible vía Copr: refi64/webapp-manager
-xorg-x11-fonts-100dpi       # base Fedora
-xorg-x11-fonts-75dpi        # base Fedora
+qemu
+qemu-kvm
+libvirt*
+virt-manager
+virt-top
+virt-viewer
+guestfs-tools
+libguestfs-tools
+clamav
+clamtk
+brave-browser
+code
+onlyoffice-desktopeditors
+dejavu-fonts-all
+gnu-free-sans-fonts
+gnu-free-serif-fonts
+gnu-free-mono-fonts
+lyx-fonts
+google-roboto-fonts
+google-roboto-condensed-fonts
+bitstream-vera-fonts-all
+msttcorefonts
+bleachbit
+bridge-utils
+filezilla
+topgrade
+variety
+webapp-manager
+xorg-x11-fonts-100dpi
+xorg-x11-fonts-75dpi

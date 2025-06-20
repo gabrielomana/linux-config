@@ -1,7 +1,5 @@
 ffmpeg
-x264
 x265
-mencoder
 mplayer
 openssl
 gstreamer1-libav
@@ -17,7 +15,7 @@ gstreamer1-plugins-bad-free-wildmidi
 gstreamer1-svt-av1
 libopenraw
 dav1d
-h264enc
 rav1e
+
 
 
