@@ -426,8 +426,8 @@ EOF
 install_konsole_and_dotfiles() {
   log_section "🎨 Instalación de Konsole y dotfiles personalizados"
 
-  local config_src="${PROJECT_ROOT}/dotfiles"
-  local fastfetch_dir="${PROJECT_ROOT}/fastfetch"
+  local config_src="${SCRIPT_DIR}/dotfiles"
+  local fastfetch_dir="${SCRIPT_DIR}/fastfetch"
 
   try_cmd "Eliminar instalación previa de Fastfetch" sudo rm -rf "$fastfetch_dir"
 
