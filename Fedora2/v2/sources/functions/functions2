@@ -456,11 +456,11 @@ run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
     log_info "GPU detectada: $gpu_entry"
 
     if echo "$gpu_entry" | grep -qi "Intel"; then
-      show_message "Configurando GPU Intel..."
+      log_section "Configurando GPU Intel..."
       run_cmd "sudo dnf install -y intel-media-driver vdpau-driver-all libva-utils"         "Drivers de Intel instalados"         "Error al instalar drivers Intel"
 
     elif echo "$gpu_entry" | grep -qi "AMD"; then
-      show_message "Configurando GPU AMD..."
+      log_section "Configurando GPU AMD..."
 
       run_cmd "sudo dnf install -y akmod-amdgpu mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld vdpau-driver-all libva-utils"         "Drivers de AMD instalados"         "Error al instalar drivers AMD"
 
@@ -469,7 +469,7 @@ run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
       run_cmd "sudo dnf swap -y mesa-vdpau-drivers mesa-vdpau-drivers-freeworld"         "mesa-vdpau-drivers actualizado"         "Error al reemplazar mesa-vdpau-drivers"
 
     elif echo "$gpu_entry" | grep -qi "NVIDIA"; then
-      show_message "Configurando GPU NVIDIA..."
+      log_section "Configurando GPU NVIDIA..."
 
       run_cmd "sudo dnf install -y akmod-nvidia nvidia-driver nvidia-settings nvidia-vaapi-driver vdpau-driver-all libva-utils"         "Drivers de NVIDIA instalados"         "Error al instalar drivers NVIDIA"
 
@@ -483,7 +483,7 @@ run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
   done
 
 # Validar herramientas de aceleración
-show_message "Verificando APIs de aceleración de video..."
+log_section "Verificando APIs de aceleración de video..."
 
 # Asegurar que las herramientas de diagnóstico estén instaladas
 if ! command -v vaapi-info &>/dev/null; then
@@ -521,11 +521,11 @@ done
   log_info "CPU detectada: ${cpu_name:-Desconocida}"
 
   if echo "$cpu_name" | grep -qi "intel"; then
-    show_message "Procesador Intel detectado. Instalando microcódigo..."
+    log_section "Procesador Intel detectado. Instalando microcódigo..."
     run_cmd "sudo dnf install -y --enablerepo=rpmfusion-nonfree microcode_ctl"       "Microcódigo de Intel instalado"       "Error al instalar microcódigo de Intel"
 
   elif echo "$cpu_name" | grep -qi "amd"; then
-    show_message "Procesador AMD detectado. Instalando microcódigo..."
+    log_section "Procesador AMD detectado. Instalando microcódigo..."
     run_cmd "sudo dnf install -y --enablerepo=rpmfusion-nonfree amd-ucode"       "Microcódigo de AMD instalado"       "Error al instalar microcódigo de AMD"
 
     log_info "Regenerando initramfs para cargar el microcódigo AMD"
