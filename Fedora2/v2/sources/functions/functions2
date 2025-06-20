@@ -426,7 +426,7 @@ EOF
 
 
 configure_hardware() {
-  show_section "Configurando hardware del sistema"
+  log_section "Configurando hardware del sistema"
 
   # ─── Paquetes multimedia y códecs ────────────────────────────────
 # Instalación de paquetes multimedia adicionales no cubiertos por listas
@@ -448,7 +448,7 @@ run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
   "Fallo al instalar paquetes multimedia directos"
 
   # ─── Soporte gráfico (GPU) ────────────────────────────────────────────────
-  show_section "Detectando y configurando GPU"
+  log_section "Detectando y configurando GPU"
 
   mapfile -t gpu_list < <(lspci | grep -iE "VGA|3D controller")
 
@@ -509,7 +509,7 @@ done
 
 
   # ─── Soporte para CPU ─────────────────────────────────────────────────────
-  show_section "Configurando soporte para CPU"
+  log_section "Configurando soporte para CPU"
 
   hypervisor=$(systemd-detect-virt)
   if [[ "$hypervisor" != "none" ]]; then
