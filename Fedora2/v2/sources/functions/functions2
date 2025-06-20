@@ -1004,6 +1004,34 @@ install_extra_apps() {
   return 0
 }
 
+system_cleanup() {
+  log_section "🧹 Limpieza final del sistema"
+
+  run_cmd "sudo dnf autoremove -y" \
+    "Paquetes huérfanos eliminados" \
+    "Fallo al eliminar paquetes huérfanos"
+
+  run_cmd "sudo dnf clean all" \
+    "Caché de DNF limpiada" \
+    "Fallo al limpiar caché de DNF"
+
+  if command -v flatpak &>/dev/null; then
+    run_cmd "flatpak uninstall --unused -y" \
+      "Runtimes Flatpak no usados eliminados" \
+      "Fallo al limpiar runtimes Flatpak"
+  fi
+
+  if command -v bleachbit &>/dev/null; then
+    log_info "Ejecutando limpieza con BleachBit"
+    sudo bleachbit --clean system.cache system.clipboard system.trash &>> "$LOG_FILE" \
+      && log_success "Limpieza realizada con BleachBit" \
+      || log_warn "BleachBit no pudo ejecutar todas las limpiezas"
+  fi
+
+  log_success "🧼 Limpieza del sistema completada"
+}
+
+
 
 configure_libvirtd() {
   log_info "Habilitando y configurando libvirtd"
