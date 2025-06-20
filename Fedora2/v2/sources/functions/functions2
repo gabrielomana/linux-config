@@ -978,26 +978,32 @@ log_success "🎯 Instalación de herramientas vía Cargo completada"
 
 
 install_extra_apps() {
-  log_section "Instalando aplicaciones adicionales"
+  log_section "📦 Instalación de aplicaciones adicionales"
 
+  # Verificar existencia de la lista
   if [[ ! -f "${extra_apps}" ]]; then
     log_error "Archivo de lista de aplicaciones adicionales no encontrado: ${extra_apps}"
     return 1
   fi
-  
-  log_info "Instalando paquetes adicionales desde lista: ${extra_apps}"
-  install_packages "${extra_apps}" || log_warn "Algunos paquetes adicionales no pudieron instalarse"
 
+  # Instalar paquetes desde lista
+  log_info "Instalando paquetes desde lista: $(basename "$extra_apps")"
+  if ! install_packages "${extra_apps}"; then
+    log_warn "⚠️ Algunos paquetes de la lista no se pudieron instalar correctamente"
+  fi
+
+  # Configuraciones complementarias
   configure_libvirtd
   configure_sddm
   configure_rtc_clock
   install_onlyoffice
   install_flatpak_apps
-  install_vscode_with_extensions
+  configure_vscode  # ← CORRECCIÓN: función ya implementada correctamente
 
-  log_success "Aplicaciones adicionales instaladas y configuradas"
+  log_success "✅ Aplicaciones adicionales instaladas y configuradas exitosamente"
   return 0
 }
+
 
 configure_libvirtd() {
   log_info "Habilitando y configurando libvirtd"
