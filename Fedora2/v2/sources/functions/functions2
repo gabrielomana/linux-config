@@ -980,25 +980,34 @@ log_success "🎯 Instalación de herramientas vía Cargo completada"
 install_extra_apps() {
   log_section "📦 Instalación de aplicaciones adicionales"
 
-  # Verificar existencia de la lista
+  # ─── Lista de apps extra ─────────────────────
   if [[ ! -f "${extra_apps}" ]]; then
     log_error "Archivo de lista de aplicaciones adicionales no encontrado: ${extra_apps}"
     return 1
   fi
 
-  # Instalar paquetes desde lista
   log_info "Instalando paquetes desde lista: $(basename "$extra_apps")"
   if ! install_packages "${extra_apps}"; then
-    log_warn "⚠️ Algunos paquetes de la lista no se pudieron instalar correctamente"
+    log_warn "⚠️ Algunos paquetes de ${extra_apps} no se pudieron instalar correctamente"
   fi
 
-  # Configuraciones complementarias
+  # ─── Lista de apps KDE adicionales ────────────
+  if [[ -f "$kde_plasma_apps" ]]; then
+    log_info "Instalando paquetes adicionales de KDE desde: $(basename "$kde_plasma_apps")"
+    if ! install_packages "$kde_plasma_apps"; then
+      log_warn "⚠️ Algunos paquetes de ${kde_plasma_apps} no se pudieron instalar correctamente"
+    fi
+  else
+    log_warn "Archivo de lista kde_plasma_apps no encontrado: $kde_plasma_apps"
+  fi
+
+  # ─── Configuraciones complementarias ─────────
   configure_libvirtd
   configure_sddm
   configure_rtc_clock
   install_onlyoffice
   install_flatpak_apps
-  configure_vscode  # ← CORRECCIÓN: función ya implementada correctamente
+  configure_vscode
 
   log_success "✅ Aplicaciones adicionales instaladas y configuradas exitosamente"
   return 0
