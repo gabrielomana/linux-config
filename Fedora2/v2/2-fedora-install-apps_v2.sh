@@ -56,11 +56,11 @@ execute_command() {
 }
 
 # ========== CARGA DE FUNCIONES EXTERNAS ==========
-if [[ -f "$SCRIPT_DIR/sources/functions/functions" ]]; then
-    source "$SCRIPT_DIR/sources/functions/functions"
+if [[ -f "$SCRIPT_DIR/sources/functions/functions2" ]]; then
+    source "$SCRIPT_DIR/sources/functions/functions2"
     print_message "INFO" "Funciones externas cargadas correctamente"
 else
-    print_message "ERROR" "Archivo de funciones no encontrado en sources/functions/"
+    print_message "ERROR" "Archivo de funciones no encontrado en sources/functions2/"
     exit 1
 fi
 
