@@ -464,6 +464,7 @@ install_konsole_and_dotfiles() {
 
 
 
+
 configure_hardware() {
   log_section "Configurando hardware del sistema"
 
