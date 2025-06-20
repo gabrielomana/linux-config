@@ -746,6 +746,19 @@ reload_plasma() {
   fi
 }
 
+check_dependencies() {
+    local deps=(git wget unzip cmake dnf bleachbit fastfetch)
+    local missing=()
+    for cmd in "${deps[@]}"; do
+        command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        log_info "Instalando dependencias: ${missing[*]}"
+        sudo dnf install -y "${missing[@]}"
+    fi
+}
+
+
 # ─── Instalación de Aplicaciones Multimedia ────────────────────────────────
 install_multimedia() {
   log_section "🎵 Instalación de aplicaciones multimedia y códecs"
