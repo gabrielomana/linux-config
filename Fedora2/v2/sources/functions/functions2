@@ -353,16 +353,16 @@ remove_packages() {
 
 
 add_repositories() {
-  log_section "🌐 Agregando y configurando repositorios adicionales"
+  log_section "🌐 Agregando y configurando repositorios adicionales necesarios"
 
   declare -A repos=(
-    # RPM Fusion
-    ["RPM Fusion"]="sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-\$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-\$(rpm -E %fedora).noarch.rpm"
 
-    # WebApp Manager
-    ["WebApp Manager"]="sudo dnf -y copr enable refi64/webapp-manager"
+    # ─── RPM Fusion (Free + Nonfree) ───────────────────────────────
+    ["RPM Fusion"]="sudo dnf install -y \
+      https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-\$(rpm -E %fedora).noarch.rpm \
+      https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-\$(rpm -E %fedora).noarch.rpm"
 
-    # Brave Browser (incluye importación de GPG key)
+    # ─── Brave Browser ─────────────────────────────────────────────
     ["Brave Repo"]="
       sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc &&
       sudo tee /etc/yum.repos.d/brave-browser.repo > /dev/null <<EOF
@@ -375,16 +375,7 @@ gpgkey=https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
 EOF
 "
 
-    # OnlyOffice
-    ["OnlyOffice"]="
-      sudo rpm --import https://download.onlyoffice.com/repo/onlyoffice.key &&
-      sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
-    "
-
-    # Personal COPR
-    ["Personal COPR"]="sudo dnf -y copr enable ayoungdukie/Personal_Repo"
-
-    # Microsoft GPG + VSCode Repo
+    # ─── Microsoft (VSCode) ─────────────────────────────────────────
     ["VSCode Repo"]="
       sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc &&
       sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<EOF
@@ -396,17 +387,46 @@ gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
 "
+
+    # ─── OnlyOffice ────────────────────────────────────────────────
+    ["OnlyOffice"]="
+      sudo rpm --import https://download.onlyoffice.com/repo/onlyoffice.key &&
+      sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
+    "
+
+    # ─── Copr: WebApp Manager ──────────────────────────────────────
+    ["WebApp Manager"]="sudo dnf -y copr enable refi64/webapp-manager"
+
+    # ─── Copr: Topgrade ────────────────────────────────────────────
+    ["Topgrade"]="sudo dnf -y copr enable lilay/topgrade"
+
+    # ─── Copr: Variety (si no está en main repo) ───────────────────
+    ["Variety"]="sudo dnf -y copr enable danyspin97/variety"
+
+    # ─── Copr: msttcorefonts (si no tienes el script oficial) ──────
+    ["msttcorefonts"]="sudo dnf -y copr enable dawid/better_fonts"
+
   )
 
-  local total=${#repos[@]}
+  local ordered=(
+    "RPM Fusion"
+    "Brave Repo"
+    "VSCode Repo"
+    "OnlyOffice"
+    "WebApp Manager"
+    "Topgrade"
+    "Variety"
+    "msttcorefonts"
+  )
+
+  local total=${#ordered[@]}
   local count=0
 
-  # Lista secuencial explícita para ejecución ordenada
-  for name in "RPM Fusion" "WebApp Manager" "Brave Repo" "OnlyOffice" "Personal COPR" "VSCode Repo"; do
+  for name in "${ordered[@]}"; do
     ((count++))
     draw_progress_bar "$count" "$total"
     log_info "🔧 Configurando repositorio: $name"
-    
+
     if eval "${repos[$name]}" &>> "$LOG_FILE"; then
       log_success "✅ Repositorio '$name' configurado correctamente."
     else
@@ -423,7 +443,6 @@ EOF
   log_success "🗂️ Repositorios configurados y caché actualizada"
   return 0
 }
-
 
 
 configure_hardware() {
