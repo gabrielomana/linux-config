@@ -1,18 +1,24 @@
 #!/usr/bin/env bash
-set -euo pipefail
-IFS=$'\n\t'
-trap 'echo "■ Error en la línea $LINENO"; exit 1' ERR
 
-# ===============================================================
-# functions_zsh – Instalación y configuración automática de ZSH
-# ===============================================================
+install_zsh_main() {
+  log_section "🚀 Instalación total de ZSH (user + root)"
+  try_cmd "Instalar paquetes base" sudo dnf install -y zsh git wget curl fzf util-linux-user starship
+  install_common_plugins
+  install_zsh_user
+  install_zsh_root
+  log_success "✨ ZSH completamente instalado y configurado"
+  log_warn "ℹ️ Para aplicar los cambios, ejecuta: exec zsh o reinicia la terminal"
+}
 
-verify_zsh_in_shells() {
-  local zsh_path
-  zsh_path=$(command -v zsh || true)
-  [[ -z "$zsh_path" ]] && return 0
-  if ! grep -q "$zsh_path" /etc/shells; then
-    echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
+install_zsh_user() {
+  _install_zsh_for "$(whoami)" "$HOME" ""
+}
+
+install_zsh_root() {
+  if sudo -n true 2>/dev/null; then
+    _install_zsh_for "root" "/root" "sudo "
+  else
+    log_warn "⚠️ No hay privilegios sudo para configurar ZSH en root, se omite."
   fi
 }
 
@@ -31,6 +37,7 @@ install_common_plugins() {
     "https://github.com/MichaelAquilina/zsh-you-should-use.git"
     "https://github.com/Aloxaf/fzf-tab.git"
   )
+
   for repo in "${repos[@]}"; do
     local name
     name=$(basename "$repo" .git)
@@ -40,8 +47,41 @@ install_common_plugins() {
       try_cmd "Clonar plugin $name" sudo git clone --depth=1 --quiet "$repo" "$custom_plugins_path/$name"
     fi
   done
+
   try_cmd "Renombrar you-should-use" sudo mv -f "${custom_plugins_path}/zsh-you-should-use" "${custom_plugins_path}/you-should-use" || true
-  log_success "Plugins comunes instalados/actualizados"
+  log_success "✅ Plugins comunes instalados/actualizados"
+}
+
+verify_zsh_setup() {
+  log_section "🔍 Verificación post-instalación de ZSH"
+
+  local current_shell
+  current_shell=$(getent passwd "$USER" | cut -d: -f7)
+
+  if [[ "$current_shell" != *"zsh" ]]; then
+    log_warn "⚠️ El shell predeterminado aún no es ZSH para $USER"
+  else
+    log_success "✅ ZSH es el shell predeterminado"
+  fi
+
+  if [[ ! -f "$HOME/.zshrc" ]]; then
+    log_error "❌ Archivo .zshrc no encontrado en $HOME"
+  else
+    grep -q "oh-my-zsh" "$HOME/.zshrc" && log_success "✅ .zshrc contiene Oh‑My‑ZSH" || log_warn "⚠️ .zshrc no hace referencia a Oh‑My‑ZSH"
+    grep -q "starship init zsh" "$HOME/.zshrc" && log_success "✅ Starship está configurado en .zshrc" || log_warn "⚠️ Starship no está declarado en .zshrc"
+  fi
+
+  if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+    log_error "❌ Directorio .oh-my-zsh no encontrado"
+  else
+    log_success "✅ Oh‑My‑ZSH está instalado correctamente"
+  fi
+
+  if command -v starship &>/dev/null; then
+    log_success "✅ Starship está disponible en PATH"
+  else
+    log_warn "⚠️ Starship no está en PATH"
+  fi
 }
 
 _install_zsh_for() {
@@ -51,25 +91,21 @@ _install_zsh_for() {
 
   log_section "🐚 Instalando ZSH para $user"
 
-  try_cmd "Crear estructura de directorios" ${sudo_prefix}mkdir -p       "$home_dir/.config" "$home_dir/.cache/zsh" "$home_dir/.local/share/zsh"
+  try_cmd "Crear estructura de directorios" ${sudo_prefix}mkdir -p     "$home_dir/.config" "$home_dir/.cache/zsh" "$home_dir/.local/share/zsh"
 
-  # Backup zshrc
   if [[ -f "$home_dir/.zshrc" ]]; then
     try_cmd "Backup .zshrc existente" ${sudo_prefix}mv -f "$home_dir/.zshrc" "$home_dir/.zshrc.backup.$(date +%F)"
   fi
 
-  # Oh‑My‑ZSH
   if [[ -d "$home_dir/.oh-my-zsh" ]]; then
     try_cmd "Actualizar Oh‑My‑ZSH" ${sudo_prefix}git -C "$home_dir/.oh-my-zsh" pull --quiet
   else
     try_cmd "Clonar Oh‑My‑ZSH" ${sudo_prefix}git clone --depth=1 --quiet https://github.com/ohmyzsh/ohmyzsh.git "$home_dir/.oh-my-zsh"
   fi
 
-  # Dotfiles .zshrc
   if [[ -f "${SCRIPT_DIR}/../../dotfiles/.zshrc" ]]; then
     try_cmd "Copiar .zshrc" ${sudo_prefix}cp -f "${SCRIPT_DIR}/../../dotfiles/.zshrc" "$home_dir/.zshrc"
   else
-    # Minimal zshrc
     ${sudo_prefix}bash -c "cat > '$home_dir/.zshrc' <<'EOF'
 export ZSH="\$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
@@ -78,34 +114,39 @@ source \$ZSH/oh-my-zsh.sh
 EOF"
   fi
 
-  # Starship config
   if command -v starship &>/dev/null; then
-    try_cmd "Config Starship" ${sudo_prefix}sh -c "echo 'eval "\\$(starship init zsh)"' >> '$home_dir/.zshrc'"
+    try_cmd "Añadir Starship al .zshrc" ${sudo_prefix}sh -c "echo 'eval "\$(starship init zsh)"' >> '$home_dir/.zshrc'"
+
+    local themes_folder="$home_dir/.config/starship_themes"
+    try_cmd "Descargar configuración principal" wget -q "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/prompt_black.toml" -O /tmp/starship_config
+    try_cmd "Copiar configuración starship.toml" ${sudo_prefix}cp -f /tmp/starship_config "$home_dir/.config/starship.toml"
+    try_cmd "Permisos de starship.toml" ${sudo_prefix}chown $user:$user "$home_dir/.config/starship.toml"
+    try_cmd "Crear carpeta de temas" ${sudo_prefix}mkdir -p "$themes_folder"
+
+    local theme_files=(
+      "prompt_black.toml"
+      "prompt_matcha.toml"
+      "prompt_nord_aurora.toml"
+      "prompt_nord_frost.toml"
+    )
+
+    for theme in "${theme_files[@]}"; do
+      try_cmd "Descargar tema $theme" wget -q "https://raw.githubusercontent.com/gabrielomana/MyStarships/main/$theme" -O "/tmp/$theme"
+      try_cmd "Instalar tema $theme" ${sudo_prefix}cp -f "/tmp/$theme" "$themes_folder/$theme"
+      try_cmd "Permisos de $theme" ${sudo_prefix}chown $user:$user "$themes_folder/$theme"
+    done
   fi
 
-  ${sudo_prefix}chown -R "$user:$user" "$home_dir/.oh-my-zsh" "$home_dir/.zshrc" "$home_dir/.config" "$home_dir/.cache" || true
+  try_cmd "Asignar ownership de $user" ${sudo_prefix}chown -R "$user:$user"     "$home_dir/.oh-my-zsh" "$home_dir/.zshrc" "$home_dir/.config" "$home_dir/.cache"
+
   verify_zsh_in_shells
-  try_cmd "Cambiar shell $user -> zsh" ${sudo_prefix}chsh -s "$(command -v zsh)" "$user"
-  log_success "ZSH configurado para $user"
-}
+  try_cmd "Cambiar shell por defecto" ${sudo_prefix}chsh -s "$(command -v zsh)" "$user"
 
-install_zsh_user() {
-  _install_zsh_for "$(whoami)" "$HOME" ""
-}
-
-install_zsh_root() {
-  if sudo -n true 2>/dev/null; then
-    _install_zsh_for "root" "/root" "sudo "
+  if [[ "$SHELL" != "$(command -v zsh)" ]]; then
+    log_warn "⚠️ Shell actual aún no es ZSH. Ejecuta manualmente: exec zsh"
   else
-    log_warn "No hay privilegios sudo para configurar ZSH en root, se omite."
+    log_info "✅ ZSH ya es el shell activo"
   fi
-}
 
-install_zsh_main() {
-  log_section "🚀 Instalación total de ZSH (user + root)"
-  try_cmd "Instalar paquetes base" sudo dnf install -y zsh git wget curl fzf util-linux-user starship
-  install_common_plugins
-  install_zsh_user
-  install_zsh_root
-  log_success "✨ ZSH completamente instalado y configurado"
+  log_success "✅ ZSH configurado para $user"
 }
