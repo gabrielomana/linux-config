@@ -9,7 +9,7 @@ IFS=$'\n\t'
 
 # ========== VARIABLES GLOBALES ==========
 SCRIPT_NAME="$(basename "$0")"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME="$(eval echo "~$REAL_USER")"
 
@@ -62,6 +62,34 @@ if [[ -f "$SCRIPT_DIR/sources/functions/functions_zsh" ]]; then
 else
   log_error "Archivo de funciones no encontrado: sources/functions/functions_zsh"
 fi
+
+# ========== DEFINICIÓN DE RUTAS DE LISTAS ==========
+LISTS_DIR="${SCRIPT_DIR}/sources/lists"
+
+LIST_KDE_PLASMA="${LISTS_DIR}/kde_plasma.list"
+LIST_KDE_APPS="${LISTS_DIR}/kde_plasma_apps.list"
+LIST_KDE_BLOATWARE="${LISTS_DIR}/kde_bloatware.list"
+LIST_MULTIMEDIA="${LISTS_DIR}/multimedia.list"
+LIST_CODECS="${LISTS_DIR}/codecs.list"
+LIST_UTILITIES="${LISTS_DIR}/utilities.list"
+LIST_EXTRA_APPS="${LISTS_DIR}/extra_apps.list"
+LIST_XORG_WORKSPACE="${LISTS_DIR}/plasma_xorg_full.list"
+
+REQUIRED_LISTS=(
+  "$LIST_KDE_PLASMA"
+  "$LIST_KDE_APPS"
+  "$LIST_KDE_BLOATWARE"
+  "$LIST_MULTIMEDIA"
+  "$LIST_CODECS"
+  "$LIST_UTILITIES"
+  "$LIST_EXTRA_APPS"
+  "$LIST_XORG_WORKSPACE"
+)
+
+# ========== VALIDACIÓN DE LISTAS ==========
+for list_file in "${REQUIRED_LISTS[@]}"; do
+  [[ -f "$list_file" ]] || log_error "Lista no encontrada: $list_file"
+done
 
 # ========== EJECUCIÓN ==========
 main() {

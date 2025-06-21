@@ -20,7 +20,7 @@ fi
 
 # ─── Variables de entorno y rutas ────────────────────────────────────────────
 SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
-LISTS_DIR="${SCRIPT_DIR}/../lists"
+LISTS_DIR="${SCRIPT_DIR}/../sources/lists"
 LOG_DIR="$HOME/fedora_logs"
 LOG_FILE="${LOG_DIR}/pkg_manager.log"
 
@@ -148,15 +148,51 @@ try_cmd() {
 load_dotfiles() {
   local df_dir="$SCRIPT_DIR/dotfiles"
   log_section "Aplicando dotfiles..."
-  
+
+  # Dotfiles básicos
   [[ -f "$df_dir/.zshrc" ]]        && cp "$df_dir/.zshrc" ~/.zshrc           && log_success "Copiado .zshrc"
   [[ -f "$df_dir/.nanorc" ]]       && cp "$df_dir/.nanorc" ~/.nanorc         && log_success "Copiado .nanorc"
   [[ -f "$df_dir/.aliases" ]]      && cp "$df_dir/.aliases" ~/.aliases       && log_success "Copiado .aliases"
   [[ -f "$df_dir/.exports" ]]      && cp "$df_dir/.exports" ~/.exports       && log_success "Copiado .exports"
-  [[ -f "$df_dir/neofetch.conf" ]] && mkdir -p ~/.config/neofetch && cp "$df_dir/neofetch.conf" ~/.config/neofetch/config.conf && log_success "Neofetch configurado"
+
+  # Neofetch
+  if [[ -f "$df_dir/neofetch.conf" ]]; then
+    mkdir -p ~/.config/neofetch
+    cp "$df_dir/neofetch.conf" ~/.config/neofetch/config.conf
+    log_success "Neofetch configurado"
+  fi
+
+  # Starship
+  if [[ -f "$df_dir/starship.toml" ]]; then
+    mkdir -p ~/.config
+    cp "$df_dir/starship.toml" ~/.config/starship.toml
+    log_success "Starship configurado"
+  fi
+
+  # Topgrade
+  if [[ -f "$df_dir/topgrade.toml" ]]; then
+    mkdir -p ~/.config
+    cp "$df_dir/topgrade.toml" ~/.config/topgrade.toml
+    log_success "Topgrade configurado"
+  fi
+
+  # Fastfetch
+  if [[ -f "$df_dir/fastfetch_config.jsonc" ]]; then
+    mkdir -p ~/.config/fastfetch
+    cp "$df_dir/fastfetch_config.jsonc" ~/.config/fastfetch/config.jsonc
+    log_success "Fastfetch configurado"
+  fi
+
+  # Konsole (si aplica)
+  if [[ -f "$df_dir/konsole.profile" || -f "$df_dir/konsolerc" ]]; then
+    mkdir -p ~/.local/share/konsole ~/.config
+    [[ -f "$df_dir/konsole.profile" ]] && cp "$df_dir/konsole.profile" ~/.local/share/konsole/Default.profile && log_success "Konsole profile aplicado"
+    [[ -f "$df_dir/konsolerc" ]]       && cp "$df_dir/konsolerc" ~/.config/konsolerc && log_success "Konsole rc aplicado"
+  fi
 
   log_info "Dotfiles aplicados correctamente"
 }
+
 
 #===============================================================================
 # Instalación de paquetes desde listas
