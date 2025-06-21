@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 IFS=$'\n\t'
+trap 'echo "■ Error en la línea $LINENO"; exit 1' ERR
 
 # ───────────────────────────────────────────────────────────────
 # Fedora 42 Post-install Script - Initium
@@ -18,95 +19,43 @@ TIMESTAMP="$(date +'%Y-%m-%d %H:%M:%S')"
 
 mkdir -p "$LOG_DIR"
 
-# ========== LOGGING ==========
-log() {
-    local level="$1"
-    local message="$2"
-    local timestamp
-    timestamp="$(date +'%Y-%m-%d %H:%M:%S')"
-    echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
-}
-
-print_message() {
-    local level="$1"
-    local message="$2"
-    local color=""
-    case "$level" in
-        INFO) color="\033[0;34m" ;;
-        ERROR) color="\033[0;31m" ;;
-        SUCCESS) color="\033[0;32m" ;;
-        *) color="\033[0m" ;;
-    esac
-    echo -e "${color}[$level] $message\033[0m"
-    log "$level" "$message"
-}
-
-execute_command() {
-    local cmd="$1"
-    local description="$2"
-    print_message "INFO" "Ejecutando: $description"
-    output=$(eval "$cmd" 2>&1) || {
-        print_message "ERROR" "Error al ejecutar: $description"
-        log "ERROR_DETAIL" "$output"
-        ((ERROR_COUNT++))
-        return 1
-    }
-    print_message "SUCCESS" "$description completado correctamente"
-    log "OUTPUT" "$output"
-}
-
 # ========== CARGA DE FUNCIONES EXTERNAS ==========
 if [[ -f "$SCRIPT_DIR/sources/functions/functions2" ]]; then
-    source "$SCRIPT_DIR/sources/functions/functions2"
+    
     print_message "INFO" "Funciones externas cargadas correctamente"
 else
     print_message "ERROR" "Archivo de funciones no encontrado en sources/functions2/"
     exit 1
 fi
 
-# ========== INICIALIZACIÓN LOG ==========
-setup_log_file() {
-    {
-        echo "==============================================================="
-        echo "    LOG DE POST-INSTALACIÓN FEDORA 42 - $TIMESTAMP"
-        echo "==============================================================="
-        echo ""
-    } > "$LOG_FILE"
-    print_message "INFO" "Archivo de log creado en $LOG_FILE"
-}
+if [[ -f "$SCRIPT_DIR/sources/functions/functions_zsh" ]]; then
+    
+    print_message "INFO" "Funciones externas cargadas correctamente"
+else
+    print_message "ERROR" "Archivo de funciones no encontrado en sources/functions/"
+    exit 1
+fi
 
-# ========== FLUJO PRINCIPAL ==========
+
 main() {
-    setup_log_file
-
     check_dependencies
     add_repositories
     configure_hardware
     install_multimedia
-    install_konsole_and_dotfiles
-    install_extra_apps
+    configure_konsole
+    install_zsh_main      # ← ahora todo ZSH
+    install_extra_apps    # (incluye CLI tools)
     system_cleanup
-    #install_zsh
 
-    echo ""
-    echo "==============================================================="
-    if [[ $ERROR_COUNT -eq 0 ]]; then
-        print_message "SUCCESS" "INSTALACIÓN COMPLETADA SIN ERRORES"
-    else
-        print_message "ERROR" "INSTALACIÓN COMPLETADA CON $ERROR_COUNT ERRORES"
-        print_message "INFO" "Revise el archivo de log en $LOG_FILE"
-    fi
-    echo "==============================================================="
-
-    echo ""
-    read -p "¿Desea reiniciar el sistema ahora? (s/n): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Ss]$ ]]; then
-        print_message "INFO" "Reiniciando el sistema..."
-        execute_command "sudo reboot" "Reinicio del sistema"
-    else
-        print_message "INFO" "Reinicio cancelado. Reinicie manualmente para aplicar los cambios."
-    fi
+  echo -e "
+🌀 Instalación finalizada. ¿Deseas reiniciar ahora? (s/n)"
+  read -r answer
+  if [[ "$answer" =~ ^[sS]$ ]]; then
+    log_info "Reiniciando el sistema..."
+    reboot
+  else
+    log_info "Reinicio omitido por el usuario."
+  fi
 }
 
 main

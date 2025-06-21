@@ -1,71 +1,7 @@
-#!/bin/bash
-#===============================================================================
-# Archivo: functions.sh
-# Proyecto: Fedora Post-Install (KDE)
-# Descripción: Módulo de funciones reutilizables para scripts de instalación y postconfiguración
-# Autor: Gabriel Omaña / Initium
-# Licencia: MIT
-#===============================================================================
-
-# Protección: Evita que este archivo se ejecute directamente
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  echo "[ERROR] Este archivo es un módulo de funciones y no debe ejecutarse directamente."
-  echo "        Por favor, inclúyelo con: source ${BASH_SOURCE[0]}"
-  exit 1
-fi
-
-#===============================================================================
-# Variables globales y rutas a listas de paquetes
-#===============================================================================
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LISTS_DIR="${SCRIPT_DIR}/../lists"  # ← Corrección aplicada aquí
-
-LIST_KDE_PLASMA="${LISTS_DIR}/kde_plasma.list"
-LIST_KDE_APPS="${LISTS_DIR}/kde_plasma_apps.list"
-LIST_KDE_BLOATWARE="${LISTS_DIR}/kde_bloatware.list"
-LIST_MULTIMEDIA="${LISTS_DIR}/multimedia.list"
-LIST_CODECS="${LISTS_DIR}/codecs.list"
-LIST_UTILITIES="${LISTS_DIR}/utilities.list"
-LIST_EXTRA_APPS="${LISTS_DIR}/extra_apps.list"
-
-REQUIRED_LISTS=(
-  "$LIST_KDE_PLASMA"
-  "$LIST_KDE_APPS"
-  "$LIST_KDE_BLOATWARE"
-  "$LIST_MULTIMEDIA"
-  "$LIST_UTILITIES"
-  "$LIST_EXTRA_APPS"
-)
-
-# Variables de lista individuales (usadas por funciones instaladoras)
-kde_plasma="$LIST_KDE_PLASMA"
-kde_plasma_apps="$LIST_KDE_APPS"
-kde_bloatware="$LIST_KDE_BLOATWARE"
-multimedia="$LIST_MULTIMEDIA"
-codecs="$LIST_CODECS"
-utilities="$LIST_UTILITIES"
-extra_apps="$LIST_EXTRA_APPS"
-
-# Validación de listas necesarias
-for list_file in "${REQUIRED_LISTS[@]}"; do
-  if [[ ! -f "$list_file" ]]; then
-    echo "[ERROR] Lista no encontrada: $list_file"
-    return 1
-  fi
-done
-
-
-# Colores ANSI
-if [[ -t 1 ]]; then
-  RED="\033[0;31m"
-  GREEN="\033[0;32m"
-  YELLOW="\033[1;33m"
-  BLUE="\033[1;34m"
-  NC="\033[0m"
-else
-  RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
-fi
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+trap 'echo "■ Error en la línea $LINENO"; exit 1' ERR
 
 setup_colors() {
   if [[ -t 1 ]] && command -v tput >/dev/null 2>&1; then
@@ -111,12 +47,14 @@ done
 # Funciones utilitarias genéricas
 #===============================================================================
 
+
 check_command() {
   command -v "$1" &>/dev/null || {
     log_error "Comando requerido no disponible: $1"
     return 1
   }
 }
+
 
 ensure_file_exists() {
   local file="$1"
@@ -125,6 +63,7 @@ ensure_file_exists() {
     return 1
   fi
 }
+
 
 run_sudo() {
   if ! sudo -n true 2>/dev/null; then
@@ -135,6 +74,7 @@ run_sudo() {
     }
   fi
 }
+
 
 run_cmd() {
   local cmd="$1"
@@ -151,9 +91,11 @@ run_cmd() {
 }
 
 
+
 is_root() {
   [[ "$EUID" -eq 0 ]]
 }
+
 
 draw_progress_bar() {
   local current=$1
@@ -171,6 +113,7 @@ draw_progress_bar() {
   [[ "$current" -eq "$total" ]] && echo ""
 }
 
+
 try_cmd() {
   local desc="$1"; shift
   if "$@"; then
@@ -184,6 +127,7 @@ try_cmd() {
 #===============================================================================
 # Funciones de instalación y eliminación de paquetes
 #===============================================================================
+
 
 install_packages() {
   local list_file="$1"
@@ -249,6 +193,7 @@ install_packages() {
 }
 
 
+
 log_section() {
   local title="$1"
   local clean_title="${title//[$'\t\r\n']}"
@@ -264,6 +209,7 @@ log_section() {
 
   [[ -f "$LOG_FILE" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SECTION] $title" >> "$LOG_FILE"
 }
+
 
 
 
@@ -330,6 +276,7 @@ remove_packages() {
 
   return 0
 }
+
 
 
 
@@ -404,6 +351,7 @@ EOF
   log_success "🗂️ Repositorios configurados y caché actualizada"
   return 0
 }
+
 
 
 
@@ -528,6 +476,7 @@ done
   fi
 }
 
+
 clean_kde_bloatware() {
   log_section "Eliminando bloatware de KDE: $LIST_KDE_PLASMA"
 
@@ -572,6 +521,7 @@ clean_kde_bloatware() {
 }
 
 # ─── Instalación de KDE Plasma ───────────────────────────────────────────────
+
 install_kde() {
   log_section "🚀 Instalando entorno de escritorio KDE Plasma"
 
@@ -616,6 +566,7 @@ install_kde() {
 }
 
 
+
 configure_flameshot() {
   log_section "📸 Configurando Flameshot + OCR y atajos con kwriteconfig5"
 
@@ -647,6 +598,7 @@ configure_flameshot() {
   return 0
 }
 
+
 install_deps() {
   local pkgs=(flameshot tesseract tesseract-langpack-spa imagemagick xclip)
   local msg="Instalando dependencias: ${pkgs[*]}"
@@ -655,6 +607,7 @@ install_deps() {
     "Dependencias instaladas correctamente" \
     "Fallo al instalar dependencias requeridas para Flameshot" || return 1
 }
+
 
 create_ocr_script() {
   local desk="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
@@ -683,6 +636,7 @@ EOF
   return 0
 }
 
+
 configure_kwrite_shortcuts() {
   local file="$HOME/.config/kglobalshortcutsrc"
 
@@ -705,6 +659,7 @@ configure_kwrite_shortcuts() {
   return 0
 }
 
+
 create_menu_shortcut() {
   local script_path="${XDG_DESKTOP_DIR:-$HOME/Desktop}/flameshot_ocr.sh"
   local desktop_entry="$HOME/.local/share/applications/flameshot-ocr.desktop"
@@ -723,20 +678,6 @@ EOF
   return 0
 }
 
-reload_plasma() {
-  if command -v qdbus &>/dev/null; then
-    qdbus org.kde.KWin /KWin reconfigure && {
-      log_success "Atajos recargados en Plasma"
-      return 0
-    } || {
-      log_warn "Falló recarga por D-Bus; quizás requieras logout/login"
-      return 1
-    }
-  else
-    log_warn "qdbus no encontrado; reinicia tu sesión para aplicar cambios"
-    return 1
-  fi
-}
 
 reload_plasma() {
   if command -v qdbus &>/dev/null; then
@@ -747,6 +688,7 @@ reload_plasma() {
 }
 
 # ─── Instalación de Aplicaciones Multimedia ────────────────────────────────
+
 install_multimedia() {
   log_section "🎵 Instalación de aplicaciones multimedia y códecs"
 
@@ -770,6 +712,7 @@ install_multimedia() {
 }
 
 
+
 install_core_apps() {
   log_section "🧰 Instalación de aplicaciones básicas del sistema"
   add_repositories
@@ -778,6 +721,7 @@ install_core_apps() {
 
   log_success "🧩 Aplicaciones básicas instaladas correctamente"
 }
+
 
 install_system_utilities() {
   log_section "🛠️ Instalación de utilidades del sistema"
@@ -833,6 +777,7 @@ install_system_utilities() {
     fi
   done
 }
+
 
 install_cargo_tools() {
 log_section "🔧 Instalación de herramientas vía Cargo (Rust)"
@@ -902,6 +847,7 @@ log_success "🎯 Instalación de herramientas vía Cargo completada"
 
 
 
+
 install_extra_apps() {
   log_section "Instalando aplicaciones adicionales"
 
@@ -924,6 +870,7 @@ install_extra_apps() {
   return 0
 }
 
+
 configure_libvirtd() {
   log_info "Habilitando y configurando libvirtd"
 
@@ -937,6 +884,7 @@ configure_libvirtd() {
 }
 
 # ─── Configurar gestor de sesión SDDM ─────────────────────────────────────
+
 configure_sddm_core() {
   log_info "Habilitando SDDM como gestor de sesiones..."
   run_cmd "sudo systemctl enable sddm" \
@@ -949,6 +897,7 @@ configure_sddm_core() {
 }
 
 # ─── Configurar NumLock en SDDM ───────────────────────────────────────────
+
 configure_sddm_numlock() {
   log_info "Configurando NumLock en SDDM..."
 
@@ -974,6 +923,7 @@ configure_sddm_numlock() {
 }
 
 # ─── Ocultar usuarios en pantalla de inicio de SDDM ───────────────────────
+
 configure_sddm_hide_users() {
   local conf_file="/etc/sddm.conf"
   local username="libvirt-qemu"
@@ -999,12 +949,14 @@ configure_sddm_hide_users() {
 }
 
 # ─── Configuración completa de SDDM (núcleo, numlock, ocultar usuarios) ──
+
 configure_sddm() {
   log_section "⚙️ Configurando SDDM"
   configure_sddm_core
   configure_sddm_numlock
   configure_sddm_hide_users
 }
+
 
 configure_rtc_clock() {
   log_info "Configurando el reloj en hora local (RTC localtime)"
@@ -1015,6 +967,7 @@ configure_rtc_clock() {
     log_warn "No se pudo configurar el RTC en hora local"
   fi
 }
+
 
 install_onlyoffice() {
   log_info "Instalando OnlyOffice Desktop Editors"
@@ -1027,6 +980,7 @@ install_onlyoffice() {
     log_warn "No se pudo instalar OnlyOffice. Revisa los repositorios o conectividad"
   fi
 }
+
 
 install_flatpak_apps() {
   log_section "Instalando aplicaciones Flatpak desde Flathub"
@@ -1065,6 +1019,7 @@ install_flatpak_apps() {
 
   return 0
 }
+
 
 configure_vscode() {
   log_section "Instalando y configurando Visual Studio Code"

@@ -1,0 +1,3 @@
+# Aliases comunes
+alias ll='ls -lah'
+alias gs='git status'

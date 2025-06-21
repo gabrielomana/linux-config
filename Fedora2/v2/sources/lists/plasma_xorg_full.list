@@ -1,4 +1,4 @@
-@base-x
+plasma-workspace-x11
 plasma-desktop
 xorg-x11-server-Xorg
 sddm
@@ -8,3 +8,4 @@ plasma-pa
 plasma-systemmonitor
 bluedevil
 firewall-config
+@base-x

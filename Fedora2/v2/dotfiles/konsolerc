@@ -1,29 +1,2 @@
 [Desktop Entry]
 DefaultProfile=konsole.profile
-
-[Favorite Profiles]
-Favorites=dark.profile,light.profile
-
-[General]
-ConfigVersion=1
-
-[KonsoleWindow]
-RememberWindowSize=false
-ShowMenuBarByDefault=false
-
-[MainWindow]
-1920x945 screen: Height=656
-1920x945 screen: Width=977
-1920x945 screen: XPosition=471
-1920x945 screen: YPosition=136
-RestorePositionForNextInstance=false
-State=AAAA/wAAAAD9AAAAAQAAAAAAAAAAAAAAAPwCAAAAAvsAAAAiAFEAdQBpAGMAawBDAG8AbQBtAGEAbgBkAHMARABvAGMAawAAAAAA/////wAAAXcA////+wAAABwAUwBTAEgATQBhAG4AYQBnAGUAcgBEAG8AYwBrAAAAAAD/////AAABBgD///8AAAPRAAACQAAAAAQAAAAEAAAACAAAAAj8AAAAAQAAAAIAAAACAAAAFgBtAGEAaQBuAFQAbwBvAGwAQgBhAHIBAAAAAP////8AAAAAAAAAAAAAABwAcwBlAHMAcwBpAG8AbgBUAG8AbwBsAGIAYQByAQAAASz/////AAAAAAAAAAA=
-ToolBarsMovable=Disabled
-Virtual1=Virtual1
-
-[TabBar]
-NewTabButton=true
-TabBarVisibility=ShowTabBarWhenNeeded
-
-[UiSettings]
-ColorScheme=
