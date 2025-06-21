@@ -19,8 +19,8 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 fi
 
 # ─── Variables de entorno y rutas ────────────────────────────────────────────
-SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
-LISTS_DIR="${SCRIPT_DIR}/../sources/lists"
+SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)}"
+LISTS_DIR="${SCRIPT_DIR}/sources/lists"
 LOG_DIR="$HOME/fedora_logs"
 LOG_FILE="${LOG_DIR}/pkg_manager.log"
 
