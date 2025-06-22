@@ -4,7 +4,7 @@ IFS=$'\n\t'
 trap 'echo "■ Error en la línea $LINENO"; exit 1' ERR
 
 # ───────────────────────────────────────────────────────────────
-# Fedora 42 Post-install Script - Initium
+# Fedora 42 Post-install Script - Initium (v3)
 # Seguridad, modularidad, logging y CI/CD-friendly
 # ───────────────────────────────────────────────────────────────
 
@@ -21,39 +21,44 @@ mkdir -p "$LOG_DIR"
 
 # ========== CARGA DE FUNCIONES EXTERNAS ==========
 if [[ -f "$SCRIPT_DIR/sources/functions/functions3" ]]; then
-    log_info "INFO" "Funciones externas cargadas correctamente"
+    source "$SCRIPT_DIR/sources/functions/functions3"
+    log_info "Funciones3 cargadas correctamente"
 else
-    log_info "ERROR" "Archivo de funciones no encontrado en sources/functions2/"
+    echo "[ERROR] No se encontró el archivo functions3 en sources/functions/"
     exit 1
 fi
 
 if [[ -f "$SCRIPT_DIR/sources/functions/functions_zsh_v2" ]]; then
-    log_info "INFO" "Funciones externas cargadas correctamente"
+    source "$SCRIPT_DIR/sources/functions/functions_zsh_v2"
+    log_info "Funciones ZSH cargadas correctamente"
 else
-    log_info "ERROR" "Archivo de funciones no encontrado en sources/functions/"
+    echo "[ERROR] No se encontró el archivo functions_zsh_v2 en sources/functions/"
     exit 1
 fi
 
-
+# ========== EJECUCIÓN PRINCIPAL ==========
 main() {
+    log_section "🛠️ INICIO DE POST-INSTALACIÓN EN FEDORA"
+    
     check_dependencies
     add_repositories
     configure_hardware
     install_multimedia
     configure_konsole
-    install_zsh_main      # ← ahora todo ZSH
-    install_extra_apps    # (incluye CLI tools)
+    install_zsh_main       # ZSH completo: usuario + root
+    install_extra_apps     # CLI, utilidades adicionales
     system_cleanup
 
-  echo -e "
-🌀 Instalación finalizada. ¿Deseas reiniciar ahora? (s/n)"
-  read -r answer
-  if [[ "$answer" =~ ^[sS]$ ]]; then
-    log_info "Reiniciando el sistema..."
-    reboot
-  else
-    log_info "Reinicio omitido por el usuario."
-  fi
+    log_success "✅ Instalación finalizada correctamente"
+
+    echo -e "\n🌀 ¿Deseas reiniciar ahora? (s/n)"
+    read -r answer
+    if [[ "$answer" =~ ^[sS]$ ]]; then
+        log_info "Reiniciando el sistema..."
+        reboot
+    else
+        log_info "Reinicio omitido por el usuario."
+    fi
 }
 
 main
