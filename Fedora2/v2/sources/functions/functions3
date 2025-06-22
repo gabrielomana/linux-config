@@ -541,6 +541,15 @@ check_dependencies() {
   fi
 }
 
+validate_command() {
+    local cmd="$1"
+    if ! command -v "$cmd" &>/dev/null; then
+        log_error "El comando '$cmd' no está disponible en el sistema"
+        return 1
+    fi
+}
+
+
 add_repositories() {
   log_section "➕ Habilitando repositorios de terceros (Brave, RPM Fusion, VSCode, COPR)"
 
