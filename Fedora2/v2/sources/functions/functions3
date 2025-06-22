@@ -1,170 +1,28 @@
-# == Archivo refactorizado: functions2_refactored.sh ==
 #!/usr/bin/env bash
 set -euo pipefail
 IFS=$'\n\t'
-trap 'echo "■ Error en la línea $LINENO"; exit 1' ERR
-source "$(dirname "${BASH_SOURCE[0]}")/functions_zsh"
 
-install_plasma_xorg_full() {
-
-local list="${SCRIPT_DIR}/sources/lists/plasma_xorg_full.list"
-if [[ -f "$list" ]]; then
-  log_section "🏞️ Instalando KDE Plasma (sesión Xorg completa)"
-  install_packages "$list"
-else
-  log_warn "plasma_xorg_full.list no encontrado"
-fi
-}
-
-install_cli_tools() {
-
-log_section "🧰 Instalación de CLI Tools modernas"
-local cli_list="${SCRIPT_DIR}/sources/lists/cli_tools.list"
-if [[ ! -f "$cli_list" ]]; then
-  log_error "Archivo de lista no encontrado: $cli_list"
-  return 1
-fi
-install_packages "$cli_list" || log_warn "Algunas CLI tools no se pudieron instalar completamente"
-log_success "✅ CLI Tools instaladas correctamente"
-configure_cli_tools
-}
-# ─── CLI Tools Configuration ────────────────────────────────────────
-
-configure_cli_tools() {
-
-log_section "⚙️ Configuración de CLI Tools"
-local dotfiles_dir="${SCRIPT_DIR}/../../dotfiles"
-mkdir -p ~/.config
-if [[ -f "$dotfiles_dir/.zshrc" ]]; then
-  cp -f "$dotfiles_dir/.zshrc" ~/.zshrc
-  log_success ".zshrc personalizado aplicado"
-fi
-if command -v fastfetch &>/dev/null && [[ -f "$dotfiles_dir/fastfetch_config.jsonc" ]]; then
-  mkdir -p ~/.config/fastfetch
-  cp -f "$dotfiles_dir/fastfetch_config.jsonc" ~/.config/fastfetch/config.jsonc
-  log_success "Configuración de fastfetch aplicada"
-fi
-if [[ -f "$dotfiles_dir/topgrade.toml" ]]; then
-  mkdir -p ~/.config
-  cp -f "$dotfiles_dir/topgrade.toml" ~/.config/topgrade.toml
-  log_success "Configuración de topgrade aplicada"
-fi
-if command -v bat &>/dev/null || command -v batcat &>/dev/null; then
-  mkdir -p ~/.config/bat
-  echo '--theme="TwoDark"' > ~/.config/bat/config
-  log_success "Configuración de bat aplicada"
-fi
-if command -v zoxide &>/dev/null; then
-  grep -q 'zoxide init' ~/.zshrc || echo 'eval "$(zoxide init zsh)"' >> ~/.zshrc
-  log_success "zoxide integrado en .zshrc"
-fi
-if command -v navi &>/dev/null; then
-  mkdir -p ~/.config/navi
-  if [[ ! -d ~/.config/navi/cheats ]]; then
-    git clone https://github.com/denisidoro/cheat.sh.git ~/.config/navi/cheats         && log_success "Cheatsheets de navi instalados"
-  else
-    log_info "Cheatsheets de navi ya presentes"
-  fi
-  grep -q 'navi widget zsh' ~/.zshrc || echo 'eval "$(navi widget zsh)"' >> ~/.zshrc
-fi
-ensure_zsh_as_default
-log_success "🎯 Configuración personalizada de CLI Tools completada"
-if [[ -f "$dotfiles_dir/.nanorc" ]]; then
-  cp -f "$dotfiles_dir/.nanorc" ~/.nanorc
-  log_success ".nanorc personalizado aplicado"
-fi
-}
-# ─── Ensure ZSH is Default Shell ────────────────────────────────────
-
-ensure_zsh_as_default() {
-
-log_section "🔁 Configuración del shell por defecto: ZSH"
-if [[ "$SHELL" != *"zsh" ]]; then
-  local zsh_path
-  zsh_path=$(command -v zsh)
-  if [[ -x "$zsh_path" ]]; then
-    log_info "Estableciendo ZSH como shell por defecto para el usuario: $USER"
-    chsh -s "$zsh_path" "$USER" && log_success "ZSH configurado como shell por defecto"
-  else
-    log_error "ZSH no está disponible como ejecutable. No se puede aplicar chsh."
-  fi
-else
-  log_info "ZSH ya es el shell por defecto"
-fi
-}
-
-configure_konsole() {
-
-log_section "🎨 Configuración de Konsole (terminal KDE)"
-local config_src="${SCRIPT_DIR}/../../dotfiles"
-# Descargar e instalar temas de Konsole
-try_cmd "Descargar temas de Konsole" \
-sudo wget -q https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip -O /tmp/konsole.zip
-try_cmd "Descomprimir e instalar temas de Konsole" \
-unzip -o /tmp/konsole.zip -d /tmp/ && \
-sudo mkdir -p /usr/share/konsole && \
-sudo cp -rf /tmp/konsole/* /usr/share/konsole/
-try_cmd "Eliminar archivos temporales de temas" sudo rm -rf /tmp/konsole /tmp/konsole.zip
-# Aplicar configuración personalizada si existen
-try_cmd "Configurar konsolerc" cp -f "$config_src/konsolerc" ~/.config/konsolerc
-try_cmd "Configurar konsole.profile" mkdir -p ~/.local/share/konsole && cp -f "$config_src/konsole.profile" ~/.local/share/konsole/
-log_success "✅ Konsole configurado correctamente"
-}
-
-install_system_fonts() {
-
-log_section "🔤 Instalación de fuentes del sistema (DNF + Nerd Fonts)"
-echo "INSTALL SYSTEM CORE FONTS:"
-echo " - Google / Microsoft / Noto / Fira Code (vía DNF)"
-echo " - Nerd Fonts parcheadas desde GitHub"
-sleep 2
-local temp_dir="/tmp/nerd_fonts"
-local install_dir="/usr/share/fonts/nerd_fonts"
-local dotfiles_dir="${SCRIPT_DIR}/../../dotfiles"
-local font_names=("JetBrainsMono" "Ubuntu" "Mononoki" "Hack")
-mkdir -p "$temp_dir"
-for font_name in "${font_names[@]}"; do
-local url="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/${font_name}.zip"
-log_info "Descargando Nerd Font: $font_name"
-wget -O "$temp_dir/${font_name}.zip" "$url"
-unzip -o "$temp_dir/${font_name}.zip" -d "$temp_dir/$font_name"
-done
-sudo mkdir -p "$install_dir"
-for font_name in "${font_names[@]}"; do
-sudo mv "$temp_dir/$font_name"/*.{ttf,otf} "$install_dir/" 2>/dev/null || true
-done
-local fonts_list="${SCRIPT_DIR}/sources/lists/fonts.list"
-if [[ -f "$fonts_list" ]]; then
-  install_packages "$fonts_list"
-else
-  log_warn "fonts.list no encontrado, se omite instalación DNF de fuentes"
-fi
-if [[ -f "$dotfiles_dir/fonts.conf" ]]; then
-  sudo cp -f "$dotfiles_dir/fonts.conf" /etc/fonts/fonts.conf
-  log_success "fonts.conf personalizado aplicado"
-fi
-sudo rm -rf "$temp_dir"
-sudo fc-cache -fv
-log_success "✅ Fuentes del sistema y Nerd Fonts instaladas correctamente"
-}
 #===============================================================================
-# Archivo: functions.sh
+# Archivo: functions3
 # Proyecto: Fedora Post-Install (KDE)
-# Descripción: Módulo de funciones reutilizables para scripts de instalación y postconfiguración
+# Descripción: Funciones reutilizables, refactorizadas y modulares
 # Autor: Gabriel Omaña / Initium
 # Licencia: MIT
 #===============================================================================
-# Protección: Evita que este archivo se ejecute directamente
+
+# ─── Protección contra ejecución directa ─────────────────────────────────────
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "[ERROR] Este archivo es un módulo de funciones y no debe ejecutarse directamente."
   echo "        Por favor, inclúyelo con: source ${BASH_SOURCE[0]}"
   exit 1
 fi
-#===============================================================================
-# Variables globales y rutas a listas de paquetes
-#===============================================================================
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LISTS_DIR="${SCRIPT_DIR}/../lists"  # ← Corrección aplicada aquí
+
+# ─── Variables globales y rutas ──────────────────────────────────────────────
+SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+LISTS_DIR="${SCRIPT_DIR}/sources/lists"
+LOG_DIR="$HOME/fedora_logs"
+LOG_FILE="${LOG_DIR}/pkg_manager.log"
+
 LIST_KDE_PLASMA="${LISTS_DIR}/kde_plasma.list"
 LIST_KDE_APPS="${LISTS_DIR}/kde_plasma_apps.list"
 LIST_KDE_BLOATWARE="${LISTS_DIR}/kde_bloatware.list"
@@ -172,488 +30,546 @@ LIST_MULTIMEDIA="${LISTS_DIR}/multimedia.list"
 LIST_CODECS="${LISTS_DIR}/codecs.list"
 LIST_UTILITIES="${LISTS_DIR}/utilities.list"
 LIST_EXTRA_APPS="${LISTS_DIR}/extra_apps.list"
+LIST_XORG_WORKSPACE="${LISTS_DIR}/plasma_xorg_full.list"
+LIST_CLI_TOOLS="${LISTS_DIR}/cli_tools.list"
+
 REQUIRED_LISTS=(
-"$LIST_KDE_PLASMA"
-"$LIST_KDE_APPS"
-"$LIST_KDE_BLOATWARE"
-"$LIST_MULTIMEDIA"
-"$LIST_UTILITIES"
-"$LIST_EXTRA_APPS"
+  "$LIST_KDE_PLASMA"
+  "$LIST_KDE_APPS"
+  "$LIST_KDE_BLOATWARE"
+  "$LIST_MULTIMEDIA"
+  "$LIST_CODECS"
+  "$LIST_UTILITIES"
+  "$LIST_EXTRA_APPS"
+  "$LIST_XORG_WORKSPACE"
 )
-# Variables de lista individuales (usadas por funciones instaladoras)
-kde_plasma="$LIST_KDE_PLASMA"
-kde_plasma_apps="$LIST_KDE_APPS"
-kde_bloatware="$LIST_KDE_BLOATWARE"
-multimedia="$LIST_MULTIMEDIA"
-codecs="$LIST_CODECS"
-utilities="$LIST_UTILITIES"
-extra_apps="$LIST_EXTRA_APPS"
-# Validación de listas necesarias
+
+# ─── Validación de listas necesarias ─────────────────────────────────────────
 for list_file in "${REQUIRED_LISTS[@]}"; do
-if [[ ! -f "$list_file" ]]; then
-  echo "[ERROR] Lista no encontrada: $list_file"
-  return 1
-fi
+  [[ -f "$list_file" ]] || {
+    echo "[ERROR] Lista no encontrada: $list_file"
+    exit 1
+  }
 done
-# Colores ANSI
+
+# ─── Colores ANSI ────────────────────────────────────────────────────────────
 if [[ -t 1 ]]; then
   RED="\033[0;31m"
   GREEN="\033[0;32m"
   YELLOW="\033[1;33m"
   BLUE="\033[1;34m"
+  BOLD="\033[1m"
   NC="\033[0m"
 else
-  RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
+  RED=""; GREEN=""; YELLOW=""; BLUE=""; BOLD=""; NC=""
 fi
 
-log_info()    { echo -e "\033[1;34m[INFO]    $*\033[0m"; }
-
-log_warn()    { echo -e "\033[1;33m[WARN]    $*\033[0m"; }
-
-log_error()   { echo -e "\033[1;31m[ERROR]   $*\033[0m"; ((ERROR_COUNT++)); }
-
-log_success() { echo -e "\033[1;32m[OK]      $*\033[0m"; }
-
-
-
-}
-}
-# Solo la invoca si no está definida
-[[ -z "${BOLD:-}" ]] && setup_colors
-#===============================================================================
-# Configuración de logging
-#===============================================================================
-: "${LOG_FILE:="$HOME/fedora_logs/pkg_manager.log"}"
-mkdir -p "$(dirname "$LOG_FILE")"
+# ─── Logging y utilidades base ───────────────────────────────────────────────
+mkdir -p "$LOG_DIR"
 touch "$LOG_FILE"
+
+log_info()    { echo -e "${BLUE}[INFO]    $*${NC}"; }
+log_warn()    { echo -e "${YELLOW}[WARN]    $*${NC}"; }
+log_error()   { echo -e "${RED}[ERROR]   $*${NC}" >&2; ((ERROR_COUNT++)) || true; }
+log_success() { echo -e "${GREEN}[OK]      $*${NC}"; }
+log_section() {
+  local title="$1"
+  local clean_title="${title//[$'\t\r\n']}"
+  local visual_width=${#clean_title}
+  local padding=4
+  local total_width=$((visual_width + padding))
+  local border
+  border=$(printf '─%.0s' $(seq 1 "$total_width"))
+  echo -e "\n${BLUE}┌$border┐${NC}"
+  echo -e "${BLUE}│  ${BOLD}${title}${NC}${BLUE}  │${NC}"
+  echo -e "${BLUE}└$border┘${NC}\n"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SECTION] $title" >> "$LOG_FILE"
+}
+
 #===============================================================================
-# Verificación de comandos necesarios
-#===============================================================================
-REQUIRED_CMDS=(dnf awk xargs sort grep)
-for cmd in "${REQUIRED_CMDS[@]}"; do
-if ! command -v "$cmd" &>/dev/null; then
-  echo "[ERROR] Comando requerido no encontrado: $cmd" >&2
-  exit 1
-fi
-done
-#===============================================================================
-# Funciones utilitarias genéricas
+# Funciones utilitarias generales
 #===============================================================================
 
 check_command() {
-
-command -v "$1" &>/dev/null || {
-log_error "Comando requerido no disponible: $1"
-return 1
-}
+  command -v "$1" &>/dev/null || {
+    log_error "Comando requerido no disponible: $1"
+    return 1
+  }
 }
 
 ensure_file_exists() {
-
-local file="$1"
-if [[ ! -f "$file" ]]; then
-  log_error "Archivo no encontrado: $file"
-  return 1
-fi
+  local file="$1"
+  [[ -f "$file" ]] || {
+    log_error "Archivo no encontrado: $file"
+    return 1
+  }
 }
 
 run_sudo() {
-
-if ! sudo -n true 2>/dev/null; then
-  log_warn "Se requiere autenticación sudo..."
-  sudo -v || {
-  log_error "No se pudo elevar a sudo. Abortando."
-  exit 1
-}
-fi
-}
+  if ! sudo -n true 2>/dev/null; then
+    log_warn "Se requiere autenticación sudo..."
+    sudo -v || {
+      log_error "No se pudo elevar a sudo. Abortando."
+      exit 1
+    }
+  fi
 }
 
 is_root() {
-
-[[ "$EUID" -eq 0 ]]
+  [[ "$EUID" -eq 0 ]]
 }
 
 draw_progress_bar() {
-
-local current=$1
-local total=$2
-local width=40
-local percent=$(( current * 100 / total ))
-local filled=$(( current * width / total ))
-local empty=$(( width - filled ))
-local progress_bar
-progress_bar=$(printf "%-${filled}s" "#" | tr ' ' '#')
-progress_bar+=$(printf "%-${empty}s" "-" | tr ' ' '-')
-printf "\r[%s] %3d%% (%d/%d)" "$progress_bar" "$percent" "$current" "$total"
-[[ "$current" -eq "$total" ]] && echo ""
+  local current=$1
+  local total=$2
+  local width=40
+  local percent=$(( current * 100 / total ))
+  local filled=$(( current * width / total ))
+  local empty=$(( width - filled ))
+  local progress_bar
+  progress_bar=$(printf "%-${filled}s" "#" | tr ' ' '#')
+  progress_bar+=$(printf "%-${empty}s" "-" | tr ' ' '-')
+  printf "\r[%s] %3d%% (%d/%d)" "$progress_bar" "$percent" "$current" "$total"
+  [[ "$current" -eq "$total" ]] && echo ""
 }
 
 try_cmd() {
-
-local desc="$1"; shift
-if "$@"; then
-  log_success "✔️ $desc completado"
-else
-  log_warn "⚠️ $desc falló: $*"
-fi
+  local desc="$1"; shift
+  if "$@"; then
+    log_success "✔️ $desc completado"
+  else
+    log_warn "⚠️ $desc falló: $*"
+  fi
 }
+
+run_cmd() {
+  local cmd="$1"
+  local success_msg="$2"
+  local error_msg="$3"
+  if eval "$cmd" &>> "$LOG_FILE"; then
+    log_success "$success_msg"
+  else
+    log_warn "$error_msg"
+  fi
+}
+
 #===============================================================================
 # Funciones de instalación y eliminación de paquetes
 #===============================================================================
 
 install_packages() {
+  local list_file="$1"
+  if [[ ! -f "$list_file" ]]; then
+    log_warn "Archivo de lista no encontrado: $list_file"
+    return 0
+  fi
 
-local list_file="$1"
-if [[ ! -f "$list_file" ]]; then
-  log_warn "Archivo de lista no encontrado: $list_file"
+  log_section "📦 Instalación desde lista: $(basename "$list_file")"
+
+  mapfile -t raw_lines < "$list_file"
+  local packages=()
+  for line in "${raw_lines[@]}"; do
+    local clean_line
+    clean_line=$(echo "$line" | sed 's/#.*//' | xargs)
+    [[ -z "$clean_line" ]] && continue
+    packages+=("$clean_line")
+  done
+
+  local total=${#packages[@]}
+  local count=0
+  local dnf_flags=(-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true)
+
+  for pkg in "${packages[@]}"; do
+    ((count++))
+    if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
+      log_warn "⚠️ Entrada inválida detectada: '$pkg' — omitida"
+      continue
+    fi
+
+    draw_progress_bar "$count" "$total"
+
+    if [[ "$pkg" == @* ]]; then
+      log_info "➡️ Instalando grupo: $pkg"
+      if sudo dnf group install "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"; then
+        log_success "✅ Grupo instalado: $pkg"
+      else
+        log_warn "⚠️ Fallo al instalar grupo: $pkg"
+      fi
+    elif [[ "$pkg" == *'*'* ]]; then
+      log_info "🔍 Instalando comodín: $pkg"
+      if sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
+        log_success "✅ Wildcard instalado: $pkg"
+      else
+        log_warn "⚠️ Fallo wildcard: $pkg"
+      fi
+    else
+      log_info "📦 Instalando: $pkg"
+      if sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
+        log_success "✅ Instalado: $pkg"
+      else
+        log_warn "⚠️ Fallo paquete: $pkg"
+      fi
+    fi
+  done
+
   return 0
-fi
-log_section "📦 Instalación desde lista: $(basename "$list_file")"
-mapfile -t raw_lines < "$list_file"
-local packages=()
-for line in "${raw_lines[@]}"; do
-local clean_line
-clean_line=$(echo "$line" | sed 's/#.*//' | xargs)
-[[ -z "$clean_line" ]] && continue
-packages+=("$clean_line")
-done
-local total=${#packages[@]}
-local count=0
-local dnf_flags=(-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true)
-for pkg in "${packages[@]}"; do
-((count++))
-# Validar entrada sospechosa
-if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
-  log_warn "⚠️ Entrada inválida detectada: '$pkg' — omitida"
-  continue
-fi
-draw_progress_bar "$count" "$total"
-if [[ "$pkg" == @* ]]; then
-  log_info "➡️ Instalando grupo: $pkg"
-  if sudo dnf group install "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"; then
-    log_success "✅ Grupo instalado: $pkg"
-  else
-    log_warn "⚠️ Fallo al instalar grupo: $pkg"
-  fi
-elif [[ "$pkg" == *'*'* ]]; then
-  log_info "🔍 Instalando comodín: $pkg"
-  if sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
-    log_success "✅ Wildcard instalado: $pkg"
-  else
-    log_warn "⚠️ Fallo wildcard: $pkg"
-  fi
-else
-  log_info "📦 Instalando: $pkg"
-  if sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
-    log_success "✅ Instalado: $pkg"
-  else
-    log_warn "⚠️ Fallo paquete: $pkg"
-  fi
-fi
-done
-return 0
-}
-
-log_section() {
-
-local title="$1"
-local clean_title="${title//[$'\t\r\n']}"
-local visual_width=${#clean_title}
-local padding=4
-local total_width=$((visual_width + padding))
-local border
-border=$(printf '─%.0s' $(seq 1 "$total_width"))
-echo -e "\n${BLUE}┌$border┐${NC}"
-echo -e "${BLUE}│  ${BOLD}${title}${NC}${BLUE}  │${NC}"
-echo -e "${BLUE}└$border┘${NC}\n"
-[[ -f "$LOG_FILE" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SECTION] $title" >> "$LOG_FILE"
 }
 
 remove_packages() {
+  local list_file="$1"
+  if [[ ! -f "$list_file" ]]; then
+    log_warn "Archivo de lista no encontrado: $list_file"
+    return 0
+  fi
 
-local list_file="$1"
-if [[ ! -f "$list_file" ]]; then
-  log_warn "Archivo de lista no encontrado: $list_file"
+  log_section "🧹 Eliminación desde lista: $(basename "$list_file")"
+
+  mapfile -t raw_lines < "$list_file"
+  local packages=()
+  for line in "${raw_lines[@]}"; do
+    local clean_line
+    clean_line=$(echo "$line" | sed 's/#.*//' | xargs)
+    [[ -z "$clean_line" ]] && continue
+    packages+=("$clean_line")
+  done
+
+  local total=${#packages[@]}
+  local count=0
+  local dnf_flags=(-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true)
+
+  for pkg in "${packages[@]}"; do
+    ((count++))
+    if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
+      log_warn "⚠️ Entrada inválida: '$pkg' — omitida"
+      continue
+    fi
+
+    draw_progress_bar "$count" "$total"
+
+    if [[ "$pkg" == @* ]]; then
+      log_info "❌ Eliminando grupo: $pkg"
+      if sudo dnf group remove "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"; then
+        log_success "✅ Grupo eliminado: $pkg"
+      else
+        log_warn "⚠️ Fallo al eliminar grupo: $pkg"
+      fi
+    elif [[ "$pkg" == *'*'* ]]; then
+      log_info "❌ Eliminando comodín: $pkg"
+      if sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
+        log_success "✅ Wildcard eliminado: $pkg"
+      else
+        log_warn "⚠️ Fallo wildcard: $pkg"
+      fi
+    else
+      log_info "❌ Eliminando paquete: $pkg"
+      if sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
+        log_success "✅ Eliminado: $pkg"
+      else
+        log_warn "⚠️ Fallo al eliminar: $pkg"
+      fi
+    fi
+  done
+
   return 0
-fi
-log_section "🧹 Eliminación desde lista: $(basename "$list_file")"
-mapfile -t raw_lines < "$list_file"
-# == Contenido adicional desde functions3 ==
-#===============================================================================
-# Archivo: functions.sh
-# Proyecto: Fedora Post-Install (KDE)
-# Descripción: Módulo de funciones reutilizables para scripts de instalación y postconfiguración
-# Autor: Gabriel Omaña / Initium
-# Licencia: MIT
-#===============================================================================
-# Protección: Evita que este archivo se ejecute directamente
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  echo "[ERROR] Este archivo es un módulo de funciones y no debe ejecutarse directamente."
-  echo "        Por favor, inclúyelo con: source ${BASH_SOURCE[0]}"
-  exit 1
-fi
-#===============================================================================
-# Variables globales y rutas a listas de paquetes
-#===============================================================================
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LISTS_DIR="${SCRIPT_DIR}/../lists"  # ← Corrección aplicada aquí
-LIST_KDE_PLASMA="${LISTS_DIR}/kde_plasma.list"
-LIST_KDE_APPS="${LISTS_DIR}/kde_plasma_apps.list"
-LIST_KDE_BLOATWARE="${LISTS_DIR}/kde_bloatware.list"
-LIST_MULTIMEDIA="${LISTS_DIR}/multimedia.list"
-LIST_CODECS="${LISTS_DIR}/codecs.list"
-LIST_UTILITIES="${LISTS_DIR}/utilities.list"
-LIST_EXTRA_APPS="${LISTS_DIR}/extra_apps.list"
-REQUIRED_LISTS=(
-"$LIST_KDE_PLASMA"
-"$LIST_KDE_APPS"
-"$LIST_KDE_BLOATWARE"
-"$LIST_MULTIMEDIA"
-"$LIST_UTILITIES"
-"$LIST_EXTRA_APPS"
-)
-# Variables de lista individuales (usadas por funciones instaladoras)
-kde_plasma="$LIST_KDE_PLASMA"
-kde_plasma_apps="$LIST_KDE_APPS"
-kde_bloatware="$LIST_KDE_BLOATWARE"
-multimedia="$LIST_MULTIMEDIA"
-codecs="$LIST_CODECS"
-utilities="$LIST_UTILITIES"
-extra_apps="$LIST_EXTRA_APPS"
-# Validación de listas necesarias
-for list_file in "${REQUIRED_LISTS[@]}"; do
-if [[ ! -f "$list_file" ]]; then
-  echo "[ERROR] Lista no encontrada: $list_file"
-  return 1
-fi
-done
-# Colores ANSI
-if [[ -t 1 ]]; then
-  RED="\033[0;31m"
-  GREEN="\033[0;32m"
-  YELLOW="\033[1;33m"
-  BLUE="\033[1;34m"
-  NC="\033[0m"
-else
-  RED=""; GREEN=""; YELLOW=""; BLUE=""; NC=""
-fi
+}
 
-log_info()    { echo -e "\033[1;34m[INFO]    $*\033[0m"; }
+#===============================================================================
+# Instalación de aplicaciones adicionales y configuración del entorno
+#===============================================================================
 
-log_warn()    { echo -e "\033[1;33m[WARN]    $*\033[0m"; }
+install_extra_apps() {
+  log_section "📦 Instalación de aplicaciones adicionales del sistema"
 
-log_error()   { echo -e "\033[1;31m[ERROR]   $*\033[0m"; ((ERROR_COUNT++)); }
+  # ─── 1. Aplicaciones generales desde lista ───────────────────────
+  ensure_file_exists "$LIST_EXTRA_APPS" || return 1
+  log_info "Instalando paquetes desde lista: $(basename "$LIST_EXTRA_APPS")"
+  install_packages "$LIST_EXTRA_APPS" || log_warn "⚠️ Algunos paquetes no se instalaron correctamente"
 
-log_success() { echo -e "\033[1;32m[OK]      $*\033[0m"; }
-
-
-
-}
-}
-# Solo la invoca si no está definida
-[[ -z "${BOLD:-}" ]] && setup_colors
-#===============================================================================
-# Configuración de logging
-#===============================================================================
-: "${LOG_FILE:="$HOME/fedora_logs/pkg_manager.log"}"
-mkdir -p "$(dirname "$LOG_FILE")"
-touch "$LOG_FILE"
-#===============================================================================
-# Verificación de comandos necesarios
-#===============================================================================
-REQUIRED_CMDS=(dnf awk xargs sort grep)
-for cmd in "${REQUIRED_CMDS[@]}"; do
-if ! command -v "$cmd" &>/dev/null; then
-  echo "[ERROR] Comando requerido no encontrado: $cmd" >&2
-  exit 1
-fi
-done
-#===============================================================================
-# Funciones utilitarias genéricas
-#===============================================================================
-command -v "$1" &>/dev/null || {
-log_error "Comando requerido no disponible: $1"
-return 1
-}
-}
-local file="$1"
-if [[ ! -f "$file" ]]; then
-  log_error "Archivo no encontrado: $file"
-  return 1
-fi
-}
-if ! sudo -n true 2>/dev/null; then
-  log_warn "Se requiere autenticación sudo..."
-  sudo -v || {
-  log_error "No se pudo elevar a sudo. Abortando."
-  exit 1
-}
-fi
-}
-}
-[[ "$EUID" -eq 0 ]]
-}
-local current=$1
-local total=$2
-local width=40
-local percent=$(( current * 100 / total ))
-local filled=$(( current * width / total ))
-local empty=$(( width - filled ))
-local progress_bar
-progress_bar=$(printf "%-${filled}s" "#" | tr ' ' '#')
-progress_bar+=$(printf "%-${empty}s" "-" | tr ' ' '-')
-printf "\r[%s] %3d%% (%d/%d)" "$progress_bar" "$percent" "$current" "$total"
-[[ "$current" -eq "$total" ]] && echo ""
-}
-local desc="$1"; shift
-if "$@"; then
-  log_success "✔️ $desc completado"
-else
-  log_warn "⚠️ $desc falló: $*"
-fi
-}
-#===============================================================================
-# Funciones de instalación y eliminación de paquetes
-#===============================================================================
-local list_file="$1"
-if [[ ! -f "$list_file" ]]; then
-  log_warn "Archivo de lista no encontrado: $list_file"
-  return 0
-fi
-log_section "📦 Instalación desde lista: $(basename "$list_file")"
-mapfile -t raw_lines < "$list_file"
-local packages=()
-for line in "${raw_lines[@]}"; do
-local clean_line
-clean_line=$(echo "$line" | sed 's/#.*//' | xargs)
-[[ -z "$clean_line" ]] && continue
-packages+=("$clean_line")
-done
-local total=${#packages[@]}
-local count=0
-local dnf_flags=(-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true)
-for pkg in "${packages[@]}"; do
-((count++))
-# Validar entrada sospechosa
-if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
-  log_warn "⚠️ Entrada inválida detectada: '$pkg' — omitida"
-  continue
-fi
-draw_progress_bar "$count" "$total"
-if [[ "$pkg" == @* ]]; then
-  log_info "➡️ Instalando grupo: $pkg"
-  if sudo dnf group install "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"; then
-    log_success "✅ Grupo instalado: $pkg"
+  # ─── 2. Apps KDE adicionales ─────────────────────────────────────
+  if [[ -f "$LIST_KDE_APPS" ]]; then
+    log_info "Instalando apps KDE adicionales: $(basename "$LIST_KDE_APPS")"
+    install_packages "$LIST_KDE_APPS" || log_warn "⚠️ Fallo parcial en apps KDE adicionales"
   else
-    log_warn "⚠️ Fallo al instalar grupo: $pkg"
+    log_warn "Lista de KDE apps no encontrada: $LIST_KDE_APPS"
   fi
-elif [[ "$pkg" == *'*'* ]]; then
-  log_info "🔍 Instalando comodín: $pkg"
-  if sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
-    log_success "✅ Wildcard instalado: $pkg"
+
+    # ─── 3. Apps KDE adicionales ─────────────────────────────────────
+  if [[ -f "$LIST_UTILITIES" ]]; then
+    log_info "Instalando apps KDE adicionales: $(basename "$LIST_UTILITIES")"
+    install_packages "$LIST_UTILITIES" || log_warn "⚠️ Fallo parcial en apps KDE adicionales"
   else
-    log_warn "⚠️ Fallo wildcard: $pkg"
+    log_warn "Lista de KDE apps no encontrada: $LIST_UTILITIES"
   fi
-else
-  log_info "📦 Instalando: $pkg"
-  if sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
-    log_success "✅ Instalado: $pkg"
+
+  # ─── 3. Sesión Xorg (KDE Plasma completa) ────────────────────────
+  if [[ -f "$SCRIPT_DIR/sources/lists/plasma_xorg_full.list" ]]; then
+    install_plasma_xorg_full || log_warn "⚠️ Fallo parcial en sesión Xorg completa"
   else
-    log_warn "⚠️ Fallo paquete: $pkg"
+    log_info "Lista plasma_xorg_full no disponible. Saltando..."
   fi
-fi
-done
-return 0
+
+  # ─── 4. CLI Tools (modernas, zoxide, navi, bat, fastfetch, etc) ──
+  if [[ -f "$SCRIPT_DIR/sources/lists/cli_tools.list" ]]; then
+    install_cli_tools || log_warn "⚠️ Fallo parcial en CLI Tools"
+  else
+    log_info "Lista cli_tools.list no disponible. Saltando..."
+  fi
+
+
+  # ─── 8. Repositorios y utilidades complementarias ────────────────
+  install_system_utilities
+  install_fonts_support
+  install_cargo_tools
+  install_onlyoffice
+  install_flatpak_apps
+  configure_vscode
+  configure_libvirtd
+  configure_sddm
+  configure_rtc_clock
+
+  # ─── 9. Finalización ─────────────────────────────────────────────
+  log_success "✅ Aplicaciones adicionales instaladas y configuradas correctamente"
 }
-local title="$1"
-local clean_title="${title//[$'\t\r\n']}"
-local visual_width=${#clean_title}
-local padding=4
-local total_width=$((visual_width + padding))
-local border
-border=$(printf '─%.0s' $(seq 1 "$total_width"))
-echo -e "\n${BLUE}┌$border┐${NC}"
-echo -e "${BLUE}│  ${BOLD}${title}${NC}${BLUE}  │${NC}"
-echo -e "${BLUE}└$border┘${NC}\n"
-[[ -f "$LOG_FILE" ]] && echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SECTION] $title" >> "$LOG_FILE"
+
+configure_libvirtd() {
+  log_info "Habilitando y configurando libvirtd"
+
+  run_cmd "sudo systemctl start libvirtd" \
+    "libvirtd iniciado correctamente" \
+    "Error al iniciar libvirtd"
+
+  run_cmd "sudo systemctl enable libvirtd" \
+    "libvirtd habilitado para el arranque" \
+    "Error al habilitar libvirtd"
 }
-local list_file="$1"
-if [[ ! -f "$list_file" ]]; then
-  log_warn "Archivo de lista no encontrado: $list_file"
-  return 0
-fi
-log_section "🧹 Eliminación desde lista: $(basename "$list_file")"
-mapfile -t raw_lines < "$list_file"
-local packages=()
-for line in "${raw_lines[@]}"; do
-local clean_line
-clean_line=$(echo "$line" | sed 's/#.*//' | xargs)
-[[ -z "$clean_line" ]] && continue
-packages+=("$clean_line")
-done
-local total=${#packages[@]}
-local count=0
-local dnf_flags=(-y --allowerasing --skip-broken --setopt=skip_if_unavailable=true)
-for pkg in "${packages[@]}"; do
-((count++))
-if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
-  log_warn "⚠️ Entrada inválida: '$pkg' — omitida"
-  continue
-fi
-draw_progress_bar "$count" "$total"
-if [[ "$pkg" == @* ]]; then
-  log_info "❌ Eliminando grupo: $pkg"
-  if sudo dnf group remove "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"; then
-    log_success "✅ Grupo eliminado: $pkg"
+
+configure_sddm() {
+  log_section "⚙️ Configuración de SDDM"
+
+  run_cmd "sudo systemctl enable sddm" \
+    "SDDM habilitado correctamente" \
+    "Error al habilitar SDDM"
+
+  run_cmd "sudo systemctl set-default graphical.target" \
+    "Target gráfico configurado correctamente" \
+    "Error al configurar target gráfico"
+
+  configure_sddm_numlock
+  configure_sddm_hide_users
+}
+
+configure_sddm_numlock() {
+  log_info "Activando NumLock en SDDM"
+  local config="/etc/sddm.conf"
+
+  if [[ -f "$config" ]]; then
+    sudo sed -i '/^\[General\]/,/^\[/{s/^Numlock=.*/Numlock=on/; t; aNumlock=on}' "$config"
   else
-    log_warn "⚠️ Fallo al eliminar grupo: $pkg"
+    echo -e "[General]\nNumlock=on" | sudo tee "$config" > /dev/null
   fi
-elif [[ "$pkg" == *'*'* ]]; then
-  log_info "❌ Eliminando comodín: $pkg"
-  if sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
-    log_success "✅ Wildcard eliminado: $pkg"
+
+  run_cmd "sudo systemctl daemon-reexec" \
+    "SDDM recargado correctamente" \
+    "Fallo al recargar SDDM (puede requerir reinicio)"
+}
+
+configure_sddm_hide_users() {
+  local conf_file="/etc/sddm.conf"
+  local username="libvirt-qemu"
+
+  log_info "Ocultando usuario '$username' en pantalla de SDDM"
+
+  if [[ -f "$conf_file" ]]; then
+    if ! grep -q "^\[Users\]" "$conf_file"; then
+      echo -e "\n[Users]\nHideUsers=$username" | sudo tee -a "$conf_file" > /dev/null
+    elif ! grep -q "^HideUsers=" "$conf_file"; then
+      sudo sed -i "/^\[Users\]/a HideUsers=$username" "$conf_file"
+    else
+      sudo sed -i "s/^HideUsers=.*/HideUsers=$username/" "$conf_file"
+    fi
   else
-    log_warn "⚠️ Fallo wildcard: $pkg"
+    echo -e "[Users]\nHideUsers=$username" | sudo tee "$conf_file" > /dev/null
   fi
-else
-  log_info "❌ Eliminando paquete: $pkg"
-  if sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"; then
-    log_success "✅ Eliminado: $pkg"
+
+  log_success "Usuario '$username' oculto en SDDM"
+}
+
+configure_rtc_clock() {
+  log_info "Configurando RTC en hora local"
+
+  if timedatectl set-local-rtc 1 &>> "$LOG_FILE"; then
+    log_success "RTC configurado en hora local"
   else
-    log_warn "⚠️ Fallo al eliminar: $pkg"
+    log_warn "No se pudo configurar el RTC"
   fi
-fi
-done
-return 0
+}
+
+install_onlyoffice() {
+  log_info "Instalando OnlyOffice Desktop Editors"
+
+  run_cmd "sudo dnf install -y onlyoffice-desktopeditors" \
+    "OnlyOffice instalado correctamente" \
+    "Error al instalar OnlyOffice"
+}
+
+install_flatpak_apps() {
+  log_section "📦 Instalando aplicaciones Flatpak desde Flathub"
+
+  local flatpak_apps=(
+    "com.github.dail8859.NotepadNext"
+    "org.localsend.localsend_app"
+    "org.strawberrymusicplayer.strawberry"
+    "org.nomacs.ImageLounge"
+    "com.github.vkohaupt.vokoscreenNG"
+    "tv.kodi.Kodi"
+    "org.appimage.AppImageLauncher"
+    "com.github.manisandro.gImageReader"
+  )
+
+  if ! command -v flatpak &>/dev/null; then
+    log_info "Flatpak no está instalado. Procediendo a instalar..."
+    run_cmd "sudo dnf install -y flatpak" \
+      "Flatpak instalado correctamente" \
+      "Fallo al instalar Flatpak"
+  fi
+
+  run_cmd "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo" \
+    "Repositorio Flathub añadido correctamente" \
+    "Fallo al añadir Flathub"
+
+  for app in "${flatpak_apps[@]}"; do
+    log_info "Instalando Flatpak: $app"
+    if ! flatpak install -y --noninteractive flathub "$app" &>> "$LOG_FILE"; then
+      log_warn "Fallo al instalar $app desde Flatpak"
+    else
+      log_success "$app instalado correctamente"
+    fi
+  done
+}
+
+configure_vscode() {
+  log_section "🧩 Configurando Visual Studio Code"
+
+  if ! command -v code &>/dev/null; then
+    log_info "VSCode no encontrado. Intentando instalar..."
+    run_cmd "sudo dnf install -y code" \
+      "Visual Studio Code instalado" \
+      "Fallo al instalar Visual Studio Code"
+  fi
+
+  local vscode_config="$HOME/.config/Code/User"
+  mkdir -p "$vscode_config"
+
+  cat > "$vscode_config/settings.json" <<EOF
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "all",
+  "prettier.jsxSingleQuote": true,
+  "prettier.printWidth": 80,
+  "editor.fontFamily": "JetBrainsMono Nerd Font,Menlo,Monaco,Courier New,monospace,Noto Color Emoji",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 14,
+  "editor.lineHeight": 24,
+  "editor.fontWeight": "400",
+  "workbench.colorTheme": "One Monokai"
+}
+EOF
+
+  log_success "Configuración VSCode generada correctamente"
+
+  local extensions=(
+    "azemoh.one-monokai"
+    "NarasimaPandiyan.jetbrainsmono"
+  )
+
+  for ext in "${extensions[@]}"; do
+    log_info "Instalando extensión: $ext"
+    if ! code --install-extension "$ext" &>> "$LOG_FILE"; then
+      log_warn "No se pudo instalar la extensión: $ext"
+    else
+      log_success "Extensión instalada: $ext"
+    fi
+  done
+}
+
+configure_libvirtd() {
+  log_info "🔧 Configurando libvirtd"
+
+  run_cmd "sudo systemctl start libvirtd" \
+    "libvirtd iniciado correctamente" \
+    "Error al iniciar libvirtd"
+
+  run_cmd "sudo systemctl enable libvirtd" \
+    "libvirtd habilitado para el arranque" \
+    "Error al habilitar libvirtd"
+}
+
+# ─── Shell de ayuda ────────────────────────────────────────────────
+
+run_cmd() {
+  local cmd="$1"
+  local msg_ok="$2"
+  local msg_err="$3"
+
+  if eval "$cmd" &>> "$LOG_FILE"; then
+    log_success "$msg_ok"
+  else
+    log_warn "$msg_err"
+  fi
+}
+
+check_dependencies() {
+  log_section "🔍 Verificando dependencias del sistema"
+
+  local dependencies=(dnf sudo curl wget flatpak git jq unzip tar lsb_release)
+  local missing=()
+
+  for cmd in "${dependencies[@]}"; do
+    if ! command -v "$cmd" &>/dev/null; then
+      missing+=("$cmd")
+      log_warn "Dependencia ausente: $cmd"
+    fi
+  done
+
+  if (( ${#missing[@]} > 0 )); then
+    log_info "Instalando dependencias faltantes: ${missing[*]}"
+    sudo dnf install -y "${missing[@]}"
+  else
+    log_success "✅ Todas las dependencias están satisfechas"
+  fi
 }
 
 add_repositories() {
+  log_section "➕ Habilitando repositorios de terceros (Brave, RPM Fusion, VSCode, COPR)"
 
-log_section "🌐 Configuración de repositorios adicionales necesarios"
-# ─── Asegurar que config-manager esté disponible ───────────────
-try_cmd "Instalar dnf-plugins-core (si falta)" sudo dnf install -y dnf-plugins-core
-# ─── Brave Browser ─────────────────────────────────────────────
-log_info "🔧 Configurando repo Brave"
-try_cmd "Importar GPG Brave" sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
-if ! sudo dnf config-manager --add-repo=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo &>> "$LOG_FILE"; then
-  log_warn "⚠️ Fallback: usando método manual para Brave"
-  sudo tee /etc/yum.repos.d/brave-browser.repo > /dev/null <<EOF
-  [brave-browser]
-  name=Brave Browser
-  baseurl=https://brave-browser-rpm-release.s3.brave.com/x86_64/
-  enabled=1
-  gpgcheck=1
-  gpgkey=https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
-  EOF
-  log_success "Brave repo configurado manualmente"
-else
-  log_success "Repo Brave añadido correctamente"
-fi
-# ─── VSCode ─────────────────────────────────────────────────────
-log_info "🔧 Configurando repo VSCode"
-try_cmd "Importar GPG Microsoft" sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<EOF
+  validate_command dnf || return 1
+  validate_command rpm || return 1
+
+  # Brave Browser
+  if ! sudo dnf repolist | grep -q brave-browser; then
+    try_cmd "Agregar repo Brave" sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
+    try_cmd "Importar clave Brave" sudo rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+    log_success "Repositorio Brave añadido"
+  else
+    log_info "Repositorio Brave ya está habilitado"
+  fi
+
+  # RPM Fusion
+  if ! rpm -q rpmfusion-free-release &>/dev/null; then
+    try_cmd "Instalar RPM Fusion" sudo dnf install -y \
+      https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+      https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+    log_success "RPM Fusion habilitado"
+  else
+    log_info "RPM Fusion ya está instalado"
+  fi
+
+  # Microsoft VSCode
+  if [[ ! -f /etc/yum.repos.d/vscode.repo ]]; then
+    try_cmd "Importar clave GPG Microsoft" sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    try_cmd "Crear repo VSCode" sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<EOF
 [code]
 name=Visual Studio Code
 baseurl=https://packages.microsoft.com/yumrepos/vscode
@@ -661,718 +577,299 @@ enabled=1
 gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
-log_success "Repo VSCode configurado correctamente"
-# ─── OnlyOffice ────────────────────────────────────────────────
-log_info "🔧 Configurando repo OnlyOffice"
-try_cmd "Importar GPG OnlyOffice" sudo rpm --import https://download.onlyoffice.com/repo/onlyoffice.key
-try_cmd "Instalar repo OnlyOffice" sudo dnf -y install https://download.onlyoffice.com/repo/centos/main/noarch/onlyoffice-repo.noarch.rpm
-# ─── RPM Fusion (Free + Nonfree) ───────────────────────────────
-log_info "🔧 Configurando RPM Fusion"
-try_cmd "Instalar RPM Fusion Free/Nonfree" sudo dnf install -y \
-https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
-https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-# ─── COPR Repositorios comunitarios ─────────────────────────────
-declare -A coprs=(
-[webapp-manager]="refi64/webapp-manager"
-[topgrade]="lilay/topgrade"
-[variety]="danyspin97/variety"
-[msttcorefonts]="dawid/better_fonts"
-)
-for name in "${!coprs[@]}"; do
-log_info "⚙️ Habilitando COPR: ${coprs[$name]}"
-if sudo dnf copr enable -y "${coprs[$name]}" &>> "$LOG_FILE"; then
-  log_success "COPR habilitado: ${coprs[$name]}"
-else
-  log_warn "COPR no habilitado: ${coprs[$name]} (puede estar ya activo)"
-fi
-done
-# ─── Actualización final ────────────────────────────────────────
-log_info "🔄 Actualizando caché de DNF"
-try_cmd "Actualizar metadatos" sudo dnf makecache --refresh
-try_cmd "Validar integridad de caché" sudo dnf check-update
-log_success "✅ Repositorios adicionales configurados correctamente"
+    log_success "Repositorio VSCode habilitado"
+  else
+    log_info "Repositorio VSCode ya está presente"
+  fi
+
+  # COPR Repos (opcional, si hay archivo copr.list)
+  local copr_file="./sources/lists/copr.list"
+  if [[ -f "$copr_file" ]]; then
+    enable_copr_repos "$copr_file"
+  else
+    log_warn "No se encontró archivo COPR ($copr_file), se omite habilitación"
+  fi
+
+  # Actualizar caché
+  try_cmd "Actualizar caché de repositorios" sudo dnf makecache
 }
 
-install_konsole_and_dotfiles() {
-
-log_section "🎨 Instalación de Konsole y dotfiles personalizados"
-local config_src="${SCRIPT_DIR}/../../dotfiles"
-local fastfetch_dir="${SCRIPT_DIR}/../../fastfetch"
-try_cmd "Eliminar instalación previa de Fastfetch" sudo rm -rf "$fastfetch_dir"
-try_cmd "Clonar repositorio Fastfetch" \
-sudo git clone https://github.com/fastfetch-cli/fastfetch.git "$fastfetch_dir"
-try_cmd "Compilar Fastfetch" \
-bash -c "cd $fastfetch_dir && mkdir -p build && cd build && cmake .. && cmake --build ."
-try_cmd "Instalar binarios Fastfetch" \
-sudo cp "$fastfetch_dir/build/"{fastfetch,flashfetch} /usr/bin/
-try_cmd "Generar configuración de Fastfetch" \
-fastfetch --gen-config-force
-if [[ -f "$config_src/fastfetch_config.jsonc" ]]; then
-  try_cmd "Copiar configuración personalizada de Fastfetch" \
-  mkdir -p ~/.config/fastfetch && cp -f "$config_src/fastfetch_config.jsonc" ~/.config/fastfetch/config.jsonc
-else
-  log_warn "⚠️ Archivo fastfetch_config.jsonc no encontrado en: $config_src"
-fi
-try_cmd "Descargar temas de Konsole" \
-sudo wget -q https://github.com/gabrielomana/color_schemes/raw/main/konsole.zip -O /tmp/konsole.zip
-try_cmd "Descomprimir e instalar temas de Konsole" \
-unzip -o /tmp/konsole.zip -d /tmp/ && \
-sudo mkdir -p /usr/share/konsole && \
-sudo cp -rf /tmp/konsole/* /usr/share/konsole/
-try_cmd "Eliminar archivos temporales de temas" sudo rm -rf /tmp/konsole /tmp/konsole.zip
-try_cmd "Configurar dotfiles: .nanorc" cp -f "$config_src/.nanorc" ~/.nanorc
-try_cmd "Configurar dotfiles: topgrade.toml" cp -f "$config_src/topgrade.toml" ~/.config/topgrade.toml
-try_cmd "Configurar dotfiles: konsolerc" cp -f "$config_src/konsolerc" ~/.config/konsolerc
-try_cmd "Configurar dotfiles: konsole.profile" mkdir -p ~/.local/share/konsole && cp -f "$config_src/konsole.profile" ~/.local/share/konsole/
-log_success "Konsole y dotfiles instalados correctamente"
-}
 
 configure_hardware() {
+  # ─── Soporte gráfico (GPU) ────────────────────────────────────────────────
+  log_section "Detectando y configurando GPU"
 
-log_section "Configurando hardware del sistema"
-# ─── Paquetes multimedia y códecs ────────────────────────────────
-# Instalación de paquetes multimedia adicionales no cubiertos por listas
-log_section "🔊 Instalación directa de paquetes multimedia complementarios"
-# Paquetes individuales
-run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable \
-ffmpeg-libs \
-gstreamer1-plugin-mpg123 \
-gstreamer1-plugin-openh264 \
-gstreamer1-plugins-bad-free \
-gstreamer1-plugins-bad-freeworld \
-gstreamer1-plugins-base \
-gstreamer1-plugins-good \
-gstreamer1-plugins-ugly \
-libva \
-libva-utils" \
-"Paquetes multimedia instalados (directos)" \
-"Fallo al instalar paquetes multimedia directos"
-# ─── Soporte gráfico (GPU) ────────────────────────────────────────────────
-log_section "Detectando y configurando GPU"
-mapfile -t gpu_list < <(lspci | grep -iE "VGA|3D controller")
-for gpu_entry in "${gpu_list[@]}"; do
-log_info "GPU detectada: $gpu_entry"
-if echo "$gpu_entry" | grep -qi "Intel"; then
-  log_section "Configurando GPU Intel..."
-  run_cmd "sudo dnf install -y intel-media-driver vdpau-driver-all libva-utils"         "Drivers de Intel instalados"         "Error al instalar drivers Intel"
-elif echo "$gpu_entry" | grep -qi "AMD"; then
-  log_section "Configurando GPU AMD..."
-  run_cmd "sudo dnf install -y akmod-amdgpu mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld vdpau-driver-all libva-utils"         "Drivers de AMD instalados"         "Error al instalar drivers AMD"
-  run_cmd "sudo dnf swap -y mesa-va-drivers mesa-va-drivers-freeworld"         "mesa-va-drivers actualizado"         "Error al reemplazar mesa-va-drivers"
-  run_cmd "sudo dnf swap -y mesa-vdpau-drivers mesa-vdpau-drivers-freeworld"         "mesa-vdpau-drivers actualizado"         "Error al reemplazar mesa-vdpau-drivers"
-elif echo "$gpu_entry" | grep -qi "NVIDIA"; then
-  log_section "Configurando GPU NVIDIA..."
-  run_cmd "sudo dnf install -y akmod-nvidia nvidia-driver nvidia-settings nvidia-vaapi-driver vdpau-driver-all libva-utils"         "Drivers de NVIDIA instalados"         "Error al instalar drivers NVIDIA"
-  run_cmd "sudo grubby --update-kernel=ALL --args='nvidia-drm.modeset=1'"         "Kernel configurado para NVIDIA (modeset)"         "Error al configurar kernel para NVIDIA"
-  log_warn "Es probable que necesite reiniciar para aplicar configuración NVIDIA."
-else
-  show_warning "Fabricante de GPU no reconocido: $gpu_entry. Omitiendo configuración."
-fi
-done
-# Validar herramientas de aceleración
-log_section "Verificando APIs de aceleración de video..."
-# Asegurar que las herramientas de diagnóstico estén instaladas
-if ! command -v vaapi-info &>/dev/null; then
-  run_cmd "sudo dnf install -y libva-utils" \
-  "Herramienta vaapi-info instalada" \
-  "Fallo al instalar vaapi-info"
-fi
-if ! command -v vdpauinfo &>/dev/null; then
-  run_cmd "sudo dnf install -y vdpauinfo" \
-  "Herramienta vdpauinfo instalada" \
-  "Fallo al instalar vdpauinfo"
-fi
-# Verificar que las APIs están funcionales
-for api in vaapi vdpau; do
-if command -v "${api}-info" &>/dev/null; then
-  log_success "API $api disponible"
-else
-  log_warn "API $api no encontrada. Puede afectar reproducción de video."
-fi
-done
-# ─── Soporte para CPU ─────────────────────────────────────────────────────
-log_section "Configurando soporte para CPU"
-hypervisor=$(systemd-detect-virt)
-if [[ "$hypervisor" != "none" ]]; then
-  log_info "Sistema virtual detectado ($hypervisor). Omitiendo instalación de microcódigos."
-  return 0
-fi
-cpu_name=$(lscpu | grep -Ei 'Model name|Nombre del modelo' | head -n 1)
-log_info "CPU detectada: ${cpu_name:-Desconocida}"
-if echo "$cpu_name" | grep -qi "intel"; then
-  log_section "Procesador Intel detectado. Instalando microcódigo..."
-  run_cmd "sudo dnf install -y --enablerepo=rpmfusion-nonfree microcode_ctl"       "Microcódigo de Intel instalado"       "Error al instalar microcódigo de Intel"
-elif echo "$cpu_name" | grep -qi "amd"; then
-  log_section "Procesador AMD detectado. Instalando microcódigo..."
-  run_cmd "sudo dnf install -y --enablerepo=rpmfusion-nonfree amd-ucode"       "Microcódigo de AMD instalado"       "Error al instalar microcódigo de AMD"
-  log_info "Regenerando initramfs para cargar el microcódigo AMD"
-  run_cmd "sudo dracut -f"       "initramfs regenerado correctamente"       "Error al regenerar initramfs (puede requerir reinicio manual)"
-else
-  log_warn "No se pudo identificar el fabricante del procesador. Omitiendo instalación de microcódigos."
-fi
-run_cmd "sudo dnf install -y cpuid cpu-x"     "Herramientas de diagnóstico CPU instaladas"     "Error al instalar herramientas de diagnóstico"
-log_info "Verificando microcódigo en kernel..."
-if dmesg | grep -qi microcode; then
-  dmesg | grep -i microcode | tee -a "$LOG_FILE"
-  log_success "Microcódigo aplicado detectado en kernel"
-else
-  log_warn "No se detectó microcódigo activo en el kernel (dmesg vacío)"
-fi
+  mapfile -t gpu_list < <(lspci | grep -iE "VGA|3D controller")
+  for gpu_entry in "${gpu_list[@]}"; do
+    log_info "GPU detectada: $gpu_entry"
+
+    if echo "$gpu_entry" | grep -qi "Intel"; then
+      log_section "Configurando GPU Intel..."
+      run_cmd "sudo dnf install -y intel-media-driver vdpau-driver-all libva-utils" \
+        "Drivers de Intel instalados" "Error al instalar drivers Intel"
+
+    elif echo "$gpu_entry" | grep -qi "AMD"; then
+      log_section "Configurando GPU AMD..."
+      run_cmd "sudo dnf install -y akmod-amdgpu mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld vdpau-driver-all libva-utils" \
+        "Drivers de AMD instalados" "Error al instalar drivers AMD"
+      run_cmd "sudo dnf swap -y mesa-va-drivers mesa-va-drivers-freeworld" \
+        "mesa-va-drivers actualizado" "Error al reemplazar mesa-va-drivers"
+      run_cmd "sudo dnf swap -y mesa-vdpau-drivers mesa-vdpau-drivers-freeworld" \
+        "mesa-vdpau-drivers actualizado" "Error al reemplazar mesa-vdpau-drivers"
+
+    elif echo "$gpu_entry" | grep -qi "NVIDIA"; then
+      log_section "Configurando GPU NVIDIA..."
+      run_cmd "sudo dnf install -y akmod-nvidia nvidia-driver nvidia-settings nvidia-vaapi-driver vdpau-driver-all libva-utils" \
+        "Drivers de NVIDIA instalados" "Error al instalar drivers NVIDIA"
+      run_cmd "sudo grubby --update-kernel=ALL --args='nvidia-drm.modeset=1'" \
+        "Kernel configurado para NVIDIA (modeset)" "Error al configurar kernel para NVIDIA"
+      log_warn "Es probable que necesite reiniciar para aplicar configuración NVIDIA."
+
+    else
+      log_warn "Fabricante de GPU no reconocido: $gpu_entry. Omitiendo configuración."
+    fi
+  done
+
+  # Validar herramientas de aceleración
+  log_section "Verificando APIs de aceleración de video..."
+  try_cmd "Instalar libva-utils" sudo dnf install -y libva-utils
+  try_cmd "Instalar vdpauinfo" sudo dnf install -y vdpauinfo
+
+  for api in vaapi vdpau; do
+    if command -v "${api}-info" &>/dev/null; then
+      log_success "API $api disponible"
+    else
+      log_warn "API $api no encontrada. Puede afectar reproducción de video."
+    fi
+  done
+
+  # ─── Soporte para CPU ─────────────────────────────────────────────────────
+  log_section "Configurando soporte para CPU"
+
+  local hypervisor
+  hypervisor=$(systemd-detect-virt)
+  if [[ "$hypervisor" != "none" ]]; then
+    log_info "Sistema virtual detectado ($hypervisor). Omitiendo instalación de microcódigos."
+    return 0
+  fi
+
+  local cpu_name
+  cpu_name=$(lscpu | grep -Ei 'Model name|Nombre del modelo' | head -n 1)
+  log_info "CPU detectada: ${cpu_name:-Desconocida}"
+
+  if echo "$cpu_name" | grep -qi "intel"; then
+    log_section "Procesador Intel detectado. Instalando microcódigo..."
+    run_cmd "sudo dnf install -y --enablerepo=rpmfusion-nonfree microcode_ctl" \
+      "Microcódigo de Intel instalado" "Error al instalar microcódigo de Intel"
+
+  elif echo "$cpu_name" | grep -qi "amd"; then
+    log_section "Procesador AMD detectado. Instalando microcódigo..."
+    run_cmd "sudo dnf install -y --enablerepo=rpmfusion-nonfree amd-ucode" \
+      "Microcódigo de AMD instalado" "Error al instalar microcódigo de AMD"
+    log_info "Regenerando initramfs para cargar el microcódigo AMD"
+    run_cmd "sudo dracut -f" \
+      "initramfs regenerado correctamente" "Error al regenerar initramfs"
+
+  else
+    log_warn "No se pudo identificar el fabricante del procesador. Omitiendo instalación de microcódigos."
+  fi
+
+  run_cmd "sudo dnf install -y cpuid cpu-x" \
+    "Herramientas de diagnóstico CPU instaladas" "Error al instalar herramientas de diagnóstico"
+
+  log_info "Verificando microcódigo en kernel..."
+  if dmesg | grep -qi microcode; then
+    dmesg | grep -i microcode | tee -a "$LOG_FILE"
+    log_success "Microcódigo aplicado detectado en kernel"
+  else
+    log_warn "No se detectó microcódigo activo en el kernel (dmesg vacío)"
+  fi
 }
-
-clean_kde_bloatware() {
-
-log_section "Eliminando bloatware de KDE: $LIST_KDE_PLASMA"
-local list_file="${SCRIPT_DIR}/sources/lists/kde_bloatware.list"
-local removed_log="$HOME/fedora_logs/bloatware_removed_$(date +%F_%H-%M-%S).log"
-if [[ ! -f "$list_file" ]]; then
-  log_warn "Archivo de bloatware no encontrado: $list_file. Saltando limpieza."
-  return 0
-fi
-local pkgs_to_remove=()
-while IFS= read -r pkg || [[ -n "$pkg" ]]; do
-# Limpiar comentarios y líneas vacías
-pkg="${pkg%%#*}"
-pkg="$(echo -e "${pkg}" | tr -d '[:space:]')"
-[[ -z "$pkg" ]] && continue
-# Validar si el paquete está instalado
-if rpm -q "$pkg" &>/dev/null; then
-  pkgs_to_remove+=("$pkg")
-else
-  log_info "Paquete no instalado (omitido): $pkg"
-fi
-done < "$list_file"
-if [[ ${#pkgs_to_remove[@]} -eq 0 ]]; then
-  log_info "No se encontraron paquetes de bloatware instalados."
-  return 0
-fi
-log_info "Se eliminarán ${#pkgs_to_remove[@]} paquetes de bloatware."
-printf "%s\n" "${pkgs_to_remove[@]}" > "$removed_log"
-log_info "Lista guardada en: $removed_log"
-run_cmd "sudo dnf remove -y ${pkgs_to_remove[*]}" \
-"Bloatware de KDE eliminado correctamente" \
-"Fallo al eliminar bloatware de KDE"
-return 0
-}
-# ─── Instalación de KDE Plasma ───────────────────────────────────────────────
-
-install_kde() {
-
-log_section "🚀 Instalando entorno de escritorio KDE Plasma"
-if [[ ! -f "$LIST_KDE_PLASMA" ]]; then
-  log_error "Lista de paquetes de KDE Plasma no encontrada: $LIST_KDE_PLASMA"
-  return 1
-fi
-log_info "Iniciando instalación de paquetes base de KDE Plasma"
-install_packages "$LIST_KDE_PLASMA"
-configure_sddm
-log_info "Habilitando SDDM como gestor de sesiones"
-run_cmd "sudo systemctl enable sddm" \
-"SDDM habilitado correctamente" \
-"Error al habilitar SDDM"
-run_cmd "sudo systemctl set-default graphical.target" \
-"Target gráfico configurado correctamente" \
-"Error al configurar target gráfico"
-log_info "Configurando NumLock para SDDM"
-if ! set_numlock_sddm; then
-  log_warn "Falló la configuración automática de NumLock en SDDM"
-fi
-if [[ -f "$LIST_KDE_BLOATWARE" ]]; then
-  log_info "Eliminando bloatware de KDE"
-  remove_packages "$LIST_KDE_BLOATWARE"
-else
-  log_warn "Lista de bloatware de KDE no encontrada: $LIST_KDE_BLOATWARE. Omitiendo limpieza."
-fi
-if [[ -f "$LIST_KDE_APPS" ]]; then
-  log_info "Instalando aplicaciones adicionales de KDE"
-  install_packages "$LIST_KDE_APPS"
-else
-  log_warn "Lista de apps adicionales de KDE no encontrada: $LIST_KDE_APPS. Omitiendo."
-fi
-log_success "✅ KDE Plasma instalado y configurado correctamente"
-return 0
-}
-
-configure_flameshot() {
-
-log_section "📸 Configurando Flameshot + OCR y atajos con kwriteconfig5"
-if ! install_deps; then
-  log_error "Falló la instalación de dependencias de Flameshot"
-  return 1
-fi
-if ! create_ocr_script; then
-  log_error "Error al crear el script OCR de Flameshot"
-  return 1
-fi
-if ! configure_kwrite_shortcuts; then
-  log_error "Error al configurar los atajos de teclado con kwriteconfig5"
-  return 1
-fi
-if ! create_menu_shortcut; then
-  log_error "Error al crear el acceso directo en el menú de aplicaciones"
-  return 1
-fi
-if ! reload_plasma; then
-  log_warn "No se pudo recargar Plasma automáticamente. Requiere reinicio o logout"
-fi
-log_success "✅ Flameshot con OCR y atajos configurado correctamente"
-return 0
-}
-
-install_deps() {
-
-local pkgs=(flameshot tesseract tesseract-langpack-spa imagemagick xclip)
-local msg="Instalando dependencias: ${pkgs[*]}"
-log_section "📦 $msg"
-run_cmd "sudo dnf install -y --allowerasing --skip-broken --skip-unavailable ${pkgs[*]}" \
-"Dependencias instaladas correctamente" \
-"Fallo al instalar dependencias requeridas para Flameshot" || return 1
-}
-
-create_ocr_script() {
-
-local desk="${XDG_DESKTOP_DIR:-$HOME/Desktop}"
-local script="$desk/flameshot_ocr.sh"
-log_info "Creando script OCR en: $script"
-mkdir -p "$desk" || {
-log_error "No se pudo crear el directorio del escritorio: $desk"
-return 1
-}
-cat > "$script" << 'EOF'
-flameshot gui --raw | convert - -resize 400% png:- | \
-tesseract stdin stdout | awk 'NR==1{printf "%s", $0} NR>1{printf "\n%s", $0}' | \
-xclip -selection clipboard
-EOF
-chmod +x "$script" || {
-log_error "No se pudo hacer ejecutable el script: $script"
-return 1
-}
-log_success "Script OCR creado correctamente en: $script"
-return 0
-}
-
-configure_kwrite_shortcuts() {
-
-local file="$HOME/.config/kglobalshortcutsrc"
-log_info "Escribiendo atajos con kwriteconfig5"
-kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Capture "Print,none,Tomar captura de pantalla" &&
-kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Configure "Ctrl+Shift+Print,none,Configurar" &&
-kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key Launcher "Ctrl+Print,none,Open launcher" &&
-kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key _k_friendly_name "Flameshot" &&
-kwriteconfig5 --file "$file" --group org.flameshot.Flameshot.desktop --key _launch "none,none,Flameshot" || {
-log_error "No se pudieron escribir los atajos de Flameshot"
-return 1
-}
-kwriteconfig5 --file "$file" --group PlasmaShortcuts --key Print "flameshot gui" || {
-log_error "No se pudo escribir el atajo global de Plasma"
-return 1
-}
-return 0
-}
-
-create_menu_shortcut() {
-
-local script_path="${XDG_DESKTOP_DIR:-$HOME/Desktop}/flameshot_ocr.sh"
-local desktop_entry="$HOME/.local/share/applications/flameshot-ocr.desktop"
-mkdir -p "$(dirname "$desktop_entry")"
-cat > "$desktop_entry" <<EOF
-[Desktop Entry]
-Name=Flameshot OCR
-Exec=${script_path}
-Icon=flameshot
-Type=Application
-Categories=Utility;
-EOF
-log_success "Acceso directo creado en el menú: $desktop_entry"
-return 0
-}
-}
-else
-  log_warn "qdbus no encontrado; reinicia tu sesión para aplicar cambios"
-  return 1
-fi
-}
-}
-
-check_dependencies() {
-
-local deps=(git wget unzip cmake dnf bleachbit fastfetch)
-local missing=()
-for cmd in "${deps[@]}"; do
-command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
-done
-if [[ ${#missing[@]} -gt 0 ]]; then
-  log_info "Instalando dependencias: ${missing[*]}"
-  sudo dnf install -y "${missing[@]}"
-fi
-}
-# ─── Instalación de Aplicaciones Multimedia ────────────────────────────────
 
 install_multimedia() {
+  log_section "🎵 Instalación del stack multimedia (codecs, reproductores, AV)"
 
-log_section "🎵 Instalación de aplicaciones multimedia y códecs"
-local lists_to_install=("$LIST_MULTIMEDIA" "$LIST_CODECS")
-for list_file in "${lists_to_install[@]}"; do
-if [[ ! -f "$list_file" ]]; then
-  log_warn "Archivo de lista no encontrado: $list_file"
-  continue
-fi
-log_info "Instalando paquetes desde: $list_file"
-if ! install_packages "$list_file"; then
-  log_warn "Algunos paquetes de $list_file no se pudieron instalar. Revisa el log."
-else
-  log_success "Paquetes de $list_file instalados correctamente."
-fi
-done
-return 0
+  # Verificación de archivos requeridos
+  ensure_file_exists "$LIST_MULTIMEDIA" || {
+    log_error "Lista de paquetes multimedia no encontrada: $LIST_MULTIMEDIA"
+    return 1
+  }
+
+  ensure_file_exists "$LIST_CODECS" || {
+    log_error "Lista de codecs no encontrada: $LIST_CODECS"
+    return 1
+  }
+
+  # Actualizar grupo multimedia base
+  try_cmd "Actualizando grupo sound-and-video" \
+    sudo dnf groupupdate -y sound-and-video
+
+  # Instalar paquetes multimedia generales
+  install_packages "$LIST_MULTIMEDIA" || log_warn "⚠️ Algunos paquetes multimedia fallaron"
+
+  # Instalar codecs adicionales
+  install_packages "$LIST_CODECS" || log_warn "⚠️ Algunos codecs fallaron durante la instalación"
+
+  log_success "Stack multimedia y codecs instalados correctamente."
 }
 
-install_core_apps() {
 
-log_section "🧰 Instalación de aplicaciones básicas del sistema"
-add_repositories
-install_system_utilities || log_warn "Fallo parcial en instalación de utilidades del sistema"
-install_cargo_tools || log_warn "Fallo parcial en instalación de herramientas vía Cargo"
-log_success "🧩 Aplicaciones básicas instaladas correctamente"
-}
+configure_konsole() {
+  log_section "🎨 Configuración de Konsole (terminal KDE)"
 
-install_system_utilities() {
+  local konsole_dir="$HOME/.local/share/konsole"
+  local config_dir="$HOME/.config"
+  mkdir -p "$konsole_dir"
 
-log_section "🛠️ Instalación de utilidades del sistema"
-# Verificación del archivo de utilidades
-if [[ ! -f "${LIST_UTILITIES}" ]]; then
-  log_error "Archivo de lista de utilidades no encontrado: ${LIST_UTILITIES}"
-  return 1
-fi
-log_info "Instalando herramientas de desarrollo (npm, pip)"
-run_cmd "sudo dnf install -y npm pipx python3-pip" "Herramientas de desarrollo instaladas" "Error al instalar herramientas de desarrollo"
-if ! npm list -g electron-store &>/dev/null; then
-  run_cmd "sudo npm install -g electron-store" "electron-store instalado globalmente" "Error al instalar electron-store"
-else
-  log_info "electron-store ya está instalado"
-fi
-# if ! command -v rustc &>/dev/null; then
-#   log_info "Instalando Rust"
-#   run_cmd "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y" "Rust instalado correctamente" "Error al instalar Rust"
-#   [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
-#   [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]] && export PATH="$HOME/.cargo/bin:$PATH"
-# else
-#   log_info "Rust ya está instalado. Verificando actualizaciones..."
-#   run_cmd "rustup update" "Rust actualizado" "Error al actualizar Rust"
-# fi
-run_cmd "sudo dnf -y group install development-tools c-development" "Grupos de desarrollo instalados" "Error al instalar grupos de desarrollo"
-log_info "Instalando utilidades generales desde lista"
-install_packages "${LIST_UTILITIES}" || log_warn "Fallo parcial al instalar utilidades desde lista"
-if ! command -v pipx &>/dev/null; then
-  log_info "Instalando pipx + lastversion"
-  run_cmd "python3 -m pip install --user pipx && python3 -m pipx ensurepath" "pipx instalado correctamente" "Fallo al instalar pipx"
-fi
-if ! pipx list | grep -q "lastversion"; then
-  run_cmd "pipx install lastversion" "lastversion instalado correctamente" "Fallo al instalar lastversion"
-fi
-if ! fc-list | grep -qi "Ubuntu"; then
-  run_cmd "sudo dnf copr enable atim/ubuntu-fonts -y && sudo dnf install -y ubuntu-family-fonts" "Fuentes Ubuntu instaladas" "Fallo al instalar fuentes Ubuntu"
-else
-  log_info "Fuentes Ubuntu ya instaladas"
-fi
-log_info "Verificando herramientas críticas"
-for bin in git curl wget zsh bat jq ripgrep fd; do
-if ! command -v "$bin" &>/dev/null; then
-  log_warn "El binario $bin no fue encontrado tras la instalación"
-fi
-done
-}
+  cat > "$konsole_dir/Initium.profile" <<EOF
+[General]
+Name=Initium
+Command=/bin/zsh
+Icon=utilities-terminal
+EOF
 
-install_cargo_tools() {
+  cat > "$config_dir/konsolerc" <<EOF
+[Desktop Entry]
+DefaultProfile=Initium.profile
+EOF
 
-log_section "🔧 Instalación de herramientas vía Cargo (Rust)"
-# Verifica si cargo está disponible, de lo contrario instala Rust
-if ! command -v cargo &>/dev/null; then
-  log_info "Rust/Cargo no encontrados. Procediendo a instalación de Rust..."
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y &>> "$LOG_FILE"
-  if [[ -f "$HOME/.cargo/env" ]]; then
-    source "$HOME/.cargo/env"
-    export PATH="$HOME/.cargo/bin:$PATH"
-  fi
-fi
-# Validaciones post-instalación
-if ! command -v rustup &>/dev/null; then
-  log_error "❌ rustup no se instaló correctamente. Abortando instalación de herramientas Cargo."
-  return 1
-fi
-if ! command -v cargo &>/dev/null; then
-  log_error "❌ Cargo no está disponible tras instalación. Verifica si \$HOME/.cargo/bin está en el PATH."
-  return 1
-fi
-# Lista de herramientas a instalar vía Cargo
-local tools=(cargo-update topgrade)
-log_info "🛠️ Instalando herramientas CLI desde crates.io"
-local total=${#tools[@]}
-local count=0
-for tool in "${tools[@]}"; do
-((count++))
-draw_progress_bar "$count" "$total"
-sleep 0.1
-if command -v "$tool" &>/dev/null; then
-  log_info "🔹 $tool ya está instalado. Omitiendo."
-  continue
-elif [[ -x "$HOME/.cargo/bin/$tool" ]]; then
-  log_warn "🔍 $tool está instalado en ~/.cargo/bin pero no está en PATH"
-  continue
-fi
-log_info "📦 Instalando $tool con Cargo..."
-if cargo install --locked "$tool" &>> "$LOG_FILE"; then
-  if command -v "$tool" &>/dev/null || [[ -x "$HOME/.cargo/bin/$tool" ]]; then
-    log_success "✔️ $tool instalado correctamente"
-  else
-    log_warn "⚠️ $tool instalado pero no detectado en PATH."
-  fi
-else
-  log_warn "⚠️ Fallo al instalar $tool con Cargo"
-fi
-done
-# PATH Check
-if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
-  log_warn "⚠️ \$HOME/.cargo/bin no está en tu PATH. Añádelo con:"
-  log_info "echo 'export PATH=\"\$HOME/.cargo/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
-fi
-log_success "🎯 Instalación de herramientas vía Cargo completada"
-}
-
-install_extra_apps() {
-
-log_section "📦 Instalación de aplicaciones adicionales"
-# ─── Lista de apps extra ─────────────────────
-if [[ ! -f "${extra_apps}" ]]; then
-  log_error "Archivo de lista de aplicaciones adicionales no encontrado: ${extra_apps}"
-  return 1
-fi
-log_info "Instalando paquetes desde lista: $(basename "$extra_apps")"
-if ! install_packages "${extra_apps}"; then
-  log_warn "⚠️ Algunos paquetes de ${extra_apps} no se pudieron instalar correctamente"
-fi
-# ─── Lista de apps KDE adicionales ────────────
-if [[ -f "$kde_plasma_apps" ]]; then
-  log_info "Instalando paquetes adicionales de KDE desde: $(basename "$kde_plasma_apps")"
-  if ! install_packages "$kde_plasma_apps"; then
-    log_warn "⚠️ Algunos paquetes de ${kde_plasma_apps} no se pudieron instalar correctamente"
-  fi
-else
-  log_warn "Archivo de lista kde_plasma_apps no encontrado: $kde_plasma_apps"
-fi
-# ─── Configuraciones complementarias ─────────
-configure_libvirtd
-configure_sddm
-configure_rtc_clock
-install_onlyoffice
-install_flatpak_apps
-configure_vscode
-log_success "✅ Aplicaciones adicionales instaladas y configuradas exitosamente"
-return 0
+  log_success "Perfil de Konsole personalizado creado"
 }
 
 system_cleanup() {
+  log_section "🧽 Limpieza final del sistema"
 
-log_section "🧹 Limpieza final del sistema"
-run_cmd "sudo dnf autoremove -y" \
-"Paquetes huérfanos eliminados" \
-"Fallo al eliminar paquetes huérfanos"
-run_cmd "sudo dnf clean all" \
-"Caché de DNF limpiada" \
-"Fallo al limpiar caché de DNF"
-if command -v flatpak &>/dev/null; then
-  run_cmd "flatpak uninstall --unused -y" \
-  "Runtimes Flatpak no usados eliminados" \
-  "Fallo al limpiar runtimes Flatpak"
-fi
-if command -v bleachbit &>/dev/null; then
-  log_info "Ejecutando limpieza con BleachBit"
-  sudo bleachbit --clean system.cache system.clipboard system.trash &>> "$LOG_FILE" \
-  && log_success "Limpieza realizada con BleachBit" \
-  || log_warn "BleachBit no pudo ejecutar todas las limpiezas"
-fi
-log_success "🧼 Limpieza del sistema completada"
+  run_cmd "sudo dnf autoremove -y" "Dependencias huérfanas eliminadas" "Fallo al ejecutar autoremove"
+  run_cmd "sudo dnf clean all" "Cache de DNF limpiada" "Fallo al limpiar DNF"
+  run_cmd "flatpak uninstall --unused -y" "Flatpaks no usados eliminados" "Fallo al limpiar Flatpaks"
 }
 
-configure_libvirtd() {
-
-log_info "Habilitando y configurando libvirtd"
-run_cmd "sudo systemctl start libvirtd" \
-"libvirtd iniciado correctamente" \
-"Error al iniciar libvirtd"
-run_cmd "sudo systemctl enable libvirtd" \
-"libvirtd habilitado para el arranque" \
-"Error al habilitar libvirtd"
+install_plasma_xorg_full() {
+  log_section "🏞️ Instalando KDE Plasma (sesión Xorg completa)"
+  local list="${SCRIPT_DIR}/sources/lists/plasma_xorg_full.list"
+  if [[ -f "$list" ]]; then
+    install_packages "$list"
+  else
+    log_warn "plasma_xorg_full.list no encontrado"
+  fi
 }
-# ─── Configurar gestor de sesión SDDM ─────────────────────────────────────
 
-configure_sddm_core() {
-
-log_info "Habilitando SDDM como gestor de sesiones..."
-run_cmd "sudo systemctl enable sddm" \
-"SDDM habilitado correctamente" \
-"Fallo al habilitar SDDM"
-run_cmd "sudo systemctl set-default graphical.target" \
-"Target gráfico establecido como predeterminado" \
-"Fallo al establecer graphical.target"
+install_cli_tools() {
+  log_section "🧰 Instalación de CLI Tools modernas"
+  local cli_list="${SCRIPT_DIR}/sources/lists/cli_tools.list"
+  if [[ ! -f "$cli_list" ]]; then
+    log_error "Archivo de lista no encontrado: $cli_list"
+    return 1
+  fi
+  install_packages "$cli_list" || log_warn "Algunas CLI tools no se pudieron instalar completamente"
+  log_success "✅ CLI Tools instaladas correctamente"
+  configure_cli_tools
 }
-# ─── Configurar NumLock en SDDM ───────────────────────────────────────────
 
-configure_sddm_numlock() {
+install_fonts_support() {
+  log_info "Instalando fuentes base, JetBrainsMono, Ubuntu Nerd Font y Poppins..."
 
-log_info "Configurando NumLock en SDDM..."
-local config_file="/etc/sddm.conf"
-if [[ -f "$config_file" ]]; then
-  if grep -q "^\[General\]" "$config_file"; then
-    if grep -q "^Numlock=" "$config_file"; then
-      sudo sed -i "s/^Numlock=.*/Numlock=on/" "$config_file"
+  local fonts_base=(
+    google-noto-sans-fonts
+    google-noto-serif-fonts
+    google-noto-mono-fonts
+    google-roboto-fonts
+    curl
+    cabextract
+    xorg-x11-font-utils
+    fontconfig
+    freetype-freeworld
+    unzip
+  )
+
+  for pkg in "${fonts_base[@]}"; do
+    try_cmd "Instalación fuente base: $pkg" sudo dnf install -y "$pkg"
+  done
+
+  local font_dir="$HOME/.local/share/fonts"
+  mkdir -p "$font_dir"
+
+  # JetBrainsMono Nerd Font
+  local jb_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+  local jb_zip="/tmp/JetBrainsMono.zip"
+
+  log_info "Descargando JetBrainsMono Nerd Font..."
+  try_cmd "Descarga JetBrainsMono.zip" curl -Ls -o "$jb_zip" "$jb_url"
+  try_cmd "Descomprimir JetBrainsMono" unzip -o "$jb_zip" -d "$font_dir"
+  rm -f "$jb_zip"
+
+  # Ubuntu Nerd Font
+  local ub_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Ubuntu.zip"
+  local ub_zip="/tmp/UbuntuNF.zip"
+
+  log_info "Descargando Ubuntu Nerd Font..."
+  try_cmd "Descarga Ubuntu.zip" curl -Ls -o "$ub_zip" "$ub_url"
+  try_cmd "Descomprimir UbuntuNF" unzip -o "$ub_zip" -d "$font_dir"
+  rm -f "$ub_zip"
+
+  # Poppins desde Google Fonts
+  local poppins_url="https://github.com/google/fonts/raw/main/ofl/poppins/Poppins%5Bwght%5D.ttf"
+  log_info "Descargando fuente Poppins..."
+  try_cmd "Descarga Poppins.ttf" curl -Ls -o "$font_dir/Poppins.ttf" "$poppins_url"
+
+  # Regenerar caché
+  log_info "Regenerando caché de fuentes..."
+  try_cmd "fc-cache" fc-cache -fv "$font_dir"
+
+  log_success "Fuentes instaladas correctamente: Noto, Roboto, JetBrainsMono NF, Ubuntu NF, Poppins"
+}
+
+
+configure_cli_tools() {
+  log_section "⚙️ Configuración de CLI Tools"
+  local dotfiles_dir="${SCRIPT_DIR}/../../dotfiles"
+  mkdir -p ~/.config
+
+  if [[ -f "$dotfiles_dir/.zshrc" ]]; then
+    cp -f "$dotfiles_dir/.zshrc" ~/.zshrc
+    log_success ".zshrc personalizado aplicado"
+  fi
+
+  if command -v fastfetch &>/dev/null && [[ -f "$dotfiles_dir/fastfetch_config.jsonc" ]]; then
+    mkdir -p ~/.config/fastfetch
+    cp -f "$dotfiles_dir/fastfetch_config.jsonc" ~/.config/fastfetch/config.jsonc
+    log_success "Configuración de fastfetch aplicada"
+  fi
+
+  if [[ -f "$dotfiles_dir/topgrade.toml" ]]; then
+    mkdir -p ~/.config
+    cp -f "$dotfiles_dir/topgrade.toml" ~/.config/topgrade.toml
+    log_success "Configuración de topgrade aplicada"
+  fi
+
+  if command -v bat &>/dev/null || command -v batcat &>/dev/null; then
+    mkdir -p ~/.config/bat
+    echo '--theme="TwoDark"' > ~/.config/bat/config
+    log_success "Configuración de bat aplicada"
+  fi
+
+  if command -v zoxide &>/dev/null; then
+    grep -q 'zoxide init' ~/.zshrc || echo 'eval "$(zoxide init zsh)"' >> ~/.zshrc
+    log_success "zoxide integrado en .zshrc"
+  fi
+
+  if command -v navi &>/dev/null; then
+    mkdir -p ~/.config/navi
+    if [[ ! -d ~/.config/navi/cheats ]]; then
+      git clone https://github.com/denisidoro/cheat.sh.git ~/.config/navi/cheats &&
+      log_success "Cheatsheets de navi instalados"
     else
-      sudo sed -i "/^\[General\]/a Numlock=on" "$config_file"
+      log_info "Cheatsheets de navi ya presentes"
     fi
-  else
-    echo -e "\n[General]\nNumlock=on" | sudo tee -a "$config_file" > /dev/null
+    grep -q 'navi widget zsh' ~/.zshrc || echo 'eval "$(navi widget zsh)"' >> ~/.zshrc
   fi
-else
-  echo -e "[General]\nNumlock=on" | sudo tee "$config_file" > /dev/null
-fi
-run_cmd "sudo systemctl daemon-reexec" \
-"SDDM recargado correctamente" \
-"Fallo al recargar SDDM (puede requerir reinicio)"
-}
-# ─── Ocultar usuarios en pantalla de inicio de SDDM ───────────────────────
 
-configure_sddm_hide_users() {
+  ensure_zsh_as_default
 
-local conf_file="/etc/sddm.conf"
-local username="libvirt-qemu"
-log_info "Ocultando usuario '$username' en pantalla de inicio de SDDM"
-if [[ -f "$conf_file" ]]; then
-  if ! grep -q "^\[Users\]" "$conf_file"; then
-    echo -e "\n[Users]\nHideUsers=$username" | sudo tee -a "$conf_file" > /dev/null
-    log_success "Sección [Users] creada con usuario oculto"
-  elif ! grep -q "^HideUsers=" "$conf_file"; then
-    sudo sed -i "/^\[Users\]/a HideUsers=$username" "$conf_file"
-    log_success "Directiva HideUsers añadida"
-  else
-    sudo sed -i "s/^HideUsers=.*/HideUsers=$username/" "$conf_file"
-    log_info "Actualizada directiva HideUsers con nuevo valor: $username"
+  if [[ -f "$dotfiles_dir/.nanorc" ]]; then
+    cp -f "$dotfiles_dir/.nanorc" ~/.nanorc
+    log_success ".nanorc personalizado aplicado"
   fi
-else
-  log_warn "Archivo sddm.conf no encontrado. Se creará uno nuevo"
-  echo -e "[Users]\nHideUsers=$username" | sudo tee "$conf_file" > /dev/null
-  log_success "Archivo sddm.conf creado con usuario oculto"
-fi
-}
-# ─── Configuración completa de SDDM (núcleo, numlock, ocultar usuarios) ──
 
-configure_sddm() {
-
-log_section "⚙️ Configurando SDDM"
-configure_sddm_core
-configure_sddm_numlock
-configure_sddm_hide_users
-}
-
-configure_rtc_clock() {
-
-log_info "Configurando el reloj en hora local (RTC localtime)"
-if timedatectl set-local-rtc 1 &>> "$LOG_FILE"; then
-  log_success "RTC configurado para mantener hora local"
-else
-  log_warn "No se pudo configurar el RTC en hora local"
-fi
-}
-
-install_onlyoffice() {
-
-log_info "Instalando OnlyOffice Desktop Editors"
-if run_cmd "sudo dnf install -y onlyoffice-desktopeditors" \
-"OnlyOffice instalado correctamente" \
-"Error al instalar OnlyOffice"; then
-log_success "OnlyOffice instalado con éxito"
-else
-  log_warn "No se pudo instalar OnlyOffice. Revisa los repositorios o conectividad"
-fi
-}
-
-install_flatpak_apps() {
-
-log_section "Instalando aplicaciones Flatpak desde Flathub"
-local flatpak_apps=(
-"com.github.dail8859.NotepadNext"
-"org.localsend.localsend_app"
-"org.strawberrymusicplayer.strawberry"
-"org.nomacs.ImageLounge"
-"com.github.vkohaupt.vokoscreenNG"
-"tv.kodi.Kodi"
-"org.appimage.AppImageLauncher"
-"com.github.manisandro.gImageReader"
-)
-if ! command -v flatpak &>/dev/null; then
-  log_info "Flatpak no está instalado. Instalando Flatpak..."
-  run_cmd "sudo dnf install -y flatpak" \
-  "Flatpak instalado correctamente" \
-  "Fallo al instalar Flatpak"
-fi
-log_info "Asegurando acceso a Flathub"
-run_cmd "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo" \
-"Repositorio Flathub añadido correctamente" \
-"Error al añadir Flathub"
-for app in "${flatpak_apps[@]}"; do
-log_info "Instalando aplicación Flatpak: $app"
-if ! flatpak install -y --noninteractive flathub "$app" &>> "$LOG_FILE"; then
-  log_warn "Fallo al instalar $app (Flatpak). Continuando..."
-else
-  log_success "$app instalado vía Flatpak"
-fi
-done
-return 0
-}
-
-configure_vscode() {
-
-log_section "Instalando y configurando Visual Studio Code"
-# Verificar si 'code' está disponible
-if ! command -v code &>/dev/null; then
-  log_info "VSCode no encontrado. Intentando instalar desde DNF..."
-  run_cmd "sudo dnf install -y code" \
-  "Visual Studio Code instalado" \
-  "Fallo al instalar Visual Studio Code"
-fi
-# Inicializar entorno si fue la primera ejecución
-log_info "Inicializando configuración de usuario de VSCode"
-local vscode_config="$HOME/.config/Code/User"
-mkdir -p "$vscode_config"
-# Crear configuración predeterminada
-cat > "$vscode_config/settings.json" <<EOF
-{
-"editor.defaultFormatter": "esbenp.prettier-vscode",
-"editor.formatOnSave": true,
-"prettier.singleQuote": true,
-"prettier.trailingComma": "all",
-"prettier.jsxSingleQuote": true,
-"prettier.printWidth": 80,
-"editor.fontFamily": "JetBrainsMono Nerd Font,Menlo,Monaco,Courier New,monospace,Noto Color Emoji",
-"editor.fontLigatures": true,
-"editor.fontSize": 14,
-"editor.lineHeight": 24,
-"editor.fontWeight": "400",
-"workbench.colorTheme": "One Monokai"
-}
-EOF
-log_success "Archivo de configuración VSCode generado"
-# Instalar extensiones útiles
-declare -a extensions=(
-"azemoh.one-monokai"
-"NarasimaPandiyan.jetbrainsmono"
-)
-for ext in "${extensions[@]}"; do
-log_info "Instalando extensión: $ext"
-if ! code --install-extension "$ext" &>> "$LOG_FILE"; then
-  log_warn "Extensión $ext no pudo instalarse"
-else
-  log_success "Extensión $ext instalada"
-fi
-done
-return 0
+  log_success "🎯 Configuración personalizada de CLI Tools completada"
 }

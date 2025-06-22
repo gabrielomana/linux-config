@@ -277,9 +277,9 @@ remove_packages() {
 
 install_packages_refactor() {
   local list_file="$1"
-  ensure_file_exists "$list_file" || return 1
+  [[ -f "$list_file" ]] || { log_error "List file not found: $list_file"; return 1; }
 
-  log_section "📦 Instalación desde lista: $(basename "$list_file")"
+  log_section "📦 Installing packages from: $(basename "$list_file")"
   mapfile -t raw_lines < "$list_file"
 
   local packages=()
@@ -296,35 +296,39 @@ install_packages_refactor() {
 
   for pkg in "${packages[@]}"; do
     ((count++))
-    draw_progress_bar "$count" "$total"
+    show_progress_bar "$count" "$total"
 
     if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
-      log_warn "⚠️ Entrada inválida detectada: '$pkg' — omitida"
+      log_warn "⚠️ Invalid entry detected: '$pkg' — skipped"
       continue
     fi
 
     case "$pkg" in
       @*)
-        log_info "➡️ Instalando grupo: $pkg"
-        try_cmd "Grupo $pkg" sudo dnf group install "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"
+        log_info "➡️ Installing group: $pkg"
+        try_cmd "Group $pkg" sudo dnf group install "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"
         ;;
       *'*'*)
-        log_info "🔍 Instalando comodín: $pkg"
+        log_info "🔍 Installing wildcard: $pkg"
         try_cmd "Wildcard $pkg" sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"
         ;;
       *)
-        log_info "📦 Instalando: $pkg"
-        try_cmd "Paquete $pkg" sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"
+        log_info "📦 Installing package: $pkg"
+        try_cmd "Package $pkg" sudo dnf install "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"
         ;;
     esac
   done
+
+  echo ""
+  log_success "✔ Finished installing from: $(basename "$list_file")"
 }
+
 
 remove_packages_refactor() {
   local list_file="$1"
-  ensure_file_exists "$list_file" || return 1
+  [[ -f "$list_file" ]] || { log_error "List file not found: $list_file"; return 1; }
 
-  log_section "🧹 Eliminación desde lista: $(basename "$list_file")"
+  log_section "🧹 Removing packages from: $(basename "$list_file")"
   mapfile -t raw_lines < "$list_file"
 
   local packages=()
@@ -341,29 +345,33 @@ remove_packages_refactor() {
 
   for pkg in "${packages[@]}"; do
     ((count++))
-    draw_progress_bar "$count" "$total"
+    show_progress_bar "$count" "$total"
 
     if [[ "$pkg" =~ ^-+$ || "$pkg" =~ ^\.+$ ]]; then
-      log_warn "⚠️ Entrada inválida: '$pkg' — omitida"
+      log_warn "⚠️ Invalid entry: '$pkg' — skipped"
       continue
     fi
 
     case "$pkg" in
       @*)
-        log_info "❌ Eliminando grupo: $pkg"
-        try_cmd "Grupo $pkg" sudo dnf group remove "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"
+        log_info "❌ Removing group: $pkg"
+        try_cmd "Group $pkg" sudo dnf group remove "${dnf_flags[@]}" "${pkg#@}" &>> "$LOG_FILE"
         ;;
       *'*'*)
-        log_info "❌ Eliminando comodín: $pkg"
+        log_info "❌ Removing wildcard: $pkg"
         try_cmd "Wildcard $pkg" sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"
         ;;
       *)
-        log_info "❌ Eliminando paquete: $pkg"
-        try_cmd "Paquete $pkg" sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"
+        log_info "❌ Removing package: $pkg"
+        try_cmd "Package $pkg" sudo dnf remove "${dnf_flags[@]}" "$pkg" &>> "$LOG_FILE"
         ;;
     esac
   done
+
+  echo ""
+  log_success "✔ Finished removing from: $(basename "$list_file")"
 }
+
 
 install_konsole_and_dotfiles() {
   log_section "🎨 Instalación de Konsole y dotfiles personalizados"
