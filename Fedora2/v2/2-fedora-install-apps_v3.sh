@@ -21,16 +21,16 @@ mkdir -p "$LOG_DIR"
 
 # ========== CARGA DE FUNCIONES EXTERNAS ==========
 if [[ -f "$SCRIPT_DIR/sources/functions/functions3" ]]; then
-    print_message "INFO" "Funciones externas cargadas correctamente"
+    log_info "INFO" "Funciones externas cargadas correctamente"
 else
-    print_message "ERROR" "Archivo de funciones no encontrado en sources/functions2/"
+    log_info "ERROR" "Archivo de funciones no encontrado en sources/functions2/"
     exit 1
 fi
 
 if [[ -f "$SCRIPT_DIR/sources/functions/functions_zsh_v2" ]]; then
-    print_message "INFO" "Funciones externas cargadas correctamente"
+    log_info "INFO" "Funciones externas cargadas correctamente"
 else
-    print_message "ERROR" "Archivo de funciones no encontrado en sources/functions/"
+    log_info "ERROR" "Archivo de funciones no encontrado en sources/functions/"
     exit 1
 fi
 
