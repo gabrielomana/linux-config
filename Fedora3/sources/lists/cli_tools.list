@@ -1,0 +1,44 @@
+# ─── Editores y Entorno ───────────────
+vim
+nano
+micro
+zsh
+bash-completion
+
+# ─── Gestión de Archivos y Búsqueda ───
+unzip
+p7zip
+p7zip-plugins
+tar
+gzip
+bzip2
+bat
+jq
+ripgrep
+fd-find
+eza
+
+# ─── Descargas, Red y Seguridad ───────
+git
+curl
+wget
+rclone
+whois
+firewalld
+openssh-clients
+fail2ban
+policycoreutils
+policycoreutils-python-utils
+
+# ─── Monitoreo y Diagnóstico ──────────
+htop
+btop
+fastfetch
+cpuid
+cpu-x
+
+# ─── Motores de Desarrollo y CLI ──────
+navi
+npm
+python3-pip
+pipx

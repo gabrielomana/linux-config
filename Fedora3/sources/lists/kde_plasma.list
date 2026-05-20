@@ -1,0 +1,26 @@
+# ─── Base del Entorno Plasma ──────────
+plasma-desktop
+sddm
+kwayland-integration
+kde-gtk-config
+breeze-gtk
+
+# ─── Integración de Hardware ──────────
+plasma-nm
+plasma-pa
+kscreen
+powerdevil
+bluedevil
+
+# ─── Utilidades del Sistema Base ──────
+kwallet-pam
+sddm-kcm
+plasma-systemmonitor
+kdegraphics-thumbnailers
+ffmpegthumbs
+plasma-browser-integration
+
+# ─── Comodines de Ecosistema KDE ──────
+kio*
+kf5-*
+kf6-*

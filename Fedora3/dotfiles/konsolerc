@@ -1,0 +1,7 @@
+[Desktop Entry]
+DefaultProfile=FedoraDev.profile
+
+[MainWindow]
+MenuBar=Disabled
+ToolBarsMovable=Disabled
+StatusBar=Disabled

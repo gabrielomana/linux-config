@@ -1,0 +1,25 @@
+# ─── RECONOCIMIENTO DE TEXTO (OCR) Y CAPTURA ───
+tesseract
+tesseract-langpack-spa
+imagemagick
+xclip
+
+# ─── ECOSISTEMA ONLYOFFICE Y KDE (ESPAÑOL) ───
+xorg-x11-font-utils
+kio-fuse
+kio-gdrive
+langpacks-es
+hunspell-es
+
+# ─── COMPRESIÓN Y UTILIDADES CLI HEREDADAS ───
+ark
+unrar
+hblock
+navi
+bleachbit
+
+# ─── TIPOGRAFÍAS DE GOOGLE ───
+google-roboto-fonts
+google-noto-fonts
+google-noto-sans-fonts
+google-noto-serif-fonts

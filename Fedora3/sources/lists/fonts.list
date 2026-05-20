@@ -1,0 +1,14 @@
+# ─── Motores tipográficos ─────────────
+xorg-x11-font-utils
+fontconfig
+freetype-freeworld
+cabextract
+
+# ─── Familias Tipográficas ────────────
+ubuntu-family-fonts
+google-noto-sans-fonts
+google-noto-serif-fonts
+google-noto-mono-fonts
+google-roboto-fonts
+dejavu-sans-fonts
+dejavu-serif-fonts

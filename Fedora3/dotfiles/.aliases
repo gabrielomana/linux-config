@@ -1,0 +1,25 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# MATRIZ DE ALIAS MAESTROS - FEDORA WORKSPACE V2
+# ──────────────────────────────────────────────────────────────────────────────
+
+# --- Reemplazos Modernos (Ecosistema Rust/Go) ---
+alias ls='eza --icons --group-directories-first'
+alias ll='eza -l --icons --group-directories-first --git'
+alias la='eza -a --icons --group-directories-first'
+alias lla='eza -la --icons --group-directories-first --git'
+alias cat='bat --style=plain'
+alias top='btop'
+alias grep='rg'
+alias find='fd'
+alias cd='z'
+
+# --- Utilidades rápidas de administración ---
+alias update='topgrade'
+alias c='clear'
+alias q='exit'
+alias path='echo $PATH | tr ":" "\n"'
+
+# --- Variables de Entorno del Sistema ---
+export EDITOR='micro'
+export VISUAL='micro'
+export PAGER='less'
